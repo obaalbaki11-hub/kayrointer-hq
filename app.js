@@ -298,172 +298,179 @@ const Chat = {
 function save_(k){save(k);}
 
 // ══════════════════════════════════════════════════════════════
-//  PAGE: HQ (3D Virtual Office)
+//  PAGE: HQ (2D Dashboard)
 // ══════════════════════════════════════════════════════════════
 const HQ = {
   _active: false,
-  _renderer: null,
-  _threeReady: false,
+  _clock: null,
+
+  _COMMITS: [
+    ['feat','Merge branch "feature/ai-chat" into main'],
+    ['fix', 'Resolve API streaming timeout on long responses'],
+    ['docs','Update design system tokens for dark mode'],
+    ['feat','Add UTM tracking to cold email campaigns'],
+    ['fix', 'Resolve CRM duplicate contact detection bug'],
+    ['feat','Add onboarding checklist for new subscribers'],
+    ['refactor','Clean up task board drag-and-drop handlers'],
+    ['feat','Add formula parser for AVERAGE and COUNT'],
+    ['fix', 'Fix WebGL context leak on page revisit'],
+    ['chore','Upgrade Claude model to haiku-4-5-20251001'],
+    ['style','Align modal spacing to 8px grid'],
+    ['feat','Implement cold email AI generation modal'],
+  ],
+
   init(container) {
-    container.innerHTML = '<div class="page-fill" id="hq-root"></div>';
+    HQ._active = true;
+    container.innerHTML = '<div class="page-scroll" id="hq-root" style="padding:16px"></div>';
     const root = document.getElementById('hq-root');
-    if (window.THREE) { HQ._build(root); }
-    else {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      s.onload = () => HQ._build(root);
-      document.head.appendChild(s);
-    }
+    HQ._render(root);
+    HQ._clock = setInterval(() => {
+      const el = document.getElementById('hq-clock');
+      if (el) {
+        const n = new Date();
+        el.textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+      }
+    }, 30000);
   },
+
   destroy() {
     HQ._active = false;
-    if (HQ._renderer) {
-      HQ._renderer.dispose();
-      try { HQ._renderer.forceContextLoss(); } catch(e){}
-    }
-    HQ._renderer = null;
+    clearInterval(HQ._clock);
+    HQ._clock = null;
   },
-  _build(root) {
-    HQ._active = true;
+
+  _render(root) {
     const emps = State.employees;
-    // Overlays
+    const now = new Date();
+    const hh = String(now.getHours()).padStart(2,'0');
+    const mm = String(now.getMinutes()).padStart(2,'0');
+    const DAYS = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
+    const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const activeTasks = State.tasks.filter(t => t.column !== 'done').length;
+    const doneTasks   = State.tasks.filter(t => t.column === 'done').length;
+    const activities  = HQ._genActivity(emps);
+    const statuses    = emps.map(() => Math.random() > 0.35 ? 'working' : 'idle');
+
     root.innerHTML = `
-      <div class="hq-emp-bar" id="hq-emp-bar">${emps.map(e=>`
-        <div class="hq-emp-item" data-eid="${e.id}">
-          <div class="hq-emp-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
-          <span style="font-size:11.5px;color:#c8d8f0">${e.name}</span>
-          <div class="hq-dots">
-            <div class="hq-dot" style="background:${e.color}"></div>
-            <div class="hq-dot" style="background:#2a3550"></div>
-            <div class="hq-dot" style="background:#2a3550"></div>
-          </div>
-        </div>${emps.indexOf(e)<emps.length-1?'<div class="hq-sep"></div>':''}`).join('')}
+      <!-- Header -->
+      <div class="hq2-header">
+        <div class="hq2-clock-block">
+          <div class="hq2-clock" id="hq-clock">${hh}:${mm}</div>
+          <div class="hq2-date">${DAYS[now.getDay()]} · ${MONTHS[now.getMonth()]} ${now.getDate()}, ${now.getFullYear()}</div>
+        </div>
+        <div class="hq2-stats">
+          <div class="hq2-stat"><div class="hq2-stat-val" style="color:var(--green)">${emps.length}</div><div class="hq2-stat-lbl">ONLINE</div></div>
+          <div class="hq2-stat"><div class="hq2-stat-val" style="color:var(--amber)">${activeTasks}</div><div class="hq2-stat-lbl">ACTIVE TASKS</div></div>
+          <div class="hq2-stat"><div class="hq2-stat-val">${doneTasks}</div><div class="hq2-stat-lbl">COMPLETED</div></div>
+          <div class="hq2-stat"><div class="hq2-stat-val" style="color:var(--accent)">${State.tasks.length}</div><div class="hq2-stat-lbl">TOTAL TASKS</div></div>
+        </div>
+        <button class="btn btn-primary" id="hq2-standup-btn">VIEW STANDUP</button>
       </div>
-      <div class="standup-panel">
-        <div class="sp-lbl">STANDUP</div>
-        <div class="sp-msg">Gathering in meeting room.</div>
-        <div class="sp-ct">2/${emps.length} arrived</div>
-        <button class="sp-btn" id="sp-board-btn">STANDUP BOARD</button>
-      </div>
-      <div class="hq-bot-bar">
-        <div class="hq-bs"><b>0</b> working</div>
-        <div class="hq-bdiv">•</div>
-        <div class="hq-bs"><b>${emps.length}</b> idle</div>
-        <div class="hq-bdiv">•</div>
-        <div class="hq-bs"><b>0</b> error</div>
-        <div class="hq-bdiv">•</div>
-        <div class="hq-bs">quiet</div>
-        <div class="hq-hints">
-          <span class="hq-hint">drag</span>
-          <span class="hq-hint">scroll</span>
-          <span class="hq-hint">space+drag</span>
+
+      <!-- Commit ticker -->
+      <div class="hq2-ticker">
+        <div class="hq2-ticker-track">
+          ${[...activities,...activities].map(a=>`
+            <span class="hq2-tick-item">
+              <span class="hq2-tick-type">${escHtml(a.type)}</span>
+              <span class="hq2-tick-name" style="color:${a.color}">${escHtml(a.name)}</span>
+              <span class="hq2-tick-msg">${escHtml(a.msg)}</span>
+              <span class="hq2-tick-time">${a.time}</span>
+            </span>`).join('')}
         </div>
       </div>
-      <div class="hq-wm">${State.settings.companyName.toUpperCase()||'KAYRO'}</div>
-      <div id="hq-ntags"></div>`;
-    root.querySelectorAll('.hq-emp-item').forEach(el=>
-      el.addEventListener('click',()=>Chat.open(el.dataset.eid)));
-    document.getElementById('sp-board-btn').addEventListener('click',()=>Employees.showStandup());
 
-    // THREE.JS SCENE
-    const THREE = window.THREE;
-    const W = root.clientWidth||window.innerWidth, H = root.clientHeight||window.innerHeight-50;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x070d1a);
-    const FRUST = 13, asp = W/H;
-    const camera = new THREE.OrthographicCamera(-FRUST*asp,FRUST*asp,FRUST,-FRUST,-100,200);
-    camera.position.set(18,18,18); camera.lookAt(0,1,0);
-    const renderer = new THREE.WebGLRenderer({antialias:true});
-    renderer.setSize(W,H); renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-    renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-    renderer.domElement.style.cssText='position:absolute;top:0;left:0;z-index:1';
-    root.appendChild(renderer.domElement);
-    HQ._renderer = renderer;
-    scene.add(new THREE.AmbientLight(0xc8d8ff,0.78));
-    const sun=new THREE.DirectionalLight(0xfff5f0,1.1);
-    sun.position.set(14,22,14); sun.castShadow=true;
-    sun.shadow.mapSize.set(2048,2048);
-    Object.assign(sun.shadow.camera,{left:-25,right:25,top:25,bottom:-25,near:.5,far:100});
-    scene.add(sun);
-    scene.add(new THREE.DirectionalLight(0x4488ff,0.25));
-    function mat(c,em){const m=new THREE.MeshLambertMaterial({color:c});if(em!==undefined)m.emissive=new THREE.Color(em);return m;}
-    const M={fl:mat(0xdfd8c8),wa:mat(0xf0ebe3),wa2:mat(0xe4e0da),de:mat(0x9a7548),dt:mat(0xc9a56a),ch:mat(0x1e3050),cb:mat(0x142038),mo:mat(0x0e1420),sc:mat(0x0a1e3c,0x040e1a),sv:mat(0x1e2030),sl:mat(0x00dd88,0x004422),rt:mat(0xc4804a),so:mat(0x1e3a6e),so2:mat(0xcc4512),pg:mat(0x15803d),ne:mat(0xeaeaea),sh:mat(0x6a4e2a),pp:mat(0x7a3812),pl:mat(0x246020),tv:mat(0x080c18),ts:mat(0x071c2e,0x030d18),ct:mat(0xb89060),pn:mat(0x1a1a38)};
-    function ab(w,h,d,material,x,y,z,ry){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material);m.position.set(x,y,z);if(ry)m.rotation.y=ry;m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
-    function cy(r,h,material,x,y,z,sg){const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;scene.add(m);return m;}
-    const OW=26,OD=18,WH=2.4,WT=.22;
-    ab(OW,.12,OD,M.fl,0,-.06,0);
-    ab(OW,WH,WT,M.wa,0,WH/2,-OD/2);
-    ab(WT,WH,OD,M.wa2,-OW/2,WH/2,0);
-    ab(WT,WH,OD,M.wa2,OW/2,WH/2,0);
-    ab(3.5,WH,WT,M.wa,-OW/2+1.75,WH/2,OD/2);
-    ab(3.5,WH,WT,M.wa,OW/2-1.75,WH/2,OD/2);
-    ab(WT,WH,6,M.wa2,-OW/2+5.2,WH/2,-OD/2+3);
-    const SX=-9.8,SZ=-6.2;
-    for(let i=0;i<4;i++){ab(.55,1.95,.38,M.sv,SX+i*.72,.97,SZ);ab(.07,.05,.04,M.sl,SX+i*.72+.18,.5+Math.random()*.9,SZ-.21);ab(.07,.05,.04,M.sl,SX+i*.72-.1,.9+Math.random()*.4,SZ-.21);}
-    ab(3.2,.1,.65,M.dt,SX+1.08,.88,SZ);
-    const MX=-5.5,MZ=-4.5;
-    cy(1.3,.1,M.rt,MX,.72,MZ);cy(.06,.72,M.de,MX,.36,MZ);
-    for(let i=0;i<6;i++){const a=(i/6)*Math.PI*2,cx=MX+Math.sin(a)*1.72,cz=MZ+Math.cos(a)*1.72;ab(.44,.1,.44,M.ch,cx,.7,cz);ab(.44,.44,.08,M.cb,cx+Math.sin(a)*.26,1,cz+Math.cos(a)*.26);}
-    function desk(x,z,ry=0){const c=Math.cos(ry),s=Math.sin(ry);ab(1.5,.08,.75,M.dt,x,.7,z,ry);ab(1.5,.62,.05,M.de,x-s*.34,.4,z-c*.34,ry);[[.65,.3],[-.65,.3],[.65,-.3],[-.65,-.3]].forEach(([dx,dz])=>ab(.05,.7,.05,M.de,x+dx*c-dz*s,.34,z+dx*s+dz*c));ab(.55,.38,.04,M.mo,x,.97,z-s*.1+c*.14,ry);ab(.55,.38,.04,M.sc,x,.97,z-s*.1+c*.12,ry);ab(.04,.12,.04,M.mo,x,.78,z-s*.1+c*.1,ry);}
-    [[-2.5,-1.5],[-.5,-1.5],[1.5,-1.5],[-2.5,.8],[-.5,.8],[1.5,.8],[-2.5,3],[-.5,3],[1.5,3],[5,-1.5],[7,-1.5],[5,.8],[7,.8],[5,3],[7,3]].forEach(([x,z])=>{desk(x,z);ab(.42,.1,.42,M.ch,x,.7,z+.9);ab(.42,.38,.07,M.cb,x,.94,z+1.1);[[.16,.16],[-.16,.16],[.16,-.16],[-.16,-.16]].forEach(([dx,dz])=>ab(.04,.7,.04,M.cb,x+dx,.35,z+.9+dz));});
-    ab(2.6,.52,.78,M.so,8.6,.26,-2.2);ab(.78,.52,2.4,M.so,7.7,.26,-3);ab(2.6,.82,.12,M.so,8.6,.67,-2.62);ab(.12,.82,2.4,M.so,7.28,.67,-3);ab(.92,.46,.78,M.so2,9.2,.23,.6);ab(.92,.82,.1,M.so2,9.2,.64,.16);ab(1.15,.07,.68,M.ct,8.7,.44,-1.2);
-    ab(.3,2.1,2.3,M.sh,OW/2-.28,1.05,-2.8);[.35,.9,1.5].forEach(y=>ab(.25,.05,2.3,M.dt,OW/2-.28,y,-2.8));
-    [0xcc2222,0x2244aa,0x228833,0xcc8811,0x882299,0x226688].forEach((c,i)=>{const bm=new THREE.MeshLambertMaterial({color:c});ab(.07,.24,.18,bm,OW/2-.28,.52+Math.floor(i/3)*.58,-2.8+(i%3-1)*.42);});
-    ab(2.6,.09,1.4,M.pg,7.8,.6,5.2);ab(.04,.22,1.4,M.ne,7.8,.74,5.2);[[-1.1,.56],[1.1,.56],[-1.1,-.56],[1.1,-.56]].forEach(([dx,dz])=>ab(.06,.6,.06,M.de,7.8+dx,.3,5.2+dz));
-    ab(2.4,1.35,.09,M.tv,3,1.5,-OD/2+.08);ab(2.25,1.22,.07,M.ts,3,1.5,-OD/2+.14);
-    function plant(x,z){cy(.18,.26,M.pp,x,.13,z,8);cy(.09,.58,M.pl,x,.52,z,6);const lm=new THREE.Mesh(new THREE.SphereGeometry(.3,6,5),M.pl);lm.scale.y=.6;lm.position.set(x,.96,z);lm.castShadow=true;scene.add(lm);}
-    [[-OW/2+.7,-OD/2+.7],[OW/2-.9,-OD/2+.7],[-OW/2+.7,OD/2-.9],[OW/2-.9,OD/2-.9],[6.5,-5.5],[-4,5.5]].forEach(([x,z])=>plant(x,z));
-    // Characters from State.employees
-    const chars=[];
-    emps.forEach((e,i)=>{
-      const g=new THREE.Group();
-      const mB=new THREE.MeshLambertMaterial({color:e.bodyHex||0x3b82f6});
-      const mS=new THREE.MeshLambertMaterial({color:e.skinHex||(SKIN[i%SKIN.length])});
-      [-.07,.07].forEach(dx=>{const l=new THREE.Mesh(new THREE.BoxGeometry(.12,.34,.12),M.pn);l.position.set(dx,.17,0);l.castShadow=true;g.add(l);});
-      const b=new THREE.Mesh(new THREE.BoxGeometry(.3,.36,.2),mB);b.position.set(0,.51,0);b.castShadow=true;g.add(b);
-      [-.22,.22].forEach(dx=>{const a=new THREE.Mesh(new THREE.BoxGeometry(.1,.3,.1),mB);a.position.set(dx,.47,0);a.castShadow=true;g.add(a);});
-      const h=new THREE.Mesh(new THREE.BoxGeometry(.24,.24,.24),mS);h.position.set(0,.82,0);h.castShadow=true;g.add(h);
-      const hr=new THREE.Mesh(new THREE.BoxGeometry(.26,.08,.26),M.pn);hr.position.set(0,.96,0);g.add(hr);
-      const pos=e.pos||[0,0];
-      g.position.set(pos[0],0,pos[1]);scene.add(g);chars.push({group:g,emp:e});
+      <!-- Employee list + Activity feed -->
+      <div class="hq2-grid">
+        <div class="hq2-emp-panel">
+          <div class="hq2-panel-label">// team status</div>
+          ${emps.map((e,i)=>`
+            <div class="hq2-emp-row" data-eid="${e.id}">
+              <div class="hq2-emp-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
+              <div class="hq2-emp-info">
+                <div class="hq2-emp-name">${escHtml(e.name)}</div>
+                <div class="hq2-emp-role">${escHtml(e.role)}</div>
+              </div>
+              <div class="hq2-emp-status ${statuses[i]}">${statuses[i]==='working'?'WORKING':'IDLE'}</div>
+            </div>`).join('')}
+        </div>
+        <div class="hq2-activity">
+          <div class="hq2-panel-label">// commit activity</div>
+          ${activities.map(a=>`
+            <div class="hq2-act-row">
+              <div class="hq2-act-hash">${a.hash}</div>
+              <div class="hq2-act-type ${a.type}">${escHtml(a.type)}</div>
+              <div class="hq2-act-msg">${escHtml(a.msg)}</div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                <div style="width:16px;height:16px;border-radius:50%;background:${a.color}22;color:${a.color};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:800">${a.name[0]}</div>
+                <div class="hq2-act-time">${a.time}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+
+      <!-- Standup cards -->
+      <div class="hq2-standup">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div class="hq2-panel-label" style="margin-bottom:0">// daily standup</div>
+          <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${hh}:${mm} · ${DAYS[now.getDay()]}</div>
+        </div>
+        <div class="hq2-standup-grid">
+          ${emps.map((e,i)=>HQ._standupCard(e,statuses[i])).join('')}
+        </div>
+      </div>`;
+
+    root.querySelectorAll('.hq2-emp-row[data-eid]').forEach(row =>
+      row.addEventListener('click', () => Chat.open(row.dataset.eid)));
+    document.getElementById('hq2-standup-btn')?.addEventListener('click', () => Employees.showStandup());
+  },
+
+  _genActivity(emps) {
+    return HQ._COMMITS.map(([ type, msg ], i) => {
+      const emp  = emps[i % emps.length] || { name: 'System', color: '#3b82f6' };
+      const mins = (i + 1) * 5 + Math.floor(i * 1.7);
+      return {
+        hash:  Math.random().toString(36).slice(2, 9),
+        type, msg,
+        name:  emp.name,
+        color: emp.color,
+        time:  mins < 60 ? `${mins}m ago` : `${Math.floor(mins/60)}h ago`,
+      };
     });
-    // Name tags
-    const ntContainer=document.getElementById('hq-ntags');
-    const ntEls=chars.map(({emp})=>{
-      const d=document.createElement('div');d.className='ntag';
-      d.innerHTML=`<div class="ntag-inner"><div class="ntag-dot" style="background:${emp.color}"></div>${emp.name}</div>`;
-      d.style.cursor='pointer';d.addEventListener('click',()=>Chat.open(emp.id));
-      ntContainer.appendChild(d);return d;
-    });
-    // Camera controls
-    let drag=false,prevXY=[0,0],panX=0,panZ=0,tPanX=0,tPanZ=0,zoom=1,tZoom=1;
-    const cvs=renderer.domElement;
-    cvs.addEventListener('mousedown',e=>{drag=true;prevXY=[e.clientX,e.clientY];});
-    cvs.addEventListener('mousemove',e=>{if(!drag)return;tPanX-=(e.clientX-prevXY[0])*.025;tPanZ-=(e.clientY-prevXY[1])*.025;prevXY=[e.clientX,e.clientY];});
-    cvs.addEventListener('mouseup',()=>drag=false);cvs.addEventListener('mouseleave',()=>drag=false);
-    cvs.addEventListener('wheel',e=>{tZoom=Math.max(.35,Math.min(3.5,tZoom-e.deltaY*.001));e.preventDefault();},{passive:false});
-    const tmpV=new THREE.Vector3();
-    function updateTags(){
-      chars.forEach(({group},i)=>{
-        tmpV.set(group.position.x,group.position.y+1.2,group.position.z);
-        tmpV.project(camera);
-        const sx=(tmpV.x*.5+.5)*renderer.domElement.clientWidth;
-        const sy=(-tmpV.y*.5+.5)*renderer.domElement.clientHeight;
-        ntEls[i].style.left=sx+'px';ntEls[i].style.top=sy+'px';
-      });
-    }
-    let t=0;
-    (function animate(){
-      if(!HQ._active)return;
-      requestAnimationFrame(animate);t+=.012;
-      panX+=(tPanX-panX)*.1;panZ+=(tPanZ-panZ)*.1;zoom+=(tZoom-zoom)*.1;
-      camera.position.set(18+panX,18,18+panZ);camera.lookAt(panX,1,panZ);
-      const fz=FRUST/zoom;camera.left=-fz*asp;camera.right=fz*asp;camera.top=fz;camera.bottom=-fz;
-      camera.updateProjectionMatrix();
-      chars.forEach(({group},i)=>{group.position.y=Math.sin(t*1.3+i*1.2)*.04;group.rotation.y=Math.sin(t*.35+i*.9)*.2;});
-      updateTags();renderer.render(scene,camera);
-    })();
-  }
+  },
+
+  _standupCard(e, status) {
+    const empTasks   = State.tasks.filter(t => t.assignee === e.id);
+    const inProgress = empTasks.filter(t => t.column === 'inprogress');
+    const done       = empTasks.filter(t => t.column === 'done');
+    const isWorking  = status === 'working';
+    const commits    = [
+      `feat: ${e.name.toLowerCase()}-specific feature update`,
+      `fix: resolve edge case in ${e.role.toLowerCase()} workflow`,
+    ];
+    return `
+      <div class="hq2-su-card">
+        <div class="hq2-su-hdr">
+          <div class="hq2-su-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
+          <div>
+            <div class="hq2-su-name">${escHtml(e.name)}</div>
+            <div class="hq2-su-role">${escHtml(e.role).toLowerCase()}</div>
+          </div>
+          <div class="hq2-su-status ${isWorking?'working':'idle'}">${isWorking?'WORKING':'IDLE'}</div>
+        </div>
+        <div class="hq2-su-section">CURRENT TASK</div>
+        <div class="hq2-su-task">${inProgress.length ? escHtml(inProgress[0].title) : '<span style="color:var(--text3)">No active task</span>'}</div>
+        <div class="hq2-su-section">RECENT COMMITS</div>
+        ${commits.map(c=>`<div class="hq2-su-commit"><span class="hq2-commit-hash">${Math.random().toString(36).slice(2,9)}</span>${c}</div>`).join('')}
+        <div class="hq2-su-section">TICKETS</div>
+        <div class="hq2-su-task" style="color:var(--text2)">${empTasks.filter(t=>t.column!=='done').length} open &nbsp;·&nbsp; ${done.length} closed</div>
+        <div class="hq2-su-sources">
+          <button class="hq2-su-src active">GITHUB</button>
+          <button class="hq2-su-src">JIRA</button>
+          <button class="hq2-su-src">MANUAL</button>
+        </div>
+      </div>`;
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
