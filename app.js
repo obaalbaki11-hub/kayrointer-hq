@@ -10,18 +10,100 @@ const COLS   = ['todo','inprogress','review','done'];
 const COL_LABELS = {todo:'TO DO',inprogress:'IN PROGRESS',review:'REVIEW',done:'DONE'};
 
 const DEFAULT_EMPLOYEES = [
-  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[-2.5, 1.5],status:'online', skills:['Product Strategy','Roadmapping','User Research'],      hired:Date.now(),tasks:0,
-   system:'You are Omar, Head of Product at Kayro Interactive. You are strategic, data-driven, and user-obsessed. Give sharp, concise product advice. Max 3 sentences unless detail is needed.'},
-  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-5.0,-3.5],status:'online', skills:['React','Node.js','System Architecture'],              hired:Date.now(),tasks:0,
-   system:'You are Sarah, Lead Engineer at Kayro Interactive. You are technical, precise, and love clean code. Give direct technical answers. Max 3 sentences unless a code snippet is needed.'},
-  {id:'e3',name:'Alex',  role:'Marketing',        color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[ 2.0,-0.5],status:'online', skills:['Growth Marketing','SEO','Social Media'],              hired:Date.now(),tasks:0,
-   system:'You are Alex, Marketing Manager at Kayro Interactive. You are creative, data-driven, and growth-focused. Give punchy marketing advice. Max 3 sentences.'},
-  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[ 0.5, 2.8],status:'online', skills:['Figma','User Research','Prototyping'],                hired:Date.now(),tasks:0,
-   system:'You are Zara, UI/UX Designer at Kayro Interactive. You care deeply about user experience and beautiful design. Give thoughtful, empathy-first design feedback. Max 3 sentences.'},
-  {id:'e5',name:'Chris', role:'Sales',            color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[ 4.5, 0.5],status:'online', skills:['Cold Outreach','CRM','Closing Deals'],                hired:Date.now(),tasks:0,
-   system:'You are Chris, Sales Manager at Kayro Interactive. You are confident, persuasive, and relationship-focused. Give sales advice with energy. Max 3 sentences.'},
-  {id:'e6',name:'Mia',   role:'Customer Success', color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-1.5,-5.0],status:'online', skills:['Onboarding','Support','Retention'],                   hired:Date.now(),tasks:0,
-   system:'You are Mia, Customer Success Manager at Kayro Interactive. You are empathetic and solution-focused. Give warm, actionable advice. Max 3 sentences.'},
+  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[-2.5, 1.5],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
+   system:`You are Omar, Head of Product. You are the strategic brain of the company — obsessed with users, shipping, and cutting through ambiguity fast.
+
+PERSONALITY: Decisive, direct, slightly blunt. You think in frameworks. You hate vague answers and give crisp, opinionated takes.
+
+WHAT YOU DO WELL:
+- Write full, detailed PRDs with user stories, acceptance criteria, and edge cases
+- Prioritize backlogs ruthlessly using ICE or RICE scoring
+- Run sprint planning: pick tasks, assign owners, set goals
+- Break down complex features into phased rollouts
+- Write OKRs, success metrics, and product strategy memos
+- Give honest, direct feedback on feature ideas
+
+STYLE: Use bullet points. Be specific — never generic. When writing a document, write it IN FULL. End every response with a clear next action.`},
+
+  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-5.0,-3.5],status:'online', skills:['React','Node.js','System Architecture','Code Review','TypeScript'],hired:Date.now(),tasks:0,
+   system:`You are Sarah, Lead Engineer. You build and review systems that scale. You have strong opinions about code quality and catch edge cases others miss.
+
+PERSONALITY: Precise, thorough, opinionated. You hate technical debt and vague specs. You ask the right clarifying questions.
+
+WHAT YOU DO WELL:
+- Review code and architecture decisions with specific feedback
+- Estimate task complexity (XS/S/M/L/XL) with clear reasoning
+- Write technical specs, system design docs, and API contracts
+- Spot risks, bottlenecks, and missing error handling
+- Write actual working code snippets (JavaScript, TypeScript, Python, SQL)
+- Debug issues: ask for the error, trace the root cause, give the fix
+- Evaluate tech choices (pros/cons with real tradeoffs)
+
+STYLE: Technical but readable. Include code when it helps. Always flag assumptions and edge cases. If asked to write code, write the real code — not pseudocode.`},
+
+  {id:'e3',name:'Alex',  role:'Head of Marketing', color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[ 2.0,-0.5],status:'online', skills:['Growth Marketing','SEO','Copywriting','Paid Ads','Content Strategy'],hired:Date.now(),tasks:0,
+   system:`You are Alex, Head of Marketing. You turn ideas into campaigns that drive real growth. You're equal parts creative and analytical.
+
+PERSONALITY: High-energy, punchy, results-obsessed. You think in hooks, headlines, and conversion funnels.
+
+WHAT YOU DO WELL:
+- Write compelling copy: headlines, landing pages, email subject lines, ad copy
+- Build complete content calendars and campaign plans
+- Write full cold email sequences (3–5 emails with subject lines)
+- Create go-to-market strategies with channels, messaging, and timelines
+- Analyze competitors and write positioning documents
+- Write SEO blog posts and social media content
+- Define ICP (ideal customer profile) and messaging frameworks
+
+STYLE: Punchy and specific. When writing copy, write the REAL copy — not templates with [INSERT TEXT HERE]. Give options when useful.`},
+
+  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[ 0.5, 2.8],status:'online', skills:['Figma','Design Systems','User Research','Wireframing','Accessibility'],hired:Date.now(),tasks:0,
+   system:`You are Zara, UI/UX Designer. You craft interfaces that are beautiful, intuitive, and accessible. You advocate for users in every decision.
+
+PERSONALITY: Empathetic, detail-obsessed, and opinionated about design. You push back on poor UX decisions.
+
+WHAT YOU DO WELL:
+- Write detailed design briefs and UX specifications
+- Critique designs and flows with specific, actionable feedback
+- Describe UI components, layouts, and interactions in precise terms
+- Conduct UX audits: identify friction points and suggest fixes
+- Create design system documentation (colors, typography, spacing, components)
+- Write user research plans and interview questions
+- Define user flows and information architecture
+
+STYLE: Visual and precise. Describe layouts, spacing, and interactions clearly. Reference design principles when relevant. Be opinionated — tell them what's wrong and why.`},
+
+  {id:'e5',name:'Chris', role:'Head of Sales',     color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[ 4.5, 0.5],status:'online', skills:['Cold Outreach','CRM','Objection Handling','Pipeline Management','Closing'],hired:Date.now(),tasks:0,
+   system:`You are Chris, Head of Sales. You close deals and build relationships that last. You're confident without being pushy, and you know how to handle any objection.
+
+PERSONALITY: Direct, energetic, and strategic. You think in pipelines and outcomes. You never waste a prospect's time.
+
+WHAT YOU DO WELL:
+- Write personalized cold emails that get replies (with subject line + body)
+- Build outreach sequences: intro, follow-up, break-up emails
+- Handle objections with specific responses (price, timing, competition)
+- Create sales scripts and call frameworks
+- Write pitch decks outlines and executive summaries
+- Analyze the pipeline and recommend deal-closing strategies
+- Write proposals and pricing justifications
+
+STYLE: Confident and tight. Real emails, real scripts — no templates with [YOUR VALUE PROP]. When writing an email, write it as if you're sending it tomorrow.`},
+
+  {id:'e6',name:'Mia',   role:'Customer Success',  color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-1.5,-5.0],status:'online', skills:['Onboarding','Retention','Support','NPS','Churn Prevention'],hired:Date.now(),tasks:0,
+   system:`You are Mia, Head of Customer Success. You ensure every customer gets real value and sticks around long-term. You're the voice of the customer inside the company.
+
+PERSONALITY: Warm, proactive, and solutions-first. You never escalate a problem without a proposed solution.
+
+WHAT YOU DO WELL:
+- Write full onboarding guides, welcome emails, and check-in sequences
+- Create help docs, FAQs, and knowledge base articles
+- Design customer health scoring and churn early-warning systems
+- Write escalation playbooks and difficult conversation scripts
+- Build NPS survey strategies and follow-up workflows
+- Identify churn signals and write win-back campaigns
+- Draft QBR (quarterly business review) templates and agendas
+
+STYLE: Warm but professional. Specific and actionable. When writing a doc, write it completely. Think about what will actually help the customer, not just what sounds good.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -208,11 +290,13 @@ const Chat = {
     document.getElementById('cp-name').textContent = e.name;
     document.getElementById('cp-role').textContent = e.role;
     Chat.renderTabs();
+    Chat.renderQuickActions(e);
     if (render) Chat.renderMessages();
     else {
       const msgs = document.getElementById('chat-messages');
       msgs.innerHTML='';
-      if (!State.chatHistory[id]?.length) Chat.addBubble(id, e.name, e.color, `Hi! I'm ${e.name}, your ${e.role}. How can I help today?`, false, false);
+      const greeting = `Hi! I'm ${e.name}, your ${e.role}. I can write full documents, emails, plans, and code — not just give advice. What do you need?`;
+      if (!State.chatHistory[id]?.length) Chat.addBubble(id, e.name, e.color, greeting, false, false);
       else Chat.renderMessages();
     }
   },
@@ -258,6 +342,105 @@ const Chat = {
       </div>`;
     container.appendChild(div);
   },
+  // Builds a rich system prompt injecting live company context
+  _buildSystemPrompt(emp) {
+    const company   = State.settings.companyName || 'Kayro Interactive';
+    const myTasks   = State.tasks.filter(t => t.assignee === emp.id);
+    const active    = myTasks.filter(t => t.column !== 'done');
+    const done      = myTasks.filter(t => t.column === 'done');
+    const teammates = State.employees.filter(e => e.id !== emp.id);
+    const allActive = State.tasks.filter(t => t.column !== 'done');
+    return `${emp.system.replace(/Kayro Interactive/g, company)}
+
+══ LIVE WORKSPACE ══
+Company: ${company}
+Your name: ${emp.name} | Role: ${emp.role}
+Teammates: ${teammates.length ? teammates.map(e=>`${e.name} (${e.role})`).join(', ') : 'None yet — you\'re the first hire'}
+
+Your tasks (${active.length} active, ${done.length} completed):
+${active.length ? active.map(t=>`  • [${t.column.toUpperCase()}] ${t.title}${t.desc?' — '+t.desc:''}`).join('\n') : '  • No tasks assigned yet'}
+
+All team tasks: ${allActive.length} active across ${State.employees.length} employees
+══════════════════
+
+RULES:
+- Write things IN FULL when asked (emails, docs, PRDs, code — complete, not outlined)
+- Reference specific task names when discussing work
+- Proactively flag blockers or risks without being asked
+- If someone is better suited to a question, say so AND answer anyway
+- Use line breaks and structure for readability`;
+  },
+
+  // Quick actions per role (shown as pill buttons in chat)
+  _quickActions(emp) {
+    const byRole = {
+      'Head of Product':    [
+        { label: '📋 Review my tasks',   msg: 'Review all my current tasks and tell me which to prioritize first, and why. Be specific.' },
+        { label: '📝 Write a PRD',       msg: 'Pick the most important task on my plate and write a full PRD for it — goals, user stories, acceptance criteria, edge cases.' },
+        { label: '🗓 Sprint plan',       msg: 'Look at all active team tasks and run a sprint planning session. What goes in this sprint, who owns what, and what\'s the sprint goal?' },
+        { label: '📊 Prioritize backlog',msg: 'Score all our active tasks using RICE (Reach, Impact, Confidence, Effort) and give me a ranked list with scores.' },
+      ],
+      'Lead Engineer':      [
+        { label: '⚖️ Estimate tasks',    msg: 'Estimate the complexity of every active task (XS/S/M/L/XL) with one-line reasoning for each.' },
+        { label: '⚠️ Tech risks',        msg: 'What are the biggest technical risks in our current task list? Rank by severity and suggest mitigations.' },
+        { label: '🔍 Code review',       msg: 'Walk me through a detailed code review checklist for our most recent feature work.' },
+        { label: '🏗 Architecture',      msg: 'Based on our tasks, describe the ideal system architecture. What services, APIs, and data models do we need?' },
+      ],
+      'Head of Marketing':  [
+        { label: '✉️ Email sequence',    msg: 'Write a complete 3-email cold outreach sequence for our product. Include subject lines and the full email body for each.' },
+        { label: '🚀 Launch plan',       msg: 'Write a go-to-market launch plan for our product — channels, messaging, timeline, and success metrics.' },
+        { label: '✍️ Landing page copy', msg: 'Write full landing page copy for our product: hero headline, subheading, 3 feature blocks, social proof section, and CTA.' },
+        { label: '📅 Content calendar', msg: 'Build a 4-week content calendar (blog, LinkedIn, Twitter/X) with specific post titles/topics for each day.' },
+      ],
+      'UI/UX Designer':     [
+        { label: '🎨 Design brief',      msg: 'Write a detailed design brief for our most complex active task — goals, user needs, layout, components, interactions.' },
+        { label: '🔎 UX audit',          msg: 'Conduct a UX audit of our product. What are the 5 biggest friction points users will hit, and how do we fix them?' },
+        { label: '📐 Design system',     msg: 'Define our core design system: color palette, typography scale, spacing system, and key component specs.' },
+        { label: '🗺 User flow',         msg: 'Map the complete user flow from sign-up to first value moment. Include every screen and decision point.' },
+      ],
+      'Head of Sales':      [
+        { label: '📧 Cold email',        msg: 'Write a cold email to a potential enterprise customer for our product. Include subject line and full personalized body.' },
+        { label: '💼 Sales pitch',       msg: 'Write a full sales pitch for a 15-minute discovery call — opening, discovery questions, value prop, and close.' },
+        { label: '🛡 Handle objections', msg: 'Write responses to the 5 most common sales objections we\'d face: too expensive, not now, using a competitor, need approval, don\'t see the value.' },
+        { label: '📈 Pipeline review',   msg: 'Based on our tasks and activity, give me a pipeline review — what deals are at risk, what to push, what to let go.' },
+      ],
+      'Customer Success':   [
+        { label: '🎯 Onboarding guide',  msg: 'Write a complete customer onboarding guide — welcome email, day 1 checklist, first week milestones, and success metrics.' },
+        { label: '📖 Help docs',         msg: 'Write 3 help docs for the most common questions new users would have about our product.' },
+        { label: '🔄 Churn playbook',    msg: 'Write a churn prevention playbook — early warning signals, intervention triggers, and scripts for each scenario.' },
+        { label: '📊 QBR template',      msg: 'Create a complete QBR (Quarterly Business Review) template with sections, talking points, and metrics to review.' },
+      ],
+    };
+    return byRole[emp.role] || [
+      { label: '📋 Review my tasks',    msg: 'Review my current task list and recommend what to work on first.' },
+      { label: '📝 Draft a summary',    msg: 'Write a brief summary of what our team is working on and what the key goals are.' },
+      { label: '💡 Suggest next steps', msg: 'Based on our active tasks, what should the team focus on next?' },
+    ];
+  },
+
+  renderQuickActions(emp) {
+    const existing = document.getElementById('chat-quick-actions');
+    if (existing) existing.remove();
+    const actions = Chat._quickActions(emp);
+    const wrap = document.createElement('div');
+    wrap.id = 'chat-quick-actions';
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:5px;padding:8px 12px;border-top:1px solid var(--border);flex-shrink:0;';
+    wrap.innerHTML = actions.map(a =>
+      `<button class="chat-qa-pill" data-msg="${escHtml(a.msg)}">${a.label}</button>`
+    ).join('');
+    const inputRow = document.querySelector('.chat-input-row');
+    if (inputRow) inputRow.parentNode.insertBefore(wrap, inputRow);
+    wrap.querySelectorAll('.chat-qa-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('chat-input').value = btn.dataset.msg;
+        document.getElementById('chat-input').style.height = 'auto';
+        document.getElementById('chat-input').style.height =
+          Math.min(document.getElementById('chat-input').scrollHeight, 100) + 'px';
+        Chat.send();
+      });
+    });
+  },
+
   async send() {
     const inp = document.getElementById('chat-input');
     const text = inp.value.trim(); if(!text||!Chat.activeEmpId) return;
@@ -272,15 +455,14 @@ const Chat = {
       <div class="msg-body"><div class="msg-sender">${e.name}</div>
       <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
     msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
-    // build message history
     const history = (State.chatHistory[Chat.activeEmpId]||[]).slice(-20);
     let full = '';
     const bubble = document.createElement('div');
     bubble.className = 'msg';
     bubble.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
-      <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble" id="stream-bubble"></div></div>`;
+      <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble" id="stream-bubble" style="white-space:pre-wrap"></div></div>`;
     const tn = document.createTextNode('');
-    for await (const chunk of AI.stream(history, e.system)) {
+    for await (const chunk of AI.stream(history, Chat._buildSystemPrompt(e))) {
       document.getElementById('chat-typing')?.remove();
       if (!bubble.isConnected) { msgs.appendChild(bubble); }
       tn.textContent += chunk; full += chunk;
@@ -289,7 +471,6 @@ const Chat = {
     }
     document.getElementById('chat-typing')?.remove();
     if (!bubble.isConnected) msgs.appendChild(bubble);
-    // save response
     if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId]=[];
     State.chatHistory[Chat.activeEmpId].push({role:'assistant',content:full});
     save_('chatHistory');
@@ -649,25 +830,70 @@ const Employees = {
     });
   },
   showStandup() {
-    const arrived = State.employees.slice(0,2);
-    const waiting = State.employees.slice(2);
-    Modal.open('Standup Board',`
-      <div style="margin-bottom:16px;display:flex;flex-direction:column;gap:8px">
-        ${State.employees.map(e=>`
-          <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:rgba(255,255,255,.04);border-radius:10px;border:1px solid var(--border)">
-            <div style="width:32px;height:32px;border-radius:50%;background:${e.color}22;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;flex-shrink:0">${e.name[0]}</div>
-            <div style="flex:1">
-              <div style="font-size:13px;font-weight:500;color:var(--text)">${escHtml(e.name)}</div>
-              <div style="font-size:11px;color:var(--text2)">${escHtml(e.role)}</div>
-            </div>
-            <div style="font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px;${Math.random()>.5?'background:var(--green-dim);color:var(--green)':'background:var(--border);color:var(--text3)'}">${Math.random()>.5?'ARRIVED':'WAITING'}</div>
-          </div>`).join('')}
-      </div>
-      <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px">
-        <div style="flex:1;background:rgba(255,255,255,.06);border-radius:99px;height:6px;overflow:hidden">
-          <div style="height:100%;border-radius:99px;background:var(--green);width:33%"></div>
+    const emps = State.employees;
+    const now  = new Date();
+    const days = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const arrived = Math.ceil(emps.length * 0.65);
+    document.getElementById('modal-box').style.maxWidth = '92vw';
+    document.getElementById('modal-box').style.width = '860px';
+    Modal.open('Daily Standup Board', `
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border)">
+        <div>
+          <div style="font-family:var(--mono);font-size:9px;letter-spacing:2px;color:var(--text3);margin-bottom:4px">STANDUP · ${days[now.getDay()].toUpperCase()}</div>
+          <div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--text);letter-spacing:-1px">${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</div>
         </div>
-        <div style="font-size:12px;color:var(--green);font-weight:600;white-space:nowrap">2 / ${State.employees.length} arrived</div>
+        <div style="display:flex;gap:20px">
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--green)">${arrived}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px">ARRIVED</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--amber)">${emps.length - arrived}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px">WAITING</div>
+          </div>
+          <div style="text-align:center">
+            <div style="font-family:var(--mono);font-size:18px;font-weight:600;color:var(--text)">${State.tasks.filter(t=>t.column!=='done').length}</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px">ACTIVE TASKS</div>
+          </div>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;max-height:60vh;overflow-y:auto;padding-right:4px">
+        ${emps.map((e,i) => {
+          const myTasks   = State.tasks.filter(t=>t.assignee===e.id);
+          const inProgress= myTasks.filter(t=>t.column==='inprogress');
+          const done      = myTasks.filter(t=>t.column==='done');
+          const isHere    = i < arrived;
+          const commits   = [
+            `feat: ${e.name.toLowerCase()}-workflow improvements`,
+            `fix: resolve edge case in ${e.role.toLowerCase().split(' ')[0]} module`,
+            `docs: update ${e.role.toLowerCase().split(' ').pop()} runbook`,
+          ];
+          return `
+            <div style="background:var(--surface2);border:1px solid ${isHere?'rgba(34,197,94,.2)':'var(--border)'};border-radius:10px;padding:14px">
+              <div style="display:flex;align-items:center;gap:9px;margin-bottom:10px">
+                <div style="width:28px;height:28px;border-radius:7px;background:${e.color}22;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;flex-shrink:0">${e.name[0]}</div>
+                <div style="flex:1;min-width:0">
+                  <div style="font-size:12.5px;font-weight:700;color:var(--text)">${escHtml(e.name)}</div>
+                  <div style="font-family:var(--mono);font-size:9px;color:var(--text3)">${escHtml(e.role).toLowerCase()}</div>
+                </div>
+                <div style="font-family:var(--mono);font-size:8.5px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:1px;${isHere?'background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.2)':'background:rgba(245,158,11,.1);color:var(--amber);border:1px solid rgba(245,158,11,.2)'}">${isHere?'ARRIVED':'WAITING'}</div>
+              </div>
+              <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text3);margin-bottom:4px">CURRENT TASK</div>
+              <div style="font-family:var(--mono);font-size:10.5px;color:var(--text);line-height:1.4;margin-bottom:8px">${inProgress.length?escHtml(inProgress[0].title):'<span style="color:var(--text3)">No active task</span>'}</div>
+              <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text3);margin-bottom:4px">RECENT COMMITS</div>
+              ${commits.slice(0,2).map(c=>`
+                <div style="font-family:var(--mono);font-size:9.5px;color:var(--text2);padding-left:7px;border-left:2px solid var(--border);margin-bottom:3px;line-height:1.4">
+                  <span style="color:var(--accent);font-size:8.5px">${Math.random().toString(36).slice(2,9)}</span> ${c}
+                </div>`).join('')}
+              <div style="font-family:var(--mono);font-size:8.5px;letter-spacing:2px;color:var(--text3);margin:8px 0 4px">TICKETS</div>
+              <div style="font-family:var(--mono);font-size:10px;color:var(--text2)">${myTasks.filter(t=>t.column!=='done').length} open &nbsp;·&nbsp; ${done.length} closed</div>
+              <div style="display:flex;gap:4px;margin-top:10px">
+                <button style="font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--ba);color:var(--accent);background:rgba(59,130,246,.08);letter-spacing:.5px">GITHUB</button>
+                <button style="font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:none;letter-spacing:.5px">JIRA</button>
+                <button style="font-family:var(--mono);font-size:9px;font-weight:600;padding:3px 8px;border-radius:5px;cursor:pointer;border:1px solid var(--border);color:var(--text3);background:none;letter-spacing:.5px">MANUAL</button>
+              </div>
+            </div>`;
+        }).join('')}
       </div>`);
   }
 };

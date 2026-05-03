@@ -453,6 +453,26 @@ footer{
 .foot-link{font-size:12px;color:var(--text3);text-decoration:none;transition:color .15s}
 .foot-link:hover{color:var(--text2)}
 
+/* ── CREDIT EXPLAINER ── */
+.credit-explainer{
+  display:flex;align-items:center;gap:0;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:14px;padding:20px 28px;margin-bottom:36px;flex-wrap:wrap;gap:0;
+}
+.ce-item{display:flex;align-items:flex-start;gap:14px;flex:1;min-width:240px}
+.ce-icon{font-size:22px;flex-shrink:0;margin-top:2px}
+.ce-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px}
+.ce-desc{font-size:12px;color:var(--text2);line-height:1.6}
+.ce-divider{width:1px;background:var(--border);align-self:stretch;margin:0 28px;flex-shrink:0}
+@media(max-width:600px){.ce-divider{display:none}.ce-item{min-width:100%}}
+.pricing-credit-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.15);
+  border-radius:8px;padding:7px 12px;margin-bottom:16px;
+}
+.pcb-label{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);letter-spacing:1.5px}
+.pcb-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)}
+
 /* ── PRICING ── */
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
 @media(max-width:800px){.pricing-grid{grid-template-columns:1fr}}
@@ -833,8 +853,27 @@ footer{
 <section id="pricing">
   <div class="features-section">
     <div class="feat-label">// pricing</div>
-    <h2 class="feat-h">Simple, transparent pricing</h2>
-    <p class="feat-sub">Start free. Scale when you're ready. Cancel anytime.</p>
+    <h2 class="feat-h">Pay for what you use</h2>
+    <p class="feat-sub">AI is included — no API keys, no hidden costs. We handle the compute so you can focus on the work.</p>
+
+    <!-- Credit explainer -->
+    <div class="credit-explainer">
+      <div class="ce-item">
+        <div class="ce-icon">💬</div>
+        <div>
+          <div class="ce-title">What's an AI Message?</div>
+          <div class="ce-desc">Every time you or an employee sends a message, uses AI Fill in spreadsheets, generates an email, or updates a task — that's one AI message.</div>
+        </div>
+      </div>
+      <div class="ce-divider"></div>
+      <div class="ce-item">
+        <div class="ce-icon">⚡</div>
+        <div>
+          <div class="ce-title">We cover the API cost</div>
+          <div class="ce-desc">Your subscription includes real Claude AI usage. No Anthropic account needed. We pay for the compute, you get the output.</div>
+        </div>
+      </div>
+    </div>
 
     <div class="pricing-grid">
 
@@ -842,61 +881,72 @@ footer{
       <div class="pricing-card">
         <div class="pricing-tier">STARTER</div>
         <div class="pricing-price">$0<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">Everything you need to get started with your AI team.</div>
+        <div class="pricing-desc">Try Kayro with your own Claude API key. Perfect for solo founders testing the product.</div>
+        <div class="pricing-credit-bar">
+          <span class="pcb-label">BRING YOUR OWN KEY</span>
+        </div>
         <ul class="pricing-features">
           <li><span class="pf-check">✓</span> 3 AI employees</li>
           <li><span class="pf-check">✓</span> Kanban task board</li>
           <li><span class="pf-check">✓</span> AI spreadsheets</li>
-          <li><span class="pf-check">✓</span> 10 cold emails / month</li>
           <li><span class="pf-check">✓</span> Live HQ dashboard</li>
-          <li><span class="pf-dim">✗</span> Custom AI personalities</li>
-          <li><span class="pf-dim">✗</span> Priority responses</li>
+          <li><span class="pf-check">✓</span> Cold email composer</li>
+          <li><span class="pf-dim">✗</span> AI messages included</li>
+          <li><span class="pf-dim">✗</span> Custom personalities</li>
         </ul>
-        <a class="pricing-btn" href="#auth">Get Started Free</a>
+        <a class="pricing-btn" href="#auth">Start Free</a>
       </div>
 
-      <!-- Pro — popular -->
+      <!-- Growth — popular -->
       <div class="pricing-card pricing-popular">
         <div class="pricing-badge">MOST POPULAR</div>
-        <div class="pricing-tier" style="color:var(--accent)">PRO</div>
-        <div class="pricing-price">$29<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">For growing teams that need the full AI workforce experience.</div>
+        <div class="pricing-tier" style="color:var(--accent)">GROWTH</div>
+        <div class="pricing-price">$49<span class="pricing-period">/month</span></div>
+        <div class="pricing-desc">For founders and small teams running a real operation on AI. AI usage included — no key needed.</div>
+        <div class="pricing-credit-bar">
+          <span class="pcb-label">AI MESSAGES INCLUDED</span>
+          <span class="pcb-val">5,000 / month</span>
+        </div>
         <ul class="pricing-features">
           <li><span class="pf-check">✓</span> <b>10 AI employees</b></li>
-          <li><span class="pf-check">✓</span> Everything in Starter</li>
-          <li><span class="pf-check">✓</span> Unlimited cold emails</li>
+          <li><span class="pf-check">✓</span> <b>5,000 AI messages / mo</b></li>
+          <li><span class="pf-check">✓</span> No API key required</li>
           <li><span class="pf-check">✓</span> Custom AI personalities</li>
           <li><span class="pf-check">✓</span> Priority AI responses</li>
+          <li><span class="pf-check">✓</span> Full spreadsheet AI</li>
           <li><span class="pf-check">✓</span> Email support</li>
-          <li><span class="pf-dim">✗</span> Dedicated account manager</li>
         </ul>
-        <a class="pricing-btn pricing-btn-primary" href="https://buy.stripe.com/REPLACE_WITH_PRO_LINK" target="_blank" rel="noopener" id="stripe-pro-btn">Upgrade to Pro →</a>
+        <a class="pricing-btn pricing-btn-primary" href="https://buy.stripe.com/REPLACE_WITH_GROWTH_LINK" target="_blank" rel="noopener" id="stripe-growth-btn">Get Growth →</a>
         <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;margin-top:8px">Powered by Stripe · Cancel anytime</div>
       </div>
 
-      <!-- Enterprise -->
+      <!-- Scale -->
       <div class="pricing-card">
-        <div class="pricing-tier">ENTERPRISE</div>
-        <div class="pricing-price">$99<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">For companies who want to run their entire operation on AI.</div>
+        <div class="pricing-tier">SCALE</div>
+        <div class="pricing-price">$149<span class="pricing-period">/month</span></div>
+        <div class="pricing-desc">For agencies and companies running entire departments on AI. Unlimited everything.</div>
+        <div class="pricing-credit-bar">
+          <span class="pcb-label">AI MESSAGES INCLUDED</span>
+          <span class="pcb-val">Unlimited</span>
+        </div>
         <ul class="pricing-features">
           <li><span class="pf-check">✓</span> <b>Unlimited AI employees</b></li>
-          <li><span class="pf-check">✓</span> Everything in Pro</li>
-          <li><span class="pf-check">✓</span> Advanced analytics</li>
+          <li><span class="pf-check">✓</span> <b>Unlimited AI messages</b></li>
+          <li><span class="pf-check">✓</span> Everything in Growth</li>
           <li><span class="pf-check">✓</span> Custom branding</li>
+          <li><span class="pf-check">✓</span> Advanced analytics</li>
           <li><span class="pf-check">✓</span> Dedicated account manager</li>
-          <li><span class="pf-check">✓</span> SLA guarantee</li>
-          <li><span class="pf-check">✓</span> Priority Slack support</li>
+          <li><span class="pf-check">✓</span> SLA + Slack support</li>
         </ul>
-        <a class="pricing-btn" href="https://buy.stripe.com/REPLACE_WITH_ENTERPRISE_LINK" target="_blank" rel="noopener" id="stripe-ent-btn">Get Enterprise →</a>
+        <a class="pricing-btn" href="https://buy.stripe.com/REPLACE_WITH_SCALE_LINK" target="_blank" rel="noopener" id="stripe-scale-btn">Get Scale →</a>
       </div>
 
     </div>
 
     <div class="pricing-note">
       <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">// </span>
-      Payments are processed securely by <strong style="color:var(--text2)">Stripe</strong>.
-      Your Claude API key powers the AI — we never store it.
+      All paid plans powered by <strong style="color:var(--text2)">Claude AI</strong> · Payments via <strong style="color:var(--text2)">Stripe</strong> · Cancel anytime ·
+      <a href="mailto:obaalbaki11@gmail.com" style="color:var(--accent);text-decoration:none">Contact us</a> for team deals
     </div>
   </div>
 </section>
