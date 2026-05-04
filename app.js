@@ -612,7 +612,7 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0c0b09);
+    scene.background = new THREE.Color(0x080c14);
     const FRUST = 22, asp = W / H;
     const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 300);
     camera.position.set(30, 30, 30); camera.lookAt(0, 1, 0);
@@ -623,45 +623,45 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — warm amber simulation
-    scene.add(new THREE.AmbientLight(0x2c2418, 2.6));
-    const sun = new THREE.DirectionalLight(0xc09060, 0.85);
+    // Lighting — clean cool office
+    scene.add(new THREE.AmbientLight(0x101828, 3.2));
+    const sun = new THREE.DirectionalLight(0xd8e8ff, 1.1);
     sun.position.set(22, 38, 18); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:.5, far:120 });
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x201808, 0.35);
+    const rim = new THREE.DirectionalLight(0x0a1428, 0.4);
     rim.position.set(-18, 10, -18); scene.add(rim);
 
     function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
     const M = {
-      fl:  mat(0x262018),       // warm concrete floor — visible
-      ca:  mat(0x1e1810),       // carpet — warm dark
-      wex: mat(0x302820),       // exterior walls — warm grey
-      win: mat(0x262018),       // interior partitions
-      gl:  mat(0x201808, 0x0e0a04),  // glass — amber tint
-      ceil:mat(0x1e1a14),       // ceiling
-      clt: mat(0x5a4028, 0x382814),  // ceiling light — amber glow
-      dt:  mat(0x342a1e),       // desk surface — warm wood
-      de:  mat(0x201c14),       // desk legs / dark metal
-      ch:  mat(0x282018),       // chair seat
-      cb:  mat(0x201a12),       // chair back
-      mo:  mat(0x181410),       // monitor frame
-      sc:  mat(0x0c0804, 0x060402),  // monitor screen — subtle amber
-      sv:  mat(0x221e18),       // server rack
+      fl:  mat(0x0e1520),       // dark floor — clean slate
+      ca:  mat(0x101a28),       // carpet — dark navy
+      wex: mat(0x151e2e),       // exterior walls — dark blue-grey
+      win: mat(0x111a28),       // interior partitions
+      gl:  mat(0x1a2840, 0x0a1220),  // glass — blue tint
+      ceil:mat(0x0c1018),       // ceiling — near black
+      clt: mat(0x3060c0, 0x102060),  // ceiling light — cool blue glow
+      dt:  mat(0x1e2a3e),       // desk surface — dark blue-grey
+      de:  mat(0x0e1420),       // desk legs / dark metal
+      ch:  mat(0x141c2a),       // chair seat
+      cb:  mat(0x101620),       // chair back
+      mo:  mat(0x0a0e14),       // monitor frame
+      sc:  mat(0x060c18, 0x0a1830),  // monitor screen — cool blue glow
+      sv:  mat(0x141c28),       // server rack
       led: mat(0x44ee88, 0x114422),  // green LED
-      ldb: mat(0xc88a4e, 0x3c2010),  // copper LED — brand accent
-      so:  mat(0x302818),       // sofa
-      so2: mat(0x4a2010),       // sofa accent — amber
-      cnt: mat(0x2a2418),       // counter/cabinet
-      app: mat(0x1a1610),       // appliances
-      wb:  mat(0xe8dfd0),       // whiteboard — warm white
-      wbf: mat(0x1e1a14),       // whiteboard frame
-      rug: mat(0x201808),       // area rug
-      pp:  mat(0x302010),       // plant pot
-      pl:  mat(0x1e3010),       // plant leaves
-      ct:  mat(0x262018),       // coffee table
-      pn:  mat(0x100c08),       // character pants/hair
+      ldb: mat(0x4488ff, 0x102060),  // blue LED — brand accent
+      so:  mat(0x182030),       // sofa
+      so2: mat(0x1e3050),       // sofa accent — blue
+      cnt: mat(0x131c2a),       // counter/cabinet
+      app: mat(0x0e1420),       // appliances
+      wb:  mat(0xd4dff0),       // whiteboard — cool white
+      wbf: mat(0x0e1828),       // whiteboard frame
+      rug: mat(0x0f1a28),       // area rug
+      pp:  mat(0x182030),       // plant pot
+      pl:  mat(0x1a3820),       // plant leaves
+      ct:  mat(0x131c2a),       // coffee table
+      pn:  mat(0x080c14),       // character pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
@@ -673,10 +673,10 @@ const HQ = {
      [-15,-2],[-5,-2],[5,-2],[15,-2],
      [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
       ab(.6,.06,.6,M.clt,x,WH+.02,z);
-      const pl=new THREE.PointLight(0xffaa50,0.75,14); pl.position.set(x,WH-.15,z); scene.add(pl);
+      const pl=new THREE.PointLight(0xc8deff,0.8,14); pl.position.set(x,WH-.15,z); scene.add(pl);
     });
     // accent: exec office
-    const epl=new THREE.PointLight(0xffe0b0,0.5,9); epl.position.set(17,-9,3); scene.add(epl);
+    const epl=new THREE.PointLight(0xa8c8ff,0.5,9); epl.position.set(17,-9,3); scene.add(epl);
 
     // ── FLOOR ──────────────────────────────────────────────────
     ab(OW,.1,OD,M.fl, 0,-.05,0);

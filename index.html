@@ -4,24 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kayro Interactive — Hire AI Employees</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='%23c88a4e'/><text y='72' font-size='62' font-family='Georgia,serif' font-style='italic' font-weight='600' fill='%23fff' text-anchor='middle' x='50'>K</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ffffff'/><text y='72' font-size='60' font-family='Inter,sans-serif' font-weight='900' fill='%23000000' text-anchor='middle' x='50'>K</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 :root{
-  --bg:#0c0b09;
-  --bg2:#141210;
-  --border:rgba(200,138,78,0.12);
-  --border2:rgba(200,138,78,0.25);
-  --text:#e8dfd0;
-  --text2:#7a6e5e;
-  --text3:#3a3228;
-  --green:#5aaa78;
-  --accent:#c88a4e;
+  --bg:#080808;
+  --bg2:#111;
+  --border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.18);
+  --text:#ffffff;
+  --text2:#888;
+  --text3:#333;
+  --green:#22c55e;
   --mono:'JetBrains Mono',monospace;
   --sans:'Inter',-apple-system,sans-serif;
-  --serif:'Cormorant Garamond',Georgia,serif;
 }
 body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px}
@@ -31,66 +29,68 @@ body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:h
 nav{
   position:fixed;top:0;left:0;right:0;z-index:100;
   height:60px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;background:rgba(8,8,8,.9);backdrop-filter:blur(20px);
+  padding:0 32px;background:rgba(8,8,8,.92);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
 }
 .nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo-text{line-height:1}
-.nav-logo-name{
-  font-family:var(--serif);font-size:20px;font-weight:500;
-  color:var(--text);letter-spacing:-.2px;display:block;
+.nav-logo-mark{
+  width:32px;height:32px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:15px;color:#000;flex-shrink:0;
 }
-.nav-logo-name .nav-k{color:var(--accent);font-style:italic;font-weight:600}
-.nav-logo-sub{font-size:8px;font-weight:500;color:var(--text3);letter-spacing:3px;font-family:var(--sans);display:block;margin-top:2px;text-transform:uppercase}
+.nav-logo-name{
+  font-size:15px;font-weight:700;color:#fff;
+  letter-spacing:-.2px;font-family:var(--sans);
+}
 .nav-right{display:flex;align-items:center;gap:4px}
 .nav-link{
   font-size:13px;font-weight:500;color:var(--text2);
   background:none;border:none;cursor:pointer;font-family:var(--sans);
   padding:8px 14px;border-radius:8px;transition:color .15s;text-decoration:none;
 }
-.nav-link:hover{color:var(--text)}
+.nav-link:hover{color:#fff}
 .nav-sep{width:1px;height:16px;background:var(--border);margin:0 4px}
 .nav-signin{
   font-size:13px;font-weight:500;color:var(--text2);
   background:none;border:none;cursor:pointer;font-family:var(--sans);
   padding:8px 14px;border-radius:8px;transition:color .15s;text-decoration:none;
 }
-.nav-signin:hover{color:var(--text)}
+.nav-signin:hover{color:#fff}
 .nav-getstarted{
-  font-size:13px;font-weight:600;color:var(--bg);background:var(--accent);
+  font-size:13px;font-weight:600;color:#000;background:#fff;
   border:none;cursor:pointer;font-family:var(--sans);
   padding:9px 20px;border-radius:8px;transition:all .15s;text-decoration:none;
   display:inline-flex;align-items:center;gap:6px;
 }
-.nav-getstarted:hover{background:#d4a060;transform:translateY(-1px)}
+.nav-getstarted:hover{background:#e8e8e8;transform:translateY(-1px)}
 
 /* ── HERO ── */
 .hero{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
   padding:100px 24px 60px;text-align:center;
+  background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 70%);
 }
 .hero-badge{
   display:inline-flex;align-items:center;gap:7px;
-  border:1px solid var(--border2);color:var(--text2);
+  border:1px solid rgba(255,255,255,.15);color:var(--text2);
   font-size:12px;font-weight:500;padding:6px 16px;
   border-radius:20px;margin-bottom:36px;font-family:var(--sans);
 }
 .badge-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero-h1{
-  font-size:clamp(50px,7vw,92px);font-weight:500;line-height:1.05;
-  letter-spacing:-2px;color:var(--text);margin-bottom:0;
-  font-family:var(--serif);
+  font-size:clamp(52px,7.5vw,96px);font-weight:900;line-height:1.05;
+  letter-spacing:-3px;color:#fff;margin-bottom:0;
+  font-family:var(--sans);
 }
-.hero-h1-k{color:var(--accent);font-style:italic;font-weight:600}
-.hero-h1-dim{color:var(--text3)}
+.hero-h1-dim{color:#555}
 .hero-sub{
   font-size:clamp(14px,2vw,18px);color:var(--text2);line-height:1.65;
   max-width:500px;margin:28px auto 12px;font-weight:400;
 }
 .hero-trust{
-  font-size:11.5px;color:var(--text3);margin-bottom:56px;
+  font-size:11.5px;color:#444;margin-bottom:56px;
   font-family:var(--mono);letter-spacing:.3px;
 }
 .hero-trust span{margin:0 8px}
@@ -100,17 +100,17 @@ nav{
 .billing-label{font-size:13px;color:var(--text2);font-weight:500}
 .toggle-track{
   position:relative;width:44px;height:24px;background:#222;
-  border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid var(--border2);
+  border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid rgba(255,255,255,.15);
 }
-.toggle-track.annual{background:var(--accent)}
+.toggle-track.annual{background:var(--green)}
 .toggle-thumb{
   position:absolute;top:2px;left:2px;width:18px;height:18px;
   background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.5);
 }
 .toggle-track.annual .toggle-thumb{left:22px}
 .annual-badge{
-  background:var(--accent);color:var(--bg);font-size:10px;font-weight:700;
-  padding:2px 8px;border-radius:20px;font-family:var(--mono);letter-spacing:.5px;
+  background:var(--green);color:#000;font-size:10px;font-weight:700;
+  padding:3px 9px;border-radius:20px;font-family:var(--mono);letter-spacing:.5px;
 }
 
 /* ── PRICING ── */
@@ -118,15 +118,15 @@ nav{
 .pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 @media(max-width:720px){.pricing-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto}}
 .p-card{
-  background:#101010;border:1px solid var(--border);
+  background:#0e0e0e;border:1px solid var(--border);
   border-radius:16px;padding:28px;display:flex;flex-direction:column;
   transition:border-color .2s;
 }
-.p-card:hover{border-color:var(--border2)}
-.p-card.popular{border-color:rgba(255,255,255,.25)}
+.p-card:hover{border-color:rgba(255,255,255,.2)}
+.p-card.popular{border-color:rgba(255,255,255,.3)}
 .p-tier{
   font-family:var(--mono);font-size:10px;font-weight:600;
-  letter-spacing:2.5px;color:var(--text3);margin-bottom:12px;
+  letter-spacing:2.5px;color:#555;margin-bottom:12px;
   text-transform:uppercase;
 }
 .p-price{
@@ -141,27 +141,27 @@ nav{
 .p-desc{font-size:12.5px;color:var(--text2);line-height:1.6;margin:12px 0 20px}
 .p-credits{
   display:flex;align-items:center;justify-content:space-between;
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  background:rgba(255,255,255,.03);border:1px solid var(--border);
   border-radius:8px;padding:8px 12px;margin-bottom:18px;
 }
-.p-credits-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;font-weight:600}
-.p-credits-val{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:600}
+.p-credits-label{font-family:var(--mono);font-size:9px;color:#444;letter-spacing:1.5px;font-weight:600}
+.p-credits-val{font-family:var(--mono);font-size:11px;color:#fff;font-weight:600}
 .p-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px;flex:1}
 .p-features li{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text2);line-height:1.4}
 .pf-check{color:var(--green);flex-shrink:0;font-size:13px;margin-top:0}
-.pf-x{color:var(--text3);flex-shrink:0;font-size:13px}
+.pf-x{color:#333;flex-shrink:0;font-size:13px}
 .p-btn{
   display:block;text-align:center;padding:12px;border-radius:9px;
   font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;
   font-family:var(--sans);transition:all .2s;
-  border:1px solid var(--border2);color:var(--text2);background:none;
+  border:1px solid rgba(255,255,255,.15);color:var(--text2);background:none;
 }
 .p-btn:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.3)}
-.p-btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
-.p-btn.primary:hover{background:#d4a060;transform:translateY(-1px)}
+.p-btn.primary{background:#fff;color:#000;border-color:#fff}
+.p-btn.primary:hover{background:#e8e8e8;transform:translateY(-1px)}
 .p-popular-label{
   font-family:var(--mono);font-size:9px;font-weight:700;
-  color:var(--text);letter-spacing:1.5px;margin-bottom:8px;
+  color:#fff;letter-spacing:1.5px;margin-bottom:8px;
 }
 
 /* ── FEATURES SECTION ── */
@@ -176,7 +176,7 @@ nav{
 @media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:580px){.feat-grid{grid-template-columns:1fr}}
 .feat-card{
-  background:#111520;border:1px solid var(--border);
+  background:#0e0e0e;border:1px solid var(--border);
   border-radius:16px;padding:28px;display:flex;flex-direction:column;
   transition:border-color .2s,transform .2s;
 }
@@ -189,7 +189,7 @@ nav{
 .feat-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-.3px}
 .feat-desc{font-size:12.5px;color:var(--text2);line-height:1.7;margin-bottom:18px;flex:1}
 .feat-preview{
-  background:#08090f;border:1px solid rgba(255,255,255,.06);
+  background:#050505;border:1px solid rgba(255,255,255,.06);
   border-radius:8px;padding:12px 14px;
   font-family:var(--mono);font-size:11px;line-height:1.75;
 }
@@ -207,7 +207,7 @@ nav{
 }
 .office-strip-label{
   font-family:var(--mono);font-size:10px;letter-spacing:2.5px;
-  color:var(--text3);font-weight:600;margin-bottom:12px;text-transform:uppercase;
+  color:#333;font-weight:600;margin-bottom:12px;text-transform:uppercase;
 }
 .office-strip-h{
   font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-1px;
@@ -215,14 +215,14 @@ nav{
 .office-strip-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
 .office-btn{
   display:inline-flex;align-items:center;gap:8px;
-  background:var(--accent);color:var(--bg);padding:12px 28px;
+  background:#fff;color:#000;padding:12px 28px;
   border-radius:9px;font-size:13px;font-weight:600;
   text-decoration:none;font-family:var(--sans);transition:all .2s;
   margin:0 6px;
 }
-.office-btn:hover{background:#d4a060;transform:translateY(-1px)}
-.office-btn.ghost{background:none;color:var(--text2);border:1px solid var(--border2)}
-.office-btn.ghost:hover{color:var(--text);border-color:var(--border2)}
+.office-btn:hover{background:#e8e8e8;transform:translateY(-1px)}
+.office-btn.ghost{background:none;color:var(--text2);border:1px solid rgba(255,255,255,.15)}
+.office-btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,.3)}
 
 /* ── FOOTER ── */
 footer{
@@ -230,21 +230,26 @@ footer{
   display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
 }
 .foot-left{display:flex;align-items:center;gap:10px}
-.foot-name{font-size:13px;font-weight:600;color:var(--text)}
-.foot-copy{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.foot-logo-mark{
+  width:26px;height:26px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:12px;color:#000;flex-shrink:0;
+}
+.foot-name{font-size:13px;font-weight:600;color:#fff}
+.foot-copy{font-size:11px;color:#333;margin-top:2px;font-family:var(--mono)}
 .foot-links{display:flex;gap:20px}
-.foot-link{font-size:12px;color:var(--text3);text-decoration:none;transition:color .15s}
+.foot-link{font-size:12px;color:#444;text-decoration:none;transition:color .15s}
 .foot-link:hover{color:var(--text2)}
 
 /* ── AUTH MODAL ── */
 .auth-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;
+  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
   display:flex;align-items:center;justify-content:center;
   backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;
 }
 .auth-overlay.open{opacity:1;pointer-events:all}
 .auth-box{
-  background:#111;border:1px solid var(--border2);border-radius:16px;
+  background:#111;border:1px solid rgba(255,255,255,.12);border-radius:16px;
   padding:36px;width:400px;max-width:94vw;
   transform:scale(.97) translateY(8px);transition:transform .2s;
 }
@@ -277,7 +282,7 @@ footer{
   font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;
 }
 .form-inp:focus{border-color:rgba(255,255,255,.3)}
-.form-inp::placeholder{color:var(--text3)}
+.form-inp::placeholder{color:#333}
 .auth-submit{
   background:#fff;color:#000;padding:12px;
   border-radius:9px;font-size:14px;font-weight:700;
@@ -285,12 +290,12 @@ footer{
   transition:all .2s;margin-top:6px;
 }
 .auth-submit:hover{background:#e8e8e8;transform:translateY(-1px)}
-.auth-hint{font-size:11.5px;color:var(--text3);text-align:center;margin-top:4px}
+.auth-hint{font-size:11.5px;color:#444;text-align:center;margin-top:4px}
 .auth-hint a{color:var(--text2);text-decoration:none;font-weight:600}
 .auth-hint a:hover{color:#fff}
 .auth-close{
   position:absolute;top:16px;right:20px;background:none;border:none;
-  color:var(--text3);font-size:20px;cursor:pointer;line-height:1;
+  color:#444;font-size:20px;cursor:pointer;line-height:1;
   transition:color .15s;
 }
 .auth-close:hover{color:#fff}
@@ -301,10 +306,8 @@ footer{
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#">
-    <div class="nav-logo-text">
-      <span class="nav-logo-name"><span class="nav-k">K</span>ayro</span>
-      <span class="nav-logo-sub">Interactive</span>
-    </div>
+    <div class="nav-logo-mark">K</div>
+    <span class="nav-logo-name">Kayro Interactive</span>
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#features">Features</a>
@@ -312,7 +315,7 @@ footer{
     <a class="nav-link" href="#pricing">Pricing</a>
     <div class="nav-sep"></div>
     <a class="nav-signin" href="#" onclick="openAuth('login');return false">Sign in</a>
-    <a class="nav-getstarted" href="#" onclick="openAuth('signup');return false">Get Started →</a>
+    <a class="nav-getstarted" href="#" onclick="openAuth('signup');return false">Get started</a>
   </div>
 </nav>
 
@@ -327,10 +330,6 @@ footer{
     Hire AI employees.<br>
     <span class="hero-h1-dim">Pay only for what they do.</span>
   </h1>
-  <!-- decorative K watermark -->
-  <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:-1;overflow:hidden">
-    <span style="font-family:var(--serif);font-size:clamp(300px,40vw,500px);color:rgba(200,138,78,0.025);font-style:italic;font-weight:600;user-select:none;line-height:1">K</span>
-  </div>
 
   <p class="hero-sub">Each plan includes a monthly credit allowance. Top up anytime — no waste, no surprise bills.</p>
   <div class="hero-trust">
@@ -344,7 +343,7 @@ footer{
       <div class="toggle-thumb"></div>
     </div>
     <span class="billing-label">Annual</span>
-    <span class="annual-badge" id="annual-badge" style="opacity:.35">SAVE 20%</span>
+    <span class="annual-badge" id="annual-badge" style="opacity:.4">SAVE 20%</span>
   </div>
 
   <!-- Pricing cards -->
@@ -367,8 +366,8 @@ footer{
           <li><span class="pf-check">✓</span>AI spreadsheets</li>
           <li><span class="pf-check">✓</span>Cold email composer</li>
           <li><span class="pf-check">✓</span>3D HQ office</li>
-          <li><span class="pf-x">✗</span><span style="color:var(--text3)">AI credits included</span></li>
-          <li><span class="pf-x">✗</span><span style="color:var(--text3)">Custom personalities</span></li>
+          <li><span class="pf-x">✗</span><span style="color:#333">AI credits included</span></li>
+          <li><span class="pf-x">✗</span><span style="color:#333">Custom personalities</span></li>
         </ul>
         <a class="p-btn" href="#" onclick="openAuth('signup');return false">Start free</a>
       </div>
@@ -380,7 +379,7 @@ footer{
         <div class="p-price p-price-monthly">$49<span class="p-period">/mo</span></div>
         <div class="p-price p-price-annual">$39<span class="p-period">/mo</span></div>
         <div class="p-desc">For founders running a real operation on AI. No API key needed — credits included.</div>
-        <div class="p-credits" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.06)">
+        <div class="p-credits" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)">
           <span class="p-credits-label">AI CREDITS / MO</span>
           <span class="p-credits-val">5,000 msgs</span>
         </div>
@@ -520,7 +519,7 @@ footer{
 <!-- FOOTER -->
 <footer>
   <div class="foot-left">
-    <div class="nav-logo-mark" style="width:28px;height:28px;font-size:13px">K</div>
+    <div class="foot-logo-mark">K</div>
     <div>
       <div class="foot-name">Kayro Interactive</div>
       <div class="foot-copy">© 2026</div>
@@ -583,16 +582,14 @@ footer{
 </div>
 
 <script>
-// Billing toggle
 let isAnnual = false;
 function toggleBilling() {
   isAnnual = !isAnnual;
   document.getElementById('billing-track').classList.toggle('annual', isAnnual);
-  document.getElementById('annual-badge').style.opacity = isAnnual ? '1' : '.35';
+  document.getElementById('annual-badge').style.opacity = isAnnual ? '1' : '.4';
   document.getElementById('pricing-wrap').classList.toggle('billing-annual', isAnnual);
 }
 
-// Auth modal
 function openAuth(tab) {
   document.getElementById('auth-overlay').classList.add('open');
   switchTab(tab || 'login');
