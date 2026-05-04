@@ -4,25 +4,26 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Kayro Interactive — Hire AI Employees</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='%23fff'/><text y='72' font-size='62' font-family='sans-serif' font-weight='900' fill='%23000' text-anchor='middle' x='50'>K</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='%23c88a4e'/><text y='72' font-size='62' font-family='Georgia,serif' font-style='italic' font-weight='600' fill='%23fff' text-anchor='middle' x='50'>K</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
 :root{
-  --bg:#080808;
-  --bg2:#111111;
-  --border:rgba(255,255,255,0.08);
-  --border2:rgba(255,255,255,0.15);
-  --text:#ffffff;
-  --text2:#888888;
-  --text3:#444444;
-  --green:#22c55e;
-  --accent:#3b82f6;
+  --bg:#0c0b09;
+  --bg2:#141210;
+  --border:rgba(200,138,78,0.12);
+  --border2:rgba(200,138,78,0.25);
+  --text:#e8dfd0;
+  --text2:#7a6e5e;
+  --text3:#3a3228;
+  --green:#5aaa78;
+  --accent:#c88a4e;
   --mono:'JetBrains Mono',monospace;
   --sans:'Inter',-apple-system,sans-serif;
+  --serif:'Cormorant Garamond',Georgia,serif;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;-webkit-font-smoothing:antialiased}
 ::-webkit-scrollbar{width:4px}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
 
@@ -33,15 +34,14 @@ nav{
   padding:0 32px;background:rgba(8,8,8,.9);backdrop-filter:blur(20px);
   border-bottom:1px solid var(--border);
 }
-.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
-.nav-logo-mark{
-  width:36px;height:36px;border-radius:50%;background:#fff;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:17px;color:#000;flex-shrink:0;
-}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
 .nav-logo-text{line-height:1}
-.nav-logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px;display:block}
-.nav-logo-sub{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:2px;font-family:var(--mono);display:block;margin-top:1px}
+.nav-logo-name{
+  font-family:var(--serif);font-size:20px;font-weight:500;
+  color:var(--text);letter-spacing:-.2px;display:block;
+}
+.nav-logo-name .nav-k{color:var(--accent);font-style:italic;font-weight:600}
+.nav-logo-sub{font-size:8px;font-weight:500;color:var(--text3);letter-spacing:3px;font-family:var(--sans);display:block;margin-top:2px;text-transform:uppercase}
 .nav-right{display:flex;align-items:center;gap:4px}
 .nav-link{
   font-size:13px;font-weight:500;color:var(--text2);
@@ -57,12 +57,12 @@ nav{
 }
 .nav-signin:hover{color:var(--text)}
 .nav-getstarted{
-  font-size:13px;font-weight:700;color:#000;background:#fff;
+  font-size:13px;font-weight:600;color:var(--bg);background:var(--accent);
   border:none;cursor:pointer;font-family:var(--sans);
   padding:9px 20px;border-radius:8px;transition:all .15s;text-decoration:none;
   display:inline-flex;align-items:center;gap:6px;
 }
-.nav-getstarted:hover{background:#e8e8e8;transform:translateY(-1px)}
+.nav-getstarted:hover{background:#d4a060;transform:translateY(-1px)}
 
 /* ── HERO ── */
 .hero{
@@ -79,10 +79,12 @@ nav{
 .badge-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero-h1{
-  font-size:clamp(52px,7vw,96px);font-weight:900;line-height:1.02;
-  letter-spacing:-3px;color:#fff;margin-bottom:0;
+  font-size:clamp(50px,7vw,92px);font-weight:500;line-height:1.05;
+  letter-spacing:-2px;color:var(--text);margin-bottom:0;
+  font-family:var(--serif);
 }
-.hero-h1-dim{color:#333}
+.hero-h1-k{color:var(--accent);font-style:italic;font-weight:600}
+.hero-h1-dim{color:var(--text3)}
 .hero-sub{
   font-size:clamp(14px,2vw,18px);color:var(--text2);line-height:1.65;
   max-width:500px;margin:28px auto 12px;font-weight:400;
@@ -100,14 +102,14 @@ nav{
   position:relative;width:44px;height:24px;background:#222;
   border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid var(--border2);
 }
-.toggle-track.annual{background:var(--green)}
+.toggle-track.annual{background:var(--accent)}
 .toggle-thumb{
   position:absolute;top:2px;left:2px;width:18px;height:18px;
   background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.5);
 }
 .toggle-track.annual .toggle-thumb{left:22px}
 .annual-badge{
-  background:var(--green);color:#000;font-size:10px;font-weight:800;
+  background:var(--accent);color:var(--bg);font-size:10px;font-weight:700;
   padding:2px 8px;border-radius:20px;font-family:var(--mono);letter-spacing:.5px;
 }
 
@@ -155,8 +157,8 @@ nav{
   border:1px solid var(--border2);color:var(--text2);background:none;
 }
 .p-btn:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.3)}
-.p-btn.primary{background:#fff;color:#000;border-color:#fff}
-.p-btn.primary:hover{background:#e8e8e8;transform:translateY(-1px)}
+.p-btn.primary{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+.p-btn.primary:hover{background:#d4a060;transform:translateY(-1px)}
 .p-popular-label{
   font-family:var(--mono);font-size:9px;font-weight:700;
   color:var(--text);letter-spacing:1.5px;margin-bottom:8px;
@@ -213,14 +215,14 @@ nav{
 .office-strip-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
 .office-btn{
   display:inline-flex;align-items:center;gap:8px;
-  background:#fff;color:#000;padding:12px 28px;
-  border-radius:9px;font-size:13px;font-weight:700;
+  background:var(--accent);color:var(--bg);padding:12px 28px;
+  border-radius:9px;font-size:13px;font-weight:600;
   text-decoration:none;font-family:var(--sans);transition:all .2s;
   margin:0 6px;
 }
-.office-btn:hover{background:#e8e8e8;transform:translateY(-1px)}
+.office-btn:hover{background:#d4a060;transform:translateY(-1px)}
 .office-btn.ghost{background:none;color:var(--text2);border:1px solid var(--border2)}
-.office-btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+.office-btn.ghost:hover{color:var(--text);border-color:var(--border2)}
 
 /* ── FOOTER ── */
 footer{
@@ -299,10 +301,9 @@ footer{
 <!-- NAV -->
 <nav>
   <a class="nav-logo" href="#">
-    <div class="nav-logo-mark">K</div>
     <div class="nav-logo-text">
-      <span class="nav-logo-name">Kayro</span>
-      <span class="nav-logo-sub">AI WORKFORCE</span>
+      <span class="nav-logo-name"><span class="nav-k">K</span>ayro</span>
+      <span class="nav-logo-sub">Interactive</span>
     </div>
   </a>
   <div class="nav-right">
@@ -326,6 +327,10 @@ footer{
     Hire AI employees.<br>
     <span class="hero-h1-dim">Pay only for what they do.</span>
   </h1>
+  <!-- decorative K watermark -->
+  <div style="position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;pointer-events:none;z-index:-1;overflow:hidden">
+    <span style="font-family:var(--serif);font-size:clamp(300px,40vw,500px);color:rgba(200,138,78,0.025);font-style:italic;font-weight:600;user-select:none;line-height:1">K</span>
+  </div>
 
   <p class="hero-sub">Each plan includes a monthly credit allowance. Top up anytime — no waste, no surprise bills.</p>
   <div class="hero-trust">

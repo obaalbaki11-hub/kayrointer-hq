@@ -559,44 +559,36 @@ const HQ = {
       return t ? t.title : null;
     };
 
+    const company = State.settings.companyName || 'Kayro Interactive';
     root.innerHTML = `
-      <div class="hq-emp-bar" id="hq-emp-bar">
+      <div class="sim-topbar" id="hq-emp-bar">
         ${emps.map((e, i) => `
-          <div class="hq-emp-item" data-eid="${e.id}">
-            <div class="hq-emp-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
-            <span>${e.name}</span>
-            <div class="hq-emp-badge ${statuses[i]}">${statuses[i] === 'working' ? 'WORKING' : 'IDLE'}</div>
-          </div>${i < emps.length - 1 ? '<div class="hq-sep"></div>' : ''}`).join('')}
+          <div class="sim-emp" data-eid="${e.id}">
+            <div class="sim-emp-av" style="background:${e.color}20;color:${e.color}">${e.name[0]}</div>
+            <span class="sim-emp-name">${e.name}</span>
+            <span class="sim-emp-st ${statuses[i]}">${statuses[i]==='working'?'●':'○'}</span>
+          </div>${i < emps.length-1 ? '<div class="sim-sep"></div>' : ''}`).join('')}
       </div>
 
-      <div class="standup-panel">
-        <div class="sp-lbl">STANDUP CLOCK</div>
-        <div class="sp-clock" id="hq-sp-clock">--:--</div>
-        <div class="sp-date" id="hq-sp-date">--</div>
-        <div class="sp-divider"></div>
-        <div class="sp-stat-row">
-          <span class="sp-lbl" style="margin:0">ACTIVE</span>
-          <span class="sp-stat-val" style="color:var(--green)">${emps.length} / ${emps.length}</span>
+      <div class="sim-panel">
+        <div class="sim-time" id="hq-sp-clock">--:--</div>
+        <div class="sim-date" id="hq-sp-date">--</div>
+        <div class="sim-divider"></div>
+        <div class="sim-stat-row">
+          <span class="sim-stat-lbl">ONLINE</span>
+          <span class="sim-stat-val">${emps.length}</span>
         </div>
-        <div class="sp-stat-row">
-          <span class="sp-lbl" style="margin:0">TASKS</span>
-          <span class="sp-stat-val">${State.tasks.filter(t => t.column !== 'done').length} ACTIVE</span>
+        <div class="sim-stat-row">
+          <span class="sim-stat-lbl">TASKS</span>
+          <span class="sim-stat-val">${State.tasks.filter(t=>t.column!=='done').length}</span>
         </div>
-        <button class="sp-btn" id="sp-board-btn">VIEW STANDUP</button>
+        <button class="sim-panel-btn" id="sp-board-btn">STANDUP</button>
       </div>
 
-      <div class="hq-bot-bar">
-        <div class="hq-bs"><b>${statuses.filter(s => s === 'working').length}</b> working</div>
-        <div class="hq-bdiv">·</div>
-        <div class="hq-bs"><b>${statuses.filter(s => s === 'idle').length}</b> idle</div>
-        <div class="hq-bdiv">·</div>
-        <div class="hq-bs"><b>${State.tasks.filter(t => t.column !== 'done').length}</b> active tasks</div>
-        <div class="hq-hints">
-          <span class="hq-hint">scroll to zoom</span>
-          <span class="hq-hint">drag to pan</span>
-        </div>
+      <div class="sim-bottom">
+        <span class="sim-co">${company}</span>
+        <span class="sim-hint">drag · scroll to zoom · click to chat</span>
       </div>
-      <div class="hq-wm">${(State.settings.companyName || 'KAYRO').toUpperCase()}</div>
       <div id="hq-ntags"></div>`;
 
     root.querySelectorAll('.hq-emp-item').forEach(el =>
@@ -620,7 +612,7 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x080808);
+    scene.background = new THREE.Color(0x0c0b09);
     const FRUST = 22, asp = W / H;
     const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 300);
     camera.position.set(30, 30, 30); camera.lookAt(0, 1, 0);
@@ -631,45 +623,45 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — ambient base + directional sun + ceiling point lights
-    scene.add(new THREE.AmbientLight(0x1e2c44, 2.2));
-    const sun = new THREE.DirectionalLight(0x7090c0, 0.75);
-    sun.position.set(20, 35, 20); sun.castShadow = true;
+    // Lighting — warm amber simulation
+    scene.add(new THREE.AmbientLight(0x2c2418, 2.6));
+    const sun = new THREE.DirectionalLight(0xc09060, 0.85);
+    sun.position.set(22, 38, 18); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:.5, far:120 });
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x102030, 0.45);
-    rim.position.set(-15, 12, -15); scene.add(rim);
+    const rim = new THREE.DirectionalLight(0x201808, 0.35);
+    rim.position.set(-18, 10, -18); scene.add(rim);
 
     function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
     const M = {
-      fl:  mat(0x1c1c1e),       // concrete floor
-      ca:  mat(0x0d1828),       // carpet (open-plan zones)
-      wex: mat(0x1e1e22),       // exterior walls
-      win: mat(0x17171c),       // interior partitions
-      gl:  mat(0x08162a, 0x030914),  // glass walls — emissive blue tint
-      ceil:mat(0x141416),       // ceiling
-      clt: mat(0x2e2620, 0x1c1610),  // ceiling light panel — warm emissive
-      dt:  mat(0x1c2440),       // desk surface — blue-tinted slate
-      de:  mat(0x141720),       // desk legs / metal
-      ch:  mat(0x101828),       // chair seat
-      cb:  mat(0x0c1422),       // chair back mesh
-      mo:  mat(0x0c0c0e),       // monitor frame
-      sc:  mat(0x030a1c, 0x010610),  // monitor screen — emissive
-      sv:  mat(0x0e1420),       // server rack body
-      led: mat(0x00ee66, 0x004422),  // green LED
-      ldb: mat(0x0088ff, 0x002244),  // blue LED
-      so:  mat(0x111e34),       // sofa main
-      so2: mat(0x3c1008),       // sofa accent
-      cnt: mat(0x1c2030),       // counters / cabinets
-      app: mat(0x0e0e12),       // appliances
-      wb:  mat(0xd8e0ea),       // whiteboard surface
-      wbf: mat(0x141418),       // whiteboard frame
-      rug: mat(0x0c1530),       // area rug
-      pp:  mat(0x1c0e06),       // plant pot
-      pl:  mat(0x102808),       // plant leaves
-      ct:  mat(0x141c2c),       // coffee table
-      pn:  mat(0x080810),       // character pants/hair
+      fl:  mat(0x262018),       // warm concrete floor — visible
+      ca:  mat(0x1e1810),       // carpet — warm dark
+      wex: mat(0x302820),       // exterior walls — warm grey
+      win: mat(0x262018),       // interior partitions
+      gl:  mat(0x201808, 0x0e0a04),  // glass — amber tint
+      ceil:mat(0x1e1a14),       // ceiling
+      clt: mat(0x5a4028, 0x382814),  // ceiling light — amber glow
+      dt:  mat(0x342a1e),       // desk surface — warm wood
+      de:  mat(0x201c14),       // desk legs / dark metal
+      ch:  mat(0x282018),       // chair seat
+      cb:  mat(0x201a12),       // chair back
+      mo:  mat(0x181410),       // monitor frame
+      sc:  mat(0x0c0804, 0x060402),  // monitor screen — subtle amber
+      sv:  mat(0x221e18),       // server rack
+      led: mat(0x44ee88, 0x114422),  // green LED
+      ldb: mat(0xc88a4e, 0x3c2010),  // copper LED — brand accent
+      so:  mat(0x302818),       // sofa
+      so2: mat(0x4a2010),       // sofa accent — amber
+      cnt: mat(0x2a2418),       // counter/cabinet
+      app: mat(0x1a1610),       // appliances
+      wb:  mat(0xe8dfd0),       // whiteboard — warm white
+      wbf: mat(0x1e1a14),       // whiteboard frame
+      rug: mat(0x201808),       // area rug
+      pp:  mat(0x302010),       // plant pot
+      pl:  mat(0x1e3010),       // plant leaves
+      ct:  mat(0x262018),       // coffee table
+      pn:  mat(0x100c08),       // character pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
@@ -681,7 +673,7 @@ const HQ = {
      [-15,-2],[-5,-2],[5,-2],[15,-2],
      [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
       ab(.6,.06,.6,M.clt,x,WH+.02,z);
-      const pl=new THREE.PointLight(0xffc870,0.65,13); pl.position.set(x,WH-.15,z); scene.add(pl);
+      const pl=new THREE.PointLight(0xffaa50,0.75,14); pl.position.set(x,WH-.15,z); scene.add(pl);
     });
     // accent: exec office
     const epl=new THREE.PointLight(0xffe0b0,0.5,9); epl.position.set(17,-9,3); scene.add(epl);
@@ -901,7 +893,7 @@ const HQ = {
       g.position.set(pos[0], 0, pos[1]); scene.add(g); chars.push({ group:g, emp:e });
     });
 
-    // Name tags with status badge + task bubble
+    // Name tags — minimal sim chips
     const ntContainer = document.getElementById('hq-ntags');
     const ntEls = chars.map(({ emp }, i) => {
       const d = document.createElement('div');
@@ -909,10 +901,12 @@ const HQ = {
       const task = getTaskLabel(emp);
       const status = statuses[i];
       d.innerHTML = `
-        ${task ? `<div class="ntag-bubble"><span class="ntag-bubble-name">${emp.name}:</span> ${escHtml(task.length > 36 ? task.slice(0,36)+'…' : task)}</div>` : ''}
-        <div class="ntag-status ${status}">${status === 'working' ? 'WORKING' : 'IDLE'}</div>
-        <div class="ntag-inner"><div class="ntag-dot" style="background:${emp.color}"></div>${emp.name}</div>`;
-      d.style.cursor = 'pointer';
+        <div class="ntag-chip">
+          <div class="ntag-dot" style="background:${emp.color}"></div>
+          <span>${escHtml(emp.name)}</span>
+          <div class="ntag-status-dot ${status}"></div>
+        </div>
+        ${task ? `<div class="ntag-task">${escHtml(task.length > 38 ? task.slice(0,38)+'…' : task)}</div>` : ''}`;
       d.addEventListener('click', () => Chat.open(emp.id));
       ntContainer.appendChild(d);
       return d;
