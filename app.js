@@ -580,7 +580,7 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x070d1a);
+    scene.background = new THREE.Color(0x080808);
     const FRUST = 13, asp = W / H;
     const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 200);
     camera.position.set(18, 18, 18); camera.lookAt(0, 1, 0);
@@ -591,44 +591,44 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Night-mode lighting — cool blue-tinted to match dark navy theme
-    scene.add(new THREE.AmbientLight(0x3a5a9a, 1.1));
-    const sun = new THREE.DirectionalLight(0x7aaaf0, 0.65);
+    // Deep-dark lighting — minimal, just enough to show geometry
+    scene.add(new THREE.AmbientLight(0x2a3a5a, 1.4));
+    const sun = new THREE.DirectionalLight(0x6090c8, 0.7);
     sun.position.set(14, 22, 14); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-25, right:25, top:25, bottom:-25, near:.5, far:100 });
     scene.add(sun);
-    const fill = new THREE.DirectionalLight(0x203860, 0.4);
+    const fill = new THREE.DirectionalLight(0x101820, 0.5);
     fill.position.set(-10, 8, -10); scene.add(fill);
 
     function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
     const M = {
-      // Structure — dark navy family matching #070d1a bg
-      fl: mat(0x0c1828),   // floor — barely lighter than background
-      wa: mat(0x101f38),   // back wall
-      wa2:mat(0x0e1c34),   // side walls
-      // Furniture — navy blue-grey tones
-      de: mat(0x1c3050),   // desk legs
-      dt: mat(0x162844),   // desk surface
-      ch: mat(0x0e1e3a),   // chair seat
-      cb: mat(0x091628),   // chair back
-      mo: mat(0x080e1c),   // monitor stand
-      sc: mat(0x0a1830, 0x020612), // monitor screen — subtle glow
+      // Structure — near-black matching #080808 bg
+      fl: mat(0x0d0d0d),   // floor — barely visible
+      wa: mat(0x111111),   // back wall
+      wa2:mat(0x0f0f0f),   // side walls
+      // Furniture — dark charcoal tones with blue tint
+      de: mat(0x1a2030),   // desk legs
+      dt: mat(0x141a28),   // desk surface
+      ch: mat(0x0d1520),   // chair seat
+      cb: mat(0x080e18),   // chair back
+      mo: mat(0x080808),   // monitor stand
+      sc: mat(0x080f20, 0x020510), // monitor screen — subtle glow
       // Features
-      sv: mat(0x111c30),   // server rack
+      sv: mat(0x101520),   // server rack
       sl: mat(0x00dd88, 0x005533), // server LED — keep green
-      rt: mat(0x1a2c48),   // round meeting table
-      so: mat(0x0f2244),   // sofa main
-      so2:mat(0x7a2010),   // sofa accent — dark red pop
-      pg: mat(0x0a3818),   // ping pong table
-      ne: mat(0x2a4060),   // net — dark blue-grey
-      sh: mat(0x0c1830),   // bookshelf
-      pp: mat(0x2c1408),   // plant pot
-      pl: mat(0x194214),   // plant leaves
-      tv: mat(0x050a12),   // TV frame
-      ts: mat(0x06091e, 0x020510), // TV screen — subtle glow
-      ct: mat(0x18293e),   // coffee table
-      pn: mat(0x080c1c),   // character pants/hair
+      rt: mat(0x161e2c),   // round meeting table
+      so: mat(0x0d1830),   // sofa main
+      so2:mat(0x5a1808),   // sofa accent — dark red pop
+      pg: mat(0x082810),   // ping pong table
+      ne: mat(0x1e2e44),   // net
+      sh: mat(0x0c1220),   // bookshelf
+      pp: mat(0x200e04),   // plant pot
+      pl: mat(0x102c0c),   // plant leaves
+      tv: mat(0x050508),   // TV frame
+      ts: mat(0x040614, 0x010408), // TV screen — subtle glow
+      ct: mat(0x141c28),   // coffee table
+      pn: mat(0x060810),   // character pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }

@@ -1,9 +1,9 @@
 :root {
-  --bg:          #070d1a;
-  --surface:     #0d1528;
-  --surface2:    #111e35;
-  --surface3:    #162040;
-  --sidebar-bg:  #060c18;
+  --bg:          #080808;
+  --surface:     #0f0f0f;
+  --surface2:    #141414;
+  --surface3:    #1a1a1a;
+  --sidebar-bg:  #060606;
   --border:      rgba(255,255,255,0.07);
   --border2:     rgba(255,255,255,0.12);
   --ba:          rgba(59,130,246,0.3);

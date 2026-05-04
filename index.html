@@ -3,1081 +3,619 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Kayro Interactive — AI Workforce Platform</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text y='72' font-size='62' font-family='sans-serif' font-weight='900' fill='white' text-anchor='middle' x='50'>K</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<title>Kayro Interactive — Hire AI Employees</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='50' fill='%23fff'/><text y='72' font-size='62' font-family='sans-serif' font-weight='900' fill='%23000' text-anchor='middle' x='50'>K</text></svg>">
+<link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{
-  --bg:#070d1a;
-  --surface:#0d1528;
-  --surface2:#111e35;
-  --border:rgba(255,255,255,0.07);
-  --border2:rgba(255,255,255,0.13);
-  --accent:#3b82f6;
-  --ba:rgba(59,130,246,0.35);
-  --green:#22c55e;
-  --amber:#f59e0b;
-  --purple:#a855f7;
-  --cyan:#06b6d4;
-  --text:#e2eaf8;
-  --text2:#7a90b0;
-  --text3:#3a4f6a;
-  --mono:'JetBrains Mono',monospace;
-  --sans:'Inter',-apple-system,sans-serif;
-  --radius:10px;
-}
 *{margin:0;padding:0;box-sizing:border-box}
 html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;overflow-x:hidden}
-
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:transparent}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:3px}
-
-/* ── ANIMATED BACKGROUND ── */
-.bg-grid{
-  position:fixed;inset:0;z-index:0;pointer-events:none;
-  background-image:linear-gradient(rgba(59,130,246,.04) 1px,transparent 1px),
-                   linear-gradient(90deg,rgba(59,130,246,.04) 1px,transparent 1px);
-  background-size:48px 48px;
-  mask-image:radial-gradient(ellipse 90% 80% at 50% 0%,black 40%,transparent 100%);
+:root{
+  --bg:#080808;
+  --bg2:#111111;
+  --border:rgba(255,255,255,0.08);
+  --border2:rgba(255,255,255,0.15);
+  --text:#ffffff;
+  --text2:#888888;
+  --text3:#444444;
+  --green:#22c55e;
+  --accent:#3b82f6;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Inter',-apple-system,sans-serif;
 }
-.bg-glow{
-  position:fixed;top:-20vh;left:50%;transform:translateX(-50%);
-  width:900px;height:600px;
-  background:radial-gradient(ellipse,rgba(59,130,246,.13) 0%,transparent 70%);
-  z-index:0;pointer-events:none;
-}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
 
 /* ── NAV ── */
 nav{
-  position:fixed;top:0;left:0;right:0;z-index:200;
-  height:58px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 40px;
-  background:rgba(7,13,26,.85);border-bottom:1px solid var(--border);
-  backdrop-filter:blur(18px);
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:60px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;background:rgba(8,8,8,.9);backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
 }
-.nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-mark{
-  width:32px;height:32px;background:var(--accent);border-radius:9px;
+.nav-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.nav-logo-mark{
+  width:36px;height:36px;border-radius:50%;background:#fff;
   display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:16px;color:#fff;letter-spacing:-1px;flex-shrink:0;
+  font-weight:900;font-size:17px;color:#000;flex-shrink:0;
 }
-.nav-name{font-size:15px;font-weight:700;color:var(--text);letter-spacing:-.3px}
-.nav-sub{font-size:8px;color:var(--text3);letter-spacing:2px;font-weight:600;margin-top:1px}
-.nav-links{display:flex;align-items:center;gap:6px}
+.nav-logo-text{line-height:1}
+.nav-logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.3px;display:block}
+.nav-logo-sub{font-size:9px;font-weight:600;color:var(--text3);letter-spacing:2px;font-family:var(--mono);display:block;margin-top:1px}
+.nav-right{display:flex;align-items:center;gap:4px}
 .nav-link{
-  padding:6px 14px;border-radius:8px;font-size:12.5px;font-weight:500;
-  color:var(--text2);cursor:pointer;border:none;background:none;
-  font-family:var(--sans);transition:all .15s;text-decoration:none;
+  font-size:13px;font-weight:500;color:var(--text2);
+  background:none;border:none;cursor:pointer;font-family:var(--sans);
+  padding:8px 14px;border-radius:8px;transition:color .15s;text-decoration:none;
 }
-.nav-link:hover{color:var(--text);background:rgba(255,255,255,.05)}
-.nav-cta{
-  background:var(--accent);color:#fff;padding:7px 20px;
-  border-radius:8px;font-size:12.5px;font-weight:700;
+.nav-link:hover{color:var(--text)}
+.nav-sep{width:1px;height:16px;background:var(--border);margin:0 4px}
+.nav-signin{
+  font-size:13px;font-weight:500;color:var(--text2);
+  background:none;border:none;cursor:pointer;font-family:var(--sans);
+  padding:8px 14px;border-radius:8px;transition:color .15s;text-decoration:none;
+}
+.nav-signin:hover{color:var(--text)}
+.nav-getstarted{
+  font-size:13px;font-weight:700;color:#000;background:#fff;
   border:none;cursor:pointer;font-family:var(--sans);
-  transition:background .15s;text-decoration:none;
-  display:flex;align-items:center;gap:6px;
+  padding:9px 20px;border-radius:8px;transition:all .15s;text-decoration:none;
+  display:inline-flex;align-items:center;gap:6px;
 }
-.nav-cta:hover{background:#2563eb}
-
-/* ── WRAPPER ── */
-main{position:relative;z-index:1}
-section{position:relative}
+.nav-getstarted:hover{background:#e8e8e8;transform:translateY(-1px)}
 
 /* ── HERO ── */
 .hero{
   min-height:100vh;display:flex;flex-direction:column;
-  align-items:center;justify-content:center;text-align:center;
-  padding:110px 24px 80px;
+  align-items:center;justify-content:center;
+  padding:100px 24px 60px;text-align:center;
 }
 .hero-badge{
   display:inline-flex;align-items:center;gap:7px;
-  background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.2);
-  color:var(--green);font-size:11px;font-weight:700;letter-spacing:1px;
-  padding:5px 14px;border-radius:20px;margin-bottom:28px;
-  font-family:var(--mono);
+  border:1px solid var(--border2);color:var(--text2);
+  font-size:12px;font-weight:500;padding:6px 16px;
+  border-radius:20px;margin-bottom:36px;font-family:var(--sans);
 }
-.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(1.3)}}
-h1{
-  font-size:clamp(40px,6vw,78px);font-weight:800;line-height:1.05;
-  color:var(--text);letter-spacing:-2px;margin-bottom:22px;
+.badge-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.hero-h1{
+  font-size:clamp(52px,7vw,96px);font-weight:900;line-height:1.02;
+  letter-spacing:-3px;color:#fff;margin-bottom:0;
 }
-h1 span{
-  background:linear-gradient(135deg,#3b82f6 0%,#8b5cf6 50%,#06b6d4 100%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
-}
+.hero-h1-dim{color:#333}
 .hero-sub{
   font-size:clamp(14px,2vw,18px);color:var(--text2);line-height:1.65;
-  max-width:560px;margin-bottom:36px;font-weight:400;
+  max-width:500px;margin:28px auto 12px;font-weight:400;
 }
-.hero-ctas{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:64px}
-.cta-primary{
-  background:var(--accent);color:#fff;padding:13px 32px;
-  border-radius:10px;font-size:14px;font-weight:700;
-  border:none;cursor:pointer;font-family:var(--sans);
-  transition:all .2s;text-decoration:none;
-  display:inline-flex;align-items:center;gap:8px;
-  box-shadow:0 0 30px rgba(59,130,246,.3);
+.hero-trust{
+  font-size:11.5px;color:var(--text3);margin-bottom:56px;
+  font-family:var(--mono);letter-spacing:.3px;
 }
-.cta-primary:hover{background:#2563eb;transform:translateY(-1px);box-shadow:0 0 40px rgba(59,130,246,.45)}
-.cta-secondary{
-  background:rgba(255,255,255,.05);border:1px solid var(--border2);
-  color:var(--text);padding:13px 28px;border-radius:10px;
-  font-size:14px;font-weight:600;cursor:pointer;font-family:var(--sans);
-  transition:all .2s;text-decoration:none;display:inline-flex;align-items:center;gap:8px;
-}
-.cta-secondary:hover{background:rgba(255,255,255,.09);border-color:var(--ba)}
+.hero-trust span{margin:0 8px}
 
-/* ── HQ PREVIEW ── */
-.hq-preview{
-  width:100%;max-width:860px;margin:0 auto;
-  background:var(--surface);border:1px solid var(--border2);
-  border-radius:16px;overflow:hidden;
-  box-shadow:0 40px 100px rgba(0,0,30,.6),0 0 0 1px rgba(59,130,246,.08);
+/* ── BILLING TOGGLE ── */
+.billing-toggle{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:40px}
+.billing-label{font-size:13px;color:var(--text2);font-weight:500}
+.toggle-track{
+  position:relative;width:44px;height:24px;background:#222;
+  border-radius:12px;cursor:pointer;transition:background .2s;border:1px solid var(--border2);
 }
-.preview-topbar{
-  background:rgba(6,12,24,.95);height:42px;display:flex;align-items:center;
-  justify-content:space-between;padding:0 16px;border-bottom:1px solid var(--border);
+.toggle-track.annual{background:var(--green)}
+.toggle-thumb{
+  position:absolute;top:2px;left:2px;width:18px;height:18px;
+  background:#fff;border-radius:50%;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.5);
 }
-.preview-dots{display:flex;gap:6px}
-.preview-dot{width:11px;height:11px;border-radius:50%}
-.pd-r{background:#ef4444}
-.pd-y{background:#f59e0b}
-.pd-g{background:#22c55e}
-.preview-title{font-family:var(--mono);font-size:11px;color:var(--text3);letter-spacing:.5px}
-.preview-body{
-  position:relative;background:var(--bg);
-  height:380px;overflow:hidden;
-  background-image:
-    linear-gradient(rgba(59,130,246,.03) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(59,130,246,.03) 1px,transparent 1px);
-  background-size:40px 40px;
+.toggle-track.annual .toggle-thumb{left:22px}
+.annual-badge{
+  background:var(--green);color:#000;font-size:10px;font-weight:800;
+  padding:2px 8px;border-radius:20px;font-family:var(--mono);letter-spacing:.5px;
 }
 
-/* Floor grid */
-.floor{
-  position:absolute;bottom:30px;left:50%;transform:translateX(-50%);
-  width:580px;height:180px;
-  border:1px solid rgba(59,130,246,.1);
-  background:rgba(59,130,246,.02);
-  border-radius:4px;
-}
-
-/* ── STANDUP CARDS IN PREVIEW ── */
-.preview-standup{
-  position:absolute;top:14px;right:14px;
-  background:rgba(8,14,28,.9);border:1px solid rgba(100,160,255,.15);
-  border-radius:10px;padding:12px 14px;min-width:190px;
-  backdrop-filter:blur(14px);
-}
-.psd-label{
-  font-family:var(--mono);font-size:9px;letter-spacing:2.5px;
-  color:var(--text3);font-weight:600;margin-bottom:6px;
-}
-.psd-time{
-  font-family:var(--mono);font-size:18px;font-weight:600;
-  color:var(--text);letter-spacing:-1px;
-}
-.psd-date{font-size:10px;color:var(--text2);margin-top:1px;font-family:var(--mono)}
-.psd-divider{height:1px;background:var(--border);margin:10px 0}
-.psd-status-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-.psd-s-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px}
-.psd-s-val{font-family:var(--mono);font-size:10px;color:var(--green);font-weight:600}
-.psd-btn{
-  width:100%;background:var(--green);color:#000;border:none;
-  border-radius:5px;padding:6px;font-size:9.5px;font-weight:800;
-  letter-spacing:2px;cursor:pointer;font-family:var(--mono);margin-top:6px;
-}
-
-/* Employee name tags */
-.emp-tag{
-  position:absolute;display:flex;flex-direction:column;align-items:center;gap:3px;
-}
-.emp-tag-status{
-  background:rgba(8,14,28,.88);border:1px solid rgba(34,197,94,.3);
-  color:var(--green);font-family:var(--mono);font-size:8px;font-weight:700;
-  padding:2px 7px;border-radius:4px;letter-spacing:1.5px;
-}
-.emp-tag-status.idle{border-color:rgba(245,158,11,.3);color:var(--amber)}
-.emp-tag-avatar{
-  width:28px;height:28px;border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:10px;font-weight:800;color:#fff;
-}
-.emp-tag-name{
-  background:rgba(5,10,25,.92);border:1px solid rgba(100,150,255,.18);
-  color:#d0e0f8;padding:2px 8px;border-radius:5px;font-size:9px;
-  font-weight:600;white-space:nowrap;font-family:var(--mono);
-  display:flex;align-items:center;gap:5px;
-}
-.emp-tag-dot{width:4px;height:4px;border-radius:50%;flex-shrink:0}
-
-/* Speech bubble */
-.speech-bubble{
-  position:absolute;background:rgba(8,14,28,.92);
-  border:1px solid rgba(100,160,255,.18);border-radius:8px;
-  padding:6px 9px;font-family:var(--mono);font-size:9px;
-  color:#a0c0e8;line-height:1.4;max-width:170px;
-  white-space:nowrap;
-}
-.speech-bubble::after{
-  content:'';position:absolute;bottom:-6px;left:14px;
-  border:5px solid transparent;border-top-color:rgba(100,160,255,.18);
-}
-.speech-bubble .sb-name{color:var(--accent);font-weight:600;font-size:9px}
-
-/* Axis labels */
-.preview-emp-bar{
-  position:absolute;top:14px;left:50%;transform:translateX(-50%);
-  display:flex;align-items:center;
-  background:rgba(0,0,0,.55);border:1px solid var(--border);
-  border-radius:24px;padding:4px 12px;backdrop-filter:blur(10px);gap:0;
-}
-.peb-item{
-  display:flex;align-items:center;gap:5px;padding:3px 8px;
-  border-radius:14px;font-size:10px;color:#c8d8f0;
-  font-family:var(--mono);
-}
-.peb-av{
-  width:16px;height:16px;border-radius:50%;
-  display:flex;align-items:center;justify-content:center;
-  font-size:7px;font-weight:800;color:#fff;
-}
-.peb-sep{width:1px;height:14px;background:rgba(255,255,255,.08);margin:0 2px}
-
-/* ── STANDUP MODAL PREVIEW ── */
-.standup-section{padding:80px 24px;max-width:1060px;margin:0 auto}
-.standup-section-title{
-  font-family:var(--mono);font-size:10px;letter-spacing:3px;
-  color:var(--text3);font-weight:600;text-align:center;margin-bottom:12px;
-  text-transform:uppercase;
-}
-.standup-section-h{
-  font-size:32px;font-weight:800;text-align:center;margin-bottom:10px;
-  letter-spacing:-1px;
-}
-.standup-section-sub{
-  font-size:14px;color:var(--text2);text-align:center;margin-bottom:48px;
-}
-.standup-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.su-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:16px;transition:all .2s;
-}
-.su-card:hover{border-color:var(--border2);transform:translateY(-2px)}
-.su-card-hdr{display:flex;align-items:center;gap:10px;margin-bottom:12px}
-.su-av{
-  width:34px;height:34px;border-radius:9px;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  font-size:12px;font-weight:800;color:#fff;
-}
-.su-name{font-size:13px;font-weight:700;color:var(--text)}
-.su-role{font-size:10px;color:var(--text2);font-family:var(--mono)}
-.su-status{
-  margin-left:auto;font-family:var(--mono);font-size:9px;font-weight:700;
-  padding:2px 8px;border-radius:4px;letter-spacing:1.5px;
-}
-.su-status.working{background:rgba(34,197,94,.12);color:var(--green);border:1px solid rgba(34,197,94,.25)}
-.su-status.idle{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.25)}
-.su-section{
-  font-family:var(--mono);font-size:8.5px;letter-spacing:2px;
-  color:var(--text3);font-weight:600;margin:10px 0 5px;text-transform:uppercase;
-}
-.su-task{
-  font-size:11.5px;color:var(--text);font-family:var(--mono);
-  line-height:1.45;margin-bottom:2px;
-}
-.su-commit{
-  font-family:var(--mono);font-size:10px;color:var(--text2);
-  line-height:1.5;padding-left:8px;border-left:2px solid var(--border);
-  margin-bottom:2px;
-}
-.su-commit .commit-hash{color:var(--accent);font-size:9px}
-.su-blocker{
-  font-size:10.5px;color:var(--amber);font-family:var(--mono);
-  line-height:1.45;padding:4px 8px;
-  background:rgba(245,158,11,.06);border-radius:5px;
-  border-left:2px solid rgba(245,158,11,.4);
-}
-.su-sources{display:flex;gap:5px;margin-top:10px}
-.su-src{
-  font-family:var(--mono);font-size:9px;font-weight:600;
-  padding:3px 8px;border-radius:5px;cursor:pointer;
-  border:1px solid var(--border);color:var(--text3);background:none;
-  transition:all .15s;letter-spacing:.5px;
-}
-.su-src:hover{border-color:var(--ba);color:var(--accent)}
-.su-src.active{border-color:var(--ba);color:var(--accent);background:rgba(59,130,246,.08)}
-
-/* ── FEATURES ── */
-.features-section{padding:80px 24px;max-width:1060px;margin:0 auto}
-.feat-label{
-  font-family:var(--mono);font-size:10px;letter-spacing:3px;
-  color:var(--accent);font-weight:600;text-align:center;margin-bottom:12px;
-  text-transform:uppercase;
-}
-.feat-h{font-size:32px;font-weight:800;text-align:center;margin-bottom:10px;letter-spacing:-1px}
-.feat-sub{font-size:14px;color:var(--text2);text-align:center;margin-bottom:56px}
-.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-@media(max-width:700px){.features-grid{grid-template-columns:1fr}.standup-grid{grid-template-columns:1fr}}
-.feat-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:22px;transition:all .2s;
-}
-.feat-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 8px 30px rgba(0,0,20,.3)}
-.feat-icon{
-  width:42px;height:42px;border-radius:10px;
-  display:flex;align-items:center;justify-content:center;
-  font-size:19px;margin-bottom:16px;
-}
-.feat-title{font-size:14.5px;font-weight:700;color:var(--text);margin-bottom:8px}
-.feat-desc{font-size:12.5px;color:var(--text2);line-height:1.65}
-.feat-mono{
-  margin-top:12px;font-family:var(--mono);font-size:10px;color:var(--text3);
-  background:rgba(0,0,0,.35);border:1px solid var(--border);
-  border-radius:6px;padding:7px 10px;line-height:1.6;
-}
-.feat-mono .hl{color:var(--accent)}
-.feat-mono .hl-g{color:var(--green)}
-
-/* ── HOW IT WORKS ── */
-.how-section{padding:80px 24px;max-width:760px;margin:0 auto;text-align:center}
-.how-steps{display:flex;flex-direction:column;gap:1px;margin-top:48px;position:relative}
-.how-steps::before{
-  content:'';position:absolute;left:23px;top:0;bottom:0;
-  width:1px;background:linear-gradient(to bottom,transparent,var(--ba) 20%,var(--ba) 80%,transparent);
-}
-.how-step{
-  display:flex;align-items:flex-start;gap:18px;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:12px;padding:18px 20px;text-align:left;
+/* ── PRICING ── */
+.pricing-wrap{width:100%;max-width:940px;margin:0 auto}
+.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+@media(max-width:720px){.pricing-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto}}
+.p-card{
+  background:#101010;border:1px solid var(--border);
+  border-radius:16px;padding:28px;display:flex;flex-direction:column;
   transition:border-color .2s;
 }
-.how-step:hover{border-color:var(--border2)}
-.how-num{
-  width:34px;height:34px;border-radius:9px;background:var(--accent);
-  display:flex;align-items:center;justify-content:center;
-  font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;flex-shrink:0;
+.p-card:hover{border-color:var(--border2)}
+.p-card.popular{border-color:rgba(255,255,255,.25)}
+.p-tier{
+  font-family:var(--mono);font-size:10px;font-weight:600;
+  letter-spacing:2.5px;color:var(--text3);margin-bottom:12px;
+  text-transform:uppercase;
 }
-.how-text-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
-.how-text-desc{font-size:12.5px;color:var(--text2);line-height:1.6}
-.how-connector{
-  width:1px;height:28px;background:var(--border);
-  margin-left:40px;
+.p-price{
+  font-size:40px;font-weight:800;color:#fff;letter-spacing:-2px;
+  line-height:1;margin-bottom:4px;
+  font-family:var(--sans);
+}
+.p-price-annual{display:none}
+.billing-annual .p-price-monthly{display:none}
+.billing-annual .p-price-annual{display:block}
+.p-period{font-size:14px;font-weight:400;color:var(--text2);letter-spacing:0}
+.p-desc{font-size:12.5px;color:var(--text2);line-height:1.6;margin:12px 0 20px}
+.p-credits{
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(255,255,255,.04);border:1px solid var(--border);
+  border-radius:8px;padding:8px 12px;margin-bottom:18px;
+}
+.p-credits-label{font-family:var(--mono);font-size:9px;color:var(--text3);letter-spacing:1.5px;font-weight:600}
+.p-credits-val{font-family:var(--mono);font-size:11px;color:var(--text);font-weight:600}
+.p-features{list-style:none;display:flex;flex-direction:column;gap:9px;margin-bottom:24px;flex:1}
+.p-features li{display:flex;align-items:flex-start;gap:9px;font-size:12.5px;color:var(--text2);line-height:1.4}
+.pf-check{color:var(--green);flex-shrink:0;font-size:13px;margin-top:0}
+.pf-x{color:var(--text3);flex-shrink:0;font-size:13px}
+.p-btn{
+  display:block;text-align:center;padding:12px;border-radius:9px;
+  font-size:13px;font-weight:700;cursor:pointer;text-decoration:none;
+  font-family:var(--sans);transition:all .2s;
+  border:1px solid var(--border2);color:var(--text2);background:none;
+}
+.p-btn:hover{background:rgba(255,255,255,.06);color:#fff;border-color:rgba(255,255,255,.3)}
+.p-btn.primary{background:#fff;color:#000;border-color:#fff}
+.p-btn.primary:hover{background:#e8e8e8;transform:translateY(-1px)}
+.p-popular-label{
+  font-family:var(--mono);font-size:9px;font-weight:700;
+  color:var(--text);letter-spacing:1.5px;margin-bottom:8px;
 }
 
-/* ── AUTH ── */
-.auth-section{
-  padding:80px 24px 120px;display:flex;
-  align-items:center;justify-content:center;
+/* ── FEATURES SECTION ── */
+.feat-section{max-width:1100px;margin:80px auto;padding:0 28px}
+.feat-section-sub{
+  font-size:14px;color:var(--text2);text-align:center;
+  max-width:600px;margin:0 auto 48px;line-height:1.7;
 }
-.auth-box{
-  width:100%;max-width:420px;
-  background:var(--surface);border:1px solid var(--border2);
-  border-radius:16px;padding:32px;
+.feat-grid{
+  display:grid;grid-template-columns:repeat(3,1fr);gap:16px;
 }
-.auth-logo{
-  display:flex;justify-content:center;margin-bottom:24px;
+@media(max-width:900px){.feat-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:580px){.feat-grid{grid-template-columns:1fr}}
+.feat-card{
+  background:#111520;border:1px solid var(--border);
+  border-radius:16px;padding:28px;display:flex;flex-direction:column;
+  transition:border-color .2s,transform .2s;
 }
-.auth-mark{
-  width:46px;height:46px;background:var(--accent);border-radius:12px;
+.feat-card:hover{border-color:rgba(255,255,255,.18);transform:translateY(-2px)}
+.feat-icon-wrap{
+  width:44px;height:44px;border-radius:12px;
   display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:22px;color:#fff;
+  font-size:22px;margin-bottom:18px;flex-shrink:0;
 }
-.auth-title{font-size:20px;font-weight:800;color:var(--text);text-align:center;margin-bottom:5px;letter-spacing:-.5px}
+.feat-title{font-size:15px;font-weight:700;color:#fff;margin-bottom:8px;letter-spacing:-.3px}
+.feat-desc{font-size:12.5px;color:var(--text2);line-height:1.7;margin-bottom:18px;flex:1}
+.feat-preview{
+  background:#08090f;border:1px solid rgba(255,255,255,.06);
+  border-radius:8px;padding:12px 14px;
+  font-family:var(--mono);font-size:11px;line-height:1.75;
+}
+.fp-green{color:#22c55e}
+.fp-blue{color:#60a5fa}
+.fp-purple{color:#a78bfa}
+.fp-orange{color:#fb923c}
+.fp-dim{color:#444}
+.fp-white{color:#e2e8f0}
+
+/* ── OFFICE PREVIEW STRIP ── */
+.office-strip{
+  max-width:940px;margin:0 auto 80px;padding:0 24px;
+  text-align:center;
+}
+.office-strip-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:2.5px;
+  color:var(--text3);font-weight:600;margin-bottom:12px;text-transform:uppercase;
+}
+.office-strip-h{
+  font-size:28px;font-weight:800;color:#fff;margin-bottom:8px;letter-spacing:-1px;
+}
+.office-strip-sub{font-size:13px;color:var(--text2);margin-bottom:28px}
+.office-btn{
+  display:inline-flex;align-items:center;gap:8px;
+  background:#fff;color:#000;padding:12px 28px;
+  border-radius:9px;font-size:13px;font-weight:700;
+  text-decoration:none;font-family:var(--sans);transition:all .2s;
+  margin:0 6px;
+}
+.office-btn:hover{background:#e8e8e8;transform:translateY(-1px)}
+.office-btn.ghost{background:none;color:var(--text2);border:1px solid var(--border2)}
+.office-btn.ghost:hover{color:#fff;border-color:rgba(255,255,255,.3)}
+
+/* ── FOOTER ── */
+footer{
+  border-top:1px solid var(--border);padding:32px;
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
+}
+.foot-left{display:flex;align-items:center;gap:10px}
+.foot-name{font-size:13px;font-weight:600;color:var(--text)}
+.foot-copy{font-size:11px;color:var(--text3);margin-top:2px;font-family:var(--mono)}
+.foot-links{display:flex;gap:20px}
+.foot-link{font-size:12px;color:var(--text3);text-decoration:none;transition:color .15s}
+.foot-link:hover{color:var(--text2)}
+
+/* ── AUTH MODAL ── */
+.auth-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:500;
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;
+}
+.auth-overlay.open{opacity:1;pointer-events:all}
+.auth-box{
+  background:#111;border:1px solid var(--border2);border-radius:16px;
+  padding:36px;width:400px;max-width:94vw;
+  transform:scale(.97) translateY(8px);transition:transform .2s;
+}
+.auth-overlay.open .auth-box{transform:scale(1) translateY(0)}
+.auth-logo{display:flex;justify-content:center;margin-bottom:24px}
+.auth-logo-mark{
+  width:48px;height:48px;border-radius:50%;background:#fff;
+  display:flex;align-items:center;justify-content:center;
+  font-weight:900;font-size:22px;color:#000;
+}
+.auth-title{font-size:20px;font-weight:800;color:#fff;text-align:center;margin-bottom:5px;letter-spacing:-.5px}
 .auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px}
 .auth-tabs{
-  display:flex;background:rgba(0,0,0,.3);border-radius:9px;
-  padding:3px;margin-bottom:24px;gap:3px;
+  display:flex;background:rgba(255,255,255,.04);border-radius:9px;
+  padding:3px;margin-bottom:24px;border:1px solid var(--border);
 }
 .auth-tab{
   flex:1;padding:8px;border-radius:7px;font-size:13px;font-weight:600;
   border:none;cursor:pointer;font-family:var(--sans);
   color:var(--text2);background:none;transition:all .15s;
 }
-.auth-tab.active{background:var(--surface2);color:var(--text)}
+.auth-tab.active{background:rgba(255,255,255,.1);color:#fff}
 .auth-form{display:flex;flex-direction:column;gap:14px}
 .auth-form-hidden{display:none}
 .form-grp{display:flex;flex-direction:column;gap:5px}
-.form-lbl{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.3px}
+.form-lbl{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.3px;font-family:var(--mono)}
 .form-inp{
-  background:rgba(255,255,255,.04);border:1px solid var(--border);
-  border-radius:8px;padding:10px 13px;color:var(--text);
+  background:rgba(255,255,255,.05);border:1px solid var(--border);
+  border-radius:8px;padding:10px 13px;color:#fff;
   font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;
 }
-.form-inp:focus{border-color:var(--ba);box-shadow:0 0 0 3px rgba(59,130,246,.08)}
+.form-inp:focus{border-color:rgba(255,255,255,.3)}
 .form-inp::placeholder{color:var(--text3)}
 .auth-submit{
-  background:var(--accent);color:#fff;padding:12px;
+  background:#fff;color:#000;padding:12px;
   border-radius:9px;font-size:14px;font-weight:700;
   border:none;cursor:pointer;font-family:var(--sans);
   transition:all .2s;margin-top:6px;
 }
-.auth-submit:hover{background:#2563eb;transform:translateY(-1px);box-shadow:0 4px 20px rgba(59,130,246,.35)}
-.auth-divider{display:flex;align-items:center;gap:10px;color:var(--text3);font-size:11px}
-.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
-.auth-hint{font-size:11.5px;color:var(--text3);text-align:center;margin-top:6px}
-.auth-hint a{color:var(--accent);text-decoration:none;font-weight:600}
-.auth-hint a:hover{text-decoration:underline}
-
-/* ── TICKER BAR ── */
-.ticker{
-  background:rgba(6,12,24,.9);border-top:1px solid var(--border);border-bottom:1px solid var(--border);
-  padding:8px 0;overflow:hidden;white-space:nowrap;
+.auth-submit:hover{background:#e8e8e8;transform:translateY(-1px)}
+.auth-hint{font-size:11.5px;color:var(--text3);text-align:center;margin-top:4px}
+.auth-hint a{color:var(--text2);text-decoration:none;font-weight:600}
+.auth-hint a:hover{color:#fff}
+.auth-close{
+  position:absolute;top:16px;right:20px;background:none;border:none;
+  color:var(--text3);font-size:20px;cursor:pointer;line-height:1;
+  transition:color .15s;
 }
-.ticker-track{
-  display:inline-flex;animation:ticker 30s linear infinite;
-}
-.ticker-item{
-  display:inline-flex;align-items:center;gap:8px;padding:0 32px;
-  font-family:var(--mono);font-size:11px;color:var(--text2);
-}
-.ticker-item .ti-hash{color:var(--accent);font-size:9px;font-weight:600}
-.ticker-item .ti-name{color:var(--text);font-weight:600}
-.ticker-item .ti-msg{color:var(--text2)}
-.ticker-item .ti-time{color:var(--text3);font-size:9px}
-@keyframes ticker{0%{transform:translateX(0)}100%{transform:translateX(-50%)}}
-
-/* ── FOOTER ── */
-footer{
-  padding:40px;border-top:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:16px;
-}
-.foot-brand{display:flex;align-items:center;gap:8px}
-.foot-name{font-size:13px;font-weight:700;color:var(--text)}
-.foot-copy{font-size:11px;color:var(--text3);margin-top:2px}
-.foot-links{display:flex;gap:16px}
-.foot-link{font-size:12px;color:var(--text3);text-decoration:none;transition:color .15s}
-.foot-link:hover{color:var(--text2)}
-
-/* ── CREDIT EXPLAINER ── */
-.credit-explainer{
-  display:flex;align-items:center;gap:0;
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:14px;padding:20px 28px;margin-bottom:36px;flex-wrap:wrap;gap:0;
-}
-.ce-item{display:flex;align-items:flex-start;gap:14px;flex:1;min-width:240px}
-.ce-icon{font-size:22px;flex-shrink:0;margin-top:2px}
-.ce-title{font-size:13px;font-weight:700;color:var(--text);margin-bottom:5px}
-.ce-desc{font-size:12px;color:var(--text2);line-height:1.6}
-.ce-divider{width:1px;background:var(--border);align-self:stretch;margin:0 28px;flex-shrink:0}
-@media(max-width:600px){.ce-divider{display:none}.ce-item{min-width:100%}}
-.pricing-credit-bar{
-  display:flex;align-items:center;justify-content:space-between;
-  background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.15);
-  border-radius:8px;padding:7px 12px;margin-bottom:16px;
-}
-.pcb-label{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--accent);letter-spacing:1.5px}
-.pcb-val{font-family:var(--mono);font-size:11px;font-weight:600;color:var(--text)}
-
-/* ── PRICING ── */
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;align-items:start}
-@media(max-width:800px){.pricing-grid{grid-template-columns:1fr}}
-.pricing-card{
-  background:var(--surface);border:1px solid var(--border);
-  border-radius:16px;padding:28px;display:flex;flex-direction:column;gap:0;
-  transition:all .2s;position:relative;
-}
-.pricing-card:hover{border-color:var(--border2);transform:translateY(-2px);box-shadow:0 10px 35px rgba(0,0,20,.3)}
-.pricing-popular{
-  border-color:var(--ba);
-  box-shadow:0 0 0 1px rgba(59,130,246,.15),0 8px 40px rgba(59,130,246,.1);
-}
-.pricing-badge{
-  position:absolute;top:-11px;left:50%;transform:translateX(-50%);
-  background:var(--accent);color:#fff;
-  font-family:var(--mono);font-size:9px;font-weight:700;letter-spacing:2px;
-  padding:3px 14px;border-radius:20px;white-space:nowrap;
-}
-.pricing-tier{
-  font-family:var(--mono);font-size:10px;font-weight:700;letter-spacing:3px;
-  color:var(--text3);margin-bottom:10px;
-}
-.pricing-price{
-  font-size:40px;font-weight:800;color:var(--text);letter-spacing:-2px;
-  line-height:1;margin-bottom:8px;
-}
-.pricing-period{font-size:14px;font-weight:400;color:var(--text2);letter-spacing:0}
-.pricing-desc{font-size:12.5px;color:var(--text2);line-height:1.6;margin-bottom:20px}
-.pricing-features{list-style:none;display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
-.pricing-features li{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--text2)}
-.pf-check{color:var(--green);font-weight:700;flex-shrink:0;font-size:12px}
-.pf-dim{color:var(--text3);flex-shrink:0;font-size:12px}
-.pricing-btn{
-  display:block;text-align:center;padding:11px;border-radius:9px;
-  font-size:13px;font-weight:700;cursor:pointer;
-  border:1px solid var(--border2);color:var(--text);background:rgba(255,255,255,.04);
-  text-decoration:none;transition:all .2s;font-family:var(--sans);
-}
-.pricing-btn:hover{background:rgba(255,255,255,.08);border-color:var(--ba)}
-.pricing-btn-primary{
-  background:var(--accent);border-color:var(--accent);color:#fff;
-  box-shadow:0 4px 20px rgba(59,130,246,.3);
-}
-.pricing-btn-primary:hover{background:#2563eb;box-shadow:0 6px 28px rgba(59,130,246,.4)}
-.pricing-note{
-  text-align:center;margin-top:28px;font-size:12px;color:var(--text3);
-  padding:12px;border-top:1px solid var(--border);
-}
-
-/* ── MISC ── */
-.section-divider{height:1px;background:linear-gradient(90deg,transparent,var(--border) 30%,var(--border) 70%,transparent);max-width:800px;margin:0 auto}
+.auth-close:hover{color:#fff}
 </style>
 </head>
 <body>
 
-<div class="bg-grid"></div>
-<div class="bg-glow"></div>
-
 <!-- NAV -->
 <nav>
-  <a class="nav-brand" href="#">
-    <div class="nav-mark">K</div>
-    <div>
-      <div class="nav-name">Kayro</div>
-      <div class="nav-sub">AI WORKFORCE</div>
+  <a class="nav-logo" href="#">
+    <div class="nav-logo-mark">K</div>
+    <div class="nav-logo-text">
+      <span class="nav-logo-name">Kayro</span>
+      <span class="nav-logo-sub">AI WORKFORCE</span>
     </div>
   </a>
-  <div class="nav-links">
+  <div class="nav-right">
     <a class="nav-link" href="#features">Features</a>
-    <a class="nav-link" href="#standup">Standup</a>
+    <a class="nav-link" href="app.html">Standup</a>
     <a class="nav-link" href="#pricing">Pricing</a>
-    <a class="nav-cta" href="#auth">Get Started →</a>
+    <div class="nav-sep"></div>
+    <a class="nav-signin" href="#" onclick="openAuth('login');return false">Sign in</a>
+    <a class="nav-getstarted" href="#" onclick="openAuth('signup');return false">Get Started →</a>
   </div>
 </nav>
 
-<main>
-
-<!-- TICKER -->
-<div class="ticker" style="margin-top:58px">
-  <div class="ticker-track" id="ticker-track">
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Sarah</span><span class="ti-msg">Merge branch 'feature/3d-office' into main</span><span class="ti-time">2m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">fix</span><span class="ti-name">Omar</span><span class="ti-msg">Fix API streaming timeout on long responses</span><span class="ti-time">8m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">docs</span><span class="ti-name">Zara</span><span class="ti-msg">Update design system tokens for dark mode</span><span class="ti-time">15m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Alex</span><span class="ti-msg">Add UTM tracking to cold email campaigns</span><span class="ti-time">22m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">fix</span><span class="ti-name">Chris</span><span class="ti-msg">Resolve CRM duplicate contact detection bug</span><span class="ti-time">31m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Mia</span><span class="ti-msg">Add onboarding checklist for new subscribers</span><span class="ti-time">45m ago</span></span>
-    <!-- duplicate for seamless loop -->
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Sarah</span><span class="ti-msg">Merge branch 'feature/3d-office' into main</span><span class="ti-time">2m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">fix</span><span class="ti-name">Omar</span><span class="ti-msg">Fix API streaming timeout on long responses</span><span class="ti-time">8m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">docs</span><span class="ti-name">Zara</span><span class="ti-msg">Update design system tokens for dark mode</span><span class="ti-time">15m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Alex</span><span class="ti-msg">Add UTM tracking to cold email campaigns</span><span class="ti-time">22m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">fix</span><span class="ti-name">Chris</span><span class="ti-msg">Resolve CRM duplicate contact detection bug</span><span class="ti-time">31m ago</span></span>
-    <span class="ticker-item"><span class="ti-hash">feat</span><span class="ti-name">Mia</span><span class="ti-msg">Add onboarding checklist for new subscribers</span><span class="ti-time">45m ago</span></span>
-  </div>
-</div>
-
 <!-- HERO -->
-<section class="hero">
+<section class="hero" id="pricing">
   <div class="hero-badge">
     <span class="badge-dot"></span>
-    POWERED BY CLAUDE AI
-  </div>
-  <h1>Your AI team.<br><span>Always working.</span></h1>
-  <p class="hero-sub">Hire AI employees with real personalities, assign tasks on a live kanban board, manage spreadsheets, send cold emails — all from one command center.</p>
-  <div class="hero-ctas">
-    <a class="cta-primary" href="#auth">Launch Your HQ →</a>
-    <a class="cta-secondary" href="#standup">See Standup Board</a>
+    AI Workforce Platform
   </div>
 
-  <!-- OFFICE PREVIEW -->
-  <div class="hq-preview">
-    <div class="preview-topbar">
-      <div class="preview-dots">
-        <div class="preview-dot pd-r"></div>
-        <div class="preview-dot pd-y"></div>
-        <div class="preview-dot pd-g"></div>
-      </div>
-      <div class="preview-title">kayro-hq / Headquarters</div>
-      <div style="width:60px"></div>
-    </div>
-    <div class="preview-body">
+  <h1 class="hero-h1">
+    Hire AI employees.<br>
+    <span class="hero-h1-dim">Pay only for what they do.</span>
+  </h1>
 
-      <!-- Floor -->
-      <div class="floor"></div>
-
-      <!-- Employee bar -->
-      <div class="preview-emp-bar">
-        <div class="peb-item"><div class="peb-av" style="background:#3b82f6">O</div>Omar</div>
-        <div class="peb-sep"></div>
-        <div class="peb-item"><div class="peb-av" style="background:#22c55e">S</div>Sarah</div>
-        <div class="peb-sep"></div>
-        <div class="peb-item"><div class="peb-av" style="background:#f59e0b">A</div>Alex</div>
-        <div class="peb-sep"></div>
-        <div class="peb-item"><div class="peb-av" style="background:#a855f7">Z</div>Zara</div>
-        <div class="peb-sep"></div>
-        <div class="peb-item"><div class="peb-av" style="background:#ef4444">C</div>Chris</div>
-        <div class="peb-sep"></div>
-        <div class="peb-item"><div class="peb-av" style="background:#06b6d4">M</div>Mia</div>
-      </div>
-
-      <!-- Standup panel -->
-      <div class="preview-standup">
-        <div class="psd-label">STANDUP CLOCK</div>
-        <div class="psd-time" id="preview-clock">09:41</div>
-        <div class="psd-date" id="preview-date">MONDAY · MAY 2026</div>
-        <div class="psd-divider"></div>
-        <div class="psd-status-row">
-          <span class="psd-s-label">ACTIVE</span>
-          <span class="psd-s-val">6 / 6 ONLINE</span>
-        </div>
-        <div class="psd-status-row">
-          <span class="psd-s-label">TASKS TODAY</span>
-          <span class="psd-s-val">12 IN PROGRESS</span>
-        </div>
-        <button class="psd-btn">VIEW STANDUP</button>
-      </div>
-
-      <!-- Employee name tags with speech bubbles -->
-      <div class="emp-tag" style="left:22%;bottom:115px">
-        <div class="speech-bubble"><span class="sb-name">Sarah:</span> Merging feature/3d-office</div>
-        <div style="height:6px"></div>
-        <div class="emp-tag-status">WORKING</div>
-        <div class="emp-tag-avatar" style="background:#22c55e">S</div>
-        <div class="emp-tag-name"><div class="emp-tag-dot" style="background:#22c55e"></div>Sarah</div>
-      </div>
-
-      <div class="emp-tag" style="left:43%;bottom:130px">
-        <div class="emp-tag-status">WORKING</div>
-        <div class="emp-tag-avatar" style="background:#3b82f6">O</div>
-        <div class="emp-tag-name"><div class="emp-tag-dot" style="background:#3b82f6"></div>Omar</div>
-      </div>
-
-      <div class="emp-tag" style="left:60%;bottom:90px">
-        <div class="speech-bubble" style="font-size:8.5px"><span class="sb-name">Alex:</span> Scheduling Q2 campaign</div>
-        <div style="height:6px"></div>
-        <div class="emp-tag-status idle">IDLE</div>
-        <div class="emp-tag-avatar" style="background:#f59e0b">A</div>
-        <div class="emp-tag-name"><div class="emp-tag-dot" style="background:#f59e0b"></div>Alex</div>
-      </div>
-
-      <div class="emp-tag" style="left:75%;bottom:130px">
-        <div class="emp-tag-status">WORKING</div>
-        <div class="emp-tag-avatar" style="background:#a855f7">Z</div>
-        <div class="emp-tag-name"><div class="emp-tag-dot" style="background:#a855f7"></div>Zara</div>
-      </div>
-
-      <!-- Watermark -->
-      <div style="position:absolute;bottom:42px;left:50%;transform:translateX(-50%);font-size:14px;font-weight:800;letter-spacing:5px;color:rgba(80,120,200,.06);pointer-events:none;font-family:var(--mono)">KAYRO HQ</div>
-
-      <!-- Bottom bar -->
-      <div style="position:absolute;bottom:0;left:0;right:0;height:28px;background:rgba(4,8,18,.96);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:6px;">
-        <span style="font-family:var(--mono);font-size:9.5px;color:#3a4a60"><b style="color:#506080">6</b> employees online</span>
-        <span style="color:#1a2030;font-size:11px">·</span>
-        <span style="font-family:var(--mono);font-size:9.5px;color:#3a4a60"><b style="color:#506080">12</b> tasks active</span>
-        <div style="margin-left:auto;display:flex;gap:10px">
-          <span style="font-family:var(--mono);font-size:9px;color:#252535">scroll to zoom</span>
-          <span style="font-family:var(--mono);font-size:9px;color:#252535">drag to pan</span>
-        </div>
-      </div>
-
-    </div>
+  <p class="hero-sub">Each plan includes a monthly credit allowance. Top up anytime — no waste, no surprise bills.</p>
+  <div class="hero-trust">
+    <span>7-day free trial</span>·<span>no credit card required</span>·<span>cancel anytime</span>
   </div>
-</section>
 
-<!-- STANDUP SECTION -->
-<div class="section-divider"></div>
-<section id="standup">
-  <div class="standup-section">
-    <div class="standup-section-title">// daily standup board</div>
-    <h2 class="standup-section-h">Know exactly what your team is doing</h2>
-    <p class="standup-section-sub">Every AI employee has a live standup card — current task, recent commits, active tickets, and blockers.</p>
-
-    <div class="standup-grid">
-      <!-- Sarah -->
-      <div class="su-card">
-        <div class="su-card-hdr">
-          <div class="su-av" style="background:#22c55e">S</div>
-          <div>
-            <div class="su-name">Sarah</div>
-            <div class="su-role">lead-engineer</div>
-          </div>
-          <div class="su-status working">WORKING</div>
-        </div>
-        <div class="su-section">CURRENT TASK</div>
-        <div class="su-task">Implement WebGL context lifecycle management for 3D office</div>
-        <div class="su-section">RECENT COMMITS</div>
-        <div class="su-commit"><span class="commit-hash">a3f9c1e</span> feat: add renderer.dispose() on page destroy</div>
-        <div class="su-commit"><span class="commit-hash">8b2d405</span> fix: prevent WebGL context leak on HQ revisit</div>
-        <div class="su-section">BLOCKERS</div>
-        <div style="font-size:10.5px;color:var(--green);font-family:var(--mono)">— none</div>
-        <div class="su-sources">
-          <button class="su-src active">GITHUB</button>
-          <button class="su-src">JIRA</button>
-          <button class="su-src">MANUAL</button>
-        </div>
-      </div>
-
-      <!-- Omar -->
-      <div class="su-card">
-        <div class="su-card-hdr">
-          <div class="su-av" style="background:#3b82f6">O</div>
-          <div>
-            <div class="su-name">Omar</div>
-            <div class="su-role">head-of-product</div>
-          </div>
-          <div class="su-status working">WORKING</div>
-        </div>
-        <div class="su-section">CURRENT TASK</div>
-        <div class="su-task">Finalize Q2 roadmap and prioritize AI employee feature set</div>
-        <div class="su-section">RECENT COMMITS</div>
-        <div class="su-commit"><span class="commit-hash">c91e382</span> docs: update product spec for standup board</div>
-        <div class="su-commit"><span class="commit-hash">4d7a019</span> chore: reorganize backlog for sprint 8</div>
-        <div class="su-section">BLOCKERS</div>
-        <div class="su-blocker">Waiting on design review for onboarding flow</div>
-        <div class="su-sources">
-          <button class="su-src">GITHUB</button>
-          <button class="su-src">JIRA</button>
-          <button class="su-src active">MANUAL</button>
-        </div>
-      </div>
-
-      <!-- Zara -->
-      <div class="su-card">
-        <div class="su-card-hdr">
-          <div class="su-av" style="background:#a855f7">Z</div>
-          <div>
-            <div class="su-name">Zara</div>
-            <div class="su-role">ui-ux-designer</div>
-          </div>
-          <div class="su-status idle">IDLE</div>
-        </div>
-        <div class="su-section">CURRENT TASK</div>
-        <div class="su-task">Design new onboarding screens for subscriber activation</div>
-        <div class="su-section">RECENT COMMITS</div>
-        <div class="su-commit"><span class="commit-hash">7fe5c33</span> design: export Figma components to handoff</div>
-        <div class="su-commit"><span class="commit-hash">2a8b17f</span> fix: align spacing tokens in DS v2.1</div>
-        <div class="su-section">BLOCKERS</div>
-        <div class="su-blocker">Need copy from Alex before finishing hero section</div>
-        <div class="su-sources">
-          <button class="su-src">GITHUB</button>
-          <button class="su-src active">JIRA</button>
-          <button class="su-src">MANUAL</button>
-        </div>
-      </div>
+  <!-- Billing toggle -->
+  <div class="billing-toggle">
+    <span class="billing-label">Monthly</span>
+    <div class="toggle-track" id="billing-track" onclick="toggleBilling()">
+      <div class="toggle-thumb"></div>
     </div>
+    <span class="billing-label">Annual</span>
+    <span class="annual-badge" id="annual-badge" style="opacity:.35">SAVE 20%</span>
   </div>
-</section>
 
-<div class="section-divider"></div>
-
-<!-- FEATURES -->
-<section id="features">
-  <div class="features-section">
-    <div class="feat-label">// capabilities</div>
-    <h2 class="feat-h">Everything your team needs</h2>
-    <p class="feat-sub">Six AI employees, each with their own expertise, personality, and memory — ready to work.</p>
-
-    <div class="features-grid">
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(59,130,246,.12)">👥</div>
-        <div class="feat-title">Hire & Fire Employees</div>
-        <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. They remember context across every conversation.</div>
-        <div class="feat-mono"><span class="hl">POST</span> /hire {name: "Jordan", role: "DevOps"}<br><span class="hl-g">✓</span> Jordan is now online</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(34,197,94,.12)">✅</div>
-        <div class="feat-title">Kanban Task Board</div>
-        <div class="feat-desc">Drag-and-drop tasks between To Do, In Progress, Review, and Done. AI employees update task status in natural language.</div>
-        <div class="feat-mono"><span class="hl-g">●</span> IN PROGRESS — 4 tasks<br><span class="hl">→</span> Assigned to Sarah, Omar</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(245,158,11,.12)">📊</div>
-        <div class="feat-title">AI Spreadsheets</div>
-        <div class="feat-desc">Full Excel-like grid with formula support — SUM, IF, AVERAGE, and more. Ask AI to fill ranges or analyze data instantly.</div>
-        <div class="feat-mono"><span class="hl">=SUM(B2:B10)</span> → 84,200<br><span class="hl-g">AI:</span> "Fill Q3 projections"</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(239,68,68,.12)">✉️</div>
-        <div class="feat-title">Cold Email Composer</div>
-        <div class="feat-desc">Generate personalized outreach with AI. Set the tone, add context, and send directly — or use your own EmailJS config.</div>
-        <div class="feat-mono"><span class="hl">TO:</span> james@acmecorp.com<br><span class="hl-g">TONE:</span> Professional + Punchy</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(168,85,247,.12)">🏢</div>
-        <div class="feat-title">3D Headquarters</div>
-        <div class="feat-desc">A live isometric office where your AI team works. Name tags, status badges, speech bubbles, and a daily standup panel.</div>
-        <div class="feat-mono"><span class="hl-g">WORKING</span> · Sarah · 09:41<br><span class="hl">feat:</span> Merge branch 'main'</div>
-      </div>
-      <div class="feat-card">
-        <div class="feat-icon" style="background:rgba(6,182,212,.12)">💬</div>
-        <div class="feat-title">Smart AI Chat</div>
-        <div class="feat-desc">Talk to any employee in the sliding chat panel. Powered by Claude — each employee has a unique system prompt and memory.</div>
-        <div class="feat-mono"><span class="hl-g">You:</span> What's blocking the launch?<br><span class="hl">Sarah:</span> Still need design QA sign-off</div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
-<!-- HOW IT WORKS -->
-<section id="how">
-  <div class="how-section">
-    <div class="feat-label">// setup in 3 steps</div>
-    <h2 class="feat-h">Up and running in minutes</h2>
-    <div class="how-steps">
-      <div class="how-step">
-        <div class="how-num">01</div>
-        <div>
-          <div class="how-text-title">Create your workspace</div>
-          <div class="how-text-desc">Sign up, add your Claude API key in Settings, and your AI headquarters is live instantly — no installs, no config files.</div>
-        </div>
-      </div>
-      <div class="how-connector"></div>
-      <div class="how-step">
-        <div class="how-num">02</div>
-        <div>
-          <div class="how-text-title">Hire your AI team</div>
-          <div class="how-text-desc">6 employees come pre-built. Add custom staff with any role, skills, and personality. They show up in your 3D office immediately.</div>
-        </div>
-      </div>
-      <div class="how-connector"></div>
-      <div class="how-step">
-        <div class="how-num">03</div>
-        <div>
-          <div class="how-text-title">Assign, chat, ship</div>
-          <div class="how-text-desc">Create tasks on the kanban board, chat with your team, fill spreadsheets with AI, and fire off cold emails — all in one tab.</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="section-divider"></div>
-
-<!-- PRICING -->
-<section id="pricing">
-  <div class="features-section">
-    <div class="feat-label">// pricing</div>
-    <h2 class="feat-h">Pay for what you use</h2>
-    <p class="feat-sub">AI is included — no API keys, no hidden costs. We handle the compute so you can focus on the work.</p>
-
-    <!-- Credit explainer -->
-    <div class="credit-explainer">
-      <div class="ce-item">
-        <div class="ce-icon">💬</div>
-        <div>
-          <div class="ce-title">What's an AI Message?</div>
-          <div class="ce-desc">Every time you or an employee sends a message, uses AI Fill in spreadsheets, generates an email, or updates a task — that's one AI message.</div>
-        </div>
-      </div>
-      <div class="ce-divider"></div>
-      <div class="ce-item">
-        <div class="ce-icon">⚡</div>
-        <div>
-          <div class="ce-title">We cover the API cost</div>
-          <div class="ce-desc">Your subscription includes real Claude AI usage. No Anthropic account needed. We pay for the compute, you get the output.</div>
-        </div>
-      </div>
-    </div>
-
+  <!-- Pricing cards -->
+  <div class="pricing-wrap" id="pricing-wrap">
     <div class="pricing-grid">
 
       <!-- Starter -->
-      <div class="pricing-card">
-        <div class="pricing-tier">STARTER</div>
-        <div class="pricing-price">$0<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">Try Kayro with your own Claude API key. Perfect for solo founders testing the product.</div>
-        <div class="pricing-credit-bar">
-          <span class="pcb-label">BRING YOUR OWN KEY</span>
+      <div class="p-card">
+        <div class="p-tier">Starter</div>
+        <div class="p-price p-price-monthly">$0<span class="p-period">/mo</span></div>
+        <div class="p-price p-price-annual">$0<span class="p-period">/mo</span></div>
+        <div class="p-desc">Try Kayro with your own Claude API key. Perfect for testing.</div>
+        <div class="p-credits">
+          <span class="p-credits-label">BRING YOUR OWN KEY</span>
+          <span class="p-credits-val">∞ usage</span>
         </div>
-        <ul class="pricing-features">
-          <li><span class="pf-check">✓</span> 3 AI employees</li>
-          <li><span class="pf-check">✓</span> Kanban task board</li>
-          <li><span class="pf-check">✓</span> AI spreadsheets</li>
-          <li><span class="pf-check">✓</span> Live HQ dashboard</li>
-          <li><span class="pf-check">✓</span> Cold email composer</li>
-          <li><span class="pf-dim">✗</span> AI messages included</li>
-          <li><span class="pf-dim">✗</span> Custom personalities</li>
+        <ul class="p-features">
+          <li><span class="pf-check">✓</span>3 AI employees</li>
+          <li><span class="pf-check">✓</span>Kanban task board</li>
+          <li><span class="pf-check">✓</span>AI spreadsheets</li>
+          <li><span class="pf-check">✓</span>Cold email composer</li>
+          <li><span class="pf-check">✓</span>3D HQ office</li>
+          <li><span class="pf-x">✗</span><span style="color:var(--text3)">AI credits included</span></li>
+          <li><span class="pf-x">✗</span><span style="color:var(--text3)">Custom personalities</span></li>
         </ul>
-        <a class="pricing-btn" href="#auth">Start Free</a>
+        <a class="p-btn" href="#" onclick="openAuth('signup');return false">Start free</a>
       </div>
 
       <!-- Growth — popular -->
-      <div class="pricing-card pricing-popular">
-        <div class="pricing-badge">MOST POPULAR</div>
-        <div class="pricing-tier" style="color:var(--accent)">GROWTH</div>
-        <div class="pricing-price">$49<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">For founders and small teams running a real operation on AI. AI usage included — no key needed.</div>
-        <div class="pricing-credit-bar">
-          <span class="pcb-label">AI MESSAGES INCLUDED</span>
-          <span class="pcb-val">5,000 / month</span>
+      <div class="p-card popular">
+        <div class="p-popular-label">MOST POPULAR</div>
+        <div class="p-tier" style="color:#fff">Growth</div>
+        <div class="p-price p-price-monthly">$49<span class="p-period">/mo</span></div>
+        <div class="p-price p-price-annual">$39<span class="p-period">/mo</span></div>
+        <div class="p-desc">For founders running a real operation on AI. No API key needed — credits included.</div>
+        <div class="p-credits" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.06)">
+          <span class="p-credits-label">AI CREDITS / MO</span>
+          <span class="p-credits-val">5,000 msgs</span>
         </div>
-        <ul class="pricing-features">
-          <li><span class="pf-check">✓</span> <b>10 AI employees</b></li>
-          <li><span class="pf-check">✓</span> <b>5,000 AI messages / mo</b></li>
-          <li><span class="pf-check">✓</span> No API key required</li>
-          <li><span class="pf-check">✓</span> Custom AI personalities</li>
-          <li><span class="pf-check">✓</span> Priority AI responses</li>
-          <li><span class="pf-check">✓</span> Full spreadsheet AI</li>
-          <li><span class="pf-check">✓</span> Email support</li>
+        <ul class="p-features">
+          <li><span class="pf-check">✓</span><strong>10 AI employees</strong></li>
+          <li><span class="pf-check">✓</span><strong>5,000 AI messages / mo</strong></li>
+          <li><span class="pf-check">✓</span>No API key required</li>
+          <li><span class="pf-check">✓</span>Custom AI personalities</li>
+          <li><span class="pf-check">✓</span>Priority AI responses</li>
+          <li><span class="pf-check">✓</span>Full quick-action library</li>
+          <li><span class="pf-check">✓</span>Email support</li>
         </ul>
-        <a class="pricing-btn pricing-btn-primary" href="https://buy.stripe.com/REPLACE_WITH_GROWTH_LINK" target="_blank" rel="noopener" id="stripe-growth-btn">Get Growth →</a>
-        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:center;margin-top:8px">Powered by Stripe · Cancel anytime</div>
+        <a class="p-btn primary" href="https://buy.stripe.com/REPLACE_WITH_GROWTH_LINK" target="_blank" rel="noopener">Get Growth →</a>
       </div>
 
       <!-- Scale -->
-      <div class="pricing-card">
-        <div class="pricing-tier">SCALE</div>
-        <div class="pricing-price">$149<span class="pricing-period">/month</span></div>
-        <div class="pricing-desc">For agencies and companies running entire departments on AI. Unlimited everything.</div>
-        <div class="pricing-credit-bar">
-          <span class="pcb-label">AI MESSAGES INCLUDED</span>
-          <span class="pcb-val">Unlimited</span>
+      <div class="p-card">
+        <div class="p-tier">Scale</div>
+        <div class="p-price p-price-monthly">$149<span class="p-period">/mo</span></div>
+        <div class="p-price p-price-annual">$119<span class="p-period">/mo</span></div>
+        <div class="p-desc">For agencies running entire departments on AI. Unlimited everything.</div>
+        <div class="p-credits">
+          <span class="p-credits-label">AI CREDITS / MO</span>
+          <span class="p-credits-val">Unlimited</span>
         </div>
-        <ul class="pricing-features">
-          <li><span class="pf-check">✓</span> <b>Unlimited AI employees</b></li>
-          <li><span class="pf-check">✓</span> <b>Unlimited AI messages</b></li>
-          <li><span class="pf-check">✓</span> Everything in Growth</li>
-          <li><span class="pf-check">✓</span> Custom branding</li>
-          <li><span class="pf-check">✓</span> Advanced analytics</li>
-          <li><span class="pf-check">✓</span> Dedicated account manager</li>
-          <li><span class="pf-check">✓</span> SLA + Slack support</li>
+        <ul class="p-features">
+          <li><span class="pf-check">✓</span><strong>Unlimited employees</strong></li>
+          <li><span class="pf-check">✓</span><strong>Unlimited AI messages</strong></li>
+          <li><span class="pf-check">✓</span>Everything in Growth</li>
+          <li><span class="pf-check">✓</span>Custom branding</li>
+          <li><span class="pf-check">✓</span>Advanced analytics</li>
+          <li><span class="pf-check">✓</span>Dedicated account manager</li>
+          <li><span class="pf-check">✓</span>SLA + Slack support</li>
         </ul>
-        <a class="pricing-btn" href="https://buy.stripe.com/REPLACE_WITH_SCALE_LINK" target="_blank" rel="noopener" id="stripe-scale-btn">Get Scale →</a>
+        <a class="p-btn" href="https://buy.stripe.com/REPLACE_WITH_SCALE_LINK" target="_blank" rel="noopener">Get Scale →</a>
       </div>
 
-    </div>
-
-    <div class="pricing-note">
-      <span style="font-family:var(--mono);font-size:10px;color:var(--text3)">// </span>
-      All paid plans powered by <strong style="color:var(--text2)">Claude AI</strong> · Payments via <strong style="color:var(--text2)">Stripe</strong> · Cancel anytime ·
-      <a href="mailto:obaalbaki11@gmail.com" style="color:var(--accent);text-decoration:none">Contact us</a> for team deals
     </div>
   </div>
 </section>
 
-<div class="section-divider"></div>
+<!-- FEATURES SECTION -->
+<section class="feat-section" id="features">
+  <p class="feat-section-sub">Six AI employees, each with their own expertise, personality, and memory — ready to work.</p>
+  <div class="feat-grid">
 
-<!-- AUTH -->
-<section id="auth">
-  <div class="auth-section">
-    <div class="auth-box">
-      <div class="auth-logo">
-        <div class="auth-mark">K</div>
+    <!-- Hire & Fire -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1e3a5f">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
-      <div class="auth-title">Kayro Interactive</div>
-      <div class="auth-sub">Your AI workforce, on demand</div>
-
-      <div class="auth-tabs">
-        <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
-        <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+      <div class="feat-title">Hire &amp; Fire Employees</div>
+      <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. They remember context across every conversation.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">POST</span> <span class="fp-white">/hire {name: "Jordan", role: "DevOps"}</span></div>
+        <div><span class="fp-green">✓ Jordan is now online</span></div>
       </div>
-
-      <!-- Login form -->
-      <form class="auth-form" id="login-form" onsubmit="handleAuth(event)">
-        <div class="form-grp">
-          <label class="form-lbl">EMAIL</label>
-          <input class="form-inp" type="email" placeholder="you@company.com" required>
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">PASSWORD</label>
-          <input class="form-inp" type="password" placeholder="••••••••" required>
-        </div>
-        <button class="auth-submit" type="submit">Sign In → Launch HQ</button>
-        <div class="auth-hint">No account? <a href="#" onclick="switchTab('signup');return false">Sign up free</a></div>
-      </form>
-
-      <!-- Signup form -->
-      <form class="auth-form auth-form-hidden" id="signup-form" onsubmit="handleAuth(event)">
-        <div class="form-grp">
-          <label class="form-lbl">FULL NAME</label>
-          <input class="form-inp" type="text" placeholder="Your name" required>
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">EMAIL</label>
-          <input class="form-inp" type="email" placeholder="you@company.com" required>
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">COMPANY NAME</label>
-          <input class="form-inp" type="text" placeholder="Acme Corp" id="signup-company">
-        </div>
-        <div class="form-grp">
-          <label class="form-lbl">PASSWORD</label>
-          <input class="form-inp" type="password" placeholder="Choose a password" required>
-        </div>
-        <button class="auth-submit" type="submit">Create Your HQ →</button>
-        <div class="auth-hint">Already have an account? <a href="#" onclick="switchTab('login');return false">Sign in</a></div>
-      </form>
     </div>
+
+    <!-- Kanban -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#14321e">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="feat-title">Kanban Task Board</div>
+      <div class="feat-desc">Drag-and-drop tasks between To Do, In Progress, Review, and Done. AI employees update task status in natural language.</div>
+      <div class="feat-preview">
+        <div><span class="fp-green">●</span> <span class="fp-white">IN PROGRESS — 4 tasks</span></div>
+        <div><span class="fp-dim">→</span> <span class="fp-white">Assigned to Sarah, Omar</span></div>
+      </div>
+    </div>
+
+    <!-- Spreadsheets -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#2d1f0a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+      </div>
+      <div class="feat-title">AI Spreadsheets</div>
+      <div class="feat-desc">Full Excel-like grid with formula support — SUM, IF, AVERAGE, and more. Ask AI to fill ranges or analyze data instantly.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">=SUM(B2:B10)</span> <span class="fp-dim">→</span> <span class="fp-white">84,200</span></div>
+        <div><span class="fp-orange">AI:</span> <span class="fp-white">"Fill Q3 projections"</span></div>
+      </div>
+    </div>
+
+    <!-- Cold Email -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#2d1020">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      </div>
+      <div class="feat-title">Cold Email Composer</div>
+      <div class="feat-desc">Generate personalized outreach with AI. Set the tone, add context, and send directly — or use your own EmailJS config.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">TO:</span> <span class="fp-white">james@acmecorp.com</span></div>
+        <div><span class="fp-blue">TONE:</span> <span class="fp-white">Professional + Punchy</span></div>
+      </div>
+    </div>
+
+    <!-- 3D HQ -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1e1436">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      </div>
+      <div class="feat-title">3D Headquarters</div>
+      <div class="feat-desc">A live isometric office where your AI team works. Name tags, status badges, speech bubbles, and a daily standup panel.</div>
+      <div class="feat-preview">
+        <div><span class="fp-green">WORKING</span> <span class="fp-dim">·</span> <span class="fp-white">Sarah · 09:41</span></div>
+        <div><span class="fp-dim">feat:</span> <span class="fp-white">Merge branch 'main'</span></div>
+      </div>
+    </div>
+
+    <!-- Smart Chat -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#0a2428">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      </div>
+      <div class="feat-title">Smart AI Chat</div>
+      <div class="feat-desc">Talk to any employee in the sliding chat panel. Powered by Claude — each employee has a unique system prompt and memory.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">You:</span> <span class="fp-white">What's blocking the launch?</span></div>
+        <div><span class="fp-green">Sarah:</span> <span class="fp-white">Still need design QA sign-off</span></div>
+      </div>
+    </div>
+
   </div>
 </section>
 
-</main>
+<!-- OFFICE CTA STRIP -->
+<div class="office-strip">
+  <div class="office-strip-label">// your headquarters</div>
+  <h2 class="office-strip-h">See your AI team at work</h2>
+  <p class="office-strip-sub">A live 3D office where your employees show their status, active tasks, and daily standup — in real time.</p>
+  <a class="office-btn" href="app.html">Launch HQ →</a>
+  <a class="office-btn ghost" href="#" onclick="openAuth('signup');return false">Sign up free</a>
+</div>
 
 <!-- FOOTER -->
 <footer>
-  <div class="foot-brand">
-    <div class="nav-mark" style="width:28px;height:28px;font-size:13px">K</div>
+  <div class="foot-left">
+    <div class="nav-logo-mark" style="width:28px;height:28px;font-size:13px">K</div>
     <div>
       <div class="foot-name">Kayro Interactive</div>
-      <div class="foot-copy">© 2026 · All rights reserved</div>
+      <div class="foot-copy">© 2026</div>
     </div>
   </div>
   <div class="foot-links">
     <a class="foot-link" href="app.html">Launch App</a>
+    <a class="foot-link" href="mailto:obaalbaki11@gmail.com">Contact</a>
     <a class="foot-link" href="#">Privacy</a>
-    <a class="foot-link" href="#">Terms</a>
   </div>
 </footer>
 
-<!-- Stripe.js — replace publishable key with your real key from dashboard.stripe.com -->
-<script src="https://js.stripe.com/v3/"></script>
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuth()">
+  <div class="auth-box" style="position:relative">
+    <button class="auth-close" onclick="closeAuth()">✕</button>
+    <div class="auth-logo"><div class="auth-logo-mark">K</div></div>
+    <div class="auth-title">Kayro Interactive</div>
+    <div class="auth-sub">Your AI workforce, on demand</div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
+    </div>
+
+    <form class="auth-form" id="login-form" onsubmit="handleAuth(event)">
+      <div class="form-grp">
+        <label class="form-lbl">EMAIL</label>
+        <input class="form-inp" type="email" placeholder="you@company.com" required>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">PASSWORD</label>
+        <input class="form-inp" type="password" placeholder="••••••••" required>
+      </div>
+      <button class="auth-submit" type="submit">Sign In → Launch HQ</button>
+      <div class="auth-hint">No account? <a href="#" onclick="switchTab('signup');return false">Sign up free</a></div>
+    </form>
+
+    <form class="auth-form auth-form-hidden" id="signup-form" onsubmit="handleAuth(event)">
+      <div class="form-grp">
+        <label class="form-lbl">FULL NAME</label>
+        <input class="form-inp" type="text" placeholder="Your name" required>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">EMAIL</label>
+        <input class="form-inp" type="email" placeholder="you@company.com" required>
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">COMPANY NAME</label>
+        <input class="form-inp" type="text" id="signup-company" placeholder="Acme Corp">
+      </div>
+      <div class="form-grp">
+        <label class="form-lbl">PASSWORD</label>
+        <input class="form-inp" type="password" placeholder="Choose a password" required>
+      </div>
+      <button class="auth-submit" type="submit">Create HQ →</button>
+      <div class="auth-hint">Have an account? <a href="#" onclick="switchTab('login');return false">Sign in</a></div>
+    </form>
+  </div>
+</div>
+
 <script>
-// Stripe setup — replace these with your real Stripe keys & payment link URLs
-// Dashboard: https://dashboard.stripe.com/payment-links
-const STRIPE_PUBLISHABLE_KEY = 'pk_live_REPLACE_WITH_YOUR_KEY';
-// If you prefer Payment Links (no code needed), just update the href on #stripe-pro-btn and #stripe-ent-btn
-// If you prefer Stripe Checkout, initialize here:
-// const stripe = Stripe(STRIPE_PUBLISHABLE_KEY);
-
-// Clock
-function updateClock() {
-  const now = new Date();
-  const hh = String(now.getHours()).padStart(2,'0');
-  const mm = String(now.getMinutes()).padStart(2,'0');
-  const days = ['SUNDAY','MONDAY','TUESDAY','WEDNESDAY','THURSDAY','FRIDAY','SATURDAY'];
-  const months = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-  const el = document.getElementById('preview-clock');
-  const de = document.getElementById('preview-date');
-  if (el) el.textContent = hh + ':' + mm;
-  if (de) de.textContent = days[now.getDay()] + ' · ' + months[now.getMonth()] + ' ' + now.getFullYear();
+// Billing toggle
+let isAnnual = false;
+function toggleBilling() {
+  isAnnual = !isAnnual;
+  document.getElementById('billing-track').classList.toggle('annual', isAnnual);
+  document.getElementById('annual-badge').style.opacity = isAnnual ? '1' : '.35';
+  document.getElementById('pricing-wrap').classList.toggle('billing-annual', isAnnual);
 }
-updateClock();
-setInterval(updateClock, 30000);
 
-// Auth tab switching
+// Auth modal
+function openAuth(tab) {
+  document.getElementById('auth-overlay').classList.add('open');
+  switchTab(tab || 'login');
+}
+function closeAuth() {
+  document.getElementById('auth-overlay').classList.remove('open');
+}
 function switchTab(tab) {
-  const loginForm = document.getElementById('login-form');
-  const signupForm = document.getElementById('signup-form');
-  const tabLogin = document.getElementById('tab-login');
-  const tabSignup = document.getElementById('tab-signup');
+  const lf = document.getElementById('login-form');
+  const sf = document.getElementById('signup-form');
+  const tl = document.getElementById('tab-login');
+  const ts = document.getElementById('tab-signup');
   if (tab === 'login') {
-    loginForm.classList.remove('auth-form-hidden');
-    signupForm.classList.add('auth-form-hidden');
-    tabLogin.classList.add('active');
-    tabSignup.classList.remove('active');
+    lf.classList.remove('auth-form-hidden'); sf.classList.add('auth-form-hidden');
+    tl.classList.add('active'); ts.classList.remove('active');
   } else {
-    signupForm.classList.remove('auth-form-hidden');
-    loginForm.classList.add('auth-form-hidden');
-    tabSignup.classList.add('active');
-    tabLogin.classList.remove('active');
+    sf.classList.remove('auth-form-hidden'); lf.classList.add('auth-form-hidden');
+    ts.classList.add('active'); tl.classList.remove('active');
   }
 }
-
-// Auth submit — store company name and redirect
 function handleAuth(e) {
   e.preventDefault();
-  const companyInp = document.getElementById('signup-company');
-  if (companyInp && companyInp.value.trim()) {
+  const co = document.getElementById('signup-company');
+  if (co && co.value.trim()) {
     try {
-      const settings = JSON.parse(localStorage.getItem('kayro_settings') || '{}');
-      settings.companyName = companyInp.value.trim();
-      localStorage.setItem('kayro_settings', JSON.stringify(settings));
+      const s = JSON.parse(localStorage.getItem('kayro_settings') || '{}');
+      s.companyName = co.value.trim();
+      localStorage.setItem('kayro_settings', JSON.stringify(s));
     } catch(_) {}
   }
   window.location.href = 'app.html';
