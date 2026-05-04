@@ -706,3 +706,46 @@ td.editing .cell-editor{display:block}
   .brand-mark{margin:auto}
   .sidebar-brand{justify-content:center}
 }
+
+/* ── DESIGN STUDIO ─────────────────────────────────────────── */
+.ds-top{display:grid;grid-template-columns:340px 1fr;gap:16px;padding:0 24px 24px;min-height:540px}
+@media(max-width:900px){.ds-top{grid-template-columns:1fr;min-height:auto}}
+.ds-form{display:flex;flex-direction:column;gap:14px}
+.ds-type-row{display:flex;gap:6px;flex-wrap:wrap}
+.ds-type-btn{
+  padding:6px 14px;border-radius:8px;font-size:11.5px;font-weight:600;
+  border:1px solid var(--border2);color:var(--text2);background:none;
+  cursor:pointer;font-family:var(--font);transition:all .15s;
+}
+.ds-type-btn.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.ds-type-btn:hover:not(.active){border-color:rgba(255,255,255,.25);color:var(--text)}
+.ds-preview-wrap{
+  border:1px solid var(--border);border-radius:12px;
+  overflow:hidden;background:var(--surface);
+  display:flex;flex-direction:column;min-height:500px;
+}
+.ds-preview-empty{
+  flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:var(--text3);
+}
+.ds-preview-toolbar{
+  display:flex;align-items:center;gap:10px;padding:10px 14px;
+  border-bottom:1px solid var(--border);background:var(--surface2);flex-shrink:0;
+}
+.ds-preview-emp{font-size:12px;font-weight:700}
+.ds-iframe{flex:1;border:none;min-height:460px;background:#000}
+.ds-saved-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px;padding:0 24px 32px}
+.ds-saved-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:16px}
+.ds-sc-hdr{display:flex;align-items:flex-start;gap:8px;margin-bottom:6px}
+.ds-sc-title{font-size:12.5px;font-weight:600;color:var(--text);flex:1;line-height:1.4}
+.ds-sc-meta{font-size:11px}
+
+/* ── BRAIN PAGE ─────────────────────────────────────────────── */
+.brain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:0 24px 32px}
+.brain-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.brain-card-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
+.brain-memories{padding:10px 6px;max-height:360px;overflow-y:auto}
+.brain-mem{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-radius:7px;transition:background .1s}
+.brain-mem:hover{background:rgba(255,255,255,.03)}
+.brain-mem-bullet{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
+.brain-mem-text{font-size:11.5px;color:var(--text2);line-height:1.6;flex:1}

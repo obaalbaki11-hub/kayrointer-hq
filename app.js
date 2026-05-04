@@ -10,7 +10,7 @@ const COLS   = ['todo','inprogress','review','done'];
 const COL_LABELS = {todo:'TO DO',inprogress:'IN PROGRESS',review:'REVIEW',done:'DONE'};
 
 const DEFAULT_EMPLOYEES = [
-  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[-2.5, 1.5],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
+  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[-11, 3],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product. You are the strategic brain of the company — obsessed with users, shipping, and cutting through ambiguity fast.
 
 PERSONALITY: Decisive, direct, slightly blunt. You think in frameworks. You hate vague answers and give crisp, opinionated takes.
@@ -25,7 +25,7 @@ WHAT YOU DO WELL:
 
 STYLE: Use bullet points. Be specific — never generic. When writing a document, write it IN FULL. End every response with a clear next action.`},
 
-  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-5.0,-3.5],status:'online', skills:['React','Node.js','System Architecture','Code Review','TypeScript'],hired:Date.now(),tasks:0,
+  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-16,-5],status:'online', skills:['React','Node.js','System Architecture','Code Review','TypeScript'],hired:Date.now(),tasks:0,
    system:`You are Sarah, Lead Engineer. You build and review systems that scale. You have strong opinions about code quality and catch edge cases others miss.
 
 PERSONALITY: Precise, thorough, opinionated. You hate technical debt and vague specs. You ask the right clarifying questions.
@@ -41,7 +41,7 @@ WHAT YOU DO WELL:
 
 STYLE: Technical but readable. Include code when it helps. Always flag assumptions and edge cases. If asked to write code, write the real code — not pseudocode.`},
 
-  {id:'e3',name:'Alex',  role:'Head of Marketing', color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[ 2.0,-0.5],status:'online', skills:['Growth Marketing','SEO','Copywriting','Paid Ads','Content Strategy'],hired:Date.now(),tasks:0,
+  {id:'e3',name:'Alex',  role:'Head of Marketing', color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[11, 4],status:'online', skills:['Growth Marketing','SEO','Copywriting','Paid Ads','Content Strategy'],hired:Date.now(),tasks:0,
    system:`You are Alex, Head of Marketing. You turn ideas into campaigns that drive real growth. You're equal parts creative and analytical.
 
 PERSONALITY: High-energy, punchy, results-obsessed. You think in hooks, headlines, and conversion funnels.
@@ -57,7 +57,7 @@ WHAT YOU DO WELL:
 
 STYLE: Punchy and specific. When writing copy, write the REAL copy — not templates with [INSERT TEXT HERE]. Give options when useful.`},
 
-  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[ 0.5, 2.8],status:'online', skills:['Figma','Design Systems','User Research','Wireframing','Accessibility'],hired:Date.now(),tasks:0,
+  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[-3, 3],status:'online', skills:['Figma','Design Systems','User Research','Wireframing','Accessibility'],hired:Date.now(),tasks:0,
    system:`You are Zara, UI/UX Designer. You craft interfaces that are beautiful, intuitive, and accessible. You advocate for users in every decision.
 
 PERSONALITY: Empathetic, detail-obsessed, and opinionated about design. You push back on poor UX decisions.
@@ -73,7 +73,7 @@ WHAT YOU DO WELL:
 
 STYLE: Visual and precise. Describe layouts, spacing, and interactions clearly. Reference design principles when relevant. Be opinionated — tell them what's wrong and why.`},
 
-  {id:'e5',name:'Chris', role:'Head of Sales',     color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[ 4.5, 0.5],status:'online', skills:['Cold Outreach','CRM','Objection Handling','Pipeline Management','Closing'],hired:Date.now(),tasks:0,
+  {id:'e5',name:'Chris', role:'Head of Sales',     color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[15, 0],status:'online', skills:['Cold Outreach','CRM','Objection Handling','Pipeline Management','Closing'],hired:Date.now(),tasks:0,
    system:`You are Chris, Head of Sales. You close deals and build relationships that last. You're confident without being pushy, and you know how to handle any objection.
 
 PERSONALITY: Direct, energetic, and strategic. You think in pipelines and outcomes. You never waste a prospect's time.
@@ -89,7 +89,7 @@ WHAT YOU DO WELL:
 
 STYLE: Confident and tight. Real emails, real scripts — no templates with [YOUR VALUE PROP]. When writing an email, write it as if you're sending it tomorrow.`},
 
-  {id:'e6',name:'Mia',   role:'Customer Success',  color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-1.5,-5.0],status:'online', skills:['Onboarding','Retention','Support','NPS','Churn Prevention'],hired:Date.now(),tasks:0,
+  {id:'e6',name:'Mia',   role:'Customer Success',  color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[0, 8],status:'online', skills:['Onboarding','Retention','Support','NPS','Churn Prevention'],hired:Date.now(),tasks:0,
    system:`You are Mia, Head of Customer Success. You ensure every customer gets real value and sticks around long-term. You're the voice of the customer inside the company.
 
 PERSONALITY: Warm, proactive, and solutions-first. You never escalate a problem without a proposed solution.
@@ -104,6 +104,23 @@ WHAT YOU DO WELL:
 - Draft QBR (quarterly business review) templates and agendas
 
 STYLE: Warm but professional. Specific and actionable. When writing a doc, write it completely. Think about what will actually help the customer, not just what sounds good.`},
+
+  {id:'e7',name:'ARIA', role:'Personal Assistant', color:'#f0c040',bodyHex:0xf0c040,skinHex:0xf3c182,pos:[0, 12],status:'online', skills:['Scheduling','Briefings','Research','Prioritization','Delegation'],hired:Date.now(),tasks:0,
+   system:`You are ARIA (AI Research & Intelligence Assistant), the personal assistant to the CEO. You are the connective tissue of the whole company — you know everything happening, manage priorities, and make the boss's life easier.
+
+PERSONALITY: Calm, organized, proactive. You anticipate needs. You never waste words — every output is structured and actionable.
+
+WHAT YOU DO WELL:
+- Write comprehensive daily briefings: what's happening, who's working on what, what needs attention
+- Summarize long conversations, documents, or threads into key points and actions
+- Draft agendas for meetings with timings and goals
+- Research any topic and return a structured brief
+- Track open questions and pending decisions across the team
+- Write professional emails, Slack messages, or announcements on behalf of the CEO
+- Prioritize and triage any list of tasks or requests
+- Take a brain dump and turn it into a clean action list
+
+STYLE: Crisp, structured. Use headers and bullet points. Be specific — never vague. Always end with "NEXT ACTION:" followed by the single most important thing to do.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -118,11 +135,13 @@ const State = {
     {id:'c3',name:'Marcus Rivera',email:'m.rivera@techventures.co',company:'Tech Ventures'},
   ],
   chatHistory: {},
+  memory: {},   // empId → [{fact, timestamp, empName}]
+  designs: [],  // [{id, title, prompt, html, empId, timestamp}]
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
 function loadState() {
-  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory'];
+  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -130,6 +149,8 @@ function loadState() {
     } catch(e) {}
   });
   if (!State.employees.length) State.employees = JSON.parse(JSON.stringify(DEFAULT_EMPLOYEES));
+  if (!State.memory) State.memory = {};
+  if (!State.designs) State.designs = [];
 }
 
 let _saveTm = {};
@@ -230,13 +251,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, employees:Employees, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings };
+    const pages = { hq:HQ, employees:Employees, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',employees:'Employees',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings'};
+    const titles = {hq:'Headquarters',employees:'Employees',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -350,25 +371,43 @@ const Chat = {
     const done      = myTasks.filter(t => t.column === 'done');
     const teammates = State.employees.filter(e => e.id !== emp.id);
     const allActive = State.tasks.filter(t => t.column !== 'done');
+    const memories  = (State.memory[emp.id] || []).slice(-12);
     return `${emp.system.replace(/Kayro Interactive/g, company)}
 
 ══ LIVE WORKSPACE ══
 Company: ${company}
 Your name: ${emp.name} | Role: ${emp.role}
-Teammates: ${teammates.length ? teammates.map(e=>`${e.name} (${e.role})`).join(', ') : 'None yet — you\'re the first hire'}
+Teammates: ${teammates.length ? teammates.map(e=>`${e.name} (${e.role})`).join(', ') : 'None yet'}
 
 Your tasks (${active.length} active, ${done.length} completed):
 ${active.length ? active.map(t=>`  • [${t.column.toUpperCase()}] ${t.title}${t.desc?' — '+t.desc:''}`).join('\n') : '  • No tasks assigned yet'}
 
 All team tasks: ${allActive.length} active across ${State.employees.length} employees
 ══════════════════
+${memories.length ? `\n🧠 YOUR MEMORY (things you've learned about this company/user):\n${memories.map(m=>`  • ${m.fact}`).join('\n')}\n══════════════════` : ''}
 
 RULES:
 - Write things IN FULL when asked (emails, docs, PRDs, code — complete, not outlined)
 - Reference specific task names when discussing work
 - Proactively flag blockers or risks without being asked
 - If someone is better suited to a question, say so AND answer anyway
-- Use line breaks and structure for readability`;
+- Use line breaks and structure for readability
+- If you learn something important about the user's business, preferences, or goals from this conversation, remember it by starting a line with "📌 REMEMBER:"`;
+  },
+
+  // Extract and save memories from AI responses
+  _extractMemories(empId, text) {
+    const lines = text.split('\n');
+    const facts = lines.filter(l => l.includes('📌 REMEMBER:')).map(l => l.replace(/.*📌 REMEMBER:\s*/,'').trim());
+    if (!facts.length) return;
+    if (!State.memory[empId]) State.memory[empId] = [];
+    facts.forEach(fact => {
+      if (fact && !State.memory[empId].some(m => m.fact === fact)) {
+        State.memory[empId].push({ fact, timestamp: Date.now() });
+      }
+    });
+    if (State.memory[empId].length > 50) State.memory[empId] = State.memory[empId].slice(-50);
+    save('memory');
   },
 
   // Quick actions per role (shown as pill buttons in chat)
@@ -474,6 +513,7 @@ RULES:
     if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId]=[];
     State.chatHistory[Chat.activeEmpId].push({role:'assistant',content:full});
     save_('chatHistory');
+    Chat._extractMemories(Chat.activeEmpId, full);
   }
 };
 function save_(k){save(k);}
@@ -581,9 +621,9 @@ const HQ = {
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x080808);
-    const FRUST = 13, asp = W / H;
-    const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 200);
-    camera.position.set(18, 18, 18); camera.lookAt(0, 1, 0);
+    const FRUST = 22, asp = W / H;
+    const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 300);
+    camera.position.set(30, 30, 30); camera.lookAt(0, 1, 0);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -591,71 +631,260 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Deep-dark lighting — minimal, just enough to show geometry
-    scene.add(new THREE.AmbientLight(0x2a3a5a, 1.4));
-    const sun = new THREE.DirectionalLight(0x6090c8, 0.7);
-    sun.position.set(14, 22, 14); sun.castShadow = true;
+    // Lighting — ambient base + directional sun + ceiling point lights
+    scene.add(new THREE.AmbientLight(0x1e2c44, 2.2));
+    const sun = new THREE.DirectionalLight(0x7090c0, 0.75);
+    sun.position.set(20, 35, 20); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left:-25, right:25, top:25, bottom:-25, near:.5, far:100 });
+    Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:.5, far:120 });
     scene.add(sun);
-    const fill = new THREE.DirectionalLight(0x101820, 0.5);
-    fill.position.set(-10, 8, -10); scene.add(fill);
+    const rim = new THREE.DirectionalLight(0x102030, 0.45);
+    rim.position.set(-15, 12, -15); scene.add(rim);
 
     function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
     const M = {
-      // Structure — near-black matching #080808 bg
-      fl: mat(0x0d0d0d),   // floor — barely visible
-      wa: mat(0x111111),   // back wall
-      wa2:mat(0x0f0f0f),   // side walls
-      // Furniture — dark charcoal tones with blue tint
-      de: mat(0x1a2030),   // desk legs
-      dt: mat(0x141a28),   // desk surface
-      ch: mat(0x0d1520),   // chair seat
-      cb: mat(0x080e18),   // chair back
-      mo: mat(0x080808),   // monitor stand
-      sc: mat(0x080f20, 0x020510), // monitor screen — subtle glow
-      // Features
-      sv: mat(0x101520),   // server rack
-      sl: mat(0x00dd88, 0x005533), // server LED — keep green
-      rt: mat(0x161e2c),   // round meeting table
-      so: mat(0x0d1830),   // sofa main
-      so2:mat(0x5a1808),   // sofa accent — dark red pop
-      pg: mat(0x082810),   // ping pong table
-      ne: mat(0x1e2e44),   // net
-      sh: mat(0x0c1220),   // bookshelf
-      pp: mat(0x200e04),   // plant pot
-      pl: mat(0x102c0c),   // plant leaves
-      tv: mat(0x050508),   // TV frame
-      ts: mat(0x040614, 0x010408), // TV screen — subtle glow
-      ct: mat(0x141c28),   // coffee table
-      pn: mat(0x060810),   // character pants/hair
+      fl:  mat(0x1c1c1e),       // concrete floor
+      ca:  mat(0x0d1828),       // carpet (open-plan zones)
+      wex: mat(0x1e1e22),       // exterior walls
+      win: mat(0x17171c),       // interior partitions
+      gl:  mat(0x08162a, 0x030914),  // glass walls — emissive blue tint
+      ceil:mat(0x141416),       // ceiling
+      clt: mat(0x2e2620, 0x1c1610),  // ceiling light panel — warm emissive
+      dt:  mat(0x1c2440),       // desk surface — blue-tinted slate
+      de:  mat(0x141720),       // desk legs / metal
+      ch:  mat(0x101828),       // chair seat
+      cb:  mat(0x0c1422),       // chair back mesh
+      mo:  mat(0x0c0c0e),       // monitor frame
+      sc:  mat(0x030a1c, 0x010610),  // monitor screen — emissive
+      sv:  mat(0x0e1420),       // server rack body
+      led: mat(0x00ee66, 0x004422),  // green LED
+      ldb: mat(0x0088ff, 0x002244),  // blue LED
+      so:  mat(0x111e34),       // sofa main
+      so2: mat(0x3c1008),       // sofa accent
+      cnt: mat(0x1c2030),       // counters / cabinets
+      app: mat(0x0e0e12),       // appliances
+      wb:  mat(0xd8e0ea),       // whiteboard surface
+      wbf: mat(0x141418),       // whiteboard frame
+      rug: mat(0x0c1530),       // area rug
+      pp:  mat(0x1c0e06),       // plant pot
+      pl:  mat(0x102808),       // plant leaves
+      ct:  mat(0x141c2c),       // coffee table
+      pn:  mat(0x080810),       // character pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
 
-    const OW=26, OD=18, WH=2.4, WT=.22;
-    ab(OW,.12,OD,M.fl,0,-.06,0);
-    ab(OW,WH,WT,M.wa,0,WH/2,-OD/2);
-    ab(WT,WH,OD,M.wa2,-OW/2,WH/2,0);
-    ab(WT,WH,OD,M.wa2,OW/2,WH/2,0);
-    ab(3.5,WH,WT,M.wa,-OW/2+1.75,WH/2,OD/2);
-    ab(3.5,WH,WT,M.wa,OW/2-1.75,WH/2,OD/2);
-    ab(WT,WH,6,M.wa2,-OW/2+5.2,WH/2,-OD/2+3);
-    const SX=-9.8, SZ=-6.2;
-    for (let i=0; i<4; i++) { ab(.55,1.95,.38,M.sv,SX+i*.72,.97,SZ); ab(.07,.05,.04,M.sl,SX+i*.72+.18,.5+Math.random()*.9,SZ-.21); ab(.07,.05,.04,M.sl,SX+i*.72-.1,.9+Math.random()*.4,SZ-.21); }
-    ab(3.2,.1,.65,M.dt,SX+1.08,.88,SZ);
-    const MX=-5.5, MZ=-4.5;
-    cy(1.3,.1,M.rt,MX,.72,MZ); cy(.06,.72,M.de,MX,.36,MZ);
-    for (let i=0; i<6; i++) { const a=(i/6)*Math.PI*2, cx=MX+Math.sin(a)*1.72, cz=MZ+Math.cos(a)*1.72; ab(.44,.1,.44,M.ch,cx,.7,cz); ab(.44,.44,.08,M.cb,cx+Math.sin(a)*.26,1,cz+Math.cos(a)*.26); }
-    function desk(x,z,ry=0) { const c=Math.cos(ry),s=Math.sin(ry); ab(1.5,.08,.75,M.dt,x,.7,z,ry); ab(1.5,.62,.05,M.de,x-s*.34,.4,z-c*.34,ry); [[.65,.3],[-.65,.3],[.65,-.3],[-.65,-.3]].forEach(([dx,dz])=>ab(.05,.7,.05,M.de,x+dx*c-dz*s,.34,z+dx*s+dz*c)); ab(.55,.38,.04,M.mo,x,.97,z-s*.1+c*.14,ry); ab(.55,.38,.04,M.sc,x,.97,z-s*.1+c*.12,ry); ab(.04,.12,.04,M.mo,x,.78,z-s*.1+c*.1,ry); }
-    [[-2.5,-1.5],[-.5,-1.5],[1.5,-1.5],[-2.5,.8],[-.5,.8],[1.5,.8],[-2.5,3],[-.5,3],[1.5,3],[5,-1.5],[7,-1.5],[5,.8],[7,.8],[5,3],[7,3]].forEach(([x,z]) => { desk(x,z); ab(.42,.1,.42,M.ch,x,.7,z+.9); ab(.42,.38,.07,M.cb,x,.94,z+1.1); [[.16,.16],[-.16,.16],[.16,-.16],[-.16,-.16]].forEach(([dx,dz])=>ab(.04,.7,.04,M.cb,x+dx,.35,z+.9+dz)); });
-    ab(2.6,.52,.78,M.so,8.6,.26,-2.2); ab(.78,.52,2.4,M.so,7.7,.26,-3); ab(2.6,.82,.12,M.so,8.6,.67,-2.62); ab(.12,.82,2.4,M.so,7.28,.67,-3); ab(.92,.46,.78,M.so2,9.2,.23,.6); ab(.92,.82,.1,M.so2,9.2,.64,.16); ab(1.15,.07,.68,M.ct,8.7,.44,-1.2);
-    ab(.3,2.1,2.3,M.sh,OW/2-.28,1.05,-2.8); [.35,.9,1.5].forEach(y => ab(.25,.05,2.3,M.dt,OW/2-.28,y,-2.8));
-    [0xcc2222,0x2244aa,0x228833,0xcc8811,0x882299,0x226688].forEach((c,i) => { const bm=new THREE.MeshLambertMaterial({color:c}); ab(.07,.24,.18,bm,OW/2-.28,.52+Math.floor(i/3)*.58,-2.8+(i%3-1)*.42); });
-    ab(2.6,.09,1.4,M.pg,7.8,.6,5.2); ab(.04,.22,1.4,M.ne,7.8,.74,5.2); [[-1.1,.56],[1.1,.56],[-1.1,-.56],[1.1,-.56]].forEach(([dx,dz]) => ab(.06,.6,.06,M.de,7.8+dx,.3,5.2+dz));
-    ab(2.4,1.35,.09,M.tv,3,1.5,-OD/2+.08); ab(2.25,1.22,.07,M.ts,3,1.5,-OD/2+.14);
-    function plant(x,z) { cy(.18,.26,M.pp,x,.13,z,8); cy(.09,.58,M.pl,x,.52,z,6); const lm=new THREE.Mesh(new THREE.SphereGeometry(.3,6,5),M.pl); lm.scale.y=.6; lm.position.set(x,.96,z); lm.castShadow=true; scene.add(lm); }
-    [[-OW/2+.7,-OD/2+.7],[OW/2-.9,-OD/2+.7],[-OW/2+.7,OD/2-.9],[OW/2-.9,OD/2-.9],[6.5,-5.5],[-4,5.5]].forEach(([x,z]) => plant(x,z));
+    const OW=46, OD=32, WH=3.2, WT=.18;
+
+    // ── CEILING LIGHTS (point lights + visible panels) ──────────
+    [[-15,-11],[-5,-11],[5,-11],[15,-11],
+     [-15,-2],[-5,-2],[5,-2],[15,-2],
+     [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
+      ab(.6,.06,.6,M.clt,x,WH+.02,z);
+      const pl=new THREE.PointLight(0xffc870,0.65,13); pl.position.set(x,WH-.15,z); scene.add(pl);
+    });
+    // accent: exec office
+    const epl=new THREE.PointLight(0xffe0b0,0.5,9); epl.position.set(17,-9,3); scene.add(epl);
+
+    // ── FLOOR ──────────────────────────────────────────────────
+    ab(OW,.1,OD,M.fl, 0,-.05,0);
+    // Carpet zones
+    ab(24,.11,20,M.ca, -8,0,-2);          // engineering/design wing carpet
+    ab(12,.11,12,M.ca, 15,0,0);           // sales carpet
+
+    // ── CEILING ────────────────────────────────────────────────
+    ab(OW,.12,OD,M.ceil, 0,WH+.06,0);
+
+    // ── EXTERIOR WALLS ─────────────────────────────────────────
+    ab(OW,WH,WT,M.wex, 0,WH/2,-OD/2);             // back
+    ab(WT,WH,OD,M.wex, -OW/2,WH/2,0);             // left
+    ab(WT,WH,OD,M.wex, OW/2,WH/2,0);              // right
+    ab(10,WH,WT,M.wex, -OW/2+5,WH/2,OD/2);        // front-left
+    ab(10,WH,WT,M.wex, OW/2-5,WH/2,OD/2);         // front-right
+    // Window openings on back wall (glazing panels)
+    [[-15,-8],[0,-8],[15,-8]].forEach(([x])=>{ ab(4.5,1.4,WT,M.gl,x,WH*.6,-OD/2); });
+
+    // ── INTERIOR PARTITIONS ────────────────────────────────────
+    // Server room enclosure
+    ab(10,WH,WT,M.win, -OW/2+5,WH/2,-OD/2+5.5);
+    ab(WT,WH,5.5,M.win, -OW/2+10,WH/2,-OD/2+2.75);
+    // Meeting room glass walls
+    ab(WT,WH,10,M.gl, -1,WH/2,-4);
+    ab(WT,WH,10,M.gl, 7,WH/2,-4);
+    ab(8,WH,WT,M.gl, 3,WH/2,-9);
+    // Exec office walls
+    ab(WT,WH,9,M.win, 11,WH/2,-8.5);
+    ab(8,WH,WT,M.win, 15,WH/2,-4);
+    // Kitchen/break room half-wall
+    ab(12,1.4,WT,M.win, 15,0.7,5.5);
+
+    // ── DESK + CHAIR FUNCTIONS ─────────────────────────────────
+    function desk(x,z,ry=0) {
+      const c=Math.cos(ry),s=Math.sin(ry);
+      ab(1.9,.07,.88,M.dt,x,.72,z,ry);
+      ab(1.1,.06,.12,M.de,x,.8,z-c*.22,ry);
+      [[.85,.37],[-.85,.37],[.85,-.37],[-.85,-.37]].forEach(([dx,dz])=>
+        ab(.05,.72,.05,M.de,x+dx*c-dz*s,.36,z+dx*s+dz*c));
+      ab(.82,.48,.06,M.mo,x,1.02,z-c*.28,ry);
+      ab(.74,.42,.04,M.sc,x,1.04,z-c*.26,ry);
+      ab(.06,.16,.06,M.de,x,.82,z-c*.21,ry);
+      ab(.5,.03,.2,M.de,x,.73,z+c*.16,ry);
+      ab(.09,.03,.11,M.cnt,x+.32*c,.73,z+.32*s,ry);
+    }
+    function chair(x,z,ry=0) {
+      const c=Math.cos(ry),s=Math.sin(ry);
+      ab(.54,.1,.54,M.ch,x,.72,z);
+      ab(.54,.58,.07,M.cb,x,1.03,z-c*.3,ry);
+      [[.28,0],[-.28,0]].forEach(([dx])=>{
+        ab(.08,.04,.46,M.de,x+dx*c,.84,z+dx*s,ry);
+        cy(.05,.38,M.de,x+dx*c,.45,z+dx*s,6);
+      });
+      cy(.04,.72,M.de,x,.36,z,6);
+      for(let a=0;a<5;a++){const ag=a/5*Math.PI*2;ab(.3,.04,.06,M.de,x+Math.cos(ag)*.23,.05,z+Math.sin(ag)*.23,ag);}
+    }
+
+    // ── SERVER ROOM (back-left) ────────────────────────────────
+    const SX=-OW/2+2, SZ=-OD/2+2;
+    for(let col=0;col<4;col++) {
+      for(let rack=0;rack<3;rack++) {
+        ab(.58,2.3,.46,M.sv, SX+col*1.6+rack*.64,.02,SZ);
+        for(let j=0;j<9;j++) {
+          if(Math.random()>.35) {
+            const lm=rack%2===0?M.led:M.ldb;
+            ab(.07,.04,.04,lm, SX+col*1.6+rack*.64+.22,.1+j*.26,SZ-.24);
+          }
+        }
+      }
+      ab(2,.08,.5,M.dt, SX+col*1.6+.6,2.35,SZ);
+    }
+
+    // ── ENGINEERING WORKSPACE (left wing, 3 rows × 3 desks) ───
+    [[-19,-7],[-14,-7],[-9,-7],
+     [-19,-2],[-14,-2],[-9,-2],
+     [-19,3], [-14,3]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
+
+    // ── DESIGN AREA (center-left) ─────────────────────────────
+    [[-3,3],[-3,0]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
+    // Design whiteboard (engineering wall)
+    ab(3.2,1.5,.08,M.wb, -19,1.65,-OD/2+.1);
+    ab(3.4,1.7,.06,M.wbf, -19,1.65,-OD/2+.12);
+    // Second whiteboard
+    ab(2.6,1.3,.08,M.wb, -OW/2+.1,1.6,-3);
+    ab(2.8,1.5,.06,M.wbf, -OW/2+.12,1.6,-3);
+
+    // ── MEETING ROOM (center, behind glass) ───────────────────
+    ab(6,.08,1.8,M.dt, 3,.72,-4);
+    [3,-1.5,0,1.5,4.5,6].forEach(x=>cy(.07,.72,M.de,x,.36,-4));
+    for(let i=0;i<6;i++) {
+      ab(.52,.1,.52,M.ch, -1+i*1.2,.72,-5.4);
+      ab(.52,.58,.07,M.cb, -1+i*1.2,1.03,-5.72);
+      cy(.04,.72,M.de,-1+i*1.2,.36,-5.4,6);
+      ab(.52,.1,.52,M.ch, -1+i*1.2,.72,-2.6);
+      ab(.52,.58,.07,M.cb, -1+i*1.2,1.03,-2.28);
+      cy(.04,.72,M.de,-1+i*1.2,.36,-2.6,6);
+    }
+    ab(2.8,1.5,.08,M.mo, 3,1.72,-8.94);
+    ab(2.56,1.32,.06,M.sc, 3,1.72,-8.9);
+    ab(2.2,1.1,.08,M.wb, 3,1.55,.1);
+    ab(2.4,1.3,.06,M.wbf, 3,1.55,.12);
+    // Meeting room rug
+    ab(9,.04,8,M.rug, 3,.04,-4);
+
+    // ── EXECUTIVE OFFICE (back-right) ─────────────────────────
+    // L-desk
+    ab(2.6,.08,1.1,M.dt, 17,.72,-11);
+    ab(1.1,.08,2.0,M.dt, 15.5,.72,-10.1);
+    [[1.2,.44],[-.8,.44],[1.2,-.44],[-.8,-.44]].forEach(([dx,dz])=>ab(.06,.72,.06,M.de,17+dx,.36,-11+dz));
+    [[.44,.9],[-.44,.9]].forEach(([dx,dz])=>ab(.06,.72,.06,M.de,15.5+dx,.36,-10.1+dz-1.0));
+    // Dual monitors
+    [[-.4,0],[.4,0]].forEach(([dx])=>{ab(.82,.5,.06,M.mo,16.6+dx,1.02,-11.56);ab(.74,.44,.04,M.sc,16.6+dx,1.04,-11.54);ab(.06,.17,.06,M.de,16.6+dx,.83,-11.5);});
+    chair(17,.72,-9.7,Math.PI);
+    // Bookshelf
+    ab(.22,2.6,2.0,M.cnt, OW/2-.14,1.3,-12);
+    [.28,.82,1.36,1.9,2.44].forEach(y=>{
+      ab(.18,.05,2.0,M.de, OW/2-.14,y,-12);
+      [0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299].forEach((c,i)=>{
+        const bm=new THREE.MeshLambertMaterial({color:c});
+        ab(.07,.22,.16,bm, OW/2-.2,y+.14,-12+(i-2)*.38);
+      });
+    });
+    // Exec lounge
+    ab(2.0,.46,.76,M.so, 18.2,.22,-6.5);
+    ab(2.0,.72,.12,M.so, 18.2,.58,-6.88);
+    ab(.76,.46,2.0,M.so, OW/2-.38,.22,-7.5);
+    ab(.12,.72,2.0,M.so, OW/2-.06,.58,-7.5);
+    ab(.92,.36,.6,M.so2, 18.9,.18,-6.5);
+    ab(1.2,.06,.6,M.ct, 17.5,.5,-5.3);
+    ab(3,.04,2.5,M.rug, 18,.04,-7);
+
+    // ── SALES / MARKETING (center-right) ──────────────────────
+    [[11,-4],[16,-4],[11,0],[16,0],[11,4]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
+    // Sales lounge
+    ab(2.4,.46,.76,M.so, 13,.22,-6.5);
+    ab(2.4,.72,.12,M.so, 13,.58,-6.88);
+    ab(1.1,.06,.5,M.ct, 13,.5,-7.6);
+
+    // ── BREAK ROOM / KITCHEN (front-right) ────────────────────
+    ab(8,.9,.68,M.cnt, OW/2-4,.45,OD/2-2.2);
+    ab(.68,.9,6,M.cnt, OW/2-.34,.45,OD/2-5);
+    ab(8,.06,.68,M.dt, OW/2-4,.91,OD/2-2.2);
+    ab(.68,.06,6,M.dt, OW/2-.34,.91,OD/2-5);
+    ab(.54,.62,.42,M.app, OW/2-1.5,.95,OD/2-2.0);  // microwave
+    ab(.54,1.28,.52,M.app, OW/2-.8,.64,OD/2-2.0);   // fridge
+    ab(.24,.5,.2,M.mo, OW/2-4,.95,OD/2-2.0);         // coffee machine
+    ab(.07,.07,.07,M.led, OW/2-4,1.45,OD/2-1.92);
+    for(let i=0;i<4;i++) {
+      cy(.2,.06,M.ch, OW/2-5.5+i*1.4,.9,OD/2-3.8,8);
+      cy(.04,.9,M.de, OW/2-5.5+i*1.4,.45,OD/2-3.8);
+    }
+
+    // ── RECEPTION LOBBY (front-center) ────────────────────────
+    ab(3.6,.92,.72,M.cnt, 0,.46,OD/2-3);
+    ab(3.6,.07,.72,M.dt, 0,.93,OD/2-3);
+    ab(3.6,.92,.1,M.cnt, 0,.46,OD/2-2.66);
+    // Lobby sofas
+    [[-6,OD/2-4],[6,OD/2-4]].forEach(([x,z])=>{
+      ab(2.6,.46,.76,M.so,x,.22,z); ab(2.6,.72,.12,M.so,x,.58,z+.38);
+      ab(1.2,.06,.55,M.ct,x,.5,z-1.1);
+    });
+    ab(6,.04,5,M.rug, 0,.04,OD/2-5);
+
+    // ── OPEN PLAN PHONE BOOTH / FOCUS PODS (center) ───────────
+    [[3,5],[3,8]].forEach(([x,z])=>{
+      ab(1.4,WH,.9,M.win,x,WH/2,z);
+      ab(.9,WH,WT,M.win,x+.5,WH/2,z-0.42);
+      ab(.9,WH,WT,M.win,x+.5,WH/2,z+0.42);
+      desk(x-.1,z,Math.PI/2); chair(x+.5,z,Math.PI);
+    });
+
+    // ── BOOKSHELF ROW (left wall) ──────────────────────────────
+    ab(.22,2.2,6,M.cnt, -OW/2+.14,1.1,-8);
+    [.3,.85,1.4,1.9].forEach(y=>{
+      ab(.18,.05,6,M.de,-OW/2+.14,y,-8);
+      for(let i=0;i<8;i++){
+        const c=[0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299,0x116688,0xcc6622,0x448844][i];
+        const bm=new THREE.MeshLambertMaterial({color:c});
+        ab(.07,.22,.5,bm,-OW/2+.2,y+.14,-11+i*.74);
+      }
+    });
+
+    // ── PING PONG TABLE (rec area) ─────────────────────────────
+    ab(2.8,.09,1.5,M.dt, -4,OD/2-5.5,0);
+    ab(.04,.24,1.5,M.cnt, -4,.73,0);
+    [[-1.3,.65],[1.3,.65],[-1.3,-.65],[1.3,-.65]].forEach(([dx,dz])=>ab(.06,.65,.06,M.de,-4+dx,.32,dz));
+
+    // ── PLANTS ─────────────────────────────────────────────────
+    function plant(x,z,big=false) {
+      const s=big?1.35:1;
+      cy(.18*s,.28*s,M.pp,x,.14*s,z,8);
+      cy(.08*s,.64*s,M.pl,x,.44*s,z,6);
+      const lm=new THREE.Mesh(new THREE.SphereGeometry(.32*s,7,6),M.pl);
+      lm.scale.y=.65; lm.position.set(x,.98*s,z); lm.castShadow=true; scene.add(lm);
+    }
+    [[-OW/2+1,-OD/2+1,true],[OW/2-1,-OD/2+1,true],
+     [-OW/2+1,OD/2-1,true],[OW/2-1,OD/2-1,true],
+     [-12,-4],[-8,5],[0,-9],[6,5],[12,-9],[18,4],
+     [-4,-13],[-18,0],[4,13],[-10,10]].forEach(([x,z,big=false])=>plant(x,z,big));
 
     // Characters
     const chars = [];
@@ -715,7 +944,7 @@ const HQ = {
       if (!HQ._active) return;
       requestAnimationFrame(animate); t += .012;
       panX += (tPanX - panX) * .1; panZ += (tPanZ - panZ) * .1; zoom += (tZoom - zoom) * .1;
-      camera.position.set(18 + panX, 18, 18 + panZ); camera.lookAt(panX, 1, panZ);
+      camera.position.set(30 + panX, 30, 30 + panZ); camera.lookAt(panX, 1, panZ);
       const fz = FRUST / zoom;
       camera.left=-fz*asp; camera.right=fz*asp; camera.top=fz; camera.bottom=-fz;
       camera.updateProjectionMatrix();
@@ -1554,6 +1783,211 @@ const Settings = {
     if(State.settings.apiKey){el.textContent='🟢 AI Connected';el.className='api-status ok';}
     else{el.textContent='⚪ No API Key';el.className='api-status';}
   }
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: DESIGN STUDIO
+// ══════════════════════════════════════════════════════════════
+const DesignStudio = {
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
+    document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
+    container.innerHTML = `<div class="page-scroll" id="ds-page">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">Design Studio</div>
+          <div class="section-sub">Describe what you want. Your AI team generates real HTML/CSS designs.</div>
+        </div>
+      </div>
+      <div class="ds-top">
+        <div class="ds-form">
+          <div class="form-group">
+            <label class="form-label">EMPLOYEE</label>
+            <select class="form-input" id="ds-emp">
+              ${State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('')}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">DESIGN PROMPT</label>
+            <textarea class="form-textarea" id="ds-prompt" rows="3" placeholder="Design a dark pricing page with 3 tiers. Use Inter font. Black background, white text, green CTA buttons."></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-label">OUTPUT TYPE</label>
+            <div class="ds-type-row" id="ds-type-row">
+              <button class="ds-type-btn active" data-type="component">UI Component</button>
+              <button class="ds-type-btn" data-type="page">Full Page</button>
+              <button class="ds-type-btn" data-type="email">Email Template</button>
+              <button class="ds-type-btn" data-type="card">Card / Widget</button>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="ds-generate" style="width:100%">✦ Generate Design</button>
+        </div>
+        <div class="ds-preview-wrap" id="ds-preview-wrap">
+          <div class="ds-preview-empty">
+            <div style="font-size:32px;margin-bottom:12px">🎨</div>
+            <div style="font-size:13px;color:var(--text2)">Your design will appear here</div>
+          </div>
+        </div>
+      </div>
+      <div class="ds-saved" id="ds-saved"></div>
+    </div>`;
+
+    let selectedType = 'component';
+    container.querySelectorAll('.ds-type-btn').forEach(btn => btn.addEventListener('click', () => {
+      container.querySelectorAll('.ds-type-btn').forEach(b=>b.classList.remove('active'));
+      btn.classList.add('active');
+      selectedType = btn.dataset.type;
+    }));
+
+    document.getElementById('ds-generate').addEventListener('click', async () => {
+      const empId = document.getElementById('ds-emp').value;
+      const prompt = document.getElementById('ds-prompt').value.trim();
+      if (!prompt) { toast('Enter a design prompt','error'); return; }
+      const emp = State.employees.find(e=>e.id===empId) || State.employees[0];
+      const btn = document.getElementById('ds-generate');
+      btn.disabled = true; btn.textContent = '⏳ Generating…';
+      const wrap = document.getElementById('ds-preview-wrap');
+      wrap.innerHTML = '<div class="ds-preview-empty" style="animation:pulse 1.5s infinite"><div style="font-size:13px;color:var(--text2)">Generating design…</div></div>';
+
+      const typeInstructions = {
+        component: 'Generate a self-contained HTML+CSS UI component. No full page, just the component with styles in a <style> tag.',
+        page: 'Generate a complete single-page HTML document with embedded CSS. Include a realistic page layout.',
+        email: 'Generate an HTML email template (table-based, inline styles, 600px wide, dark themed).',
+        card: 'Generate a single HTML card/widget with embedded CSS. Small and focused.',
+      };
+      const sys = `You are ${emp.name}, ${emp.role}. Generate ONLY valid, complete HTML+CSS code — no markdown, no explanation, no code blocks. Just raw HTML starting with <!DOCTYPE html> or a <div>. The design should be dark-themed (matching background #080808 or near-black), using Inter and JetBrains Mono fonts from Google Fonts. ${typeInstructions[selectedType]}`;
+      let html = '';
+      try {
+        const stream = AI.stream([{role:'user',content:`Design request: ${prompt}\n\nOutput type: ${selectedType}`}], sys);
+        for await (const chunk of stream) html += chunk;
+        html = html.trim();
+        if (html.startsWith('```')) html = html.replace(/^```[^\n]*\n/,'').replace(/```$/,'').trim();
+        wrap.innerHTML = `
+          <div class="ds-preview-toolbar">
+            <span class="ds-preview-emp" style="color:${emp.color}">${emp.name}</span>
+            <span style="color:var(--text2);font-size:11px">${selectedType}</span>
+            <div style="flex:1"></div>
+            <button class="tb-btn" id="ds-copy-btn">Copy HTML</button>
+            <button class="btn btn-primary btn-sm" id="ds-save-btn">Save Design</button>
+          </div>
+          <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts"></iframe>`;
+        const frame = document.getElementById('ds-iframe');
+        frame.contentDocument.open();
+        frame.contentDocument.write(html);
+        frame.contentDocument.close();
+        document.getElementById('ds-copy-btn').addEventListener('click',()=>{
+          navigator.clipboard.writeText(html).then(()=>toast('HTML copied','success'));
+        });
+        document.getElementById('ds-save-btn').addEventListener('click',()=>{
+          const title = prompt.slice(0,60);
+          State.designs.push({id:uid(),title,prompt,html,empId,type:selectedType,timestamp:Date.now()});
+          save('designs');
+          DesignStudio._renderSaved();
+          toast('Design saved','success');
+        });
+      } catch(e) {
+        wrap.innerHTML = `<div class="ds-preview-empty"><div style="color:var(--danger);font-size:12px">Error: ${e.message}</div></div>`;
+      }
+      btn.disabled = false; btn.textContent = '✦ Generate Design';
+    });
+    DesignStudio._renderSaved();
+  },
+
+  _renderSaved() {
+    const el = document.getElementById('ds-saved'); if(!el) return;
+    if (!State.designs.length) { el.innerHTML=''; return; }
+    el.innerHTML = `<div class="section-title" style="margin:32px 0 16px;font-size:13px">Saved Designs (${State.designs.length})</div>
+      <div class="ds-saved-grid">${State.designs.slice().reverse().map(d=>{
+        const emp = State.employees.find(e=>e.id===d.empId);
+        return `<div class="ds-saved-card">
+          <div class="ds-sc-hdr">
+            <div class="ds-sc-title">${escHtml(d.title)}</div>
+            <button class="icon-btn ds-del-btn" data-did="${d.id}" style="color:var(--danger)">✕</button>
+          </div>
+          <div class="ds-sc-meta">${emp?`<span style="color:${emp.color}">${emp.name}</span> · `:''}<span style="color:var(--text2)">${d.type}</span></div>
+          <button class="btn btn-sm ds-view-btn" data-did="${d.id}" style="margin-top:8px;width:100%">View Design</button>
+        </div>`;
+      }).join('')}</div>`;
+    el.querySelectorAll('.ds-del-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      State.designs=State.designs.filter(d=>d.id!==btn.dataset.did);
+      save('designs'); DesignStudio._renderSaved();
+    }));
+    el.querySelectorAll('.ds-view-btn').forEach(btn=>btn.addEventListener('click',()=>{
+      const d=State.designs.find(x=>x.id===btn.dataset.did); if(!d) return;
+      Modal.open(d.title.slice(0,50), `<iframe style="width:100%;height:500px;border:none;border-radius:8px;background:#000" sandbox="allow-scripts"></iframe>`, {
+        onOpen() {
+          const f=document.querySelector('#modal-box iframe');
+          if(f){f.contentDocument.open();f.contentDocument.write(d.html);f.contentDocument.close();}
+        }
+      });
+    }));
+  },
+  destroy() {},
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: BRAIN (Memory)
+// ══════════════════════════════════════════════════════════════
+const BrainPage = {
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
+    document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
+    container.innerHTML = `<div class="page-scroll" id="brain-page">
+      <div class="section-hdr">
+        <div>
+          <div class="section-title">Brain</div>
+          <div class="section-sub">Everything your AI team has learned and remembered. Edit or clear memories per employee.</div>
+        </div>
+        <button class="btn" id="brain-clear-all" style="color:var(--danger)">Clear All Memory</button>
+      </div>
+      <div id="brain-grid"></div>
+    </div>`;
+    document.getElementById('brain-clear-all').addEventListener('click',()=>{
+      if(confirm('Clear ALL memories for all employees?')){ State.memory={}; save('memory'); BrainPage._render(); toast('Memory cleared','success'); }
+    });
+    BrainPage._render();
+  },
+
+  _render() {
+    const grid = document.getElementById('brain-grid'); if(!grid) return;
+    const emps = State.employees.filter(e=>State.memory[e.id]?.length);
+    if (!emps.length) {
+      grid.innerHTML = `<div class="empty-state">
+        <div class="empty-icon">🧠</div>
+        <div style="font-size:14px;color:var(--text2)">No memories yet</div>
+        <div class="empty-text">As you chat with your AI employees, they'll remember important facts about your business here.</div>
+      </div>`; return;
+    }
+    grid.innerHTML = `<div class="brain-grid">${emps.map(e=>{
+      const mems = (State.memory[e.id]||[]).slice().reverse();
+      return `<div class="brain-card">
+        <div class="brain-card-hdr">
+          <div class="emp-av" style="background:${e.color}22;color:${e.color};width:32px;height:32px;font-size:13px;flex-shrink:0">${e.name[0]}</div>
+          <div>
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${e.name}</div>
+            <div style="font-size:11px;color:var(--text2)">${mems.length} memories</div>
+          </div>
+          <button class="btn btn-sm brain-clear-emp" data-eid="${e.id}" style="margin-left:auto;color:var(--danger);font-size:10px">Clear</button>
+        </div>
+        <div class="brain-memories">
+          ${mems.map((m,i)=>`
+            <div class="brain-mem" data-eid="${e.id}" data-idx="${State.memory[e.id].length-1-i}">
+              <div class="brain-mem-bullet" style="background:${e.color}"></div>
+              <div class="brain-mem-text">${escHtml(m.fact)}</div>
+              <button class="icon-btn brain-del-mem" data-eid="${e.id}" data-idx="${State.memory[e.id].length-1-i}" style="color:var(--text3);font-size:11px;flex-shrink:0">✕</button>
+            </div>`).join('')}
+        </div>
+      </div>`;
+    }).join('')}</div>`;
+    grid.querySelectorAll('.brain-clear-emp').forEach(btn=>btn.addEventListener('click',()=>{
+      State.memory[btn.dataset.eid]=[]; save('memory'); BrainPage._render(); toast('Memory cleared','success');
+    }));
+    grid.querySelectorAll('.brain-del-mem').forEach(btn=>btn.addEventListener('click',()=>{
+      const arr=State.memory[btn.dataset.eid]||[];
+      arr.splice(+btn.dataset.idx,1); State.memory[btn.dataset.eid]=arr; save('memory'); BrainPage._render();
+    }));
+  },
+  destroy() {},
 };
 
 // ══════════════════════════════════════════════════════════════
