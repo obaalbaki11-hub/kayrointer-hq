@@ -250,8 +250,11 @@ const AI = {
       }
     } catch(e) {
       const msg = e.message || String(e);
-      if (msg.includes('fetch') || msg.includes('network') || msg.includes('CORS') || msg.toLowerCase().includes('failed')) {
-        yield `⚠️ Network error — cannot reach Anthropic API.\n\nPossible causes:\n• No internet connection\n• Browser is blocking cross-origin requests\n• Try opening the app on HTTPS instead of HTTP\n\nError: ${msg}`;
+      const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+      if (isSafari) {
+        yield `⚠️ Safari blocked the API request.\n\nSafari's privacy protections block cross-origin API calls.\n\n🔧 Quick fixes:\n1. Switch to Chrome or Firefox (recommended)\n2. Or in Safari: Settings → Privacy → uncheck "Prevent Cross-Site Tracking"\n\nError: ${msg}`;
+      } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('CORS') || msg.toLowerCase().includes('failed')) {
+        yield `⚠️ Network error — cannot reach Anthropic API.\n\nPossible causes:\n• No internet connection\n• Browser is blocking cross-origin requests\n• Try Chrome if you're on another browser\n\nError: ${msg}`;
       } else {
         yield `⚠️ Error: ${msg}`;
       }
@@ -636,8 +639,8 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x080c14);
-    scene.fog = new THREE.Fog(0x080c14, 18, 52);
+    scene.background = new THREE.Color(0x111c2e);
+    scene.fog = new THREE.Fog(0x111c2e, 22, 60);
     const asp = W / H;
     const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
     camera.position.set(0, 1.7, 13);
@@ -648,45 +651,47 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — clean cool office
-    scene.add(new THREE.AmbientLight(0x101828, 3.2));
-    const sun = new THREE.DirectionalLight(0xd8e8ff, 1.1);
+    // Lighting — bright enough to see clearly
+    scene.add(new THREE.AmbientLight(0xffffff, 2.8));
+    const sun = new THREE.DirectionalLight(0xe8f0ff, 3.0);
     sun.position.set(22, 38, 18); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:.5, far:120 });
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x0a1428, 0.4);
+    const rim = new THREE.DirectionalLight(0x6688cc, 1.4);
     rim.position.set(-18, 10, -18); scene.add(rim);
+    const fill = new THREE.DirectionalLight(0x8899bb, 0.8);
+    fill.position.set(0, -5, 20); scene.add(fill);
 
     function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
     const M = {
-      fl:  mat(0x0e1520),       // dark floor — clean slate
-      ca:  mat(0x101a28),       // carpet — dark navy
-      wex: mat(0x151e2e),       // exterior walls — dark blue-grey
-      win: mat(0x111a28),       // interior partitions
-      gl:  mat(0x1a2840, 0x0a1220),  // glass — blue tint
-      ceil:mat(0x0c1018),       // ceiling — near black
-      clt: mat(0x3060c0, 0x102060),  // ceiling light — cool blue glow
-      dt:  mat(0x1e2a3e),       // desk surface — dark blue-grey
-      de:  mat(0x0e1420),       // desk legs / dark metal
-      ch:  mat(0x141c2a),       // chair seat
-      cb:  mat(0x101620),       // chair back
-      mo:  mat(0x0a0e14),       // monitor frame
-      sc:  mat(0x060c18, 0x0a1830),  // monitor screen — cool blue glow
-      sv:  mat(0x141c28),       // server rack
-      led: mat(0x44ee88, 0x114422),  // green LED
-      ldb: mat(0x4488ff, 0x102060),  // blue LED — brand accent
-      so:  mat(0x182030),       // sofa
-      so2: mat(0x1e3050),       // sofa accent — blue
-      cnt: mat(0x131c2a),       // counter/cabinet
-      app: mat(0x0e1420),       // appliances
-      wb:  mat(0xd4dff0),       // whiteboard — cool white
-      wbf: mat(0x0e1828),       // whiteboard frame
-      rug: mat(0x0f1a28),       // area rug
-      pp:  mat(0x182030),       // plant pot
-      pl:  mat(0x1a3820),       // plant leaves
-      ct:  mat(0x131c2a),       // coffee table
-      pn:  mat(0x080c14),       // character pants/hair
+      fl:  mat(0x2a3a52),       // floor — visible blue-grey
+      ca:  mat(0x243550),       // carpet — medium navy
+      wex: mat(0x3a506e),       // exterior walls — blue-grey
+      win: mat(0x304562),       // interior partitions
+      gl:  mat(0x3a5880, 0x1a3060),  // glass — blue tint
+      ceil:mat(0x1a2540),       // ceiling
+      clt: mat(0x6090e0, 0x2050a0),  // ceiling light — bright blue
+      dt:  mat(0x3a5278),       // desk surface — medium blue-grey
+      de:  mat(0x253548),       // desk legs / metal
+      ch:  mat(0x2c3e58),       // chair seat
+      cb:  mat(0x243250),       // chair back
+      mo:  mat(0x1a2535),       // monitor frame
+      sc:  mat(0x102040, 0x1a3870),  // monitor screen — glowing
+      sv:  mat(0x2a3c52),       // server rack
+      led: mat(0x44ee88, 0x22aa55),  // green LED
+      ldb: mat(0x4488ff, 0x2050c0),  // blue LED
+      so:  mat(0x2e4060),       // sofa
+      so2: mat(0x3a5888),       // sofa accent
+      cnt: mat(0x253545),       // counter/cabinet
+      app: mat(0x253548),       // appliances
+      wb:  mat(0xe8eef8),       // whiteboard — bright white
+      wbf: mat(0x1e3050),       // whiteboard frame
+      rug: mat(0x1e3050),       // area rug
+      pp:  mat(0x2e4060),       // plant pot
+      pl:  mat(0x2a5832),       // plant leaves
+      ct:  mat(0x253545),       // coffee table
+      pn:  mat(0x141e2e),       // character pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
@@ -698,10 +703,10 @@ const HQ = {
      [-15,-2],[-5,-2],[5,-2],[15,-2],
      [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
       ab(.6,.06,.6,M.clt,x,WH+.02,z);
-      const pl=new THREE.PointLight(0xc8deff,0.8,14); pl.position.set(x,WH-.15,z); scene.add(pl);
+      const pl=new THREE.PointLight(0xddeeff,2.5,18); pl.position.set(x,WH-.15,z); scene.add(pl);
     });
     // accent: exec office
-    const epl=new THREE.PointLight(0xa8c8ff,0.5,9); epl.position.set(17,-9,3); scene.add(epl);
+    const epl=new THREE.PointLight(0xa8c8ff,1.8,12); epl.position.set(17,-9,3); scene.add(epl);
 
     // ── FLOOR ──────────────────────────────────────────────────
     ab(OW,.1,OD,M.fl, 0,-.05,0);
@@ -1947,7 +1952,7 @@ const Settings = {
         <div class="form-group">
           <label class="form-label">ANTHROPIC API KEY</label>
           <input class="form-input" id="s-apikey" type="text" value="${escHtml(s.apiKey||'')}" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
-          <div class="form-hint">Get your key at <b>console.anthropic.com</b> → API Keys. Must start with <code>sk-ant-</code></div>
+          <div class="form-hint">Get your key at <b>console.anthropic.com</b> → API Keys. Must start with <code>sk-ant-</code><br><span style="color:#f59e0b">⚠️ Safari users: use Chrome or Firefox for API calls — Safari blocks cross-origin requests.</span></div>
         </div>
         <div class="form-group">
           <label class="form-label">MODEL</label>
@@ -1993,8 +1998,8 @@ const Settings = {
       const st=document.getElementById('s-key-status');
       st.textContent='Testing…';st.style.color='var(--text2)';
       const reply=await AI.once([{role:'user',content:'ping'}],'Reply with just "pong".');
-      if(reply.includes('⚠️')){st.textContent='❌ '+reply;st.style.color='var(--red)';}
-      else{st.textContent='✅ Connected! Response: '+reply;st.style.color='var(--green)';}
+      if(reply.includes('⚠️')){st.textContent='❌ '+reply.split('\n')[0];st.style.color='var(--red,#ef4444)';}
+      else{st.textContent='✅ Connected! Response: '+reply;st.style.color='var(--green,#22c55e)';}
     });
     document.getElementById('s-save-ej').addEventListener('click',()=>{
       State.settings.ejServiceId=document.getElementById('s-ejsvc').value.trim();
