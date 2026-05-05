@@ -193,18 +193,23 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
 
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
+  _headers(key) {
+    return {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-dangerous-allow-browser': 'true',
+    };
+  },
   async *stream(messages, system) {
-    const key = State.settings.apiKey;
-    if (!key) { yield '⚠️ No API key. Go to Settings → add your Claude API key.'; return; }
+    const key = (State.settings.apiKey||'').trim();
+    if (!key) { yield '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key (starts with sk-ant-) → click Save Key.'; return; }
+    if (!key.startsWith('sk-')) { yield '⚠️ Invalid API key format.\n\nYour key should start with sk-ant-  — check Settings.'; return; }
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': key,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-allow-browser': 'true',
-        },
+        mode: 'cors',
+        headers: AI._headers(key),
         body: JSON.stringify({
           model: State.settings.model || 'claude-haiku-4-5-20251001',
           max_tokens: 2048,
@@ -217,7 +222,11 @@ const AI = {
         let body = {};
         try { body = await res.json(); } catch(_) {}
         const msg = body?.error?.message || `HTTP ${res.status}`;
-        yield `⚠️ API error (${res.status}): ${msg}\n\nCheck your API key in Settings. Make sure it starts with sk-ant-`;
+        const hint = res.status===401 ? '\n\nYour API key is invalid or expired — get a new one at console.anthropic.com'
+                   : res.status===429 ? '\n\nRate limit hit — wait a moment and try again'
+                   : res.status===403 ? '\n\nAccess denied — check your API key permissions'
+                   : '\n\nCheck your API key in Settings.';
+        yield `⚠️ API error (${res.status}): ${msg}${hint}`;
         return;
       }
       const reader = res.body.getReader();
@@ -239,7 +248,14 @@ const AI = {
           } catch {}
         }
       }
-    } catch(e) { yield `⚠️ Network error: ${e.message}`; }
+    } catch(e) {
+      const msg = e.message || String(e);
+      if (msg.includes('fetch') || msg.includes('network') || msg.includes('CORS') || msg.toLowerCase().includes('failed')) {
+        yield `⚠️ Network error — cannot reach Anthropic API.\n\nPossible causes:\n• No internet connection\n• Browser is blocking cross-origin requests\n• Try opening the app on HTTPS instead of HTTP\n\nError: ${msg}`;
+      } else {
+        yield `⚠️ Error: ${msg}`;
+      }
+    }
   },
   async once(messages, system) {
     let out='';
@@ -564,39 +580,40 @@ const HQ = {
     };
 
     const company = State.settings.companyName || 'Kayro Interactive';
+    const activeTasks = State.tasks.filter(t=>t.column!=='done').length;
     root.innerHTML = `
       <div class="fp-enter" id="fp-enter">
         <div class="fp-enter-logo">${company[0]||'K'}</div>
         <div class="fp-enter-title">${company} HQ</div>
-        <div class="fp-enter-sub">First-person office — walk around and talk to your team</div>
+        <div class="fp-enter-sub">${emps.length} employees online · ${activeTasks} active tasks</div>
         <div class="fp-enter-keys">
-          <span class="fp-key">W A S D</span> Move &nbsp;
+          <span class="fp-key">W A S D</span> Walk &nbsp;
           <span class="fp-key">SHIFT</span> Run &nbsp;
-          <span class="fp-key">E</span> Chat &nbsp;
-          <span class="fp-key">ESC</span> Menu
+          <span class="fp-key">E</span> Talk to employee &nbsp;
+          <span class="fp-key">ESC</span> Pause
         </div>
         <div class="fp-enter-btn" id="fp-enter-btn">▶ Enter Office</div>
       </div>
+
       <div class="fp-crosshair" id="fp-crosshair">+</div>
       <div class="fp-interact" id="fp-interact"></div>
+
+      <div class="fp-feed" id="fp-feed"></div>
+
       <canvas id="fp-minimap" class="fp-minimap" width="130" height="86"></canvas>
+
       <div class="sim-panel">
         <div class="sim-time" id="hq-sp-clock">--:--</div>
         <div class="sim-date" id="hq-sp-date">--</div>
         <div class="sim-divider"></div>
-        <div class="sim-stat-row">
-          <span class="sim-stat-lbl">ONLINE</span>
-          <span class="sim-stat-val">${emps.length}</span>
-        </div>
-        <div class="sim-stat-row">
-          <span class="sim-stat-lbl">TASKS</span>
-          <span class="sim-stat-val">${State.tasks.filter(t=>t.column!=='done').length}</span>
-        </div>
+        <div class="sim-stat-row"><span class="sim-stat-lbl">ONLINE</span><span class="sim-stat-val">${emps.length}</span></div>
+        <div class="sim-stat-row"><span class="sim-stat-lbl">TASKS</span><span class="sim-stat-val">${activeTasks}</span></div>
         <button class="sim-panel-btn" id="sp-board-btn">STANDUP</button>
       </div>
+
       <div class="sim-bottom">
         <span class="sim-co">${company}</span>
-        <span class="sim-hint" id="fp-hint">Click ▶ Enter Office to start</span>
+        <span class="sim-hint" id="fp-hint">Click ▶ Enter Office</span>
       </div>
       <div id="hq-ntags"></div>`;
 
@@ -903,7 +920,7 @@ const HQ = {
       scene.add(g); chars.push({ group:g, emp:e });
     });
 
-    // Name tags — minimal sim chips
+    // Name tags + speech bubbles
     const ntContainer = document.getElementById('hq-ntags');
     const ntEls = chars.map(({ emp }, i) => {
       const d = document.createElement('div');
@@ -916,11 +933,62 @@ const HQ = {
           <span>${escHtml(emp.name)}</span>
           <div class="ntag-status-dot ${status}"></div>
         </div>
-        ${task ? `<div class="ntag-task">${escHtml(task.length > 38 ? task.slice(0,38)+'…' : task)}</div>` : ''}`;
+        ${task ? `<div class="ntag-task">${escHtml(task.length > 36 ? task.slice(0,36)+'…' : task)}</div>` : ''}`;
       d.addEventListener('click', () => Chat.open(emp.id));
       ntContainer.appendChild(d);
       return d;
     });
+
+    // Speech bubbles (created separately so they layer above nametags)
+    const bubbleEls = chars.map(({ emp }) => {
+      const b = document.createElement('div');
+      b.className = 'sim-bubble';
+      b.style.cssText = `border-color:${emp.color}40;opacity:0;transition:opacity .4s`;
+      ntContainer.appendChild(b);
+      return b;
+    });
+
+    // ── SIMULATION ENGINE ─────────────────────────────────────
+    const SIM_PHRASES = {
+      'Head of Product':    ['Writing PRD v2...','Sprint planning','Reviewing user stories','Roadmap sync','OKR check-in','Backlog grooming','User interview done ✓','Feature scoped ✓'],
+      'Lead Engineer':      ['Reviewing PR #'+Math.ceil(Math.random()*300+100),'Fixing memory leak','Refactoring auth','Writing tests','Deploy to staging','Build passing ✓','Merged to main ✓','Architecture review'],
+      'Head of Marketing':  ['Writing launch copy','A/B test running','Email campaign live','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓'],
+      'UI/UX Designer':     ['In Figma — flows','Component library','User testing live','Design review','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide updated'],
+      'Head of Sales':      ['Discovery call','Proposal sent','Following up leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓'],
+      'Customer Success':   ['Onboarding call','NPS survey out','Churn risk flagged','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score green'],
+      'Personal Assistant': ['Daily brief ready','Meetings scheduled','Notes sent ✓','Research done','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared'],
+    };
+    const getPhrase = (emp) => {
+      const list = SIM_PHRASES[emp.role] || ['Working...','In a meeting','Thinking...'];
+      return list[Math.floor(Math.random()*list.length)];
+    };
+    const feedEl = document.getElementById('fp-feed');
+    const feedLog = [];
+    const addFeedItem = (emp, text) => {
+      feedLog.unshift({ name:emp.name, color:emp.color, text });
+      if (feedLog.length > 5) feedLog.pop();
+      if (feedEl) feedEl.innerHTML = feedLog.map(f=>
+        `<div class="fp-feed-item"><span class="fp-feed-dot" style="background:${f.color}"></span><b>${escHtml(f.name)}</b> ${escHtml(f.text)}</div>`
+      ).join('');
+    };
+    const showBubble = (i) => {
+      if (!HQ._active || i >= chars.length) return;
+      const { emp } = chars[i];
+      const text = getPhrase(emp);
+      const b = bubbleEls[i];
+      b.textContent = text;
+      b.style.opacity = '1';
+      addFeedItem(emp, text);
+      setTimeout(() => { if (b) b.style.opacity = '0'; }, 9000);
+    };
+    // Stagger initial bubbles
+    chars.forEach((_, i) => setTimeout(() => { if(HQ._active) showBubble(i); }, 1500 + i * 1800));
+    const simInterval = setInterval(() => {
+      if (!HQ._active) { clearInterval(simInterval); return; }
+      showBubble(Math.floor(Math.random()*chars.length));
+    }, 8000);
+    const oldCleanup = HQ._cleanup;
+    HQ._cleanup = () => { clearInterval(simInterval); if(oldCleanup) oldCleanup(); };
 
     // ── FIRST-PERSON CONTROLS ─────────────────────────────────
     let plocked = false;
@@ -1004,18 +1072,29 @@ const HQ = {
       mmCtx.lineTo(px - Math.sin(yaw) * 9, pz - Math.cos(yaw) * 9); mmCtx.stroke();
     }
 
-    // ── NAME TAGS ─────────────────────────────────────────────
+    // ── NAME TAGS + BUBBLES ───────────────────────────────────
     const tmpV = new THREE.Vector3();
+    const cW = renderer.domElement.clientWidth;
+    const cH = renderer.domElement.clientHeight;
     function updateTags() {
       chars.forEach(({ group }, i) => {
-        tmpV.set(group.position.x, group.position.y + 2.6, group.position.z);
+        // name tag
+        tmpV.set(group.position.x, group.position.y + 2.5, group.position.z);
         tmpV.project(camera);
-        if (tmpV.z > 1) { ntEls[i].style.opacity = '0'; return; }
-        const sx = (tmpV.x * .5 + .5) * renderer.domElement.clientWidth;
-        const sy = (-tmpV.y * .5 + .5) * renderer.domElement.clientHeight;
+        const behind = tmpV.z > 1;
+        const sx = (tmpV.x * .5 + .5) * cW;
+        const sy = (-tmpV.y * .5 + .5) * cH;
         ntEls[i].style.left = sx + 'px';
         ntEls[i].style.top = sy + 'px';
-        ntEls[i].style.opacity = tmpV.z < 0.999 ? '1' : '0';
+        ntEls[i].style.opacity = behind ? '0' : '1';
+        // speech bubble (higher up)
+        tmpV.set(group.position.x, group.position.y + 3.8, group.position.z);
+        tmpV.project(camera);
+        const bx = (tmpV.x * .5 + .5) * cW;
+        const by = (-tmpV.y * .5 + .5) * cH;
+        bubbleEls[i].style.left = bx + 'px';
+        bubbleEls[i].style.top = by + 'px';
+        if (behind) bubbleEls[i].style.opacity = '0';
       });
     }
 
@@ -1050,10 +1129,22 @@ const HQ = {
       camera.rotation.y = yaw;
       camera.rotation.x = pitch;
 
-      // Character idle sway
+      // Characters face player when nearby, otherwise idle
       chars.forEach(({ group }, i) => {
-        group.position.y = Math.sin(t * 1.2 + i) * 0.025;
-        group.rotation.y += 0.005;
+        const dx = playerPos.x - group.position.x;
+        const dz = playerPos.z - group.position.z;
+        const dist = Math.sqrt(dx*dx + dz*dz);
+        if (dist < 7 && plocked) {
+          const targetY = Math.atan2(dx, dz);
+          let diff = targetY - group.rotation.y;
+          while (diff > Math.PI) diff -= Math.PI*2;
+          while (diff < -Math.PI) diff += Math.PI*2;
+          group.rotation.y += diff * 0.08;
+        } else {
+          group.rotation.y += Math.sin(t * 0.4 + i * 1.3) * 0.008;
+        }
+        // subtle idle bob
+        group.position.y = Math.sin(t * 1.1 + i * 0.9) * 0.02;
       });
 
       // Proximity detection
