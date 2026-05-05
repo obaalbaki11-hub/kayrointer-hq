@@ -639,59 +639,62 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x111c2e);
-    scene.fog = new THREE.Fog(0x111c2e, 22, 60);
+    scene.background = new THREE.Color(0x8ab4d8);   // daylight sky outside windows
+    scene.fog = new THREE.Fog(0xd8e4ec, 28, 72);
     const asp = W / H;
     const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
     camera.position.set(0, 1.7, 13);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.physicallyCorrectLights = true;
     renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;z-index:1';
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — bright enough to see clearly
-    scene.add(new THREE.AmbientLight(0xffffff, 2.8));
-    const sun = new THREE.DirectionalLight(0xe8f0ff, 3.0);
-    sun.position.set(22, 38, 18); sun.castShadow = true;
+    // Lighting — bright modern open-plan office
+    scene.add(new THREE.AmbientLight(0xfff8f0, 4.5));           // warm white fill
+    const sun = new THREE.DirectionalLight(0xfff5e8, 6.0);       // daylight through windows
+    sun.position.set(30, 50, 25); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left:-40, right:40, top:40, bottom:-40, near:.5, far:120 });
+    Object.assign(sun.shadow.camera, { left:-44, right:44, top:44, bottom:-44, near:.5, far:130 });
     scene.add(sun);
-    const rim = new THREE.DirectionalLight(0x6688cc, 1.4);
-    rim.position.set(-18, 10, -18); scene.add(rim);
-    const fill = new THREE.DirectionalLight(0x8899bb, 0.8);
-    fill.position.set(0, -5, 20); scene.add(fill);
+    const sky = new THREE.DirectionalLight(0xd0e8ff, 2.5);       // cool sky bounce from windows
+    sky.position.set(-20, 12, -20); scene.add(sky);
+    const back = new THREE.DirectionalLight(0xfff8f0, 1.5);      // back fill so nothing is black
+    back.position.set(0, 6, 25); scene.add(back);
 
-    function mat(c, em) { const m = new THREE.MeshLambertMaterial({ color:c }); if (em !== undefined) m.emissive = new THREE.Color(em); return m; }
+    function std(c, opts={}) {
+      return new THREE.MeshStandardMaterial({ color:c, roughness:opts.r??0.85, metalness:opts.m??0.0, ...(opts.em?{emissive:new THREE.Color(opts.em),emissiveIntensity:opts.ei??1.0}:{}) });
+    }
     const M = {
-      fl:  mat(0x2a3a52),       // floor — visible blue-grey
-      ca:  mat(0x243550),       // carpet — medium navy
-      wex: mat(0x3a506e),       // exterior walls — blue-grey
-      win: mat(0x304562),       // interior partitions
-      gl:  mat(0x3a5880, 0x1a3060),  // glass — blue tint
-      ceil:mat(0x1a2540),       // ceiling
-      clt: mat(0x6090e0, 0x2050a0),  // ceiling light — bright blue
-      dt:  mat(0x3a5278),       // desk surface — medium blue-grey
-      de:  mat(0x253548),       // desk legs / metal
-      ch:  mat(0x2c3e58),       // chair seat
-      cb:  mat(0x243250),       // chair back
-      mo:  mat(0x1a2535),       // monitor frame
-      sc:  mat(0x102040, 0x1a3870),  // monitor screen — glowing
-      sv:  mat(0x2a3c52),       // server rack
-      led: mat(0x44ee88, 0x22aa55),  // green LED
-      ldb: mat(0x4488ff, 0x2050c0),  // blue LED
-      so:  mat(0x2e4060),       // sofa
-      so2: mat(0x3a5888),       // sofa accent
-      cnt: mat(0x253545),       // counter/cabinet
-      app: mat(0x253548),       // appliances
-      wb:  mat(0xe8eef8),       // whiteboard — bright white
-      wbf: mat(0x1e3050),       // whiteboard frame
-      rug: mat(0x1e3050),       // area rug
-      pp:  mat(0x2e4060),       // plant pot
-      pl:  mat(0x2a5832),       // plant leaves
-      ct:  mat(0x253545),       // coffee table
-      pn:  mat(0x141e2e),       // character pants/hair
+      fl:  std(0xc8c0b4,{r:0.9}),          // light concrete floor
+      ca:  std(0x7a8fa8,{r:0.95}),          // slate-blue carpet
+      wex: std(0xe0dcd4,{r:0.9}),           // warm off-white walls
+      win: std(0xd8d4cc,{r:0.9}),           // interior partitions — off-white
+      gl:  std(0x88b8d8,{r:0.05,m:0.1,em:0x5588aa,ei:0.3}),  // tinted glass
+      ceil:std(0xf2f0ec,{r:0.95}),          // white ceiling
+      clt: std(0xfffce8,{r:0.5,em:0xfffff0,ei:2.0}),          // glowing light panels
+      dt:  std(0xd4c4a0,{r:0.6}),           // light oak desk top
+      de:  std(0x1e1e22,{r:0.2,m:0.9}),     // black metal legs
+      ch:  std(0x1e2e48,{r:0.7}),           // dark navy chair seat
+      cb:  std(0x18243c,{r:0.7}),           // dark navy chair back
+      mo:  std(0x141418,{r:0.3,m:0.7}),     // near-black monitor frame
+      sc:  std(0x0a1428,{r:0.1,m:0.1,em:0x1a4080,ei:1.5}),   // monitor screen glow
+      sv:  std(0x1e2028,{r:0.4,m:0.6}),     // dark server rack
+      led: std(0x22ff88,{r:0.3,em:0x00ff66,ei:2.0}),          // green LED
+      ldb: std(0x4488ff,{r:0.3,em:0x2255cc,ei:2.0}),          // blue LED
+      so:  std(0x3c4e68,{r:0.8}),           // mid-blue sofa
+      so2: std(0x2a3c5a,{r:0.8}),           // sofa accent
+      cnt: std(0xc8c0b0,{r:0.7}),           // kitchen counter — light stone
+      app: std(0xd0ccc8,{r:0.3,m:0.6}),     // stainless appliances
+      wb:  std(0xf8f8f4,{r:0.85}),          // whiteboard — near white
+      wbf: std(0x2a2a30,{r:0.5,m:0.5}),     // whiteboard metal frame
+      rug: std(0x4a6080,{r:0.95}),           // area rug — medium blue
+      pp:  std(0xc06830,{r:0.9}),            // terracotta plant pot
+      pl:  std(0x228844,{r:0.8}),            // plant leaves — vivid green
+      ct:  std(0x3a3428,{r:0.6,m:0.3}),     // dark walnut coffee table
+      pn:  std(0x0c0c10,{r:0.8}),           // black pants/hair
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
@@ -702,20 +705,32 @@ const HQ = {
     [[-15,-11],[-5,-11],[5,-11],[15,-11],
      [-15,-2],[-5,-2],[5,-2],[15,-2],
      [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
-      ab(.6,.06,.6,M.clt,x,WH+.02,z);
-      const pl=new THREE.PointLight(0xddeeff,2.5,18); pl.position.set(x,WH-.15,z); scene.add(pl);
+      ab(.8,.04,2.4,M.clt,x,WH-.01,z);  // long fluorescent panel
+      const pl=new THREE.PointLight(0xfffce8,8.0,20); pl.position.set(x,WH-.2,z); scene.add(pl);
     });
-    // accent: exec office
-    const epl=new THREE.PointLight(0xa8c8ff,1.8,12); epl.position.set(17,-9,3); scene.add(epl);
+    // accent: exec office warm light
+    const epl=new THREE.PointLight(0xffeedd,5.0,14); epl.position.set(17,-9,3); scene.add(epl);
+    // extra fill lights near camera start
+    const fpl=new THREE.PointLight(0xfff8f0,4.0,16); fpl.position.set(0,WH-.3,10); scene.add(fpl);
 
     // ── FLOOR ──────────────────────────────────────────────────
     ab(OW,.1,OD,M.fl, 0,-.05,0);
-    // Carpet zones
-    ab(24,.11,20,M.ca, -8,0,-2);          // engineering/design wing carpet
-    ab(12,.11,12,M.ca, 15,0,0);           // sales carpet
+    // Carpet zones (slightly raised)
+    ab(26,.12,22,M.ca, -8,0,-2);          // engineering/design wing carpet
+    ab(14,.12,14,M.ca, 15,0,0);           // sales carpet
+    // Floor skirting (dark base strip along walls)
+    const skirt = std(0x4a4038,{r:0.7});
+    ab(OW,.08,0.06,skirt, 0,.04,-OD/2+.04);
+    ab(OW,.08,0.06,skirt, 0,.04, OD/2-.04);
+    ab(0.06,.08,OD,skirt,-OW/2+.04,.04,0);
+    ab(0.06,.08,OD,skirt, OW/2-.04,.04,0);
 
     // ── CEILING ────────────────────────────────────────────────
-    ab(OW,.12,OD,M.ceil, 0,WH+.06,0);
+    ab(OW,.14,OD,M.ceil, 0,WH+.07,0);
+    // Ceiling grid lines (visible tile grid)
+    const cgrid = std(0xd0ccc8,{r:0.9});
+    for(let gx=-20;gx<=20;gx+=2.4) ab(0.04,.04,OD,cgrid,gx,WH+.01,0);
+    for(let gz=-14;gz<=14;gz+=2.4) ab(OW,.04,0.04,cgrid,0,WH+.01,gz);
 
     // ── EXTERIOR WALLS ─────────────────────────────────────────
     ab(OW,WH,WT,M.wex, 0,WH/2,-OD/2);             // back
@@ -723,8 +738,12 @@ const HQ = {
     ab(WT,WH,OD,M.wex, OW/2,WH/2,0);              // right
     ab(10,WH,WT,M.wex, -OW/2+5,WH/2,OD/2);        // front-left
     ab(10,WH,WT,M.wex, OW/2-5,WH/2,OD/2);         // front-right
-    // Window openings on back wall (glazing panels)
-    [[-15,-8],[0,-8],[15,-8]].forEach(([x])=>{ ab(4.5,1.4,WT,M.gl,x,WH*.6,-OD/2); });
+    // Large window panels on back wall — let daylight in
+    const winGl = std(0x88c8e8,{r:0.02,m:0.05,em:0x66aad0,ei:0.4});
+    [[-16,-8],[-8,-8],[0,-8],[8,-8],[16,-8]].forEach(([x])=>{ ab(5.5,1.8,WT,winGl,x,WH*.62,-OD/2); });
+    // Window sills
+    const wsill = std(0xddd8d0,{r:0.7});
+    [[-16,-8],[-8,-8],[0,-8],[8,-8],[16,-8]].forEach(([x])=>{ ab(5.7,.08,.3,wsill,x,WH*.62-0.9,-OD/2+.15); });
 
     // ── INTERIOR PARTITIONS ────────────────────────────────────
     // Server room enclosure
@@ -826,8 +845,7 @@ const HQ = {
     [.28,.82,1.36,1.9,2.44].forEach(y=>{
       ab(.18,.05,2.0,M.de, OW/2-.14,y,-12);
       [0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299].forEach((c,i)=>{
-        const bm=new THREE.MeshLambertMaterial({color:c});
-        ab(.07,.22,.16,bm, OW/2-.2,y+.14,-12+(i-2)*.38);
+        ab(.07,.22,.16,std(c,{r:0.9}), OW/2-.2,y+.14,-12+(i-2)*.38);
       });
     });
     // Exec lounge
@@ -885,8 +903,7 @@ const HQ = {
       ab(.18,.05,6,M.de,-OW/2+.14,y,-8);
       for(let i=0;i<8;i++){
         const c=[0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299,0x116688,0xcc6622,0x448844][i];
-        const bm=new THREE.MeshLambertMaterial({color:c});
-        ab(.07,.22,.5,bm,-OW/2+.2,y+.14,-11+i*.74);
+        ab(.07,.22,.5,std(c,{r:0.9}),-OW/2+.2,y+.14,-11+i*.74);
       }
     });
 
@@ -912,13 +929,42 @@ const HQ = {
     const chars = [];
     emps.forEach((e, i) => {
       const g = new THREE.Group();
-      const mB = new THREE.MeshLambertMaterial({ color: e.bodyHex || 0x3b82f6 });
-      const mS = new THREE.MeshLambertMaterial({ color: e.skinHex || SKIN[i % SKIN.length] });
-      [-.07,.07].forEach(dx => { const l=new THREE.Mesh(new THREE.BoxGeometry(.12,.34,.12),M.pn); l.position.set(dx,.17,0); l.castShadow=true; g.add(l); });
-      const b = new THREE.Mesh(new THREE.BoxGeometry(.3,.36,.2), mB); b.position.set(0,.51,0); b.castShadow=true; g.add(b);
-      [-.22,.22].forEach(dx => { const a=new THREE.Mesh(new THREE.BoxGeometry(.1,.3,.1),mB); a.position.set(dx,.47,0); a.castShadow=true; g.add(a); });
-      const h = new THREE.Mesh(new THREE.BoxGeometry(.24,.24,.24), mS); h.position.set(0,.82,0); h.castShadow=true; g.add(h);
-      const hr = new THREE.Mesh(new THREE.BoxGeometry(.26,.08,.26), M.pn); hr.position.set(0,.96,0); g.add(hr);
+      const mB = std(e.bodyHex || 0x3b82f6, {r:0.7});
+      const mS = std(e.skinHex || SKIN[i % SKIN.length], {r:0.8});
+      // Legs
+      [-.08,.08].forEach(dx => {
+        const l=new THREE.Mesh(new THREE.BoxGeometry(.13,.36,.13),M.pn);
+        l.position.set(dx,.18,0); l.castShadow=true; g.add(l);
+      });
+      // Body (shirt)
+      const b=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,.22),mB);
+      b.position.set(0,.54,0); b.castShadow=true; g.add(b);
+      // Collar/neck
+      const nk=new THREE.Mesh(new THREE.BoxGeometry(.10,.10,.10),mS);
+      nk.position.set(0,.75,0); g.add(nk);
+      // Arms
+      [-.26,.26].forEach(dx => {
+        const a=new THREE.Mesh(new THREE.BoxGeometry(.11,.32,.12),mB);
+        a.position.set(dx,.5,0); a.castShadow=true; g.add(a);
+        // hands
+        const hd=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.09),mS);
+        hd.position.set(dx,.32,0); g.add(hd);
+      });
+      // Head
+      const h=new THREE.Mesh(new THREE.BoxGeometry(.26,.26,.26),mS);
+      h.position.set(0,.86,0); h.castShadow=true; g.add(h);
+      // Hair
+      const hr=new THREE.Mesh(new THREE.BoxGeometry(.28,.10,.28),M.pn);
+      hr.position.set(0,1.0,0); g.add(hr);
+      // Eyes (white + pupil)
+      const ew=std(0xffffff,{r:0.5});
+      const ep=std(0x111111,{r:0.3});
+      [-.06,.06].forEach(dx=>{
+        const eye=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.03),ew);
+        eye.position.set(dx,.88,.12); g.add(eye);
+        const pupil=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.03),ep);
+        pupil.position.set(dx,.88,.14); g.add(pupil);
+      });
       const pos = e.pos || [0, 0];
       g.position.set(pos[0], 0, pos[1]);
       g.scale.setScalar(1.55);
