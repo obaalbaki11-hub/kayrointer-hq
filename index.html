@@ -68,35 +68,35 @@ nav{
 .hero{
   min-height:100vh;display:flex;flex-direction:column;
   align-items:center;justify-content:center;
-  padding:100px 24px 60px;text-align:center;
-  background:radial-gradient(ellipse 80% 50% at 50% -10%, rgba(59,130,246,0.08) 0%, transparent 70%);
+  padding:90px 24px 48px;text-align:center;
+  background:radial-gradient(ellipse 60% 40% at 50% 0%, rgba(59,130,246,0.06) 0%, transparent 65%);
 }
 .hero-badge{
-  display:inline-flex;align-items:center;gap:7px;
-  border:1px solid rgba(255,255,255,.15);color:var(--text2);
-  font-size:12px;font-weight:500;padding:6px 16px;
-  border-radius:20px;margin-bottom:36px;font-family:var(--sans);
+  display:inline-flex;align-items:center;gap:6px;
+  border:1px solid rgba(255,255,255,.12);color:var(--text2);
+  font-size:11.5px;font-weight:500;padding:5px 14px;
+  border-radius:20px;margin-bottom:28px;font-family:var(--sans);
 }
-.badge-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+.badge-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .hero-h1{
-  font-size:clamp(52px,7.5vw,96px);font-weight:900;line-height:1.05;
-  letter-spacing:-3px;color:#fff;margin-bottom:0;
-  font-family:var(--sans);
+  font-size:clamp(36px,5vw,68px);font-weight:800;line-height:1.08;
+  letter-spacing:-2px;color:#fff;margin-bottom:0;
+  font-family:var(--sans);max-width:780px;
 }
-.hero-h1-dim{color:#555}
+.hero-h1-dim{color:#3a3a3a}
 .hero-sub{
-  font-size:clamp(14px,2vw,18px);color:var(--text2);line-height:1.65;
-  max-width:500px;margin:28px auto 12px;font-weight:400;
+  font-size:clamp(13px,1.5vw,16px);color:var(--text2);line-height:1.7;
+  max-width:440px;margin:20px auto 10px;font-weight:400;
 }
 .hero-trust{
-  font-size:11.5px;color:#444;margin-bottom:56px;
+  font-size:11px;color:#333;margin-bottom:40px;
   font-family:var(--mono);letter-spacing:.3px;
 }
 .hero-trust span{margin:0 8px}
 
 /* ── BILLING TOGGLE ── */
-.billing-toggle{display:flex;align-items:center;gap:14px;justify-content:center;margin-bottom:40px}
+.billing-toggle{display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:28px}
 .billing-label{font-size:13px;color:var(--text2);font-weight:500}
 .toggle-track{
   position:relative;width:44px;height:24px;background:#222;
