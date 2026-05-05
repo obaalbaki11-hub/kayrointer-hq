@@ -206,16 +206,18 @@ const AI = {
           'anthropic-dangerous-allow-browser': 'true',
         },
         body: JSON.stringify({
-          model: 'claude-haiku-4-5-20251001',
-          max_tokens: 1024,
+          model: State.settings.model || 'claude-haiku-4-5-20251001',
+          max_tokens: 2048,
           stream: true,
           system: system || 'You are a helpful AI employee at Kayro Interactive.',
           messages,
         }),
       });
       if (!res.ok) {
-        const e = await res.json().catch(()=>({error:{message:res.status}}));
-        yield `⚠️ API error: ${e?.error?.message||res.status}`;
+        let body = {};
+        try { body = await res.json(); } catch(_) {}
+        const msg = body?.error?.message || `HTTP ${res.status}`;
+        yield `⚠️ API error (${res.status}): ${msg}\n\nCheck your API key in Settings. Make sure it starts with sk-ant-`;
         return;
       }
       const reader = res.body.getReader();
@@ -542,6 +544,8 @@ const HQ = {
     HQ._active = false;
     clearInterval(HQ._clock);
     HQ._clock = null;
+    if (HQ._cleanup) { HQ._cleanup(); HQ._cleanup = null; }
+    if (document.pointerLockElement) { try { document.exitPointerLock(); } catch(e) {} }
     if (HQ._renderer) {
       HQ._renderer.dispose();
       try { HQ._renderer.forceContextLoss(); } catch(e) {}
@@ -561,15 +565,21 @@ const HQ = {
 
     const company = State.settings.companyName || 'Kayro Interactive';
     root.innerHTML = `
-      <div class="sim-topbar" id="hq-emp-bar">
-        ${emps.map((e, i) => `
-          <div class="sim-emp" data-eid="${e.id}">
-            <div class="sim-emp-av" style="background:${e.color}20;color:${e.color}">${e.name[0]}</div>
-            <span class="sim-emp-name">${e.name}</span>
-            <span class="sim-emp-st ${statuses[i]}">${statuses[i]==='working'?'●':'○'}</span>
-          </div>${i < emps.length-1 ? '<div class="sim-sep"></div>' : ''}`).join('')}
+      <div class="fp-enter" id="fp-enter">
+        <div class="fp-enter-logo">${company[0]||'K'}</div>
+        <div class="fp-enter-title">${company} HQ</div>
+        <div class="fp-enter-sub">First-person office — walk around and talk to your team</div>
+        <div class="fp-enter-keys">
+          <span class="fp-key">W A S D</span> Move &nbsp;
+          <span class="fp-key">SHIFT</span> Run &nbsp;
+          <span class="fp-key">E</span> Chat &nbsp;
+          <span class="fp-key">ESC</span> Menu
+        </div>
+        <div class="fp-enter-btn" id="fp-enter-btn">▶ Enter Office</div>
       </div>
-
+      <div class="fp-crosshair" id="fp-crosshair">+</div>
+      <div class="fp-interact" id="fp-interact"></div>
+      <canvas id="fp-minimap" class="fp-minimap" width="130" height="86"></canvas>
       <div class="sim-panel">
         <div class="sim-time" id="hq-sp-clock">--:--</div>
         <div class="sim-date" id="hq-sp-date">--</div>
@@ -584,16 +594,13 @@ const HQ = {
         </div>
         <button class="sim-panel-btn" id="sp-board-btn">STANDUP</button>
       </div>
-
       <div class="sim-bottom">
         <span class="sim-co">${company}</span>
-        <span class="sim-hint">drag · scroll to zoom · click to chat</span>
+        <span class="sim-hint" id="fp-hint">Click ▶ Enter Office to start</span>
       </div>
       <div id="hq-ntags"></div>`;
 
-    root.querySelectorAll('.hq-emp-item').forEach(el =>
-      el.addEventListener('click', () => Chat.open(el.dataset.eid)));
-    document.getElementById('sp-board-btn').addEventListener('click', () => Employees.showStandup());
+    // sp-board-btn listener set up in first-person controls block below
 
     const updateClock = () => {
       const n = new Date();
@@ -613,9 +620,10 @@ const HQ = {
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x080c14);
-    const FRUST = 22, asp = W / H;
-    const camera = new THREE.OrthographicCamera(-FRUST*asp, FRUST*asp, FRUST, -FRUST, -100, 300);
-    camera.position.set(30, 30, 30); camera.lookAt(0, 1, 0);
+    scene.fog = new THREE.Fog(0x080c14, 18, 52);
+    const asp = W / H;
+    const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
+    camera.position.set(0, 1.7, 13);
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -890,7 +898,9 @@ const HQ = {
       const h = new THREE.Mesh(new THREE.BoxGeometry(.24,.24,.24), mS); h.position.set(0,.82,0); h.castShadow=true; g.add(h);
       const hr = new THREE.Mesh(new THREE.BoxGeometry(.26,.08,.26), M.pn); hr.position.set(0,.96,0); g.add(hr);
       const pos = e.pos || [0, 0];
-      g.position.set(pos[0], 0, pos[1]); scene.add(g); chars.push({ group:g, emp:e });
+      g.position.set(pos[0], 0, pos[1]);
+      g.scale.setScalar(1.55);
+      scene.add(g); chars.push({ group:g, emp:e });
     });
 
     // Name tags — minimal sim chips
@@ -912,38 +922,161 @@ const HQ = {
       return d;
     });
 
-    // Camera controls
-    let drag=false, prevXY=[0,0], panX=0, panZ=0, tPanX=0, tPanZ=0, zoom=1, tZoom=1;
-    const cvs = renderer.domElement;
-    cvs.addEventListener('mousedown', e => { drag=true; prevXY=[e.clientX,e.clientY]; });
-    cvs.addEventListener('mousemove', e => { if (!drag) return; tPanX-=(e.clientX-prevXY[0])*.025; tPanZ-=(e.clientY-prevXY[1])*.025; prevXY=[e.clientX,e.clientY]; });
-    cvs.addEventListener('mouseup', () => drag=false);
-    cvs.addEventListener('mouseleave', () => drag=false);
-    cvs.addEventListener('wheel', e => { tZoom=Math.max(.35,Math.min(3.5,tZoom-e.deltaY*.001)); e.preventDefault(); }, { passive:false });
+    // ── FIRST-PERSON CONTROLS ─────────────────────────────────
+    let plocked = false;
+    let yaw = 0, pitch = 0;
+    const playerPos = new THREE.Vector3(0, 1.7, 13);
+    const keys = {};
+    let nearEmpRef = null;
 
+    document.getElementById('sp-board-btn').addEventListener('click', () => Employees.showStandup());
+
+    const enterBtn = document.getElementById('fp-enter-btn');
+    const enterEl = document.getElementById('fp-enter');
+    const crossEl = document.getElementById('fp-crosshair');
+    const interactEl = document.getElementById('fp-interact');
+    const hintEl = document.getElementById('fp-hint');
+
+    const lockCanvas = () => renderer.domElement.requestPointerLock();
+    if (enterBtn) enterBtn.addEventListener('click', lockCanvas);
+
+    const onPLC = () => {
+      plocked = document.pointerLockElement === renderer.domElement;
+      if (enterEl) enterEl.style.display = plocked ? 'none' : 'flex';
+      if (crossEl) crossEl.style.opacity = plocked ? '1' : '0';
+      if (hintEl) hintEl.textContent = plocked ? 'ESC — release mouse' : 'Click ▶ Enter Office to start';
+    };
+    const onMM = e => {
+      if (!plocked) return;
+      yaw -= e.movementX * 0.002;
+      pitch = Math.max(-0.88, Math.min(0.88, pitch - e.movementY * 0.002));
+    };
+    const onKD = e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      keys[e.code] = true;
+      if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
+      if (e.code === 'KeyE' && nearEmpRef) { Chat.open(nearEmpRef.id); }
+    };
+    const onKU = e => { keys[e.code] = false; };
+
+    document.addEventListener('pointerlockchange', onPLC);
+    document.addEventListener('mousemove', onMM);
+    document.addEventListener('keydown', onKD);
+    document.addEventListener('keyup', onKU);
+
+    HQ._cleanup = () => {
+      document.removeEventListener('pointerlockchange', onPLC);
+      document.removeEventListener('mousemove', onMM);
+      document.removeEventListener('keydown', onKD);
+      document.removeEventListener('keyup', onKU);
+    };
+
+    // ── MINIMAP ───────────────────────────────────────────────
+    const mmCanvas = document.getElementById('fp-minimap');
+    const mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
+    const OWH = OW / 2, ODH = OD / 2;
+    function drawMinimap() {
+      if (!mmCtx) return;
+      const mW = mmCanvas.width, mH = mmCanvas.height;
+      const scX = mW / OW, scZ = mH / OD;
+      mmCtx.fillStyle = 'rgba(8,12,20,0.95)';
+      mmCtx.fillRect(0, 0, mW, mH);
+      // office border
+      mmCtx.strokeStyle = 'rgba(255,255,255,0.1)';
+      mmCtx.lineWidth = 1;
+      mmCtx.strokeRect(0, 0, mW, mH);
+      // employees
+      chars.forEach(({ group, emp }) => {
+        const cx = (group.position.x + OWH) * scX;
+        const cz = (group.position.z + ODH) * scZ;
+        mmCtx.fillStyle = emp.color;
+        mmCtx.beginPath(); mmCtx.arc(cx, cz, 3, 0, Math.PI * 2); mmCtx.fill();
+      });
+      // player
+      const px = (playerPos.x + OWH) * scX;
+      const pz = (playerPos.z + ODH) * scZ;
+      mmCtx.fillStyle = '#ffffff';
+      mmCtx.beginPath(); mmCtx.arc(px, pz, 4, 0, Math.PI * 2); mmCtx.fill();
+      // direction
+      mmCtx.strokeStyle = '#fff';
+      mmCtx.lineWidth = 1.5;
+      mmCtx.beginPath(); mmCtx.moveTo(px, pz);
+      mmCtx.lineTo(px - Math.sin(yaw) * 9, pz - Math.cos(yaw) * 9); mmCtx.stroke();
+    }
+
+    // ── NAME TAGS ─────────────────────────────────────────────
     const tmpV = new THREE.Vector3();
     function updateTags() {
       chars.forEach(({ group }, i) => {
-        tmpV.set(group.position.x, group.position.y + 1.4, group.position.z);
+        tmpV.set(group.position.x, group.position.y + 2.6, group.position.z);
         tmpV.project(camera);
+        if (tmpV.z > 1) { ntEls[i].style.opacity = '0'; return; }
         const sx = (tmpV.x * .5 + .5) * renderer.domElement.clientWidth;
         const sy = (-tmpV.y * .5 + .5) * renderer.domElement.clientHeight;
         ntEls[i].style.left = sx + 'px';
-        ntEls[i].style.top  = sy + 'px';
+        ntEls[i].style.top = sy + 'px';
+        ntEls[i].style.opacity = tmpV.z < 0.999 ? '1' : '0';
       });
     }
 
+    // ── ANIMATION LOOP ────────────────────────────────────────
     let t = 0;
+    const fwdV = new THREE.Vector3();
+    const rgtV = new THREE.Vector3();
+    const moveV = new THREE.Vector3();
+
     (function animate() {
       if (!HQ._active) return;
-      requestAnimationFrame(animate); t += .012;
-      panX += (tPanX - panX) * .1; panZ += (tPanZ - panZ) * .1; zoom += (tZoom - zoom) * .1;
-      camera.position.set(30 + panX, 30, 30 + panZ); camera.lookAt(panX, 1, panZ);
-      const fz = FRUST / zoom;
-      camera.left=-fz*asp; camera.right=fz*asp; camera.top=fz; camera.bottom=-fz;
-      camera.updateProjectionMatrix();
-      chars.forEach(({ group }, i) => { group.position.y=Math.sin(t*1.3+i*1.2)*.04; group.rotation.y=Math.sin(t*.35+i*.9)*.2; });
-      updateTags(); renderer.render(scene, camera);
+      requestAnimationFrame(animate);
+      t += 0.012;
+
+      // Movement
+      if (plocked) {
+        const spd = (keys['ShiftLeft'] || keys['ShiftRight']) ? 0.22 : 0.1;
+        fwdV.set(-Math.sin(yaw), 0, -Math.cos(yaw));
+        rgtV.set(Math.cos(yaw), 0, -Math.sin(yaw));
+        moveV.set(0, 0, 0);
+        if (keys['KeyW'] || keys['ArrowUp'])    moveV.addScaledVector(fwdV, spd);
+        if (keys['KeyS'] || keys['ArrowDown'])  moveV.addScaledVector(fwdV, -spd);
+        if (keys['KeyA'] || keys['ArrowLeft'])  moveV.addScaledVector(rgtV, -spd);
+        if (keys['KeyD'] || keys['ArrowRight']) moveV.addScaledVector(rgtV, spd);
+        playerPos.add(moveV);
+        playerPos.x = Math.max(-OWH + 1, Math.min(OWH - 1, playerPos.x));
+        playerPos.z = Math.max(-ODH + 1, Math.min(ODH - 1, playerPos.z));
+      }
+
+      camera.position.copy(playerPos);
+      camera.rotation.order = 'YXZ';
+      camera.rotation.y = yaw;
+      camera.rotation.x = pitch;
+
+      // Character idle sway
+      chars.forEach(({ group }, i) => {
+        group.position.y = Math.sin(t * 1.2 + i) * 0.025;
+        group.rotation.y += 0.005;
+      });
+
+      // Proximity detection
+      nearEmpRef = null;
+      let nearDist = 4.5;
+      chars.forEach(({ group, emp }) => {
+        const dx = group.position.x - playerPos.x;
+        const dz = group.position.z - playerPos.z;
+        const d = Math.sqrt(dx * dx + dz * dz);
+        if (d < nearDist) { nearDist = d; nearEmpRef = emp; }
+      });
+      if (interactEl) {
+        if (nearEmpRef && plocked) {
+          interactEl.textContent = `Press E — ${nearEmpRef.name} · ${nearEmpRef.role}`;
+          interactEl.style.opacity = '1';
+        } else {
+          interactEl.style.opacity = '0';
+        }
+      }
+
+      drawMinimap();
+      updateTags();
+      renderer.render(scene, camera);
     })();
   },
 };
@@ -1722,8 +1855,16 @@ const Settings = {
         <div class="s-card-title">🤖 Claude AI</div>
         <div class="form-group">
           <label class="form-label">ANTHROPIC API KEY</label>
-          <input class="form-input" id="s-apikey" type="password" value="${escHtml(s.apiKey||'')}" placeholder="sk-ant-…">
-          <div class="form-hint">Get your key at console.anthropic.com. Required for AI chat, email generation, and task updates.</div>
+          <input class="form-input" id="s-apikey" type="text" value="${escHtml(s.apiKey||'')}" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+          <div class="form-hint">Get your key at <b>console.anthropic.com</b> → API Keys. Must start with <code>sk-ant-</code></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">MODEL</label>
+          <select class="form-select" id="s-model">
+            <option value="claude-haiku-4-5-20251001" ${(s.model||'claude-haiku-4-5-20251001')==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 (fast, cheap)</option>
+            <option value="claude-sonnet-4-6" ${s.model==='claude-sonnet-4-6'?'selected':''}>Claude Sonnet 4.6 (smart, balanced)</option>
+            <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 (most powerful)</option>
+          </select>
         </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" id="s-save-key">Save Key</button>
@@ -1749,8 +1890,13 @@ const Settings = {
       save('settings');document.getElementById('brand-name').textContent=State.settings.companyName;toast('Saved','success');
     });
     document.getElementById('s-save-key').addEventListener('click',()=>{
-      State.settings.apiKey=document.getElementById('s-apikey').value.trim();
-      save('settings');Settings.updateApiStatus();toast('API key saved','success');
+      const k = document.getElementById('s-apikey').value.trim();
+      const m = document.getElementById('s-model').value;
+      State.settings.apiKey = k;
+      State.settings.model = m;
+      try { localStorage.setItem('kayro_settings', JSON.stringify(State.settings)); } catch(_) {}
+      Settings.updateApiStatus();
+      toast(k ? 'API key saved ✓' : 'Key cleared','success');
     });
     document.getElementById('s-test-key').addEventListener('click',async()=>{
       const st=document.getElementById('s-key-status');
