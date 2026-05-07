@@ -546,6 +546,28 @@ const HQ = {
   _active: false,
   _renderer: null,
   _clock: null,
+  _ceoDesk: null,
+
+  _openWorkPanel() {
+    const todoTasks = State.tasks.filter(t=>t.column==='todo'||t.column==='inprogress').slice(0,6);
+    const taskHtml = todoTasks.length
+      ? todoTasks.map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid rgba(255,255,255,.07)"><div style="width:7px;height:7px;border-radius:50%;background:${t.column==='inprogress'?'#22c55e':'#f59e0b'};flex-shrink:0"></div><span style="font-size:13px;color:#e8e2d4;flex:1">${escHtml(t.title)}</span><span style="font-size:10px;color:#555;font-family:monospace;text-transform:uppercase">${t.column}</span></div>`).join('')
+      : '<div style="color:#555;font-size:13px;text-align:center;padding:20px">No open tasks — your team is on it.</div>';
+    Modal.open('Your Office', `
+      <div style="padding:4px 0">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px;background:rgba(200,160,64,.06);border:1px solid rgba(200,160,64,.18);border-radius:10px">
+          <div style="font-size:28px">☕</div>
+          <div><div style="font-size:16px;font-weight:700;color:#f0e8d4">Good day, Omar</div><div style="font-size:12px;color:#888;margin-top:2px">${State.tasks.filter(t=>t.column!=='done').length} open tasks · ${State.employees.length} employees online</div></div>
+        </div>
+        <div style="font-size:11px;font-weight:600;color:#666;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">OPEN TASKS</div>
+        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">${taskHtml}</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" onclick="Modal.close();Router.go('tasks')">Open Task Board</button>
+          <button class="btn" onclick="Modal.close();Router.go('employees')">Manage Team</button>
+          <button class="btn" onclick="Modal.close();document.getElementById('chat-toggle-btn').click()">Open Chat</button>
+        </div>
+      </div>`);
+  },
 
   init(container) {
     container.innerHTML = '<div class="page-fill" id="hq-root"></div>';
@@ -639,8 +661,8 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x7aaec8);  // clear blue sky outside
-    scene.fog = new THREE.Fog(0xe8e0d8, 30, 80);
+    scene.background = new THREE.Color(0x0a0c14);  // dark evening sky — Suits night feel
+    scene.fog = new THREE.Fog(0x080a12, 22, 60);
     const asp = W / H;
     const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
     camera.position.set(0, 1.7, 13);
@@ -652,17 +674,16 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — Suits-style: warm Edison exec + cool daylight work zones
-    scene.add(new THREE.AmbientLight(0xfff8e8, 3.5));
-    const sun = new THREE.DirectionalLight(0xfff0d8, 7.0); // warm daylight
-    sun.position.set(28, 48, 15); sun.castShadow = true;
+    // ── SUITS LIGHTING: low ambient, dramatic warm point lights, high contrast ──
+    scene.add(new THREE.AmbientLight(0x2a1e0e, 1.0));   // very dim warm ambient — deep shadows
+    const sun = new THREE.DirectionalLight(0xfff0d8, 1.2); // weak key for shadow casting only
+    sun.position.set(20, 40, 10); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-48, right:48, top:48, bottom:-48, near:.5, far:140 });
     scene.add(sun);
-    const skyBounce = new THREE.DirectionalLight(0xd0e8ff, 2.0); // cool sky fill
-    skyBounce.position.set(-22, 14, -18); scene.add(skyBounce);
-    const frontFill = new THREE.DirectionalLight(0xfff8e8, 2.0);
-    frontFill.position.set(0, 5, 28); scene.add(frontFill);
+    // Subtle bounce from window side — keeps walls from being totally black
+    const wbounce = new THREE.DirectionalLight(0x8090a0, 0.6);
+    wbounce.position.set(-18, 8, -20); scene.add(wbounce);
 
     function std(c, opts={}) {
       return new THREE.MeshStandardMaterial({ color:c, roughness:opts.r??0.85, metalness:opts.m??0.0, ...(opts.em?{emissive:new THREE.Color(opts.em),emissiveIntensity:opts.ei??1.0}:{}) });
@@ -715,24 +736,28 @@ const HQ = {
 
     const OW=46, OD=32, WH=3.2, WT=.18;
 
-    // ── CEILING LIGHTS: warm Edison for exec zones, cool for work zones ──
-    // Work zone cool panels
+    // ── CEILING LIGHTS — focused Edison pools, Suits drama ─────
+    // Work zone: cool white overhead (tighter range, lower to floor)
     [[-17,-10],[-10,-10],[-3,-10],[4,-10],
      [-17,-2], [-10,-2], [-3,-2],
      [-17,6],  [-10,6]].forEach(([x,z]) => {
-      ab(0.6,.04,2.0,M.cltCool,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xf0f8ff,7.0,18); pl.position.set(x,WH-.2,z); scene.add(pl);
+      ab(0.5,.04,1.8,M.cltCool,x,WH-.01,z);
+      const pl=new THREE.PointLight(0xeef4ff,3.0,12); pl.position.set(x,WH-.2,z); scene.add(pl);
     });
-    // Exec / CEO zone warm Edison
+    // CEO/exec zone: warm Edison amber — brighter, wider glow
     [[13,-10],[20,-10],[13,-3],[20,-3],[13,4]].forEach(([x,z]) => {
-      ab(0.5,.04,2.0,M.cltWarm,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xffc870,8.0,16); pl.position.set(x,WH-.25,z); scene.add(pl);
+      ab(0.4,.04,1.6,M.cltWarm,x,WH-.01,z);
+      const pl=new THREE.PointLight(0xffb84a,4.5,14); pl.position.set(x,WH-.25,z); scene.add(pl);
     });
-    // CEO office dedicated lights
-    [new THREE.PointLight(0xffaa40,10.0,14),
-     new THREE.PointLight(0xffbb55,7.0,10)].forEach((pl,i)=>{ pl.position.set(18+i*3,WH-.4,-10); scene.add(pl); });
-    // Reception / lobby warm glow
-    const lobbyPL=new THREE.PointLight(0xffcc80,6.0,18); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
+    // CEO suite dedicated overhead — warm amber focus on desk
+    const ceoOH1=new THREE.PointLight(0xffa030,8.0,11); ceoOH1.position.set(18.5,WH-.3,-11); scene.add(ceoOH1);
+    const ceoOH2=new THREE.PointLight(0xff9020,5.0,9);  ceoOH2.position.set(14,WH-.3,-7);    scene.add(ceoOH2);
+    // CEO desk lamp (warm gold glow from desk level)
+    const deskLamp=new THREE.PointLight(0xffcc60,4.0,6); deskLamp.position.set(19.5,1.2,-11.5); scene.add(deskLamp);
+    // Lobby warm glow
+    const lobbyPL=new THREE.PointLight(0xffcc80,3.0,14); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
+    // Server room blue glow
+    const srvPL=new THREE.PointLight(0x2244ff,1.5,10); srvPL.position.set(-20,1.5,-14); scene.add(srvPL);
 
     // ── FLOOR ──────────────────────────────────────────────────
     ab(OW,.1,OD,M.marble, 0,-.05,0);  // polished marble base
@@ -901,6 +926,15 @@ const HQ = {
     // Laptop / keyboard on desk
     ab(.68,.03,.44,M.mo, 18.8,.84,-11.1);
     ab(.58,.02,.36,std(0x101020,{r:0.15,em:0x102080,ei:0.8}), 18.8,.86,-11.1);
+    // Desk lamp (visible model — bronze arm + warm bulb)
+    cy(.06,.62,std(0xb08030,{r:0.3,m:0.7}), 17.1,.94,-11.3,6);   // lamp arm
+    cy(.12,.08,std(0xffe8a0,{r:0.3,em:0xffcc60,ei:3.0}), 17.1,1.26,-11.3,8);  // lamp shade glow
+    ab(.18,.04,.18,std(0x6a4818,{r:0.5,m:0.4}), 17.1,.84,-11.3);  // lamp base
+    // Coffee mug on desk
+    cy(.06,.1,std(0xf0ece8,{r:0.7}), 17.6,.85,-11.0,8);
+    cy(.055,.08,std(0x1a1210,{r:0.8}), 17.6,.88,-11.0,8);  // coffee inside
+    // "WORK" zone marker (invisible, just marks the desk position for interaction)
+    HQ._ceoDesk = new THREE.Vector3(19.5, 1.7, -10.8);
 
     // CEO leather chair — black high-back
     ab(.68,.12,.66,M.leather, 19.5,.77,-10.8);        // seat
@@ -1252,8 +1286,15 @@ const HQ = {
       if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
       if (e.code === 'KeyE' && nearEmpRef) { Chat.open(nearEmpRef.id); }
       else if (e.code === 'KeyE') {
-        const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
-        if (inCEO) { document.exitPointerLock(); Router.go('tasks'); }
+        const deskPos = HQ._ceoDesk;
+        const deskDist = deskPos ? Math.hypot(playerPos.x-deskPos.x, playerPos.z-deskPos.z) : 99;
+        if (deskDist < 3.5) {
+          document.exitPointerLock();
+          HQ._openWorkPanel();
+        } else {
+          const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
+          if (inCEO) { document.exitPointerLock(); Router.go('tasks'); }
+        }
       }
     };
     const onKU = e => { keys[e.code] = false; };
@@ -1389,10 +1430,15 @@ const HQ = {
         }
       });
       // In CEO office — show "Your Office" hint
+      const deskPos2 = HQ._ceoDesk;
+      const nearDesk = deskPos2 && Math.hypot(playerPos.x-deskPos2.x, playerPos.z-deskPos2.z) < 3.5;
       const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
       if (interactEl && nearEmpRef === null) {
-        if (inCEO && plocked) {
-          interactEl.textContent = '🏢 Your CEO Office — press E to open task board';
+        if (nearDesk && plocked) {
+          interactEl.textContent = 'E — Sit at your desk';
+          interactEl.style.opacity = '1';
+        } else if (inCEO && plocked) {
+          interactEl.textContent = 'E — Your CEO Office';
           interactEl.style.opacity = '1';
         } else {
           interactEl.style.opacity = '0';
