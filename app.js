@@ -548,6 +548,85 @@ const HQ = {
   _clock: null,
   _ceoDesk: null,
 
+  _refreshGuests() {
+    const guests = HQ._getGuests();
+    const el = document.getElementById('hq-guests');
+    if (!el) return;
+    if (!guests.length) { el.innerHTML = ''; return; }
+    el.innerHTML = guests.map(g=>
+      `<div style="display:flex;align-items:center;gap:6px;padding:3px 0">
+        <div style="width:7px;height:7px;border-radius:50%;background:${g.color||'#22c55e'};flex-shrink:0"></div>
+        <span style="font-size:11px;color:#aaa;font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(g.name)}</span>
+        <span style="font-size:9px;color:#555">GUEST</span>
+      </div>`).join('');
+  },
+
+  _getGuests() {
+    try { return JSON.parse(localStorage.getItem('kayro_guests')||'[]'); } catch{ return []; }
+  },
+
+  _saveGuests(guests) {
+    try { localStorage.setItem('kayro_guests', JSON.stringify(guests)); } catch{}
+  },
+
+  _openInvite() {
+    const company = State.settings.companyName || 'Kayro Interactive';
+    const guests = HQ._getGuests();
+    // Build invite URL with company config encoded
+    const config = btoa(JSON.stringify({
+      company,
+      employees: State.employees.map(e=>({id:e.id,name:e.name,role:e.role,color:e.color}))
+    })).replace(/=/g,'');
+    const baseUrl = window.location.href.split('?')[0].split('#')[0];
+    const inviteUrl = `${baseUrl}?invite=${config}`;
+
+    const guestHtml = guests.length
+      ? `<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:8px;font-family:monospace">GUESTS IN YOUR OFFICE</div>
+          ${guests.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:4px">
+            <div style="width:8px;height:8px;border-radius:50%;background:${g.color||'#22c55e'}"></div>
+            <span style="font-size:13px;color:#ccc;flex:1">${escHtml(g.name)}</span>
+            <button onclick="HQ._removeGuest(${i})" style="background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#555'">Remove</button>
+          </div>`).join('')}
+        </div>` : '';
+
+    Modal.open('Invite to Your Office', `
+      <div style="padding:4px 0">
+        ${guestHtml}
+        <div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">INVITE LINK</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input id="invite-url-input" value="${escHtml(inviteUrl)}" readonly
+            style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:11px;color:#888;font-family:monospace;outline:none">
+          <button onclick="navigator.clipboard.writeText(document.getElementById('invite-url-input').value).then(()=>{this.textContent='Copied!';this.style.background='rgba(34,197,94,.2)';setTimeout(()=>{this.textContent='Copy';this.style.background=''},2000)})"
+            style="padding:10px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:sans-serif">Copy</button>
+        </div>
+        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:20px">Anyone with this link can access <b style="color:#888">${escHtml(company)} HQ</b> and chat with your AI employees. They get read-only access to your team — each conversation is private to them.</div>
+        <div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">ADD GUEST MANUALLY</div>
+        <div style="display:flex;gap:8px">
+          <input id="guest-name-inp" placeholder="Guest name" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;outline:none;font-family:sans-serif">
+          <button onclick="HQ._addGuest();Modal.close();HQ._openInvite()" style="padding:10px 18px;background:#fff;color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif">Add</button>
+        </div>
+      </div>`);
+  },
+
+  _addGuest() {
+    const inp = document.getElementById('guest-name-inp');
+    if (!inp || !inp.value.trim()) return;
+    const guests = HQ._getGuests();
+    const colors = ['#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444','#f97316'];
+    guests.push({ name: inp.value.trim(), color: colors[guests.length % colors.length], joined: Date.now() });
+    HQ._saveGuests(guests);
+    HQ._refreshGuests();
+    toast(`${inp.value.trim()} added to the office`, 'success');
+  },
+
+  _removeGuest(i) {
+    const guests = HQ._getGuests();
+    guests.splice(i, 1);
+    HQ._saveGuests(guests);
+    HQ._refreshGuests();
+    Modal.close();
+  },
+
   _openWorkPanel() {
     const todoTasks = State.tasks.filter(t=>t.column==='todo'||t.column==='inprogress').slice(0,6);
     const taskHtml = todoTasks.length
@@ -633,6 +712,9 @@ const HQ = {
         <div class="sim-divider"></div>
         <div class="sim-stat-row"><span class="sim-stat-lbl">ONLINE</span><span class="sim-stat-val">${emps.length}</span></div>
         <div class="sim-stat-row"><span class="sim-stat-lbl">TASKS</span><span class="sim-stat-val">${activeTasks}</span></div>
+        <div class="sim-divider"></div>
+        <div id="hq-guests" style="margin-bottom:6px"></div>
+        <button class="sim-panel-btn" id="sp-invite-btn" style="margin-bottom:5px;background:rgba(200,160,64,.15);border-color:rgba(200,160,64,.3);color:#c8a040">INVITE</button>
         <button class="sim-panel-btn" id="sp-board-btn">STANDUP</button>
       </div>
 
@@ -661,17 +743,23 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0c14);  // dark evening sky — Suits night feel
-    scene.fog = new THREE.Fog(0x080a12, 22, 60);
+    scene.background = new THREE.Color(0x04060c);
+    scene.fog = new THREE.FogExp2(0x06080e, 0.018);
     const asp = W / H;
-    const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
+    const camera = new THREE.PerspectiveCamera(68, asp, 0.1, 200);
     camera.position.set(0, 1.7, 13);
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setSize(W, H); renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+    renderer.setSize(W, H);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.physicallyCorrectLights = true;
+    renderer.outputEncoding = THREE.sRGBEncoding;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
     renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;z-index:1';
     root.appendChild(renderer.domElement);
+    HQ._renderer = renderer;
     HQ._renderer = renderer;
 
     // ── SUITS LIGHTING: low ambient, dramatic warm point lights, high contrast ──
@@ -776,15 +864,57 @@ const HQ = {
     for(let gx=-21;gx<=21;gx+=3.0) ab(0.06,.04,OD,cgrid,gx,WH+.01,0);
     for(let gz=-15;gz<=15;gz+=3.0) ab(OW,.04,0.06,cgrid,0,WH+.01,gz);
 
+    // ══════════════════════════════════════════════════════════
+    //  NYC SKYLINE — visible through back windows, Suits night
+    // ══════════════════════════════════════════════════════════
+    const bldMat = std(0x050810,{r:0.95});
+    const winLit  = std(0xffcc88,{r:0.5,em:0xffaa44,ei:2.5});
+    const winDim  = std(0x334466,{r:0.5,em:0x223355,ei:0.8});
+    const winOff  = std(0x0a0e18,{r:0.9});
+    // City buildings [x, height, width, z_offset]
+    [[-24,22,5,-38],[-17,38,6,-44],[-10,28,5,-36],[-4,50,7,-48],
+     [4,32,5,-40],[10,42,6,-44],[17,25,5,-36],[23,18,4,-40],
+     [-28,14,4,-52],[-19,20,4,-50],[-8,16,3,-54],[0,24,5,-50],
+     [8,18,4,-52],[20,16,3,-48],[28,12,3,-54]].forEach(([x,h,w,zoff])=>{
+      const bx=new THREE.Mesh(new THREE.BoxGeometry(w,h,4),bldMat);
+      bx.position.set(x,h/2-5,zoff); scene.add(bx);
+      // Window grid on facade facing us
+      const cols=Math.floor(w/1.2), rows=Math.floor(h/1.8);
+      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
+        const lit=Math.random();
+        const wm=new THREE.Mesh(new THREE.BoxGeometry(.45,.55,.1),
+          lit>.55?winLit:lit>.3?winDim:winOff);
+        wm.position.set(x-w/2+.7+c*1.2, h/2-5-h+1.4+r*1.8, zoff-1.9);
+        scene.add(wm);
+      }
+    });
+    // Ground plane for city (dark road reflection)
+    const cityGnd=new THREE.Mesh(new THREE.PlaneGeometry(200,80),
+      std(0x060810,{r:0.05,m:0.8}));
+    cityGnd.rotation.x=-Math.PI/2; cityGnd.position.set(0,-5,-55); scene.add(cityGnd);
+    // Moon / ambient sky glow
+    const moonGlow=new THREE.PointLight(0x3355aa,0.8,80);
+    moonGlow.position.set(-30,30,-50); scene.add(moonGlow);
+
     // ── EXTERIOR WALLS + WINDOWS ───────────────────────────────
-    // Back wall with large floor-to-ceiling windows (Suits look)
-    ab(OW,WH,WT,M.wallCrm, 0,WH/2,-OD/2);
-    // Giant windows: 5 panels across back wall
+    // Back wall solid sections (between windows)
+    ab(5,WH,WT,M.dkWood, -OW/2+2.5,WH/2,-OD/2);   // left end panel
+    ab(5,WH,WT,M.dkWood,  OW/2-2.5,WH/2,-OD/2);   // right end panel
+    ab(OW,.4,WT,M.dkWood, 0,WH-.2,-OD/2);           // top fascia strip
+    ab(OW,.5,WT,M.dkWood, 0,.25,-OD/2);             // sill base strip
+    // Giant floor-to-ceiling window panels — TRANSPARENT glass
+    const glWin=new THREE.MeshPhysicalMaterial ?
+      new THREE.MeshPhysicalMaterial({color:0x88ccee,roughness:0.02,metalness:0.05,
+        transparent:true,opacity:0.18,transmission:0.9,
+        envMapIntensity:1.0}) :
+      std(0x88ccee,{r:0.02,m:0.05,em:0x224466,ei:0.05});
     [[-18],[-9],[0],[9],[18]].forEach(([x])=>{
-      ab(7,2.4,WT,M.gl, x,WH*.55,-OD/2);            // main window glass
-      ab(7.2,.1,0.22,M.dkWood, x,WH*.55-1.2,-OD/2+.12); // sill
-      ab(.1,2.6,0.22,M.brass, x-3.6,WH*.55,-OD/2+.1);   // vertical mullion left
-      ab(.1,2.6,0.22,M.brass, x+3.6,WH*.55,-OD/2+.1);   // vertical mullion right
+      const glM=new THREE.Mesh(new THREE.BoxGeometry(7.4,WH*.95,0.06),glWin);
+      glM.position.set(x,WH*.48,-OD/2+.04); scene.add(glM);
+      ab(7.6,.1,0.2,M.brass, x,WH-.08,-OD/2+.1);   // top frame brass
+      ab(7.6,.1,0.2,M.brass, x,0.05,-OD/2+.1);      // bottom frame
+      ab(.08,WH*.95,0.2,M.brass, x-3.8,WH*.48,-OD/2+.1); // left mullion
+      ab(.08,WH*.95,0.2,M.brass, x+3.8,WH*.48,-OD/2+.1); // right mullion
     });
     // Side walls
     ab(WT,WH,OD,M.wallCrm, -OW/2,WH/2,0);   // left
@@ -1259,6 +1389,9 @@ const HQ = {
     let nearEmpRef = null;
 
     document.getElementById('sp-board-btn').addEventListener('click', () => Employees.showStandup());
+    document.getElementById('sp-invite-btn').addEventListener('click', () => HQ._openInvite());
+    // Load and show any existing guests
+    HQ._refreshGuests();
 
     const enterBtn = document.getElementById('fp-enter-btn');
     const enterEl = document.getElementById('fp-enter');
@@ -2525,4 +2658,22 @@ const BrainPage = {
 loadState();
 Chat.init();
 Settings.updateApiStatus();
-Router.navigate('hq');
+
+// Handle invite link
+(function handleInviteLink() {
+  const params = new URLSearchParams(window.location.search);
+  const inv = params.get('invite');
+  if (!inv) { Router.navigate('hq'); return; }
+  try {
+    const pad = inv + '='.repeat((4 - inv.length % 4) % 4);
+    const cfg = JSON.parse(atob(pad));
+    if (cfg.company) {
+      State.settings.companyName = cfg.company;
+      document.getElementById('brand-name').textContent = cfg.company;
+    }
+    toast(`Welcome to ${cfg.company||'the'} HQ! You have guest access.`, 'success', 6000);
+    // Clean the URL
+    window.history.replaceState({}, '', window.location.pathname);
+  } catch(e) {}
+  Router.navigate('hq');
+})();
