@@ -10,7 +10,7 @@ const COLS   = ['todo','inprogress','review','done'];
 const COL_LABELS = {todo:'TO DO',inprogress:'IN PROGRESS',review:'REVIEW',done:'DONE'};
 
 const DEFAULT_EMPLOYEES = [
-  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[-11, 3],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
+  {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product. You are the strategic brain of the company — obsessed with users, shipping, and cutting through ambiguity fast.
 
 PERSONALITY: Decisive, direct, slightly blunt. You think in frameworks. You hate vague answers and give crisp, opinionated takes.
@@ -25,7 +25,7 @@ WHAT YOU DO WELL:
 
 STYLE: Use bullet points. Be specific — never generic. When writing a document, write it IN FULL. End every response with a clear next action.`},
 
-  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-16,-5],status:'online', skills:['React','Node.js','System Architecture','Code Review','TypeScript'],hired:Date.now(),tasks:0,
+  {id:'e2',name:'Sarah', role:'Lead Engineer',    color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-17,-6],status:'online', skills:['React','Node.js','System Architecture','Code Review','TypeScript'],hired:Date.now(),tasks:0,
    system:`You are Sarah, Lead Engineer. You build and review systems that scale. You have strong opinions about code quality and catch edge cases others miss.
 
 PERSONALITY: Precise, thorough, opinionated. You hate technical debt and vague specs. You ask the right clarifying questions.
@@ -41,7 +41,7 @@ WHAT YOU DO WELL:
 
 STYLE: Technical but readable. Include code when it helps. Always flag assumptions and edge cases. If asked to write code, write the real code — not pseudocode.`},
 
-  {id:'e3',name:'Alex',  role:'Head of Marketing', color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[11, 4],status:'online', skills:['Growth Marketing','SEO','Copywriting','Paid Ads','Content Strategy'],hired:Date.now(),tasks:0,
+  {id:'e3',name:'Alex',  role:'Head of Marketing', color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[5, 4],status:'online', skills:['Growth Marketing','SEO','Copywriting','Paid Ads','Content Strategy'],hired:Date.now(),tasks:0,
    system:`You are Alex, Head of Marketing. You turn ideas into campaigns that drive real growth. You're equal parts creative and analytical.
 
 PERSONALITY: High-energy, punchy, results-obsessed. You think in hooks, headlines, and conversion funnels.
@@ -57,7 +57,7 @@ WHAT YOU DO WELL:
 
 STYLE: Punchy and specific. When writing copy, write the REAL copy — not templates with [INSERT TEXT HERE]. Give options when useful.`},
 
-  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[-3, 3],status:'online', skills:['Figma','Design Systems','User Research','Wireframing','Accessibility'],hired:Date.now(),tasks:0,
+  {id:'e4',name:'Zara',  role:'UI/UX Designer',   color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[-3,-1],status:'online', skills:['Figma','Design Systems','User Research','Wireframing','Accessibility'],hired:Date.now(),tasks:0,
    system:`You are Zara, UI/UX Designer. You craft interfaces that are beautiful, intuitive, and accessible. You advocate for users in every decision.
 
 PERSONALITY: Empathetic, detail-obsessed, and opinionated about design. You push back on poor UX decisions.
@@ -73,7 +73,7 @@ WHAT YOU DO WELL:
 
 STYLE: Visual and precise. Describe layouts, spacing, and interactions clearly. Reference design principles when relevant. Be opinionated — tell them what's wrong and why.`},
 
-  {id:'e5',name:'Chris', role:'Head of Sales',     color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[15, 0],status:'online', skills:['Cold Outreach','CRM','Objection Handling','Pipeline Management','Closing'],hired:Date.now(),tasks:0,
+  {id:'e5',name:'Chris', role:'Head of Sales',     color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[5, 0],status:'online', skills:['Cold Outreach','CRM','Objection Handling','Pipeline Management','Closing'],hired:Date.now(),tasks:0,
    system:`You are Chris, Head of Sales. You close deals and build relationships that last. You're confident without being pushy, and you know how to handle any objection.
 
 PERSONALITY: Direct, energetic, and strategic. You think in pipelines and outcomes. You never waste a prospect's time.
@@ -89,7 +89,7 @@ WHAT YOU DO WELL:
 
 STYLE: Confident and tight. Real emails, real scripts — no templates with [YOUR VALUE PROP]. When writing an email, write it as if you're sending it tomorrow.`},
 
-  {id:'e6',name:'Mia',   role:'Customer Success',  color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[0, 8],status:'online', skills:['Onboarding','Retention','Support','NPS','Churn Prevention'],hired:Date.now(),tasks:0,
+  {id:'e6',name:'Mia',   role:'Customer Success',  color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-9, 3],status:'online', skills:['Onboarding','Retention','Support','NPS','Churn Prevention'],hired:Date.now(),tasks:0,
    system:`You are Mia, Head of Customer Success. You ensure every customer gets real value and sticks around long-term. You're the voice of the customer inside the company.
 
 PERSONALITY: Warm, proactive, and solutions-first. You never escalate a problem without a proposed solution.
@@ -639,8 +639,8 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x8ab4d8);   // daylight sky outside windows
-    scene.fog = new THREE.Fog(0xd8e4ec, 28, 72);
+    scene.background = new THREE.Color(0x7aaec8);  // clear blue sky outside
+    scene.fog = new THREE.Fog(0xe8e0d8, 30, 80);
     const asp = W / H;
     const camera = new THREE.PerspectiveCamera(72, asp, 0.08, 120);
     camera.position.set(0, 1.7, 13);
@@ -652,136 +652,175 @@ const HQ = {
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
 
-    // Lighting — bright modern open-plan office
-    scene.add(new THREE.AmbientLight(0xfff8f0, 4.5));           // warm white fill
-    const sun = new THREE.DirectionalLight(0xfff5e8, 6.0);       // daylight through windows
-    sun.position.set(30, 50, 25); sun.castShadow = true;
+    // Lighting — Suits-style: warm Edison exec + cool daylight work zones
+    scene.add(new THREE.AmbientLight(0xfff8e8, 3.5));
+    const sun = new THREE.DirectionalLight(0xfff0d8, 7.0); // warm daylight
+    sun.position.set(28, 48, 15); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left:-44, right:44, top:44, bottom:-44, near:.5, far:130 });
+    Object.assign(sun.shadow.camera, { left:-48, right:48, top:48, bottom:-48, near:.5, far:140 });
     scene.add(sun);
-    const sky = new THREE.DirectionalLight(0xd0e8ff, 2.5);       // cool sky bounce from windows
-    sky.position.set(-20, 12, -20); scene.add(sky);
-    const back = new THREE.DirectionalLight(0xfff8f0, 1.5);      // back fill so nothing is black
-    back.position.set(0, 6, 25); scene.add(back);
+    const skyBounce = new THREE.DirectionalLight(0xd0e8ff, 2.0); // cool sky fill
+    skyBounce.position.set(-22, 14, -18); scene.add(skyBounce);
+    const frontFill = new THREE.DirectionalLight(0xfff8e8, 2.0);
+    frontFill.position.set(0, 5, 28); scene.add(frontFill);
 
     function std(c, opts={}) {
       return new THREE.MeshStandardMaterial({ color:c, roughness:opts.r??0.85, metalness:opts.m??0.0, ...(opts.em?{emissive:new THREE.Color(opts.em),emissiveIntensity:opts.ei??1.0}:{}) });
     }
+    // ── SUITS PALETTE ─────────────────────────────────────────
     const M = {
-      fl:  std(0xc8c0b4,{r:0.9}),          // light concrete floor
-      ca:  std(0x7a8fa8,{r:0.95}),          // slate-blue carpet
-      wex: std(0xe0dcd4,{r:0.9}),           // warm off-white walls
-      win: std(0xd8d4cc,{r:0.9}),           // interior partitions — off-white
-      gl:  std(0x88b8d8,{r:0.05,m:0.1,em:0x5588aa,ei:0.3}),  // tinted glass
-      ceil:std(0xf2f0ec,{r:0.95}),          // white ceiling
-      clt: std(0xfffce8,{r:0.5,em:0xfffff0,ei:2.0}),          // glowing light panels
-      dt:  std(0xd4c4a0,{r:0.6}),           // light oak desk top
-      de:  std(0x1e1e22,{r:0.2,m:0.9}),     // black metal legs
-      ch:  std(0x1e2e48,{r:0.7}),           // dark navy chair seat
-      cb:  std(0x18243c,{r:0.7}),           // dark navy chair back
-      mo:  std(0x141418,{r:0.3,m:0.7}),     // near-black monitor frame
-      sc:  std(0x0a1428,{r:0.1,m:0.1,em:0x1a4080,ei:1.5}),   // monitor screen glow
-      sv:  std(0x1e2028,{r:0.4,m:0.6}),     // dark server rack
-      led: std(0x22ff88,{r:0.3,em:0x00ff66,ei:2.0}),          // green LED
-      ldb: std(0x4488ff,{r:0.3,em:0x2255cc,ei:2.0}),          // blue LED
-      so:  std(0x3c4e68,{r:0.8}),           // mid-blue sofa
-      so2: std(0x2a3c5a,{r:0.8}),           // sofa accent
-      cnt: std(0xc8c0b0,{r:0.7}),           // kitchen counter — light stone
-      app: std(0xd0ccc8,{r:0.3,m:0.6}),     // stainless appliances
-      wb:  std(0xf8f8f4,{r:0.85}),          // whiteboard — near white
-      wbf: std(0x2a2a30,{r:0.5,m:0.5}),     // whiteboard metal frame
-      rug: std(0x4a6080,{r:0.95}),           // area rug — medium blue
-      pp:  std(0xc06830,{r:0.9}),            // terracotta plant pot
-      pl:  std(0x228844,{r:0.8}),            // plant leaves — vivid green
-      ct:  std(0x3a3428,{r:0.6,m:0.3}),     // dark walnut coffee table
-      pn:  std(0x0c0c10,{r:0.8}),           // black pants/hair
+      marble:  std(0xe8e2d8,{r:0.15,m:0.02}),   // polished marble lobby floor
+      carpet:  std(0x141820,{r:0.98}),            // deep charcoal exec carpet
+      carpetB: std(0x1a2238,{r:0.98}),            // navy carpet work zones
+      wallCrm: std(0xf0ede6,{r:0.88}),            // cream painted walls
+      dkWood:  std(0x2e1c0a,{r:0.55}),            // dark mahogany panel
+      mdWood:  std(0x6a3e18,{r:0.60}),            // walnut desk surface
+      ceoDesk: std(0x3a2212,{r:0.50}),            // CEO executive desk — dark walnut
+      brass:   std(0xc8a040,{r:0.25,m:0.75}),     // gold / brass trim
+      chrome:  std(0xc4c8cc,{r:0.12,m:0.92}),     // chrome / steel
+      leather: std(0x0c0c0a,{r:0.65}),            // black leather
+      leathBr: std(0x2e1608,{r:0.68}),            // dark brown leather
+      gl:      std(0x7ab8d8,{r:0.04,m:0.08,em:0x44aacc,ei:0.2}), // tinted window glass
+      glInt:   std(0x88c0e8,{r:0.02,m:0.05,em:0x66bbdd,ei:0.15}),// interior glass wall
+      ceil:    std(0xf4f2ee,{r:0.95}),            // white ceiling
+      cltWarm: std(0xffe4a0,{r:0.4,em:0xffcc60,ei:1.8}), // warm Edison panel
+      cltCool: std(0xf0f8ff,{r:0.4,em:0xe0f0ff,ei:1.2}), // cool work-zone panel
+      dt:      std(0xb8a080,{r:0.55}),            // regular desk — light oak
+      de:      std(0x181818,{r:0.18,m:0.92}),     // black metal desk legs
+      chair:   std(0x0e0e0c,{r:0.60}),            // black task chair
+      chairBk: std(0x080808,{r:0.62}),            // chair back
+      mo:      std(0x0e0e14,{r:0.22,m:0.75}),     // monitor bezel
+      sc:      std(0x06101e,{r:0.08,em:0x1848a8,ei:2.0}), // monitor screen glow
+      sv:      std(0x181a20,{r:0.35,m:0.55}),     // server rack
+      ledG:    std(0x00ee66,{r:0.3,em:0x00cc44,ei:2.5}), // green LED
+      ledB:    std(0x3388ff,{r:0.3,em:0x1155dd,ei:2.5}), // blue LED
+      sofa:    std(0x0c0c0a,{r:0.70}),            // black leather sofa
+      sofaPil: std(0xc8a040,{r:0.55}),            // gold cushion accent
+      cnt:     std(0xdad4c8,{r:0.55,m:0.05}),     // stone counter
+      app:     std(0xd4d0cc,{r:0.18,m:0.72}),     // stainless appliance
+      wb:      std(0xf8f8f4,{r:0.88}),            // whiteboard
+      wbf:     std(0x181818,{r:0.28,m:0.72}),     // whiteboard metal frame
+      rug:     std(0x0a1020,{r:0.98}),            // deep navy area rug
+      rugRed:  std(0x5a1010,{r:0.98}),            // CEO red area rug
+      pp:      std(0x7a3010,{r:0.88}),            // dark terracotta pot
+      pl:      std(0x1a6e32,{r:0.78}),            // deep green plant
+      ct:      std(0x1c1208,{r:0.40,m:0.12}),     // dark walnut coffee table
+      trophy:  std(0xd4a020,{r:0.18,m:0.80}),     // gold trophy
+      pn:      std(0x060606,{r:0.82}),             // near-black pants / hair
+      namepl:  std(0xb89030,{r:0.20,m:0.80}),     // gold nameplate
+      frame:   std(0x100c08,{r:0.42,m:0.30}),     // dark picture frame
     };
     function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
     function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
 
     const OW=46, OD=32, WH=3.2, WT=.18;
 
-    // ── CEILING LIGHTS (point lights + visible panels) ──────────
-    [[-15,-11],[-5,-11],[5,-11],[15,-11],
-     [-15,-2],[-5,-2],[5,-2],[15,-2],
-     [-15,7],[-5,7],[5,7],[15,7]].forEach(([x,z]) => {
-      ab(.8,.04,2.4,M.clt,x,WH-.01,z);  // long fluorescent panel
-      const pl=new THREE.PointLight(0xfffce8,8.0,20); pl.position.set(x,WH-.2,z); scene.add(pl);
+    // ── CEILING LIGHTS: warm Edison for exec zones, cool for work zones ──
+    // Work zone cool panels
+    [[-17,-10],[-10,-10],[-3,-10],[4,-10],
+     [-17,-2], [-10,-2], [-3,-2],
+     [-17,6],  [-10,6]].forEach(([x,z]) => {
+      ab(0.6,.04,2.0,M.cltCool,x,WH-.01,z);
+      const pl=new THREE.PointLight(0xf0f8ff,7.0,18); pl.position.set(x,WH-.2,z); scene.add(pl);
     });
-    // accent: exec office warm light
-    const epl=new THREE.PointLight(0xffeedd,5.0,14); epl.position.set(17,-9,3); scene.add(epl);
-    // extra fill lights near camera start
-    const fpl=new THREE.PointLight(0xfff8f0,4.0,16); fpl.position.set(0,WH-.3,10); scene.add(fpl);
+    // Exec / CEO zone warm Edison
+    [[13,-10],[20,-10],[13,-3],[20,-3],[13,4]].forEach(([x,z]) => {
+      ab(0.5,.04,2.0,M.cltWarm,x,WH-.01,z);
+      const pl=new THREE.PointLight(0xffc870,8.0,16); pl.position.set(x,WH-.25,z); scene.add(pl);
+    });
+    // CEO office dedicated lights
+    [new THREE.PointLight(0xffaa40,10.0,14),
+     new THREE.PointLight(0xffbb55,7.0,10)].forEach((pl,i)=>{ pl.position.set(18+i*3,WH-.4,-10); scene.add(pl); });
+    // Reception / lobby warm glow
+    const lobbyPL=new THREE.PointLight(0xffcc80,6.0,18); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
 
     // ── FLOOR ──────────────────────────────────────────────────
-    ab(OW,.1,OD,M.fl, 0,-.05,0);
-    // Carpet zones (slightly raised)
-    ab(26,.12,22,M.ca, -8,0,-2);          // engineering/design wing carpet
-    ab(14,.12,14,M.ca, 15,0,0);           // sales carpet
-    // Floor skirting (dark base strip along walls)
-    const skirt = std(0x4a4038,{r:0.7});
-    ab(OW,.08,0.06,skirt, 0,.04,-OD/2+.04);
-    ab(OW,.08,0.06,skirt, 0,.04, OD/2-.04);
-    ab(0.06,.08,OD,skirt,-OW/2+.04,.04,0);
-    ab(0.06,.08,OD,skirt, OW/2-.04,.04,0);
+    ab(OW,.1,OD,M.marble, 0,-.05,0);  // polished marble base
+    // Work-zone carpets
+    ab(28,.12,20,M.carpetB, -8,0,-2);      // engineering / design carpet
+    ab(12,.12,12,M.carpetB, 4,0,-10);      // meeting + center
+    // CEO suite plush carpet (very dark, luxury)
+    ab(15,.14,14,M.carpet, 17,0,-7);
+    // Lobby marble accent (keep marble, add rug)
+    ab(8,.12,6,M.rug, 0,.01,10);
 
     // ── CEILING ────────────────────────────────────────────────
     ab(OW,.14,OD,M.ceil, 0,WH+.07,0);
-    // Ceiling grid lines (visible tile grid)
-    const cgrid = std(0xd0ccc8,{r:0.9});
-    for(let gx=-20;gx<=20;gx+=2.4) ab(0.04,.04,OD,cgrid,gx,WH+.01,0);
-    for(let gz=-14;gz<=14;gz+=2.4) ab(OW,.04,0.04,cgrid,0,WH+.01,gz);
+    // Subtle ceiling grid (coffered look)
+    const cgrid=std(0xe0dcd6,{r:0.9});
+    for(let gx=-21;gx<=21;gx+=3.0) ab(0.06,.04,OD,cgrid,gx,WH+.01,0);
+    for(let gz=-15;gz<=15;gz+=3.0) ab(OW,.04,0.06,cgrid,0,WH+.01,gz);
 
-    // ── EXTERIOR WALLS ─────────────────────────────────────────
-    ab(OW,WH,WT,M.wex, 0,WH/2,-OD/2);             // back
-    ab(WT,WH,OD,M.wex, -OW/2,WH/2,0);             // left
-    ab(WT,WH,OD,M.wex, OW/2,WH/2,0);              // right
-    ab(10,WH,WT,M.wex, -OW/2+5,WH/2,OD/2);        // front-left
-    ab(10,WH,WT,M.wex, OW/2-5,WH/2,OD/2);         // front-right
-    // Large window panels on back wall — let daylight in
-    const winGl = std(0x88c8e8,{r:0.02,m:0.05,em:0x66aad0,ei:0.4});
-    [[-16,-8],[-8,-8],[0,-8],[8,-8],[16,-8]].forEach(([x])=>{ ab(5.5,1.8,WT,winGl,x,WH*.62,-OD/2); });
-    // Window sills
-    const wsill = std(0xddd8d0,{r:0.7});
-    [[-16,-8],[-8,-8],[0,-8],[8,-8],[16,-8]].forEach(([x])=>{ ab(5.7,.08,.3,wsill,x,WH*.62-0.9,-OD/2+.15); });
+    // ── EXTERIOR WALLS + WINDOWS ───────────────────────────────
+    // Back wall with large floor-to-ceiling windows (Suits look)
+    ab(OW,WH,WT,M.wallCrm, 0,WH/2,-OD/2);
+    // Giant windows: 5 panels across back wall
+    [[-18],[-9],[0],[9],[18]].forEach(([x])=>{
+      ab(7,2.4,WT,M.gl, x,WH*.55,-OD/2);            // main window glass
+      ab(7.2,.1,0.22,M.dkWood, x,WH*.55-1.2,-OD/2+.12); // sill
+      ab(.1,2.6,0.22,M.brass, x-3.6,WH*.55,-OD/2+.1);   // vertical mullion left
+      ab(.1,2.6,0.22,M.brass, x+3.6,WH*.55,-OD/2+.1);   // vertical mullion right
+    });
+    // Side walls
+    ab(WT,WH,OD,M.wallCrm, -OW/2,WH/2,0);   // left
+    ab(WT,WH,OD,M.wallCrm,  OW/2,WH/2,0);   // right
+    // Side windows on right wall (CEO light)
+    [[-OD/2+4,-8],[-OD/2+4,-2]].forEach(([_,z])=>{
+      ab(WT,2.0,4.5,M.gl, OW/2,WH*.55,z);
+    });
+    // Front walls
+    ab(10,WH,WT,M.wallCrm, -OW/2+5,WH/2,OD/2);
+    ab(10,WH,WT,M.wallCrm,  OW/2-5,WH/2,OD/2);
+    // Dark wood wainscoting on all walls (lower third)
+    [[OW,0,-OD/2],[OW,0,OD/2],[-OW/2,0,0,Math.PI/2],[OW/2,0,0,Math.PI/2]].forEach(([w,_,z,ry])=>{
+      const wm = ab(ry?OD:w,0.9,0.1,M.dkWood,ry?_:0,0.45,z); if(ry) wm.rotation.y=ry;
+    });
 
     // ── INTERIOR PARTITIONS ────────────────────────────────────
-    // Server room enclosure
-    ab(10,WH,WT,M.win, -OW/2+5,WH/2,-OD/2+5.5);
-    ab(WT,WH,5.5,M.win, -OW/2+10,WH/2,-OD/2+2.75);
-    // Meeting room glass walls
-    ab(WT,WH,10,M.gl, -1,WH/2,-4);
-    ab(WT,WH,10,M.gl, 7,WH/2,-4);
-    ab(8,WH,WT,M.gl, 3,WH/2,-9);
-    // Exec office walls
-    ab(WT,WH,9,M.win, 11,WH/2,-8.5);
-    ab(8,WH,WT,M.win, 15,WH/2,-4);
-    // Kitchen/break room half-wall
-    ab(12,1.4,WT,M.win, 15,0.7,5.5);
+    // Server room (back-left)
+    ab(10,WH,WT,M.wallCrm, -OW/2+5,WH/2,-OD/2+5.5);
+    ab(WT,WH,5.5,M.wallCrm,-OW/2+10,WH/2,-OD/2+2.75);
+    // Meeting room glass walls (center)
+    ab(WT,WH,10,M.glInt, -1,WH/2,-4);
+    ab(WT,WH,10,M.glInt,  7,WH/2,-4);
+    ab(8,WH,WT,M.glInt, 3,WH/2,-9.0);
+    // ── CEO SUITE WALLS (back-right, enclosed) ─────────────────
+    ab(WT,WH,16,M.dkWood, 10,WH/2,-8);     // left wall of CEO suite
+    ab(14,WH,WT,M.dkWood, 17,WH/2,-0.1);   // front wall with door gap
+    // CEO suite glass strip (prestige look-in)
+    ab(WT,WH,5,M.glInt, 10,WH/2,-2.5);     // glass panel at front
+    // Kitchen half-wall
+    ab(10,1.5,WT,M.wallCrm, 16,0.75,OD/2-3);
 
     // ── DESK + CHAIR FUNCTIONS ─────────────────────────────────
     function desk(x,z,ry=0) {
       const c=Math.cos(ry),s=Math.sin(ry);
-      ab(1.9,.07,.88,M.dt,x,.72,z,ry);
-      ab(1.1,.06,.12,M.de,x,.8,z-c*.22,ry);
-      [[.85,.37],[-.85,.37],[.85,-.37],[-.85,-.37]].forEach(([dx,dz])=>
-        ab(.05,.72,.05,M.de,x+dx*c-dz*s,.36,z+dx*s+dz*c));
-      ab(.82,.48,.06,M.mo,x,1.02,z-c*.28,ry);
-      ab(.74,.42,.04,M.sc,x,1.04,z-c*.26,ry);
-      ab(.06,.16,.06,M.de,x,.82,z-c*.21,ry);
-      ab(.5,.03,.2,M.de,x,.73,z+c*.16,ry);
-      ab(.09,.03,.11,M.cnt,x+.32*c,.73,z+.32*s,ry);
+      // Surface (light oak)
+      ab(2.0,.08,.9,M.dt,x,.74,z,ry);
+      // Modesty panel
+      ab(1.6,.5,.04,M.dkWood,x,.5,z-c*.4,ry);
+      // Metal hairpin legs
+      [[.88,.38],[-.88,.38],[.88,-.38],[-.88,-.38]].forEach(([dx,dz])=>
+        ab(.04,.74,.04,M.de,x+dx*c-dz*s,.37,z+dx*s+dz*c));
+      // Monitor
+      ab(.86,.50,.07,M.mo,x,1.06,z-c*.30,ry);
+      ab(.76,.44,.04,M.sc,x,1.06,z-c*.28,ry);
+      ab(.05,.18,.05,M.chrome,x,.84,z-c*.22,ry);
+      // Keyboard + mouse pad
+      ab(.54,.02,.22,M.de,x,.76,z+c*.14,ry);
+      ab(.1,.02,.12,M.chrome,x+.34*c,.76,z+.34*s,ry);
     }
     function chair(x,z,ry=0) {
       const c=Math.cos(ry),s=Math.sin(ry);
-      ab(.54,.1,.54,M.ch,x,.72,z);
-      ab(.54,.58,.07,M.cb,x,1.03,z-c*.3,ry);
-      [[.28,0],[-.28,0]].forEach(([dx])=>{
-        ab(.08,.04,.46,M.de,x+dx*c,.84,z+dx*s,ry);
-        cy(.05,.38,M.de,x+dx*c,.45,z+dx*s,6);
+      ab(.56,.12,.54,M.chair,x,.74,z);
+      ab(.56,.62,.08,M.chairBk,x,1.08,z-c*.30,ry);
+      // Armrests
+      [[.30,0],[-.30,0]].forEach(([dx])=>{
+        ab(.08,.04,.48,M.chrome,x+dx*c,.86,z+dx*s,ry);
       });
-      cy(.04,.72,M.de,x,.36,z,6);
-      for(let a=0;a<5;a++){const ag=a/5*Math.PI*2;ab(.3,.04,.06,M.de,x+Math.cos(ag)*.23,.05,z+Math.sin(ag)*.23,ag);}
+      // Gas cylinder + base
+      cy(.04,.74,M.chrome,x,.37,z,6);
+      for(let a=0;a<5;a++){const ag=a/5*Math.PI*2;ab(.32,.04,.07,M.chrome,x+Math.cos(ag)*.24,.04,z+Math.sin(ag)*.24,ag);}
     }
 
     // ── SERVER ROOM (back-left) ────────────────────────────────
@@ -791,7 +830,7 @@ const HQ = {
         ab(.58,2.3,.46,M.sv, SX+col*1.6+rack*.64,.02,SZ);
         for(let j=0;j<9;j++) {
           if(Math.random()>.35) {
-            const lm=rack%2===0?M.led:M.ldb;
+            const lm=rack%2===0?M.ledG:M.ledB;
             ab(.07,.04,.04,lm, SX+col*1.6+rack*.64+.22,.1+j*.26,SZ-.24);
           }
         }
@@ -817,11 +856,11 @@ const HQ = {
     ab(6,.08,1.8,M.dt, 3,.72,-4);
     [3,-1.5,0,1.5,4.5,6].forEach(x=>cy(.07,.72,M.de,x,.36,-4));
     for(let i=0;i<6;i++) {
-      ab(.52,.1,.52,M.ch, -1+i*1.2,.72,-5.4);
-      ab(.52,.58,.07,M.cb, -1+i*1.2,1.03,-5.72);
+      ab(.52,.1,.52,M.chair, -1+i*1.2,.72,-5.4);
+      ab(.52,.58,.07,M.chairBk, -1+i*1.2,1.03,-5.72);
       cy(.04,.72,M.de,-1+i*1.2,.36,-5.4,6);
-      ab(.52,.1,.52,M.ch, -1+i*1.2,.72,-2.6);
-      ab(.52,.58,.07,M.cb, -1+i*1.2,1.03,-2.28);
+      ab(.52,.1,.52,M.chair, -1+i*1.2,.72,-2.6);
+      ab(.52,.58,.07,M.chairBk, -1+i*1.2,1.03,-2.28);
       cy(.04,.72,M.de,-1+i*1.2,.36,-2.6,6);
     }
     ab(2.8,1.5,.08,M.mo, 3,1.72,-8.94);
@@ -831,38 +870,108 @@ const HQ = {
     // Meeting room rug
     ab(9,.04,8,M.rug, 3,.04,-4);
 
-    // ── EXECUTIVE OFFICE (back-right) ─────────────────────────
-    // L-desk
-    ab(2.6,.08,1.1,M.dt, 17,.72,-11);
-    ab(1.1,.08,2.0,M.dt, 15.5,.72,-10.1);
-    [[1.2,.44],[-.8,.44],[1.2,-.44],[-.8,-.44]].forEach(([dx,dz])=>ab(.06,.72,.06,M.de,17+dx,.36,-11+dz));
-    [[.44,.9],[-.44,.9]].forEach(([dx,dz])=>ab(.06,.72,.06,M.de,15.5+dx,.36,-10.1+dz-1.0));
-    // Dual monitors
-    [[-.4,0],[.4,0]].forEach(([dx])=>{ab(.82,.5,.06,M.mo,16.6+dx,1.02,-11.56);ab(.74,.44,.04,M.sc,16.6+dx,1.04,-11.54);ab(.06,.17,.06,M.de,16.6+dx,.83,-11.5);});
-    chair(17,.72,-9.7,Math.PI);
-    // Bookshelf
-    ab(.22,2.6,2.0,M.cnt, OW/2-.14,1.3,-12);
-    [.28,.82,1.36,1.9,2.44].forEach(y=>{
-      ab(.18,.05,2.0,M.de, OW/2-.14,y,-12);
-      [0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299].forEach((c,i)=>{
-        ab(.07,.22,.16,std(c,{r:0.9}), OW/2-.2,y+.14,-12+(i-2)*.38);
+    // ══════════════════════════════════════════════════════════
+    //  OMAR'S CEO SUITE — back-right, 14×16 units, most impressive
+    // ══════════════════════════════════════════════════════════
+    // Dark wood accent wall behind desk (back wall inside CEO suite)
+    ab(14,.12,0.16,M.dkWood, 17,0,-OD/2+.1);      // floor trim
+    for(let p=0;p<7;p++) ab(1.8,WH-0.3,0.08,M.dkWood,11+p*2,WH/2+0.15,-OD/2+.06); // wood panels
+
+    // Massive L-shaped executive desk — dark mahogany
+    // Main desk slab
+    ab(4.0,.12,1.4,M.ceoDesk, 18.5,.76,-11.5);
+    // Return (L extension)
+    ab(1.4,.12,3.2,M.ceoDesk, 20.3,.76,-9.8);
+    // Brass edge trim
+    ab(4.04,.04,0.06,M.brass, 18.5,.82,-11.5);
+    ab(0.06,.04,3.24,M.brass, 20.3,.82,-9.8);
+    // Desk legs (solid dark wood panels, not sticks)
+    [[1.8,.60],[-1.8,.60],[1.8,-.60],[-1.8,-.60]].forEach(([dx,dz])=>
+      ab(.18,.76,.18,M.ceoDesk,18.5+dx,.38,-11.5+dz));
+    // Green leather desk pad
+    ab(2.4,.04,.9,std(0x1a3020,{r:0.85}), 18.2,.83,-11.5);
+    // Gold desk nameplate "OMAR"
+    ab(.7,.05,.2,M.namepl, 17.8,.84,-11.3);
+    // Dual wide monitors (large screens)
+    [[-.52,0],[.52,0]].forEach(([dx])=>{
+      ab(1.04,.58,.08,M.mo, 18.2+dx,1.32,-12.2);
+      ab(.94,.50,.05,M.sc,  18.2+dx,1.32,-12.16);
+      ab(.07,.20,.07,M.chrome, 18.2+dx,.90,-12.1);
+    });
+    // Laptop / keyboard on desk
+    ab(.68,.03,.44,M.mo, 18.8,.84,-11.1);
+    ab(.58,.02,.36,std(0x101020,{r:0.15,em:0x102080,ei:0.8}), 18.8,.86,-11.1);
+
+    // CEO leather chair — black high-back
+    ab(.68,.12,.66,M.leather, 19.5,.77,-10.8);        // seat
+    ab(.68,1.2,.1,M.leather,  19.5,1.35,-11.12);      // tall back
+    ab(.08,1.2,.08,M.chrome,  19.5,.60,-10.8);        // center post
+    for(let a=0;a<5;a++){
+      const ag=a/5*Math.PI*2;
+      ab(.34,.05,.08,M.chrome, 19.5+Math.cos(ag)*.28,.05,-10.8+Math.sin(ag)*.28,ag);
+    }
+    [-.30,.30].forEach(dx=>{
+      ab(.1,.06,.5,M.chrome, 19.5+dx,.88,-10.8);      // armrests
+    });
+
+    // Visitor chairs (2 black leather across the desk)
+    [[17.5,.74,-13.0],[19.3,.74,-13.0]].forEach(([x,y,z])=>{
+      ab(.58,.12,.56,M.leather,x,y,z);
+      ab(.58,.8,.1,M.leather,  x,y+.48,z-.28);
+      ab(.06,.78,.06,M.chrome, x,y-.34,z,6);
+    });
+
+    // Full bookshelf wall (right wall, floor to ceiling)
+    ab(.22,WH,4.4,M.dkWood, OW/2-.14,WH/2,-9);   // main unit
+    ab(.22,WH,4.0,M.dkWood, OW/2-.14,WH/2,-14.5); // second unit
+    [.22,.66,1.10,1.54,1.98,2.42,2.72].forEach(y=>{
+      ab(.18,.04,4.4,M.brass, OW/2-.14,y,-9);    // shelf
+      [0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x1a5a6b,0x8b4a1a,0x3a1a6b].forEach((c,i)=>{
+        ab(.06,.24,.4,std(c,{r:0.88}), OW/2-.2,y+.14,-11.2+i*.54);
       });
     });
-    // Exec lounge
-    ab(2.0,.46,.76,M.so, 18.2,.22,-6.5);
-    ab(2.0,.72,.12,M.so, 18.2,.58,-6.88);
-    ab(.76,.46,2.0,M.so, OW/2-.38,.22,-7.5);
-    ab(.12,.72,2.0,M.so, OW/2-.06,.58,-7.5);
-    ab(.92,.36,.6,M.so2, 18.9,.18,-6.5);
-    ab(1.2,.06,.6,M.ct, 17.5,.5,-5.3);
-    ab(3,.04,2.5,M.rug, 18,.04,-7);
+    [.22,.66,1.10,1.54,1.98,2.42].forEach(y=>{
+      ab(.18,.04,4.0,M.brass, OW/2-.14,y,-14.5);
+      [0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x1a5a6b].forEach((c,i)=>{
+        ab(.06,.24,.6,std(c,{r:0.88}), OW/2-.2,y+.14,-16.5+i*.68);
+      });
+    });
+    // Trophies on top of bookshelf
+    [-9.6,-8.8,-8.2].forEach((z,i)=>{
+      cy(.06,.28,M.trophy, OW/2-.4,WH+.15,z,8);    // trophy base
+      cy(.04,.12,M.trophy, OW/2-.4,WH+.43,z,6);
+      cy(.12,.08,M.trophy, OW/2-.4,WH+.55,z,8);
+    });
 
-    // ── SALES / MARKETING (center-right) ──────────────────────
-    [[11,-4],[16,-4],[11,0],[16,0],[11,4]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
-    // Sales lounge
-    ab(2.4,.46,.76,M.so, 13,.22,-6.5);
-    ab(2.4,.72,.12,M.so, 13,.58,-6.88);
-    ab(1.1,.06,.5,M.ct, 13,.5,-7.6);
+    // CEO lounge seating area (front of suite)
+    // L-shaped sofa
+    ab(3.2,.5,.84,M.sofa,  13.5,.25,-3.2);          // long sofa
+    ab(3.2,.72,.1,M.sofa,  13.5,.61,-3.62);          // sofa back
+    ab(.84,.5,2.0,M.sofa,  11.42,.25,-4.8);          // side sofa
+    ab(.1,.72,2.0,M.sofa,  11.06,.61,-4.8);          // side back
+    // Gold cushion accents
+    [12.0,13.2,14.4].forEach(x=>ab(.5,.26,.44,M.sofaPil,x,.61,-3.3));
+    // Dark walnut coffee table
+    ab(1.8,.08,0.9,M.ct, 13.2,.58,-2.0);
+    ab(.06,.58,.06,M.chrome,12.6,.28,-1.7); ab(.06,.58,.06,M.chrome,13.8,.28,-1.7);
+    ab(.06,.58,.06,M.chrome,12.6,.28,-2.3); ab(.06,.58,.06,M.chrome,13.8,.28,-2.3);
+    // CEO area rug
+    ab(7,.06,6,M.rugRed, 13.5,.03,-5);
+
+    // Framed artwork on CEO wall
+    [[16.5,WH*.7,-.08],[18.5,WH*.7,-.08]].forEach(([x,y])=>{
+      ab(1.0,1.2,.04,M.frame,x,y,-OD/2+.16);
+      ab(.8,1.0,.03,std(0x4a3820,{r:0.9}),x,y,-OD/2+.18);
+    });
+
+    // ── SALES / MARKETING (center-right, outside CEO) ─────────
+    [[5,-4],[5,0],[5,4],[8,-4],[8,0]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
+    // Sales huddle table
+    ab(1.4,.08,1.4,M.mdWood, 6.5,.72,-7.5);
+    cy(.04,.72,M.chrome,5.8,.36,-7.5,6); cy(.04,.72,M.chrome,7.2,.36,-7.5,6);
+    cy(.04,.72,M.chrome,6.5,.36,-8.2,6); cy(.04,.72,M.chrome,6.5,.36,-6.8,6);
+    for(let a=0;a<4;a++){const ag=a*Math.PI/2; chair(6.5+Math.cos(ag)*1.4,-7.5+Math.sin(ag)*1.4,ag+Math.PI);}
+    ab(1.8,.06,6,M.rugRed, 6.5,.03,-3.5);
 
     // ── BREAK ROOM / KITCHEN (front-right) ────────────────────
     ab(8,.9,.68,M.cnt, OW/2-4,.45,OD/2-2.2);
@@ -872,58 +981,75 @@ const HQ = {
     ab(.54,.62,.42,M.app, OW/2-1.5,.95,OD/2-2.0);  // microwave
     ab(.54,1.28,.52,M.app, OW/2-.8,.64,OD/2-2.0);   // fridge
     ab(.24,.5,.2,M.mo, OW/2-4,.95,OD/2-2.0);         // coffee machine
-    ab(.07,.07,.07,M.led, OW/2-4,1.45,OD/2-1.92);
+    ab(.07,.07,.07,M.ledG, OW/2-4,1.45,OD/2-1.92);
     for(let i=0;i<4;i++) {
-      cy(.2,.06,M.ch, OW/2-5.5+i*1.4,.9,OD/2-3.8,8);
-      cy(.04,.9,M.de, OW/2-5.5+i*1.4,.45,OD/2-3.8);
+      cy(.2,.06,M.chair, OW/2-5.5+i*1.4,.9,OD/2-3.8,8);
+      cy(.04,.9,M.chrome, OW/2-5.5+i*1.4,.45,OD/2-3.8);
     }
 
     // ── RECEPTION LOBBY (front-center) ────────────────────────
-    ab(3.6,.92,.72,M.cnt, 0,.46,OD/2-3);
-    ab(3.6,.07,.72,M.dt, 0,.93,OD/2-3);
-    ab(3.6,.92,.1,M.cnt, 0,.46,OD/2-2.66);
-    // Lobby sofas
-    [[-6,OD/2-4],[6,OD/2-4]].forEach(([x,z])=>{
-      ab(2.6,.46,.76,M.so,x,.22,z); ab(2.6,.72,.12,M.so,x,.58,z+.38);
-      ab(1.2,.06,.55,M.ct,x,.5,z-1.1);
+    // Marble reception desk
+    ab(4.0,.96,.8,M.dkWood, 0,.48,OD/2-3);
+    ab(4.0,.08,.8,std(0xe8e2d8,{r:0.2,m:0.05}), 0,.96,OD/2-3);   // marble top
+    ab(4.0,.96,.1,M.brass, 0,.48,OD/2-2.62);                       // brass front strip
+    // Lobby sofas (black leather)
+    [[-7,OD/2-4.5],[7,OD/2-4.5]].forEach(([x,z])=>{
+      ab(2.8,.5,.84,M.sofa,x,.25,z);
+      ab(2.8,.72,.1,M.sofa,x,.61,z+.42);
+      ab(.84,.5,.84,M.sofa,x+1.48,.25,z+.04);
+      ab(1.4,.06,.6,M.ct,x,.55,z-1.2);
     });
-    ab(6,.04,5,M.rug, 0,.04,OD/2-5);
+    ab(7,.08,5.5,M.rug, 0,.04,OD/2-5.5);
+    // Kayro company sign on reception back wall
+    ab(3.0,.5,.08,M.dkWood, 0,2.4,OD/2-.1);
+    ab(.08,.5,3.1,M.dkWood, 0,2.4,OD/2-.1);
+    ab(2.8,.3,.06,M.brass, 0,2.4,OD/2-.06);
 
-    // ── OPEN PLAN PHONE BOOTH / FOCUS PODS (center) ───────────
-    [[3,5],[3,8]].forEach(([x,z])=>{
-      ab(1.4,WH,.9,M.win,x,WH/2,z);
-      ab(.9,WH,WT,M.win,x+.5,WH/2,z-0.42);
-      ab(.9,WH,WT,M.win,x+.5,WH/2,z+0.42);
+    // ── FOCUS PODS (glass phone booths) ────────────────────────
+    [[-5,6],[-5,9]].forEach(([x,z])=>{
+      ab(1.6,WH,.96,M.glInt,x,WH/2,z);
+      ab(.96,WH,WT,M.glInt,x+.5,WH/2,z-0.46);
+      ab(.96,WH,WT,M.glInt,x+.5,WH/2,z+0.46);
       desk(x-.1,z,Math.PI/2); chair(x+.5,z,Math.PI);
     });
 
     // ── BOOKSHELF ROW (left wall) ──────────────────────────────
-    ab(.22,2.2,6,M.cnt, -OW/2+.14,1.1,-8);
-    [.3,.85,1.4,1.9].forEach(y=>{
-      ab(.18,.05,6,M.de,-OW/2+.14,y,-8);
-      for(let i=0;i<8;i++){
-        const c=[0xcc2020,0x2244bb,0x229933,0xdd8800,0x882299,0x116688,0xcc6622,0x448844][i];
-        ab(.07,.22,.5,std(c,{r:0.9}),-OW/2+.2,y+.14,-11+i*.74);
+    ab(.22,2.4,8,M.dkWood, -OW/2+.14,1.2,-7);
+    [.25,.72,1.18,1.64,2.1].forEach(y=>{
+      ab(.16,.05,8,M.brass,-OW/2+.14,y,-7);
+      for(let i=0;i<10;i++){
+        const c=[0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x116688,0x8b4a1a,0x448844,0x2a2a8b,0x8b2a2a][i];
+        ab(.06,.22,.7,std(c,{r:0.88}),-OW/2+.2,y+.14,-10.5+i*.78);
       }
     });
 
-    // ── PING PONG TABLE (rec area) ─────────────────────────────
-    ab(2.8,.09,1.5,M.dt, -4,OD/2-5.5,0);
-    ab(.04,.24,1.5,M.cnt, -4,.73,0);
-    [[-1.3,.65],[1.3,.65],[-1.3,-.65],[1.3,-.65]].forEach(([dx,dz])=>ab(.06,.65,.06,M.de,-4+dx,.32,dz));
+    // ── PING PONG (rec area, replaced with standing desks) ─────
+    ab(3.0,.09,1.6,std(0x2a5020,{r:0.9}), -4,OD/2-5.5,0);   // ping pong
+    ab(.05,.26,1.6,M.chrome, -4,.76,0);
+    [[-1.4,.7],[1.4,.7],[-1.4,-.7],[1.4,-.7]].forEach(([dx,dz])=>ab(.06,.68,.06,M.chrome,-4+dx,.34,dz));
 
     // ── PLANTS ─────────────────────────────────────────────────
     function plant(x,z,big=false) {
-      const s=big?1.35:1;
-      cy(.18*s,.28*s,M.pp,x,.14*s,z,8);
-      cy(.08*s,.64*s,M.pl,x,.44*s,z,6);
-      const lm=new THREE.Mesh(new THREE.SphereGeometry(.32*s,7,6),M.pl);
-      lm.scale.y=.65; lm.position.set(x,.98*s,z); lm.castShadow=true; scene.add(lm);
+      const s=big?1.5:1;
+      // Pot (ceramic dark terracotta)
+      cy(.2*s,.3*s,M.pp,x,.15*s,z,10);
+      cy(.22*s,.04,M.brass,x,.32*s,z,10);   // pot rim (brass)
+      // Stem
+      cy(.07*s,.8*s,M.pl,x,.55*s,z,6);
+      // Top foliage (2 spheres)
+      const lm=new THREE.Mesh(new THREE.SphereGeometry(.36*s,8,6),M.pl);
+      lm.scale.set(1,.7,1); lm.position.set(x,1.1*s,z); lm.castShadow=true; scene.add(lm);
+      const lm2=new THREE.Mesh(new THREE.SphereGeometry(.24*s,7,5),M.pl);
+      lm2.scale.set(1,.65,1); lm2.position.set(x+.18*s,1.0*s,z+.1*s); lm2.castShadow=true; scene.add(lm2);
     }
-    [[-OW/2+1,-OD/2+1,true],[OW/2-1,-OD/2+1,true],
-     [-OW/2+1,OD/2-1,true],[OW/2-1,OD/2-1,true],
-     [-12,-4],[-8,5],[0,-9],[6,5],[12,-9],[18,4],
-     [-4,-13],[-18,0],[4,13],[-10,10]].forEach(([x,z,big=false])=>plant(x,z,big));
+    // CEO suite — statement plants
+    [[-OW/2+1.2,-OD/2+1.5,true],[OW/2-1.2,-OD/2+1.5,true],
+     [-OW/2+1.2,OD/2-1.5,true],[OW/2-1.2,OD/2-1.5,true],
+     // CEO suite plants
+     [11,-14.5,true],[10.5,-1.5,true],
+     // Office floor plants
+     [-14,-4],[-8,5],[0,-10],[-2,6],[-18,0],[-4,13],[-10,10],
+     [-6,-13],[3,-5]].forEach(([x,z,big=false])=>plant(x,z,big));
 
     // Characters
     const chars = [];
@@ -968,6 +1094,10 @@ const HQ = {
       const pos = e.pos || [0, 0];
       g.position.set(pos[0], 0, pos[1]);
       g.scale.setScalar(1.55);
+      // Desk-facing rotation: employees face toward screen (generally -Z / toward back wall)
+      const baseRot = pos[0] > 10 ? Math.PI * 0.1 : (pos[0] < -8 ? 0 : Math.PI * 0.05);
+      g.rotation.y = baseRot;
+      g._baseRot = baseRot;
       scene.add(g); chars.push({ group:g, emp:e });
     });
 
@@ -1001,23 +1131,39 @@ const HQ = {
 
     // ── SIMULATION ENGINE ─────────────────────────────────────
     const SIM_PHRASES = {
-      'Head of Product':    ['Writing PRD v2...','Sprint planning','Reviewing user stories','Roadmap sync','OKR check-in','Backlog grooming','User interview done ✓','Feature scoped ✓'],
-      'Lead Engineer':      ['Reviewing PR #'+Math.ceil(Math.random()*300+100),'Fixing memory leak','Refactoring auth','Writing tests','Deploy to staging','Build passing ✓','Merged to main ✓','Architecture review'],
-      'Head of Marketing':  ['Writing launch copy','A/B test running','Email campaign live','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓'],
-      'UI/UX Designer':     ['In Figma — flows','Component library','User testing live','Design review','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide updated'],
-      'Head of Sales':      ['Discovery call','Proposal sent','Following up leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓'],
-      'Customer Success':   ['Onboarding call','NPS survey out','Churn risk flagged','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score green'],
-      'Personal Assistant': ['Daily brief ready','Meetings scheduled','Notes sent ✓','Research done','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared'],
+      'Head of Product':    ['Writing PRD v2...','Sprint planning ✓','Reviewing user stories','Roadmap sync','OKR check-in','Backlog groomed','User interview done ✓','Feature scoped ✓','Wireframe review','Strategy doc sent'],
+      'Lead Engineer':      ['Reviewing PR #'+Math.ceil(Math.random()*300+100),'Fixing memory leak','Refactoring auth module','Writing unit tests','Deploy to staging ✓','Build passing ✓','Merged to main ✓','Architecture review','Code review done ✓','Hotfix pushed'],
+      'Head of Marketing':  ['Writing launch copy','A/B test running...','Email campaign live ✓','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓','Campaign brief sent','Partnership outreach'],
+      'UI/UX Designer':     ['In Figma — new flows','Component library updated','User testing running','Design review done ✓','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide v2 live','Motion specs sent','UX audit complete'],
+      'Head of Sales':      ['Discovery call live','Proposal sent ✓','Following up 12 leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓','Contract sent','Outreach sequence live'],
+      'Customer Success':   ['Onboarding call ✓','NPS survey sent','Churn risk flagged ⚠️','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score: green','Renewal secured ✓','Escalation handled'],
+      'Personal Assistant': ['Daily brief ready ✓','Meetings scheduled','Notes distributed','Research complete','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared ✓','Travel booked','Deck formatted'],
     };
+    const BOSS_TASKS = [
+      {from:'Sarah',  text:'Architecture proposal for new API — needs your sign-off'},
+      {from:'Zara',   text:'Homepage redesign v3 ready — please review in Figma'},
+      {from:'Alex',   text:'Q3 campaign brief needs your go-ahead before it goes live'},
+      {from:'Chris',  text:'New enterprise pricing deck — approve before Friday'},
+      {from:'Mia',    text:'High-value client at risk of churn — need your call today'},
+      {from:'Sarah',  text:'Sprint goals for next 2 weeks — finalize and sign off'},
+      {from:'Zara',   text:'Design system v2 update — review before Monday standup'},
+      {from:'Alex',   text:'New ad creative needs approval — budget locks Friday'},
+      {from:'Chris',  text:'Hot deal closing this week — review proposal terms'},
+      {from:'Mia',    text:'Customer success playbook v2 — your review requested'},
+      {from:'Sarah',  text:'Which tech debt items do we tackle this quarter?'},
+      {from:'Alex',   text:'Influencer collab opportunity — your call on strategic fit'},
+      {from:'Chris',  text:'Board deck needs product slides — urgent'},
+      {from:'Zara',   text:'New icon set ready — quick approval needed'},
+    ];
     const getPhrase = (emp) => {
-      const list = SIM_PHRASES[emp.role] || ['Working...','In a meeting','Thinking...'];
+      const list = SIM_PHRASES[emp.role] || ['Working hard...','In a meeting','On it ✓'];
       return list[Math.floor(Math.random()*list.length)];
     };
     const feedEl = document.getElementById('fp-feed');
     const feedLog = [];
     const addFeedItem = (emp, text) => {
       feedLog.unshift({ name:emp.name, color:emp.color, text });
-      if (feedLog.length > 5) feedLog.pop();
+      if (feedLog.length > 6) feedLog.pop();
       if (feedEl) feedEl.innerHTML = feedLog.map(f=>
         `<div class="fp-feed-item"><span class="fp-feed-dot" style="background:${f.color}"></span><b>${escHtml(f.name)}</b> ${escHtml(f.text)}</div>`
       ).join('');
@@ -1032,14 +1178,44 @@ const HQ = {
       addFeedItem(emp, text);
       setTimeout(() => { if (b) b.style.opacity = '0'; }, 9000);
     };
+    // Task assignment — employees assign tasks to Omar
+    const assignToOmar = () => {
+      if (!HQ._active) return;
+      const t = BOSS_TASKS[Math.floor(Math.random()*BOSS_TASKS.length)];
+      const assignerEmp = emps.find(e=>e.name===t.from) || emps[1];
+      const taskTitle = t.text;
+      toast(`📋 ${t.from} → you: "${taskTitle}"`, 'info', 8000);
+      addFeedItem(assignerEmp, `Assigned you: "${taskTitle.slice(0,38)}..."`);
+      // Add to task board if not duplicate
+      if (!State.tasks.find(st=>st.title===taskTitle)) {
+        const newTask = { id:'at_'+Date.now(), title:taskTitle, column:'todo', priority:'high',
+          assignee: emps[0]?.id || 'e1', created: Date.now(), tags:['from:'+t.from] };
+        State.tasks.push(newTask);
+        save('tasks');
+      }
+    };
     // Stagger initial bubbles
     chars.forEach((_, i) => setTimeout(() => { if(HQ._active) showBubble(i); }, 1500 + i * 1800));
     const simInterval = setInterval(() => {
       if (!HQ._active) { clearInterval(simInterval); return; }
       showBubble(Math.floor(Math.random()*chars.length));
-    }, 8000);
+    }, 7000);
+    // First task assigned after 20s, then every 35-60s
+    let taskTimer;
+    const scheduleNextTask = () => {
+      taskTimer = setTimeout(() => {
+        if (!HQ._active) return;
+        assignToOmar();
+        scheduleNextTask();
+      }, 35000 + Math.random() * 25000);
+    };
+    setTimeout(() => { if(HQ._active) { assignToOmar(); scheduleNextTask(); } }, 20000);
     const oldCleanup = HQ._cleanup;
-    HQ._cleanup = () => { clearInterval(simInterval); if(oldCleanup) oldCleanup(); };
+    HQ._cleanup = () => {
+      clearInterval(simInterval);
+      clearTimeout(taskTimer);
+      if(oldCleanup) oldCleanup();
+    };
 
     // ── FIRST-PERSON CONTROLS ─────────────────────────────────
     let plocked = false;
@@ -1075,6 +1251,10 @@ const HQ = {
       keys[e.code] = true;
       if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
       if (e.code === 'KeyE' && nearEmpRef) { Chat.open(nearEmpRef.id); }
+      else if (e.code === 'KeyE') {
+        const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
+        if (inCEO) { document.exitPointerLock(); Router.go('tasks'); }
+      }
     };
     const onKU = e => { keys[e.code] = false; };
 
@@ -1180,23 +1360,44 @@ const HQ = {
       camera.rotation.y = yaw;
       camera.rotation.x = pitch;
 
-      // Characters face player when nearby, otherwise idle
-      chars.forEach(({ group }, i) => {
+      // Characters — typing animation + face player when near
+      chars.forEach(({ group, emp }, i) => {
         const dx = playerPos.x - group.position.x;
         const dz = playerPos.z - group.position.z;
         const dist = Math.sqrt(dx*dx + dz*dz);
-        if (dist < 7 && plocked) {
+        if (dist < 6 && plocked) {
+          // Turn to face player
           const targetY = Math.atan2(dx, dz);
           let diff = targetY - group.rotation.y;
           while (diff > Math.PI) diff -= Math.PI*2;
           while (diff < -Math.PI) diff += Math.PI*2;
-          group.rotation.y += diff * 0.08;
+          group.rotation.y += diff * 0.09;
+          group.position.y = Math.sin(t*1.2+i)*0.015;
         } else {
-          group.rotation.y += Math.sin(t * 0.4 + i * 1.3) * 0.008;
+          // Typing bob: rhythmic up-down suggesting keystrokes
+          const typSpd = 3.2 + (i%3)*0.5;
+          const typAmt = 0.03 + Math.sin(t*0.3+i)*0.01;
+          group.position.y = Math.abs(Math.sin(t*typSpd+i*1.4))*typAmt - 0.01;
+          // Occasional head turn (looking at second monitor / checking notes)
+          if (Math.sin(t*0.18+i*2.7) > 0.95) {
+            group.rotation.y += (Math.sin(t*0.5+i)*0.35 - group.rotation.y + group._baseRot) * 0.04;
+          } else {
+            // Return to desk-facing direction
+            const brot = group._baseRot || 0;
+            group.rotation.y += (brot - group.rotation.y) * 0.03;
+          }
         }
-        // subtle idle bob
-        group.position.y = Math.sin(t * 1.1 + i * 0.9) * 0.02;
       });
+      // In CEO office — show "Your Office" hint
+      const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
+      if (interactEl && nearEmpRef === null) {
+        if (inCEO && plocked) {
+          interactEl.textContent = '🏢 Your CEO Office — press E to open task board';
+          interactEl.style.opacity = '1';
+        } else {
+          interactEl.style.opacity = '0';
+        }
+      }
 
       // Proximity detection
       nearEmpRef = null;
