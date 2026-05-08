@@ -824,3 +824,39 @@ td.editing .cell-editor{display:block}
 .auth-user-name{font-size:12px;font-weight:600;color:var(--text2)}
 .auth-signout-btn{font-size:11px;padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;font-family:var(--sans);transition:all .15s}
 .auth-signout-btn:hover{background:rgba(255,255,255,.1);color:var(--text)}
+
+/* ── USAGE METER (SIDEBAR) ───────────────────────────────────── */
+.usage-meter{padding:10px 10px 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.xp-level-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.xp-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;border:1px solid;letter-spacing:.3px}
+.xp-pts{font-size:10px;color:var(--text3);font-family:var(--mono)}
+.xp-track{height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:4px}
+.xp-fill{height:100%;border-radius:4px;transition:width .6s ease}
+.xp-next-label{font-size:9.5px;color:var(--text3);margin-bottom:8px;font-family:var(--mono)}
+.daily-token-row{display:flex;align-items:center;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:5px;font-family:var(--mono)}
+.xp-danger{color:var(--danger,#ef4444)!important}
+.daily-track{height:4px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-bottom:6px}
+.daily-fill{height:100%;border-radius:4px;transition:width .4s ease}
+.token-bank-row{font-size:9.5px;color:var(--text3);font-family:var(--mono);margin-bottom:5px}
+.xp-upgrade-btn{width:100%;padding:6px 10px;background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(168,85,247,.1));border:1px solid rgba(59,130,246,.25);border-radius:7px;color:var(--accent);font-size:11px;font-weight:600;cursor:pointer;font-family:var(--sans);transition:all .15s;text-align:center}
+.xp-upgrade-btn:hover{background:linear-gradient(135deg,rgba(59,130,246,.25),rgba(168,85,247,.18));border-color:rgba(59,130,246,.5)}
+
+/* ── UPGRADE MODAL ───────────────────────────────────────────── */
+.upgrade-current{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:20px}
+.upgrade-packs-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}
+@media(max-width:520px){.upgrade-packs-grid{grid-template-columns:1fr}}
+.upgrade-pack-card{background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:12px;padding:16px;display:flex;flex-direction:column;gap:7px;position:relative;overflow:hidden}
+.upgrade-pack-card.popular{border-color:rgba(59,130,246,.4);background:rgba(59,130,246,.05)}
+.popular-tag{position:absolute;top:0;right:0;background:var(--accent);color:#fff;font-size:9px;font-weight:700;padding:3px 10px;border-radius:0 12px 0 8px;letter-spacing:.5px}
+.pack-name{font-size:13px;font-weight:700;color:var(--text)}
+.pack-price{font-size:22px;font-weight:800;color:var(--text);line-height:1}
+.pack-period{font-size:11px;color:var(--text3);font-weight:400}
+.pack-desc{font-size:11px;color:var(--text3)}
+.pack-perks{font-size:11px;color:var(--text2);display:flex;flex-direction:column;gap:3px;flex:1}
+.pack-cta{padding:9px;background:var(--accent);border:none;border-radius:8px;color:#fff;font-weight:700;font-size:12px;cursor:pointer;font-family:var(--sans);transition:opacity .15s;margin-top:4px}
+.pack-cta:hover{opacity:.85}
+.upgrade-code-section{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+
+/* ── LIMIT WALL (chat) ────────────────────────────────────────── */
+.limit-bubble{background:rgba(239,68,68,.08)!important;border:1px solid rgba(239,68,68,.2)!important;color:var(--text)!important}
+.limit-bubble .limit-upgrade-btn{margin-top:8px;font-size:12px;padding:8px 16px}

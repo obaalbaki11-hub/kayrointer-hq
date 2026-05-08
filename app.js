@@ -9,6 +9,22 @@ const SKIN   = [0xf5c285,0xe8b070,0xf2bf78,0xeab86e,0xf0b268,0xebba72,0xf3c182,0
 const COLS   = ['todo','inprogress','review','done'];
 const COL_LABELS = {todo:'TO DO',inprogress:'IN PROGRESS',review:'REVIEW',done:'DONE'};
 
+const XP_LEVELS = [
+  { level:0, name:'Intern',   xpReq:0,    dailyTokens:50000,    color:'#64748b' },
+  { level:1, name:'Junior',   xpReq:200,  dailyTokens:100000,   color:'#22c55e' },
+  { level:2, name:'Senior',   xpReq:600,  dailyTokens:250000,   color:'#3b82f6' },
+  { level:3, name:'Lead',     xpReq:1500, dailyTokens:500000,   color:'#a855f7' },
+  { level:4, name:'Director', xpReq:3500, dailyTokens:1000000,  color:'#f59e0b' },
+  { level:5, name:'C-Suite',  xpReq:8000, dailyTokens:Infinity, color:'#ef4444' },
+];
+
+const TOKEN_PACKS = [
+  { id:'starter', name:'Starter',  price:'$9',   tokens:500000,   xp:250,  desc:'Perfect for getting started' },
+  { id:'pro',     name:'Pro',      price:'$29',  tokens:2000000,  xp:800,  desc:'For power users', popular:true },
+  { id:'growth',  name:'Growth',   price:'$79',  tokens:8000000,  xp:2800, desc:'Scale your AI workforce' },
+  { id:'elite',   name:'C-Suite',  price:'$199', tokens:Infinity, xp:8000, desc:'Unlimited, forever' },
+];
+
 const BRAIN_CATEGORIES = {
   business: { label:'Business',  emoji:'🏢', color:'#3b82f6' },
   market:   { label:'Market',    emoji:'📈', color:'#f59e0b' },
@@ -144,14 +160,15 @@ const State = {
     {id:'c3',name:'Marcus Rivera',email:'m.rivera@techventures.co',company:'Tech Ventures'},
   ],
   chatHistory: {},
-  memory: {},   // empId → [{fact, timestamp, empName}]
-  brain: { facts: [] }, // [{id, text, category, source, sourceAgent, sourceEmpId, timestamp}]
+  memory: {},
+  brain: { facts: [] },
+  usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[] },
   designs: [],  // [{id, title, prompt, html, empId, timestamp}]
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
 function loadState() {
-  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain'];
+  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -162,6 +179,7 @@ function loadState() {
   if (!State.memory) State.memory = {};
   if (!State.designs) State.designs = [];
   if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
+  if (!State.usage || typeof State.usage.xp === 'undefined') State.usage = { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[] };
 }
 
 let _saveTm = {};
@@ -275,6 +293,181 @@ const AI = {
     let out='';
     for await (const chunk of AI.stream(messages,system)) out+=chunk;
     return out;
+  },
+};
+
+// ── USAGE / XP ───────────────────────────────────────────────
+const Usage = {
+  _today() { return new Date().toISOString().slice(0,10); },
+
+  _checkReset() {
+    const today = Usage._today();
+    if (State.usage.date !== today) {
+      State.usage.date = today;
+      State.usage.tokensToday = 0;
+      save('usage');
+    }
+  },
+
+  currentLevel() {
+    const xp = State.usage.xp || 0;
+    let lvl = XP_LEVELS[0];
+    for (const l of XP_LEVELS) { if (xp >= l.xpReq) lvl = l; }
+    return lvl;
+  },
+
+  nextLevel() {
+    const xp = State.usage.xp || 0;
+    return XP_LEVELS.find(l => l.xpReq > xp) || null;
+  },
+
+  dailyLimit() { return Usage.currentLevel().dailyTokens; },
+
+  canSend(estimatedTokens) {
+    Usage._checkReset();
+    const limit = Usage.dailyLimit();
+    if (limit === Infinity) return true;
+    // draw from token bank first
+    if ((State.usage.tokenBank || 0) > 0) return true;
+    return (State.usage.tokensToday + estimatedTokens) <= limit;
+  },
+
+  trackUsage(tokens) {
+    Usage._checkReset();
+    // drain bank first
+    if (State.usage.tokenBank > 0) {
+      const drain = Math.min(State.usage.tokenBank, tokens);
+      State.usage.tokenBank -= drain;
+      tokens -= drain;
+    }
+    State.usage.tokensToday += tokens;
+    State.usage.totalTokensUsed = (State.usage.totalTokensUsed || 0) + tokens;
+    // 1 XP per 10K tokens used
+    const usageXP = Math.floor(State.usage.totalTokensUsed / 10000);
+    State.usage.xp = (State.usage.purchaseXP || 0) + usageXP;
+    save('usage');
+    Usage.renderMeter();
+  },
+
+  applyCode(code) {
+    const CODES = {
+      'KAYRO-STARTER': { tokens:500000,   xp:250,  name:'Starter Pack' },
+      'KAYRO-PRO':     { tokens:2000000,  xp:800,  name:'Pro Pack' },
+      'KAYRO-GROWTH':  { tokens:8000000,  xp:2800, name:'Growth Pack' },
+      'KAYRO-ELITE':   { tokens:Infinity, xp:8000, name:'C-Suite Pack' },
+    };
+    const key = code.toUpperCase().trim();
+    const pack = CODES[key];
+    if (!pack) return false;
+    if (!State.usage.usedCodes) State.usage.usedCodes = [];
+    if (State.usage.usedCodes.includes(key)) return null; // already used
+    State.usage.usedCodes.push(key);
+    if (pack.tokens !== Infinity) State.usage.tokenBank = (State.usage.tokenBank || 0) + pack.tokens;
+    State.usage.purchaseXP = (State.usage.purchaseXP || 0) + pack.xp;
+    const usageXP = Math.floor((State.usage.totalTokensUsed || 0) / 10000);
+    State.usage.xp = State.usage.purchaseXP + usageXP;
+    save('usage');
+    Usage.renderMeter();
+    return pack;
+  },
+
+  _fmtK(n) {
+    if (n === Infinity) return '∞';
+    if (n >= 1000000) return (n/1000000).toFixed(1).replace(/\.0$/,'')+'M';
+    if (n >= 1000) return (n/1000).toFixed(0)+'K';
+    return String(n);
+  },
+
+  renderMeter() {
+    const el = document.getElementById('usage-meter');
+    if (!el) return;
+    Usage._checkReset();
+    const lvl  = Usage.currentLevel();
+    const next = Usage.nextLevel();
+    const xp   = State.usage.xp || 0;
+    const xpPct = next
+      ? Math.min(100, ((xp - lvl.xpReq) / (next.xpReq - lvl.xpReq)) * 100)
+      : 100;
+    const limit    = lvl.dailyTokens;
+    const used     = State.usage.tokensToday || 0;
+    const bank     = State.usage.tokenBank || 0;
+    const tokenPct = limit === Infinity ? 0 : Math.min(100, (used / limit) * 100);
+    const danger   = tokenPct > 80;
+
+    el.innerHTML = `
+      <div class="xp-level-row">
+        <span class="xp-badge" style="background:${lvl.color}20;color:${lvl.color};border-color:${lvl.color}40">Lv${lvl.level} ${lvl.name}</span>
+        <span class="xp-pts">${xp} XP</span>
+      </div>
+      <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%;background:${lvl.color}"></div></div>
+      ${next ? `<div class="xp-next-label">${Usage._fmtK(next.xpReq - xp)} XP to ${next.name}</div>` : '<div class="xp-next-label">Max level reached!</div>'}
+      <div class="daily-token-row">
+        <span>Daily tokens</span>
+        <span class="${danger ? 'xp-danger' : ''}">${Usage._fmtK(used)} / ${Usage._fmtK(limit)}</span>
+      </div>
+      <div class="daily-track"><div class="daily-fill" style="width:${tokenPct}%;background:${danger ? 'var(--danger)' : 'var(--accent)'}"></div></div>
+      ${bank > 0 ? `<div class="token-bank-row">🏦 ${Usage._fmtK(bank)} banked</div>` : ''}
+      <button class="xp-upgrade-btn" id="usage-upgrade-btn">⚡ Upgrade Plan</button>`;
+    document.getElementById('usage-upgrade-btn')?.addEventListener('click', Usage.openUpgradeModal);
+  },
+
+  openUpgradeModal() {
+    const lvl = Usage.currentLevel();
+    const xp  = State.usage.xp || 0;
+    const fmtK = Usage._fmtK;
+    Modal.open('⚡ Upgrade Your Plan', `
+      <div class="upgrade-current">
+        <div style="font-size:11px;color:var(--text3);letter-spacing:.5px">YOUR LEVEL</div>
+        <div style="font-size:15px;font-weight:800;color:${lvl.color};margin-top:4px">Lv${lvl.level} — ${lvl.name}</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:3px">${xp} XP · ${lvl.dailyTokens===Infinity?'Unlimited':fmtK(lvl.dailyTokens)+' tokens/day free'}</div>
+      </div>
+      <div class="upgrade-packs-grid">
+        ${TOKEN_PACKS.map(p => {
+          const afterXP = xp + p.xp;
+          const afterLvl = XP_LEVELS.slice().reverse().find(l => l.xpReq <= afterXP);
+          const upgrade = afterLvl && afterLvl.level > lvl.level;
+          return `<div class="upgrade-pack-card${p.popular?' popular':''}">
+            ${p.popular ? '<div class="popular-tag">Most Popular</div>' : ''}
+            <div class="pack-name">${p.name}</div>
+            <div class="pack-price">${p.price}<span class="pack-period"> one-time</span></div>
+            <div class="pack-desc">${p.desc}</div>
+            <div class="pack-perks">
+              <div>🪙 ${p.tokens===Infinity?'Unlimited':fmtK(p.tokens)} tokens</div>
+              <div>⭐ +${p.xp} XP</div>
+              ${upgrade ? `<div style="color:${afterLvl.color}">🎯 ${afterLvl.name} tier → ${afterLvl.dailyTokens===Infinity?'∞':fmtK(afterLvl.dailyTokens)}/day free</div>` : ''}
+            </div>
+            <button class="pack-cta" data-pack="${p.id}">Get ${p.name}</button>
+          </div>`;
+        }).join('')}
+      </div>
+      <div class="upgrade-code-section">
+        <div style="font-size:12px;color:var(--text2);margin-bottom:8px;font-weight:600">Redeem a code</div>
+        <div style="display:flex;gap:8px">
+          <input class="form-input" id="promo-inp" placeholder="KAYRO-XXXXXX" style="flex:1;font-family:var(--mono);font-size:12px">
+          <button class="btn btn-primary" id="promo-apply">Apply</button>
+        </div>
+        <div id="promo-msg" style="font-size:11px;margin-top:6px;min-height:16px"></div>
+      </div>`, {
+      onOpen() {
+        document.getElementById('promo-apply').addEventListener('click', () => {
+          const code = (document.getElementById('promo-inp').value || '').trim();
+          const msg  = document.getElementById('promo-msg');
+          if (!code) return;
+          const res = Usage.applyCode(code);
+          if (res === false) { msg.style.color='var(--danger)'; msg.textContent='Invalid code.'; }
+          else if (res === null) { msg.style.color='var(--danger)'; msg.textContent='Code already used.'; }
+          else {
+            msg.style.color='#22c55e';
+            msg.textContent=`✓ ${res.name} activated! +${res.xp} XP · ${res.tokens===Infinity?'Unlimited':Usage._fmtK(res.tokens)} tokens added.`;
+            setTimeout(()=>Modal.close(), 2000);
+          }
+        });
+        document.getElementById('promo-inp').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('promo-apply').click(); });
+        document.querySelectorAll('.pack-cta').forEach(btn => btn.addEventListener('click', () => {
+          toast('Checkout coming soon — contact us at kayrointer.com to upgrade 🚀','',5000);
+        }));
+      }
+    });
   },
 };
 
@@ -775,6 +968,27 @@ Start immediately. The deliverable should be ready to use as-is.
     Chat.addBubble(Chat.activeEmpId, e.name, e.color, text, true);
     const skillInject = Chat._getSkillInject(text);
     if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
+    // Daily token limit check
+    const estimatedTokens = Math.ceil(text.length / 4) + 300;
+    if (!Usage.canSend(estimatedTokens)) {
+      const lvl = Usage.currentLevel();
+      const next = Usage.nextLevel();
+      const msgs2 = document.getElementById('chat-messages');
+      const wall = document.createElement('div');
+      wall.className = 'msg limit-wall';
+      wall.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
+        <div class="msg-body"><div class="msg-sender">${e.name}</div>
+        <div class="msg-bubble limit-bubble">
+          ⚠️ <b>Daily limit reached.</b><br><br>
+          You've used your <b>${Usage._fmtK(lvl.dailyTokens)}</b> free tokens for today.
+          ${next ? `Upgrade to <b>${next.name}</b> for <b>${Usage._fmtK(next.dailyTokens)}</b>/day — or come back tomorrow.` : ''}
+          <br><br><button class="btn btn-primary limit-upgrade-btn">⚡ Upgrade Plan</button>
+        </div></div>`;
+      msgs2.appendChild(wall);
+      msgs2.scrollTop = msgs2.scrollHeight;
+      wall.querySelector('.limit-upgrade-btn').addEventListener('click', Usage.openUpgradeModal);
+      return;
+    }
     // typing indicator
     const msgs = document.getElementById('chat-messages');
     const typing = document.createElement('div');
@@ -805,6 +1019,7 @@ Start immediately. The deliverable should be ready to use as-is.
     save_('chatHistory');
     Chat._extractMemories(Chat.activeEmpId, full);
     Chat._extractTasks(full);
+    Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
   }
 };
 function save_(k){save(k);}
@@ -2388,6 +2603,7 @@ loadState();
 Chat.init();
 Settings.updateApiStatus();
 Auth.init();
+Usage.renderMeter();
 
 // Handle invite link
 (function handleInviteLink() {
