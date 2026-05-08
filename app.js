@@ -520,7 +520,7 @@ const Usage = {
         <span class="xp-pts">${xp} XP</span>
       </div>
       <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%;background:${lvl.color}"></div></div>
-      ${next ? `<div class="xp-next-label">${Usage._fmtK(next.xpReq - xp)} XP to ${next.name}</div>` : '<div class="xp-next-label">Max level reached!</div>'}
+      ${next ? `<div class="xp-next-label">${Usage._fmtK(next.xpReq - xp)} XP → ${next.name} (${Usage._fmtK(next.dailyTokens)}/day)</div>` : '<div class="xp-next-label">Max level ✓</div>'}
       <div class="daily-token-row">
         <span>Daily tokens</span>
         <span class="${danger ? 'xp-danger' : ''}">${Usage._fmtK(used)} / ${Usage._fmtK(limit)}</span>
@@ -1327,38 +1327,33 @@ const HQ = {
   },
 
   _agentCard(e) {
-    const task=State.tasks.find(t=>t.assignee===e.id&&t.column==='inprogress')
-            ||State.tasks.find(t=>t.assignee===e.id&&t.column==='todo');
-    const memCount=(State.memory[e.id]||[]).length;
-    const taskCount=State.tasks.filter(t=>t.assignee===e.id).length;
-    const skills=(e.skills||[]).slice(0,3);
+    const task      = State.tasks.find(t=>t.assignee===e.id&&t.column==='inprogress')
+                    ||State.tasks.find(t=>t.assignee===e.id&&t.column==='todo');
+    const taskCount = State.tasks.filter(t=>t.assignee===e.id).length;
     const isManager = e.id === 'e_claude';
+    const actText   = task ? task.title.slice(0,52)+(task.title.length>52?'…':'') : 'Ready — standing by';
     return `<div class="hq-agent-card${isManager?' hq-manager-card':''}" style="--ac:${e.color}">
       <div class="hq-card-glow"></div>
       ${isManager ? '<div class="hq-manager-crown">👑 AI Manager</div>' : ''}
       <div class="hq-card-hdr">
         <div class="hq-av-wrap">
-          <div class="hq-card-av" style="background:${e.color}18;color:${e.color};border-color:${e.color}35">${e.name[0]}</div>
+          <div class="hq-card-av" style="background:${e.color}18;color:${e.color};border-color:${e.color}30">${e.name[0]}</div>
           <div class="hq-online-dot"></div>
         </div>
         <div class="hq-card-info">
           <div class="hq-card-name">${escHtml(e.name)}</div>
           <div class="hq-card-role">${escHtml(e.role)}</div>
         </div>
-        <div class="hq-card-pills">
-          ${memCount?`<div class="hq-badge">🧠 ${memCount}</div>`:''}
-          <div class="hq-badge">${taskCount} tasks</div>
-        </div>
+        <div class="hq-badge hq-task-badge">${taskCount} task${taskCount!==1?'s':''}</div>
       </div>
       <div class="hq-card-activity ${task?'active':''}">
         <div class="hq-act-dot"></div>
-        <div class="hq-act-txt" id="hq-wo-${e.id}">${task?escHtml(task.title.length>48?task.title.slice(0,48)+'…':task.title):'Ready — waiting for work'}</div>
+        <div class="hq-act-txt" id="hq-wo-${e.id}">${escHtml(actText)}</div>
       </div>
-      ${skills.length?`<div class="hq-card-chips">${skills.map(s=>`<span class="hq-chip">${escHtml(s)}</span>`).join('')}</div>`:''}
       <div class="hq-card-btns">
         <button class="btn btn-primary btn-sm hq-chat-btn" data-eid="${e.id}">💬 Chat</button>
         <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/gsd ">/gsd</button>
-        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/brainstorm ">/brainstorm</button>
+        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/brainstorm ">/brief</button>
         <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/autopilot">/auto</button>
       </div>
     </div>`;
