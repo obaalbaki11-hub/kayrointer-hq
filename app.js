@@ -275,12 +275,14 @@ const State = {
   memory: {},
   brain: { facts: [] },
   usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[] },
+  opsImages: [],
+  opsScripts: [],
   designs: [],  // [{id, title, prompt, html, empId, timestamp}]
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
 function loadState() {
-  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage'];
+  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -729,13 +731,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -2218,6 +2220,395 @@ const Email = {
     window.open(`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`);
     toast('Opening your email client…');
   }
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: OPERATIONS (Live Activity + Token Tracker + Content Studio)
+// ══════════════════════════════════════════════════════════════
+const OpsPage = {
+  _activeTab: 'live',
+  _contentTab: 'images',
+  _liveInterval: null,
+  _countdownInterval: null,
+
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = `<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+    container.innerHTML = `<div class="ops-page">
+      <div class="ops-tab-bar">
+        <button class="ops-tab active" data-tab="live">🔴 Live Activity</button>
+        <button class="ops-tab" data-tab="tokens">📊 Token Tracker</button>
+        <button class="ops-tab" data-tab="content">🎬 Content Studio</button>
+      </div>
+      <div class="ops-content" id="ops-content"></div>
+    </div>`;
+    container.querySelectorAll('.ops-tab').forEach(btn => btn.addEventListener('click', () => {
+      clearInterval(OpsPage._countdownInterval);
+      OpsPage._countdownInterval = null;
+      container.querySelectorAll('.ops-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      OpsPage._activeTab = btn.dataset.tab;
+      OpsPage._render();
+    }));
+    OpsPage._render();
+    OpsPage._startLive();
+  },
+
+  destroy() {
+    clearInterval(OpsPage._liveInterval);
+    clearInterval(OpsPage._countdownInterval);
+    OpsPage._liveInterval = null;
+    OpsPage._countdownInterval = null;
+  },
+
+  _render() {
+    const el = document.getElementById('ops-content');
+    if (!el) return;
+    if (OpsPage._activeTab === 'live')    OpsPage._renderLive(el);
+    if (OpsPage._activeTab === 'tokens')  OpsPage._renderTokens(el);
+    if (OpsPage._activeTab === 'content') OpsPage._renderContent(el);
+  },
+
+  // ── LIVE ACTIVITY ─────────────────────────────────────────────
+  _ROLE_ACTS: {
+    'AI Manager':        ['Reviewing company OKR progress','Drafting strategic alignment memo','Coordinating cross-team priorities','Preparing executive briefing','Analyzing performance metrics','Running team retrospective','Synthesizing market intelligence'],
+    'Head of Product':   ['Writing PRD for upcoming feature','Prioritizing sprint backlog','Analyzing user feedback','Reviewing competitive landscape','Updating product roadmap','Running stakeholder alignment','Defining acceptance criteria'],
+    'Lead Engineer':     ['Reviewing open pull requests','Debugging API performance issue','Designing database schema','Writing unit & integration tests','Refactoring authentication module','Evaluating infrastructure costs','Documenting system architecture'],
+    'Head of Marketing': ['Drafting email campaign copy','Analyzing conversion funnel','Building content calendar','Writing SEO-optimized blog post','A/B testing ad creatives','Researching competitor messaging','Planning product launch GTM'],
+    'UI/UX Designer':    ['Wireframing new user onboarding','Updating design system tokens','Conducting accessibility audit','Creating component specifications','Reviewing user test recordings','Iterating on mobile layouts','Documenting interaction patterns'],
+    'Head of Sales':     ['Writing personalized cold email sequence','Updating CRM pipeline stages','Analyzing deal velocity metrics','Drafting negotiation strategy','Preparing discovery call framework','Building objection handling playbook','Reviewing proposal template'],
+    'Customer Success':  ['Reviewing at-risk customer health scores','Drafting onboarding email sequence','Updating help center documentation','Analyzing NPS detractor responses','Building quarterly business review','Identifying expansion opportunities','Scripting renewal conversation'],
+    'Personal Assistant':['Preparing CEO daily briefing','Synthesizing meeting notes and actions','Drafting executive communications','Organizing weekly priorities','Researching upcoming meeting context','Triaging incoming requests','Scheduling cross-functional syncs'],
+  },
+  _STATUSES: ['Writing…','Analyzing…','Thinking…','Drafting…','Reviewing…','Researching…','Building…'],
+
+  _getAct(e) {
+    const acts = OpsPage._ROLE_ACTS[e.role] || ['Working on assigned tasks'];
+    const idx = (Math.floor(Date.now() / 45000) + e.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % acts.length;
+    return acts[idx];
+  },
+
+  _getStatusLabel(e) {
+    const idx = (Math.floor(Date.now() / 18000) + e.id.charCodeAt(0)) % OpsPage._STATUSES.length;
+    return OpsPage._STATUSES[idx];
+  },
+
+  _renderLive(el) {
+    const emps = State.employees;
+    el.innerHTML = `
+      <div class="live-header">
+        <div class="live-pulse-wrap"><div class="live-pulse-dot"></div></div>
+        <span class="live-header-text">All ${emps.length} agents online — working 24 / 7</span>
+        <span class="live-clock" id="live-clock"></span>
+      </div>
+      <div class="live-agents-grid">
+        ${emps.map(e => {
+          const act = OpsPage._getAct(e);
+          const status = OpsPage._getStatusLabel(e);
+          const activeTasks = State.tasks.filter(t => t.assignee === e.id && t.column !== 'done').length;
+          const minAgo = 1 + (e.id.split('').reduce((a,c)=>a+c.charCodeAt(0),0) % 12);
+          const isManager = e.id === 'e_claude';
+          return `<div class="live-agent-card${isManager?' live-manager':''}" style="--ac:${e.color}">
+            <div class="live-av-wrap">
+              <div class="live-av" style="background:${e.color}15;color:${e.color}">${e.name[0]}</div>
+              <div class="live-spinner" style="border-top-color:${e.color}"></div>
+            </div>
+            <div class="live-agent-body">
+              <div class="live-agent-top-row">
+                <div>
+                  <div class="live-agent-name">${escHtml(e.name)}${isManager?' 👑':''}</div>
+                  <div class="live-agent-role">${escHtml(e.role)}</div>
+                </div>
+                <div class="live-status-pill" style="background:${e.color}18;color:${e.color}">${status}</div>
+              </div>
+              <div class="live-act-text">${escHtml(act)}</div>
+              <div class="live-card-footer">
+                <span class="live-meta-chip">${activeTasks} task${activeTasks!==1?'s':''}</span>
+                <span class="live-meta-chip">${minAgo}m ago</span>
+                <button class="live-chat-btn" data-eid="${e.id}">Chat →</button>
+              </div>
+            </div>
+          </div>`;
+        }).join('')}
+      </div>`;
+    el.querySelectorAll('.live-chat-btn').forEach(btn => btn.addEventListener('click', () => Chat.open(btn.dataset.eid)));
+    OpsPage._tickClock();
+  },
+
+  _tickClock() {
+    const el = document.getElementById('live-clock');
+    if (el) el.textContent = new Date().toLocaleTimeString('en-US', {hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  },
+
+  _startLive() {
+    OpsPage._liveInterval = setInterval(() => {
+      if (OpsPage._activeTab === 'live') OpsPage._render();
+      else OpsPage._tickClock();
+    }, 9000);
+    setInterval(OpsPage._tickClock, 1000);
+  },
+
+  // ── TOKEN TRACKER ─────────────────────────────────────────────
+  _renderTokens(el) {
+    Usage._checkReset();
+    const lvl   = Usage.currentLevel();
+    const next  = Usage.nextLevel();
+    const used  = State.usage.tokensToday || 0;
+    const limit = lvl.dailyTokens;
+    const pct   = limit === Infinity ? 0 : Math.min(100, (used / limit) * 100);
+    const rem   = limit === Infinity ? Infinity : Math.max(0, limit - used);
+    const xp    = State.usage.xp || 0;
+    const xpPct = next ? Math.min(100, ((xp - lvl.xpReq) / (next.xpReq - lvl.xpReq)) * 100) : 100;
+    const fmtK  = Usage._fmtK;
+    const danger = pct > 80;
+    const ringColor = pct > 85 ? '#ef4444' : pct > 65 ? '#f59e0b' : lvl.color;
+    const r = 72, circ = 2 * Math.PI * r;
+    const offset = circ * (1 - pct / 100);
+
+    const now = new Date(); const midnight = new Date(now); midnight.setHours(24,0,0,0);
+    const secsLeft = Math.floor((midnight - now) / 1000);
+    const fmt2 = n => String(n).padStart(2,'0');
+    const h = fmt2(Math.floor(secsLeft/3600)), m = fmt2(Math.floor((secsLeft%3600)/60)), s = fmt2(secsLeft%60);
+
+    el.innerHTML = `<div class="tokens-page">
+      <div class="tokens-top">
+        <div class="token-ring-wrap">
+          <svg width="190" height="190" viewBox="0 0 190 190">
+            <circle cx="95" cy="95" r="${r}" fill="none" stroke="rgba(255,255,255,.06)" stroke-width="16"/>
+            <circle cx="95" cy="95" r="${r}" fill="none" stroke="${ringColor}" stroke-width="16"
+              stroke-dasharray="${circ.toFixed(2)}" stroke-dashoffset="${offset.toFixed(2)}"
+              stroke-linecap="round" transform="rotate(-90 95 95)"
+              style="transition:stroke-dashoffset .7s ease,stroke .4s"/>
+          </svg>
+          <div class="token-ring-center">
+            <div class="token-ring-pct" style="color:${ringColor}">${limit===Infinity?'∞':Math.round(pct)+'%'}</div>
+            <div class="token-ring-sub">used today</div>
+          </div>
+        </div>
+        <div class="token-stat-col">
+          <div class="token-stat-card">
+            <div class="token-stat-label">Tokens Used</div>
+            <div class="token-stat-val">${fmtK(used)}</div>
+          </div>
+          <div class="token-stat-card">
+            <div class="token-stat-label">Remaining</div>
+            <div class="token-stat-val" style="color:${danger?'var(--danger)':'var(--green)'}">${fmtK(rem)}</div>
+          </div>
+          <div class="token-stat-card">
+            <div class="token-stat-label">Daily Limit</div>
+            <div class="token-stat-val">${fmtK(limit)}</div>
+          </div>
+          <div class="token-stat-card">
+            <div class="token-stat-label">Resets In</div>
+            <div class="token-stat-val token-countdown" id="token-countdown">${h}:${m}:${s}</div>
+          </div>
+          ${(State.usage.tokenBank||0)>0?`<div class="token-stat-card"><div class="token-stat-label">🏦 Token Bank</div><div class="token-stat-val">${fmtK(State.usage.tokenBank)}</div></div>`:''}
+        </div>
+      </div>
+      <div class="token-level-section" style="border-color:${lvl.color}25;background:${lvl.color}07">
+        <div class="token-level-top">
+          <div class="xp-badge" style="background:${lvl.color}20;color:${lvl.color};border-color:${lvl.color}40;font-size:12px;padding:5px 14px">Lv${lvl.level} — ${lvl.name}</div>
+          <span style="font-size:12px;color:var(--text2)">${xp} XP${next?` · ${next.xpReq-xp} to ${next.name}`:' · MAX'}</span>
+        </div>
+        <div class="xp-track" style="margin-top:10px;height:6px"><div class="xp-fill" style="width:${xpPct}%;background:${lvl.color}"></div></div>
+        ${next?`<div style="font-size:11px;color:var(--text3);margin-top:6px">Unlock <b style="color:${next.color}">${fmtK(next.dailyTokens)}/day</b> free at ${next.name} tier</div>`:'<div style="font-size:11px;color:var(--text3);margin-top:6px">You\'ve reached the highest tier. Unlimited tokens, forever.</div>'}
+      </div>
+      <div class="token-upgrade-row">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Need more tokens?</div>
+          <div style="font-size:11px;color:var(--text2);margin-top:3px">Buy a pack → earn XP → unlock a higher daily limit permanently. The more you invest, the more free tokens you get every single day.</div>
+        </div>
+        <button class="btn btn-primary" id="ops-upgrade-btn" style="flex-shrink:0">⚡ Upgrade</button>
+      </div>
+    </div>`;
+    document.getElementById('ops-upgrade-btn').addEventListener('click', Usage.openUpgradeModal);
+    OpsPage._countdownInterval = setInterval(() => {
+      const cel = document.getElementById('token-countdown'); if (!cel) { clearInterval(OpsPage._countdownInterval); return; }
+      const n = new Date(); const mi = new Date(n); mi.setHours(24,0,0,0);
+      const sl = Math.max(0,Math.floor((mi-n)/1000));
+      cel.textContent = `${fmt2(Math.floor(sl/3600))}:${fmt2(Math.floor((sl%3600)/60))}:${fmt2(sl%60)}`;
+    }, 1000);
+  },
+
+  // ── CONTENT STUDIO ────────────────────────────────────────────
+  _renderContent(el) {
+    el.innerHTML = `<div class="content-studio">
+      <div class="content-sub-tabs">
+        <button class="csub-tab${OpsPage._contentTab==='images'?' active':''}" data-ct="images">🖼 Images</button>
+        <button class="csub-tab${OpsPage._contentTab==='video'?' active':''}" data-ct="video">🎬 Video Scripts</button>
+      </div>
+      <div id="csub-body"></div>
+    </div>`;
+    el.querySelectorAll('.csub-tab').forEach(btn => btn.addEventListener('click', () => {
+      el.querySelectorAll('.csub-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      OpsPage._contentTab = btn.dataset.ct;
+      OpsPage._renderCTab(document.getElementById('csub-body'));
+    }));
+    OpsPage._renderCTab(document.getElementById('csub-body'));
+  },
+
+  _renderCTab(el) {
+    if (!el) return;
+    if (OpsPage._contentTab === 'images') OpsPage._renderImages(el);
+    else OpsPage._renderVideoScripts(el);
+  },
+
+  _renderImages(el) {
+    const empOpts = State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');
+    const imgs = (State.opsImages||[]).slice().reverse();
+    el.innerHTML = `<div class="content-gen-layout">
+      <div class="content-gen-form">
+        <div class="content-gen-title">🖼 AI Image Generator</div>
+        <div class="content-gen-sub">Describe what you want — your agent crafts the perfect prompt and generates the image instantly.</div>
+        <div class="form-group" style="margin-top:16px"><label class="form-label">GENERATING AGENT</label>
+          <select class="form-select" id="img-emp">${empOpts}</select></div>
+        <div class="form-group"><label class="form-label">WHAT TO CREATE</label>
+          <textarea class="form-input" id="img-desc" rows="3" placeholder="e.g. Professional hero banner for an AI SaaS company, dark gradient, glowing accent lights, modern tech aesthetic" style="resize:vertical"></textarea></div>
+        <div class="form-group"><label class="form-label">VISUAL STYLE</label>
+          <select class="form-select" id="img-model">
+            <option value="flux-realism">📷 Photorealistic</option>
+            <option value="flux">✨ Standard AI (Flux)</option>
+            <option value="flux-anime">🎨 Illustration / Anime</option>
+            <option value="flux-3d">💎 3D Render</option>
+            <option value="turbo">⚡ Fast (Turbo)</option>
+          </select></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="img-gen-btn">🎨 Generate Image</button>
+          <button class="btn" id="img-ai-btn">✨ AI-craft prompt first</button>
+        </div>
+        <div id="img-status" class="gen-status"></div>
+      </div>
+      <div class="img-gallery-wrap">
+        ${imgs.length ? `<div class="img-gallery">${imgs.map(img=>`
+          <div class="img-card">
+            <img src="${escHtml(img.url)}" alt="${escHtml(img.desc.slice(0,60))}" class="img-card-img" loading="lazy">
+            <div class="img-card-footer">
+              <span class="img-card-agent">${escHtml(img.agent)}</span>
+              <a href="${escHtml(img.url)}" target="_blank" class="img-dl-btn">⬇ Save</a>
+            </div>
+            <div class="img-card-prompt">${escHtml(img.prompt.slice(0,70))}…</div>
+          </div>`).join('')}</div>` : '<div class="empty-state" style="padding:48px 0"><div class="empty-icon">🖼</div><div class="empty-text">Generated images will appear here.<br>Your whole gallery is saved automatically.</div></div>'}
+      </div>
+    </div>`;
+    document.getElementById('img-gen-btn').addEventListener('click', async () => {
+      const desc = (document.getElementById('img-desc').value||'').trim();
+      if (!desc) { toast('Describe what to create first','error'); return; }
+      await OpsPage._genImage(desc, document.getElementById('img-model').value, document.getElementById('img-emp').value, document.getElementById('img-status'));
+    });
+    document.getElementById('img-ai-btn').addEventListener('click', async () => {
+      const desc = (document.getElementById('img-desc').value||'').trim();
+      if (!desc) { toast('Enter a concept first','error'); return; }
+      const empId = document.getElementById('img-emp').value;
+      const emp = getEmp(empId);
+      const status = document.getElementById('img-status');
+      const btn = document.getElementById('img-ai-btn');
+      status.textContent = `${emp?.name||'AI'} is crafting the perfect prompt…`;
+      btn.disabled = true;
+      const sys = `You are a world-class AI image prompt engineer. Given a concept, write a single, detailed image generation prompt optimized for photorealism and specificity. Return ONLY the prompt — no explanation, no quotes, no preamble. Include: subject, style, lighting, mood, composition, color palette, and technical quality descriptors.`;
+      const result = await AI.once([{role:'user',content:`Write an image generation prompt for: ${desc}`}], sys);
+      document.getElementById('img-desc').value = result.trim();
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Prompt crafted by ' + (emp?.name||'AI') + ' — ready to generate';
+      btn.disabled = false;
+    });
+  },
+
+  async _genImage(desc, model, empId, statusEl) {
+    const emp = getEmp(empId);
+    const btn = document.getElementById('img-gen-btn');
+    if (statusEl) { statusEl.style.color = 'var(--text2)'; statusEl.textContent = `${emp?.name||'AI'} is generating your image — this takes 10-20 seconds…`; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+    try {
+      const seed = Math.floor(Math.random() * 999999);
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(desc)}?width=1024&height=768&model=${model}&seed=${seed}&enhance=true&nologo=true`;
+      await new Promise((res, rej) => { const img = new Image(); img.onload = res; img.onerror = rej; img.src = url; });
+      if (!State.opsImages) State.opsImages = [];
+      State.opsImages.push({ url, prompt: desc, desc, model, agent: emp?.name||'AI', empId, timestamp: Date.now() });
+      save('opsImages');
+      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Image generated!'; }
+      Usage.trackUsage(150);
+      OpsPage._renderImages(document.getElementById('csub-body'));
+      toast('Image generated ✓','success');
+    } catch(e) {
+      if (statusEl) { statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Generation failed. Check your internet connection and try again.'; }
+      if (btn) { btn.disabled = false; btn.textContent = '🎨 Generate Image'; }
+    }
+  },
+
+  _renderVideoScripts(el) {
+    const empOpts = State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');
+    const scripts = (State.opsScripts||[]).slice().reverse();
+    el.innerHTML = `<div class="content-gen-layout">
+      <div class="content-gen-form">
+        <div class="content-gen-title">🎬 Video Script Generator</div>
+        <div class="content-gen-sub">Your agent writes a complete, production-ready video script — scenes, voiceover, on-screen text, pacing, and production notes.</div>
+        <div class="form-group" style="margin-top:16px"><label class="form-label">WRITING AGENT</label>
+          <select class="form-select" id="vid-emp">${empOpts}</select></div>
+        <div class="form-group"><label class="form-label">VIDEO CONCEPT / BRIEF</label>
+          <textarea class="form-input" id="vid-concept" rows="4" placeholder="e.g. 60-second product demo for Kayro Interactive targeting startup founders — show the AI team, Ask the Room feature, and task automation. High energy, modern." style="resize:vertical"></textarea></div>
+        <div class="form-group"><label class="form-label">FORMAT</label>
+          <select class="form-select" id="vid-format">
+            <option value="short">⚡ Short-form (15–60s) — TikTok, Reels, YouTube Shorts</option>
+            <option value="explainer">📖 Explainer (1–3 min) — Website, YouTube</option>
+            <option value="ad">🎯 Paid Ad (15–30s) — Meta, Google, LinkedIn</option>
+            <option value="pitch">🤝 Pitch / Demo (3–5 min) — Sales, Investors</option>
+          </select></div>
+        <button class="btn btn-primary" id="vid-gen-btn">🎬 Write Script</button>
+        <div id="vid-status" class="gen-status"></div>
+      </div>
+      <div class="scripts-list-wrap">
+        ${scripts.length ? scripts.map((s,i)=>`<div class="script-card">
+          <div class="script-card-hdr">
+            <div>
+              <div class="script-title">${escHtml(s.title)}</div>
+              <div class="script-meta">${escHtml(s.format)} · ${escHtml(s.agent)} · ${new Date(s.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
+            </div>
+            <button class="btn btn-sm script-toggle" data-i="${i}">View</button>
+          </div>
+          <pre class="script-body" id="sbody-${i}" style="display:none">${escHtml(s.content)}</pre>
+        </div>`).join('') : '<div class="empty-state" style="padding:48px 0"><div class="empty-icon">🎬</div><div class="empty-text">Generated scripts appear here.<br>Ready to shoot, share, or hand off to your video team.</div></div>'}
+      </div>
+    </div>`;
+    document.getElementById('vid-gen-btn').addEventListener('click', async () => {
+      const concept = (document.getElementById('vid-concept').value||'').trim();
+      if (!concept) { toast('Enter a video concept first','error'); return; }
+      await OpsPage._genVideoScript(concept, document.getElementById('vid-format').value, document.getElementById('vid-emp').value, document.getElementById('vid-status'));
+    });
+    el.querySelectorAll('.script-toggle').forEach(btn => btn.addEventListener('click', () => {
+      const body = document.getElementById(`sbody-${btn.dataset.i}`);
+      if (!body) return;
+      const open = body.style.display !== 'none';
+      body.style.display = open ? 'none' : 'block';
+      btn.textContent = open ? 'View' : 'Collapse';
+    }));
+  },
+
+  async _genVideoScript(concept, format, empId, statusEl) {
+    const emp = getEmp(empId);
+    const btn = document.getElementById('vid-gen-btn');
+    if (statusEl) { statusEl.style.color='var(--text2)'; statusEl.textContent = `${emp?.name||'AI'} is writing your video script…`; }
+    if (btn) { btn.disabled = true; btn.textContent = 'Writing…'; }
+    const GUIDES = {
+      short: '15–60 second short-form. Hook in the first 2 seconds. Fast cuts, captions-optimized, punchy. No fluff.',
+      explainer: '1–3 minute explainer. Structure: Problem → Solution → How It Works → Social Proof → CTA. Clear VO.',
+      ad: '15–30 second paid ad. Hook → Pain → Solution → CTA. Designed to stop the scroll.',
+      pitch: '3–5 minute pitch/demo. Context → Problem → Solution Demo → Proof → CTA. Professional and compelling.'
+    };
+    const sys = `You are a world-class video scriptwriter. Write complete, production-ready scripts that are specific, emotionally resonant, and ready to shoot. Format every script with: title, scene-by-scene breakdown (visual description, voiceover/dialogue, on-screen text, pacing), and production notes.`;
+    const prompt = `Write a complete video script:\n\nCONCEPT: ${concept}\nFORMAT: ${GUIDES[format]||format}\nWRITER ROLE: ${emp?.role||'Marketing'}\n\nStructure:\n# [TITLE]\n**Format:** [type] | **Duration:** [estimate] | **Tone:** [3 words]\n\n---\n\n## SCENES\n\n**SCENE [N] — [LOCATION / VISUAL]**\n[VISUAL: describe exactly what's on screen]\n[VO/DIALOGUE: exact words spoken]\n[ON SCREEN: text overlays]\n[CUT: pacing note]\n\n(repeat for all scenes)\n\n---\n\n## PRODUCTION NOTES\n[Music style, color grade, camera direction, key visual moments]\n\n## CALL TO ACTION\n[Exact words + visual + URL/handle]`;
+    const content = await AI.once([{role:'user',content:prompt}], sys);
+    const titleMatch = content.match(/^#\s+(.+)/m);
+    const title = titleMatch ? titleMatch[1].trim() : concept.slice(0,60);
+    if (!State.opsScripts) State.opsScripts = [];
+    State.opsScripts.push({ title, content, format, agent: emp?.name||'AI', empId, concept, timestamp: Date.now() });
+    save('opsScripts');
+    if (statusEl) { statusEl.style.color='var(--green)'; statusEl.textContent='✓ Script ready!'; }
+    Usage.trackUsage(Math.ceil(content.length / 4));
+    OpsPage._renderVideoScripts(document.getElementById('csub-body'));
+    toast('Video script ready ✓','success');
+    if (btn) { btn.disabled = false; btn.textContent = '🎬 Write Script'; }
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
