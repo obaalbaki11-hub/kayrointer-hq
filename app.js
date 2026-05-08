@@ -262,7 +262,7 @@ STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT 
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', companyName:'Kayro Interactive', ejServiceId:'', ejTemplateId:'', ejPublicKey:'' },
+  settings: { apiKey:'', platformApiKey:'', companyName:'Kayro Interactive', ejServiceId:'', ejTemplateId:'', ejPublicKey:'' },
   employees: [],
   tasks: [],
   workbook: { activeTab:0, tabs:[{name:'Sheet1',cells:{}}] },
@@ -351,8 +351,19 @@ const AI = {
     };
   },
   async *stream(messages, system) {
-    const key = (State.settings.apiKey||'').trim();
-    if (!key) { yield '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key (starts with sk-ant-) → click Save Key.'; return; }
+    const platformKey = (State.settings.platformApiKey||'').trim();
+    const userKey = (State.settings.apiKey||'').trim();
+    const hasSub = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
+    // Subscribers use Kayro's platform key; others use their own
+    const key = (platformKey && hasSub) ? platformKey : (platformKey && !userKey) ? '' : userKey;
+    if (!key) {
+      if (platformKey && !hasSub) {
+        yield '⚠️ Subscribe to Kayro to get AI access — no API key needed.\n\nClick ⚡ Upgrade in the sidebar to get started.';
+      } else {
+        yield '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key (starts with sk-ant-) → Save Key.\n\nOr subscribe to Kayro — subscribers get AI access without setting up a key.';
+      }
+      return;
+    }
     if (!key.startsWith('sk-')) { yield '⚠️ Invalid API key format.\n\nYour key should start with sk-ant-  — check Settings.'; return; }
     try {
       const res = await fetch('https://api.anthropic.com/v1/messages', {
@@ -360,7 +371,7 @@ const AI = {
         mode: 'cors',
         headers: AI._headers(key),
         body: JSON.stringify({
-          model: State.settings.model || 'claude-haiku-4-5-20251001',
+          model: State.settings.model || 'claude-sonnet-4-6',
           max_tokens: 2048,
           stream: true,
           system: system || 'You are a helpful AI employee at Kayro Interactive.',
@@ -2631,21 +2642,26 @@ const Settings = {
       </div>
       <div class="s-card full">
         <div class="s-card-title">🤖 Claude AI</div>
+        <div style="background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:6px">KAYRO PLATFORM KEY (OWNER ONLY)</div>
+          <input class="form-input" id="s-platform-key" type="password" value="${escHtml(s.platformApiKey||'')}" placeholder="sk-ant-… set once, subscribers use this automatically" autocomplete="off" spellcheck="false">
+          <div class="form-hint" style="margin-top:8px">Subscribers use <b>this key</b> automatically — they never see or enter it. Set it once here as the owner. Leave blank if you want every user to supply their own key.</div>
+        </div>
         <div class="form-group">
-          <label class="form-label">ANTHROPIC API KEY</label>
+          <label class="form-label">YOUR OWN ANTHROPIC KEY (OPTIONAL IF PLATFORM KEY IS SET)</label>
           <input class="form-input" id="s-apikey" type="text" value="${escHtml(s.apiKey||'')}" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
-          <div class="form-hint">Get your key at <b>console.anthropic.com</b> → API Keys. Must start with <code>sk-ant-</code><br><span style="color:#f59e0b">⚠️ Safari users: use Chrome or Firefox for API calls — Safari blocks cross-origin requests.</span></div>
+          <div class="form-hint">Only needed if you're testing without a subscription, or no platform key is set. Get one at <b>console.anthropic.com</b> → API Keys.<br><span style="color:#f59e0b">⚠️ Safari blocks cross-origin requests — use Chrome or Firefox.</span></div>
         </div>
         <div class="form-group">
           <label class="form-label">MODEL</label>
           <select class="form-select" id="s-model">
-            <option value="claude-haiku-4-5-20251001" ${(s.model||'claude-haiku-4-5-20251001')==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 (fast, cheap)</option>
-            <option value="claude-sonnet-4-6" ${s.model==='claude-sonnet-4-6'?'selected':''}>Claude Sonnet 4.6 (smart, balanced)</option>
-            <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 (most powerful)</option>
+            <option value="claude-sonnet-4-6" ${(!s.model||s.model==='claude-sonnet-4-6')?'selected':''}>Claude Sonnet 4.6 — smart, balanced ✦ recommended</option>
+            <option value="claude-haiku-4-5-20251001" ${s.model==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 — fastest, cheapest</option>
+            <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 — most powerful</option>
           </select>
         </div>
         <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" id="s-save-key">Save Key</button>
+          <button class="btn btn-primary" id="s-save-key">Save Keys</button>
           <button class="btn" id="s-test-key">Test Connection</button>
         </div>
         <div id="s-key-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
@@ -2661,7 +2677,7 @@ const Settings = {
       <div class="s-card full">
         <div class="s-card-title">🔐 Firebase Auth (Optional)</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect Firebase to enable Google Sign-In and persistent accounts. Create a free project at <span style="color:var(--accent)">console.firebase.google.com</span> → Authentication → enable Google provider → Project Settings → copy config.</p>
-        <div class="form-group"><label class="form-label">API KEY</label><input class="form-input" id="s-fb-apikey" placeholder="AIzaSy..." value="${escHtml((s.firebaseConfig?.apiKey)||'')}"></div>
+        <div class="form-group"><label class="form-label">FIREBASE WEB API KEY</label><input class="form-input" id="s-fb-apikey" placeholder="AIzaSy..." value="${escHtml((s.firebaseConfig?.apiKey)||'')}"></div>
         <div class="form-group"><label class="form-label">AUTH DOMAIN</label><input class="form-input" id="s-fb-domain" placeholder="your-app.firebaseapp.com" value="${escHtml((s.firebaseConfig?.authDomain)||'')}"></div>
         <div class="form-group"><label class="form-label">PROJECT ID</label><input class="form-input" id="s-fb-project" placeholder="your-project-id" value="${escHtml((s.firebaseConfig?.projectId)||'')}"></div>
         <div class="form-group"><label class="form-label">APP ID</label><input class="form-input" id="s-fb-appid" placeholder="1:123456789:web:..." value="${escHtml((s.firebaseConfig?.appId)||'')}"></div>
@@ -2677,13 +2693,15 @@ const Settings = {
       save('settings');document.getElementById('brand-name').textContent=State.settings.companyName;toast('Saved','success');
     });
     document.getElementById('s-save-key').addEventListener('click',()=>{
-      const k = document.getElementById('s-apikey').value.trim();
-      const m = document.getElementById('s-model').value;
+      const pk = document.getElementById('s-platform-key').value.trim();
+      const k  = document.getElementById('s-apikey').value.trim();
+      const m  = document.getElementById('s-model').value;
+      State.settings.platformApiKey = pk;
       State.settings.apiKey = k;
       State.settings.model = m;
       try { localStorage.setItem('kayro_settings', JSON.stringify(State.settings)); } catch(_) {}
       Settings.updateApiStatus();
-      toast(k ? 'API key saved ✓' : 'Key cleared','success');
+      toast('Keys saved ✓','success');
     });
     document.getElementById('s-test-key').addEventListener('click',async()=>{
       const st=document.getElementById('s-key-status');
@@ -2721,7 +2739,10 @@ const Settings = {
   updateApiStatus() {
     const el=document.getElementById('api-status');
     if(!el)return;
-    if(State.settings.apiKey){el.textContent='🟢 AI Connected';el.className='api-status ok';}
+    const hasPlatform = !!(State.settings.platformApiKey);
+    const hasOwn = !!(State.settings.apiKey);
+    if(hasPlatform){el.textContent='🟢 Kayro AI Ready';el.className='api-status ok';}
+    else if(hasOwn){el.textContent='🟢 AI Connected';el.className='api-status ok';}
     else{el.textContent='⚪ No API Key';el.className='api-status';}
   }
 };

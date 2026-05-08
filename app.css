@@ -790,7 +790,9 @@ td.editing .cell-editor{display:block}
 .brain-fact-card:hover .brain-fact-del{opacity:1}
 
 /* ── AUTH OVERLAY ────────────────────────────────────────────── */
-.auth-overlay{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 0%, rgba(59,130,246,.12) 0%, var(--bg) 70%);display:none;align-items:center;justify-content:center;padding:24px}
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:var(--bg);display:none;align-items:center;justify-content:center;padding:24px}
+.auth-overlay::before{content:'';position:absolute;top:-100px;left:50%;transform:translateX(-50%);width:800px;height:600px;background:radial-gradient(ellipse,rgba(59,130,246,.18) 0%,transparent 65%);pointer-events:none;z-index:0}
+.auth-card{position:relative;z-index:1}
 .auth-overlay.open{display:flex}
 .auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
 .auth-logo{font-size:32px;font-weight:900;letter-spacing:-1px;color:var(--text)}
