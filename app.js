@@ -2730,140 +2730,256 @@ const Settings = {
 //  PAGE: DESIGN STUDIO
 // ══════════════════════════════════════════════════════════════
 const DesignStudio = {
+  _type: 'component',
+  _style: '',
+
   init(container) {
-    document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
-    document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
-    container.innerHTML = `<div class="page-scroll" id="ds-page">
-      <div class="section-hdr">
-        <div>
-          <div class="section-title">Design Studio</div>
-          <div class="section-sub">Describe what you want. Your AI team generates real HTML/CSS designs.</div>
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn primary" id="ds-new-btn">+ New Design</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+    document.getElementById('ds-new-btn').addEventListener('click', () => {
+      document.getElementById('ds-prompt').value = '';
+      document.getElementById('ds-prompt').focus();
+    });
+    DesignStudio._type = 'component';
+    DesignStudio._style = '';
+    container.innerHTML = `<div class="ds-root">
+      <div class="ds-left">
+        <div class="ds-left-inner">
+
+          <div class="ds-section-label">QUICK START</div>
+          <div class="ds-quick-grid">
+            ${[
+              ['Landing Page',   'A stunning SaaS landing page hero section with headline, subtext, and CTA button'],
+              ['Pricing Cards',  'Three pricing tier cards: Free, Pro, and Enterprise. Dark theme, modern design'],
+              ['Login Form',     'A sleek sign-in form with email/password fields, Google button, and branding'],
+              ['Dashboard',      'Analytics dashboard with metric cards, a chart placeholder, and data table'],
+              ['Profile Card',   'User profile card with avatar, bio, stats, and follow/message buttons'],
+              ['Email Template', 'Professional HTML email newsletter with header, body, and CTA section'],
+            ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
+          </div>
+
+          <div class="ds-divider"></div>
+
+          <div class="ds-section-label">DESIGNER</div>
+          <div class="ds-agent-row" id="ds-agent-row">
+            ${State.employees.map((e,i) => `
+              <button class="ds-agent-chip${i===0?' active':''}" data-eid="${e.id}" style="--ac:${e.color}" title="${escHtml(e.name)} — ${escHtml(e.role)}">
+                <span class="ds-agent-av" style="background:${e.color}20;color:${e.color}">${e.name[0]}</span>
+                <span class="ds-agent-chip-name">${e.name}</span>
+              </button>`).join('')}
+          </div>
+
+          <div class="ds-section-label" style="margin-top:14px">PROMPT</div>
+          <textarea class="ds-prompt" id="ds-prompt" rows="5"
+            placeholder="Describe your design in detail — layout, colors, fonts, content, feel…&#10;&#10;e.g. A dark SaaS pricing page with three cards: Free ($0), Pro ($29), and Enterprise (custom). Blue accent, rounded corners, glassmorphism effect."></textarea>
+
+          <div class="ds-section-label" style="margin-top:14px">OUTPUT TYPE</div>
+          <div class="ds-type-grid">
+            ${[['component','⬡','UI Component'],['page','▤','Full Page'],['email','✉','Email'],['card','◻','Card/Widget']].map(([t,icon,label])=>
+              `<button class="ds-type-pill${t==='component'?' active':''}" data-type="${t}"><span class="ds-type-icon">${icon}</span>${label}</button>`).join('')}
+          </div>
+
+          <div class="ds-section-label" style="margin-top:14px">STYLE PRESET</div>
+          <div class="ds-style-row">
+            ${[['','None'],['dark','Dark Mode'],['glass','Glassmorphism'],['minimal','Minimal'],['bold','Bold & Vibrant'],['neo','Neumorphism']].map(([s,l])=>
+              `<button class="ds-style-pill${s===''?' active':''}" data-style="${s}">${l}</button>`).join('')}
+          </div>
+
+          <button class="ds-generate-btn" id="ds-generate">✦ Generate Design</button>
+          <div class="ds-gen-status" id="ds-gen-status"></div>
         </div>
       </div>
-      <div class="ds-top">
-        <div class="ds-form">
-          <div class="form-group">
-            <label class="form-label">EMPLOYEE</label>
-            <select class="form-input" id="ds-emp">
-              ${State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('')}
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">DESIGN PROMPT</label>
-            <textarea class="form-textarea" id="ds-prompt" rows="3" placeholder="Design a dark pricing page with 3 tiers. Use Inter font. Black background, white text, green CTA buttons."></textarea>
-          </div>
-          <div class="form-group">
-            <label class="form-label">OUTPUT TYPE</label>
-            <div class="ds-type-row" id="ds-type-row">
-              <button class="ds-type-btn active" data-type="component">UI Component</button>
-              <button class="ds-type-btn" data-type="page">Full Page</button>
-              <button class="ds-type-btn" data-type="email">Email Template</button>
-              <button class="ds-type-btn" data-type="card">Card / Widget</button>
+
+      <div class="ds-right">
+        <div class="ds-preview-area" id="ds-preview-area">
+          <div class="ds-empty-state">
+            <div class="ds-empty-icon">✦</div>
+            <div class="ds-empty-title">Your design appears here</div>
+            <div class="ds-empty-sub">Pick a quick start or describe what you want on the left, then hit Generate.</div>
+            <div class="ds-empty-examples">
+              <div class="ds-ex-card" style="background:linear-gradient(135deg,#1a1a2e,#16213e)">
+                <div style="width:60%;height:8px;background:#3b82f6;border-radius:4px;margin-bottom:6px"></div>
+                <div style="width:80%;height:4px;background:rgba(255,255,255,.15);border-radius:2px;margin-bottom:4px"></div>
+                <div style="width:50%;height:4px;background:rgba(255,255,255,.1);border-radius:2px;margin-bottom:10px"></div>
+                <div style="display:flex;gap:6px"><div style="width:40%;height:20px;background:#3b82f6;border-radius:4px"></div><div style="width:30%;height:20px;background:rgba(255,255,255,.1);border-radius:4px"></div></div>
+              </div>
+              <div class="ds-ex-card" style="background:linear-gradient(135deg,#0f0f0f,#1a0a2e)">
+                <div style="display:flex;gap:5px;margin-bottom:8px">${['#3b82f6','#22c55e','#a855f7'].map(c=>`<div style="flex:1;height:50px;background:${c}20;border:1px solid ${c}30;border-radius:6px"></div>`).join('')}</div>
+                <div style="width:100%;height:6px;background:rgba(255,255,255,.06);border-radius:3px"></div>
+              </div>
             </div>
           </div>
-          <button class="btn btn-primary" id="ds-generate" style="width:100%">✦ Generate Design</button>
-        </div>
-        <div class="ds-preview-wrap" id="ds-preview-wrap">
-          <div class="ds-preview-empty">
-            <div style="font-size:32px;margin-bottom:12px">🎨</div>
-            <div style="font-size:13px;color:var(--text2)">Your design will appear here</div>
-          </div>
         </div>
       </div>
-      <div class="ds-saved" id="ds-saved"></div>
-    </div>`;
+    </div>
+    <div class="ds-gallery-section" id="ds-gallery"></div>`;
 
-    let selectedType = 'component';
-    container.querySelectorAll('.ds-type-btn').forEach(btn => btn.addEventListener('click', () => {
-      container.querySelectorAll('.ds-type-btn').forEach(b=>b.classList.remove('active'));
-      btn.classList.add('active');
-      selectedType = btn.dataset.type;
+    // Quick start clicks
+    container.querySelectorAll('.ds-quick-btn').forEach(btn => btn.addEventListener('click', () => {
+      document.getElementById('ds-prompt').value = btn.dataset.prompt;
+      document.getElementById('ds-prompt').focus();
     }));
 
-    document.getElementById('ds-generate').addEventListener('click', async () => {
-      const empId = document.getElementById('ds-emp').value;
-      const prompt = document.getElementById('ds-prompt').value.trim();
-      if (!prompt) { toast('Enter a design prompt','error'); return; }
-      const emp = State.employees.find(e=>e.id===empId) || State.employees[0];
-      const btn = document.getElementById('ds-generate');
-      btn.disabled = true; btn.textContent = '⏳ Generating…';
-      const wrap = document.getElementById('ds-preview-wrap');
-      wrap.innerHTML = '<div class="ds-preview-empty" style="animation:pulse 1.5s infinite"><div style="font-size:13px;color:var(--text2)">Generating design…</div></div>';
+    // Agent selection
+    container.querySelectorAll('.ds-agent-chip').forEach(chip => chip.addEventListener('click', () => {
+      container.querySelectorAll('.ds-agent-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+    }));
 
-      const typeInstructions = {
-        component: 'Generate a self-contained HTML+CSS UI component. No full page, just the component with styles in a <style> tag.',
-        page: 'Generate a complete single-page HTML document with embedded CSS. Include a realistic page layout.',
-        email: 'Generate an HTML email template (table-based, inline styles, 600px wide, dark themed).',
-        card: 'Generate a single HTML card/widget with embedded CSS. Small and focused.',
-      };
-      const sys = `You are ${emp.name}, ${emp.role}. Generate ONLY valid, complete HTML+CSS code — no markdown, no explanation, no code blocks. Just raw HTML starting with <!DOCTYPE html> or a <div>. The design should be dark-themed (matching background #080808 or near-black), using Inter and JetBrains Mono fonts from Google Fonts. ${typeInstructions[selectedType]}`;
-      let html = '';
-      try {
-        const stream = AI.stream([{role:'user',content:`Design request: ${prompt}\n\nOutput type: ${selectedType}`}], sys);
-        for await (const chunk of stream) html += chunk;
-        html = html.trim();
-        if (html.startsWith('```')) html = html.replace(/^```[^\n]*\n/,'').replace(/```$/,'').trim();
-        wrap.innerHTML = `
-          <div class="ds-preview-toolbar">
-            <span class="ds-preview-emp" style="color:${emp.color}">${emp.name}</span>
-            <span style="color:var(--text2);font-size:11px">${selectedType}</span>
-            <div style="flex:1"></div>
-            <button class="tb-btn" id="ds-copy-btn">Copy HTML</button>
-            <button class="btn btn-primary btn-sm" id="ds-save-btn">Save Design</button>
-          </div>
-          <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts"></iframe>`;
-        const frame = document.getElementById('ds-iframe');
-        frame.contentDocument.open();
-        frame.contentDocument.write(html);
-        frame.contentDocument.close();
-        document.getElementById('ds-copy-btn').addEventListener('click',()=>{
-          navigator.clipboard.writeText(html).then(()=>toast('HTML copied','success'));
-        });
-        document.getElementById('ds-save-btn').addEventListener('click',()=>{
-          const title = prompt.slice(0,60);
-          State.designs.push({id:uid(),title,prompt,html,empId,type:selectedType,timestamp:Date.now()});
-          save('designs');
-          DesignStudio._renderSaved();
-          toast('Design saved','success');
-        });
-      } catch(e) {
-        wrap.innerHTML = `<div class="ds-preview-empty"><div style="color:var(--danger);font-size:12px">Error: ${e.message}</div></div>`;
-      }
-      btn.disabled = false; btn.textContent = '✦ Generate Design';
+    // Type selection
+    container.querySelectorAll('.ds-type-pill').forEach(pill => pill.addEventListener('click', () => {
+      container.querySelectorAll('.ds-type-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      DesignStudio._type = pill.dataset.type;
+    }));
+
+    // Style presets
+    container.querySelectorAll('.ds-style-pill').forEach(pill => pill.addEventListener('click', () => {
+      container.querySelectorAll('.ds-style-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+      DesignStudio._style = pill.dataset.style;
+    }));
+
+    // Generate
+    document.getElementById('ds-generate').addEventListener('click', () => DesignStudio._generate(container));
+    document.getElementById('ds-prompt').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.metaKey) DesignStudio._generate(container);
     });
-    DesignStudio._renderSaved();
+
+    DesignStudio._renderGallery();
   },
 
-  _renderSaved() {
-    const el = document.getElementById('ds-saved'); if(!el) return;
-    if (!State.designs.length) { el.innerHTML=''; return; }
-    el.innerHTML = `<div class="section-title" style="margin:32px 0 16px;font-size:13px">Saved Designs (${State.designs.length})</div>
-      <div class="ds-saved-grid">${State.designs.slice().reverse().map(d=>{
-        const emp = State.employees.find(e=>e.id===d.empId);
-        return `<div class="ds-saved-card">
-          <div class="ds-sc-hdr">
-            <div class="ds-sc-title">${escHtml(d.title)}</div>
-            <button class="icon-btn ds-del-btn" data-did="${d.id}" style="color:var(--danger)">✕</button>
+  async _generate(container) {
+    const prompt = (document.getElementById('ds-prompt').value || '').trim();
+    if (!prompt) { toast('Describe your design first', 'error'); return; }
+    const activeChip = container.querySelector('.ds-agent-chip.active');
+    const empId = activeChip?.dataset.eid || State.employees[0]?.id;
+    const emp = State.employees.find(e => e.id === empId) || State.employees[0];
+    const btn = document.getElementById('ds-generate');
+    const status = document.getElementById('ds-gen-status');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ds-gen-spin">◌</span> Generating…';
+    status.textContent = `${emp.name} is designing…`;
+
+    const preview = document.getElementById('ds-preview-area');
+    preview.innerHTML = `<div class="ds-generating"><div class="ds-gen-ring" style="border-top-color:${emp.color}"></div><div class="ds-gen-txt" style="color:${emp.color}">${emp.name} is designing…</div></div>`;
+
+    const STYLE_HINTS = {
+      dark:    'Dark background (#0a0a0f), subtle glows, high contrast white text, accent color highlights.',
+      glass:   'Glassmorphism: frosted glass panels (backdrop-filter blur), translucent backgrounds, soft borders, depth layering.',
+      minimal: 'Minimal and clean: lots of white space, subtle grays, no decorative elements, typography-focused.',
+      bold:    'Bold and vibrant: strong colors, thick typography, high energy, large elements, punchy visual hierarchy.',
+      neo:     'Neumorphism: soft shadows, same-color backgrounds, extruded 3D feel, muted palette.',
+      '':      '',
+    };
+    const styleHint = STYLE_HINTS[DesignStudio._style] || '';
+    const typeInstr = {
+      component: 'Generate a self-contained HTML+CSS UI component. Wrap everything in a centered <div>. Include <style> tag.',
+      page:      'Generate a complete single-page HTML document with full layout — nav, hero, sections, footer.',
+      email:     'Generate a pixel-perfect HTML email (table layout, inline CSS, 600px max-width, email-client safe).',
+      card:      'Generate a single beautiful card or widget. Compact, polished, self-contained.',
+    };
+    const sys = `You are ${emp.name}, ${emp.role} at a world-class design agency. You write ONLY raw, production-quality HTML+CSS — no markdown code blocks, no explanations, no comments. Just the HTML, starting immediately. Load Inter from Google Fonts. Make it genuinely beautiful, pixel-perfect, and impressive. This should look like it came from a $500/hr designer. ${typeInstr[DesignStudio._type]}${styleHint ? ' Style: '+styleHint : ''}`;
+
+    let html = '';
+    try {
+      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys)) html += chunk;
+      html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
+
+      preview.innerHTML = `
+        <div class="ds-preview-bar">
+          <div class="ds-preview-bar-left">
+            <div class="ds-preview-av" style="background:${emp.color}20;color:${emp.color}">${emp.name[0]}</div>
+            <div>
+              <div class="ds-preview-bar-name">${escHtml(emp.name)}</div>
+              <div class="ds-preview-bar-meta">${DesignStudio._type}${DesignStudio._style?' · '+DesignStudio._style:''}</div>
+            </div>
           </div>
-          <div class="ds-sc-meta">${emp?`<span style="color:${emp.color}">${emp.name}</span> · `:''}<span style="color:var(--text2)">${d.type}</span></div>
-          <button class="btn btn-sm ds-view-btn" data-did="${d.id}" style="margin-top:8px;width:100%">View Design</button>
-        </div>`;
-      }).join('')}</div>`;
-    el.querySelectorAll('.ds-del-btn').forEach(btn=>btn.addEventListener('click',()=>{
-      State.designs=State.designs.filter(d=>d.id!==btn.dataset.did);
-      save('designs'); DesignStudio._renderSaved();
-    }));
-    el.querySelectorAll('.ds-view-btn').forEach(btn=>btn.addEventListener('click',()=>{
-      const d=State.designs.find(x=>x.id===btn.dataset.did); if(!d) return;
-      Modal.open(d.title.slice(0,50), `<iframe style="width:100%;height:500px;border:none;border-radius:8px;background:#000" sandbox="allow-scripts"></iframe>`, {
+          <div style="display:flex;gap:6px">
+            <button class="tb-btn" id="ds-copy-btn">⎘ Copy HTML</button>
+            <button class="btn btn-primary btn-sm" id="ds-save-btn">Save</button>
+          </div>
+        </div>
+        <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts"></iframe>`;
+
+      const frame = document.getElementById('ds-iframe');
+      frame.contentDocument.open();
+      frame.contentDocument.write(html);
+      frame.contentDocument.close();
+
+      document.getElementById('ds-copy-btn').addEventListener('click', () => {
+        navigator.clipboard.writeText(html).then(() => toast('HTML copied ✓', 'success'));
+      });
+      document.getElementById('ds-save-btn').addEventListener('click', () => {
+        State.designs.push({ id:uid(), title:prompt.slice(0,60), prompt, html, empId, type:DesignStudio._type, style:DesignStudio._style, timestamp:Date.now() });
+        save('designs');
+        DesignStudio._renderGallery();
+        toast('Design saved ✓', 'success');
+      });
+      status.style.color = 'var(--green)';
+      status.textContent = '✓ Design ready — press ⌘↵ to regenerate';
+      Usage.trackUsage(Math.ceil(html.length / 4));
+    } catch(e) {
+      preview.innerHTML = `<div class="ds-empty-state"><div class="ds-empty-icon" style="color:var(--danger)">✕</div><div class="ds-empty-sub">${escHtml(e.message)}</div></div>`;
+      status.textContent = '';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '✦ Generate Design';
+  },
+
+  _renderGallery() {
+    const el = document.getElementById('ds-gallery'); if (!el) return;
+    if (!State.designs.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <div class="ds-gallery-hdr">
+        <div class="ds-section-label">SAVED DESIGNS (${State.designs.length})</div>
+      </div>
+      <div class="ds-gallery-grid">
+        ${State.designs.slice().reverse().map(d => {
+          const emp = State.employees.find(e => e.id === d.empId);
+          return `<div class="ds-gallery-card">
+            <div class="ds-gallery-preview" id="ds-gp-${d.id}">
+              <iframe class="ds-gallery-frame" sandbox="allow-scripts" data-html="${encodeURIComponent(d.html.slice(0,8000))}"></iframe>
+              <div class="ds-gallery-overlay">
+                <button class="ds-gallery-view-btn" data-did="${d.id}">View</button>
+              </div>
+            </div>
+            <div class="ds-gallery-meta">
+              <div class="ds-gallery-title">${escHtml(d.title.slice(0,40))}</div>
+              <div class="ds-gallery-info">
+                ${emp ? `<span style="color:${emp.color};font-size:10px">${emp.name}</span>` : ''}
+                <span class="ds-gallery-type">${d.type}</span>
+              </div>
+            </div>
+            <button class="ds-gallery-del" data-did="${d.id}">✕</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    // Lazy-load gallery iframes
+    el.querySelectorAll('.ds-gallery-frame').forEach(frame => {
+      const html = decodeURIComponent(frame.dataset.html);
+      try { frame.contentDocument.open(); frame.contentDocument.write(html); frame.contentDocument.close(); } catch(_) {}
+    });
+    el.querySelectorAll('.ds-gallery-view-btn').forEach(btn => btn.addEventListener('click', () => {
+      const d = State.designs.find(x => x.id === btn.dataset.did); if (!d) return;
+      Modal.open(d.title.slice(0, 50), `<iframe style="width:100%;height:520px;border:none;border-radius:8px;background:#000" sandbox="allow-scripts"></iframe>`, {
         onOpen() {
-          const f=document.querySelector('#modal-box iframe');
-          if(f){f.contentDocument.open();f.contentDocument.write(d.html);f.contentDocument.close();}
+          const f = document.querySelector('#modal-box iframe');
+          if (f) { f.contentDocument.open(); f.contentDocument.write(d.html); f.contentDocument.close(); }
         }
       });
     }));
+    el.querySelectorAll('.ds-gallery-del').forEach(btn => btn.addEventListener('click', () => {
+      State.designs = State.designs.filter(d => d.id !== btn.dataset.did);
+      save('designs');
+      DesignStudio._renderGallery();
+    }));
   },
-  destroy() {},
+
+  destroy() { DesignStudio._type = 'component'; DesignStudio._style = ''; },
 };
 
 // ══════════════════════════════════════════════════════════════
