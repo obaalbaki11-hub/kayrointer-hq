@@ -371,7 +371,7 @@ const AI = {
         mode: 'cors',
         headers: AI._headers(key),
         body: JSON.stringify({
-          model: State.settings.model || 'claude-sonnet-4-6',
+          model: State.settings.model || 'claude-3-5-sonnet-20241022',
           max_tokens: 2048,
           stream: true,
           system: system || 'You are a helpful AI employee at Kayro Interactive.',
@@ -2655,9 +2655,15 @@ const Settings = {
         <div class="form-group">
           <label class="form-label">MODEL</label>
           <select class="form-select" id="s-model">
-            <option value="claude-sonnet-4-6" ${(!s.model||s.model==='claude-sonnet-4-6')?'selected':''}>Claude Sonnet 4.6 — smart, balanced ✦ recommended</option>
-            <option value="claude-haiku-4-5-20251001" ${s.model==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 — fastest, cheapest</option>
-            <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 — most powerful</option>
+            <optgroup label="── Claude 4 (newest) ──">
+              <option value="claude-sonnet-4-6" ${(!s.model||s.model==='claude-sonnet-4-6')?'selected':''}>Claude Sonnet 4.6 — smart, balanced ✦ recommended</option>
+              <option value="claude-haiku-4-5-20251001" ${s.model==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 — fastest, cheapest</option>
+              <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 — most powerful</option>
+            </optgroup>
+            <optgroup label="── Claude 3.5 (widely available) ──">
+              <option value="claude-3-5-sonnet-20241022" ${s.model==='claude-3-5-sonnet-20241022'?'selected':''}>Claude 3.5 Sonnet — reliable fallback</option>
+              <option value="claude-3-5-haiku-20241022" ${s.model==='claude-3-5-haiku-20241022'?'selected':''}>Claude 3.5 Haiku — fast fallback</option>
+            </optgroup>
           </select>
         </div>
         <div style="display:flex;gap:8px">
@@ -2705,10 +2711,48 @@ const Settings = {
     });
     document.getElementById('s-test-key').addEventListener('click',async()=>{
       const st=document.getElementById('s-key-status');
-      st.textContent='Testing…';st.style.color='var(--text2)';
-      const reply=await AI.once([{role:'user',content:'ping'}],'Reply with just "pong".');
-      if(reply.includes('⚠️')){st.textContent='❌ '+reply.split('\n')[0];st.style.color='var(--red,#ef4444)';}
-      else{st.textContent='✅ Connected! Response: '+reply;st.style.color='var(--green,#22c55e)';}
+      // Always read live from inputs — don't require Save first
+      const pk=(document.getElementById('s-platform-key').value||'').trim();
+      const k=(document.getElementById('s-apikey').value||'').trim();
+      const m=document.getElementById('s-model').value||'claude-haiku-4-5-20251001';
+      const testKey=pk||k;
+      if(!testKey){st.textContent='❌ Paste an API key above first';st.style.color='var(--red,#ef4444)';return;}
+      st.textContent='Testing connection…';st.style.color='var(--text2)';
+      try {
+        const res=await fetch('https://api.anthropic.com/v1/messages',{
+          method:'POST',
+          headers:{
+            'Content-Type':'application/json',
+            'x-api-key':testKey,
+            'anthropic-version':'2023-06-01',
+            'anthropic-dangerous-allow-browser':'true',
+          },
+          body:JSON.stringify({
+            model:m,
+            max_tokens:16,
+            messages:[{role:'user',content:'Reply with only the word: connected'}],
+          }),
+        });
+        if(res.ok){
+          st.textContent='✅ Connected! Key works — model: '+m;
+          st.style.color='var(--green,#22c55e)';
+        } else {
+          const body=await res.json().catch(()=>({}));
+          const msg=body?.error?.message||'Unknown';
+          if(res.status===401){st.textContent='❌ 401 Invalid key — check you copied it fully from console.anthropic.com';}
+          else if(res.status===403){st.textContent='❌ 403 No access to this model — try selecting Haiku 4.5 in the dropdown';}
+          else{st.textContent='❌ HTTP '+res.status+': '+msg;}
+          st.style.color='var(--red,#ef4444)';
+        }
+      } catch(e){
+        const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+        if(isSafari){
+          st.innerHTML='❌ Safari blocked it — <b>open this page in Chrome or Firefox</b> and it will work';
+        } else {
+          st.textContent='❌ Network error: '+(e.message||'Failed to reach api.anthropic.com — check your internet connection');
+        }
+        st.style.color='var(--red,#ef4444)';
+      }
     });
     document.getElementById('s-save-ej').addEventListener('click',()=>{
       State.settings.ejServiceId=document.getElementById('s-ejsvc').value.trim();
