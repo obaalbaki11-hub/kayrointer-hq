@@ -9,6 +9,15 @@ const SKIN   = [0xf5c285,0xe8b070,0xf2bf78,0xeab86e,0xf0b268,0xebba72,0xf3c182,0
 const COLS   = ['todo','inprogress','review','done'];
 const COL_LABELS = {todo:'TO DO',inprogress:'IN PROGRESS',review:'REVIEW',done:'DONE'};
 
+const BRAIN_CATEGORIES = {
+  business: { label:'Business',  emoji:'🏢', color:'#3b82f6' },
+  market:   { label:'Market',    emoji:'📈', color:'#f59e0b' },
+  product:  { label:'Product',   emoji:'🛠️', color:'#a855f7' },
+  customer: { label:'Customer',  emoji:'👤', color:'#06b6d4' },
+  team:     { label:'Team',      emoji:'👥', color:'#22c55e' },
+  process:  { label:'Process',   emoji:'⚡', color:'#f97316' },
+};
+
 const DEFAULT_EMPLOYEES = [
   {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product. You are the strategic brain of the company — obsessed with users, shipping, and cutting through ambiguity fast.
@@ -136,12 +145,13 @@ const State = {
   ],
   chatHistory: {},
   memory: {},   // empId → [{fact, timestamp, empName}]
+  brain: { facts: [] }, // [{id, text, category, source, sourceAgent, sourceEmpId, timestamp}]
   designs: [],  // [{id, title, prompt, html, empId, timestamp}]
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
 function loadState() {
-  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs'];
+  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -151,6 +161,7 @@ function loadState() {
   if (!State.employees.length) State.employees = JSON.parse(JSON.stringify(DEFAULT_EMPLOYEES));
   if (!State.memory) State.memory = {};
   if (!State.designs) State.designs = [];
+  if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
 }
 
 let _saveTm = {};
@@ -267,18 +278,153 @@ const AI = {
   },
 };
 
+// ── AUTH ──────────────────────────────────────────────────────
+const Auth = {
+  user: null,
+
+  init() {
+    // Restore stored user (demo/guest mode)
+    const stored = localStorage.getItem('kayro_auth_user');
+    if (stored) {
+      try { Auth.user = JSON.parse(stored); } catch(_) {}
+    }
+    if (Auth.user) { Auth._hideOverlay(); Auth._renderUserArea(); return; }
+
+    // Try Firebase if config present
+    const cfg = State.settings.firebaseConfig;
+    if (cfg && cfg.apiKey) {
+      Auth._initFirebase(cfg);
+    } else {
+      Auth._showOverlay();
+    }
+
+    document.getElementById('auth-google-btn').addEventListener('click', Auth.signInGoogle);
+    document.getElementById('auth-signin-btn').addEventListener('click', Auth.signInEmail);
+    document.getElementById('auth-signup-btn').addEventListener('click', Auth.signUpEmail);
+    document.getElementById('auth-guest-btn').addEventListener('click', Auth.continueAsGuest);
+    document.getElementById('auth-password').addEventListener('keydown', e => { if(e.key==='Enter') Auth.signInEmail(); });
+  },
+
+  _initFirebase(cfg) {
+    const script1 = document.createElement('script');
+    script1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+    script1.onload = () => {
+      const script2 = document.createElement('script');
+      script2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+      script2.onload = () => {
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(cfg);
+          firebase.auth().onAuthStateChanged(user => {
+            if (user) {
+              Auth.user = { uid:user.uid, name:user.displayName||user.email.split('@')[0], email:user.email, photoURL:user.photoURL, isGuest:false };
+              localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+              Auth._hideOverlay();
+              Auth._renderUserArea();
+            } else {
+              Auth._showOverlay();
+            }
+          });
+        } catch(e) { Auth._showOverlay(); }
+      };
+      document.head.appendChild(script2);
+    };
+    document.head.appendChild(script1);
+  },
+
+  async signInGoogle() {
+    const cfg = State.settings.firebaseConfig;
+    if (!cfg || !cfg.apiKey) {
+      Auth._showError('Add your Firebase config in Settings → Firebase first.');
+      return;
+    }
+    try {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      await firebase.auth().signInWithPopup(provider);
+    } catch(e) { Auth._showError(e.message); }
+  },
+
+  signInEmail() {
+    const email = (document.getElementById('auth-email').value||'').trim();
+    const pass  = document.getElementById('auth-password').value;
+    if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
+    const cfg = State.settings.firebaseConfig;
+    if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
+      firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
+    } else {
+      // Demo mode: accept any creds
+      Auth.user = { uid:'demo_'+email, name:email.split('@')[0], email, photoURL:null, isGuest:false };
+      localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+      Auth._hideOverlay();
+      Auth._renderUserArea();
+    }
+  },
+
+  signUpEmail() {
+    const email = (document.getElementById('auth-email').value||'').trim();
+    const pass  = document.getElementById('auth-password').value;
+    if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
+    const cfg = State.settings.firebaseConfig;
+    if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
+      firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
+    } else {
+      Auth.signInEmail();
+    }
+  },
+
+  continueAsGuest() {
+    Auth.user = { uid:'guest', name:'Guest', email:null, photoURL:null, isGuest:true };
+    localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+    Auth._hideOverlay();
+    Auth._renderUserArea();
+  },
+
+  signOut() {
+    Auth.user = null;
+    localStorage.removeItem('kayro_auth_user');
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+      firebase.auth().signOut().catch(()=>{});
+    }
+    Auth._clearUserArea();
+    Auth._showOverlay();
+  },
+
+  _showOverlay() { document.getElementById('auth-overlay').classList.add('open'); },
+  _hideOverlay() { document.getElementById('auth-overlay').classList.remove('open'); },
+  _showError(msg) {
+    const el = document.getElementById('auth-error');
+    if (el) { el.textContent = msg; el.style.display = 'block'; }
+  },
+
+  _renderUserArea() {
+    const u = Auth.user;
+    if (!u) return;
+    const area = document.getElementById('auth-user-area');
+    if (!area) return;
+    area.innerHTML = `
+      ${u.photoURL ? `<img src="${escHtml(u.photoURL)}" class="auth-av" alt="">` : `<div class="auth-av-init">${escHtml(u.name[0].toUpperCase())}</div>`}
+      <span class="auth-user-name">${escHtml(u.isGuest ? 'Guest' : u.name)}</span>
+      <button class="auth-signout-btn" id="auth-signout-btn">${u.isGuest ? 'Sign In' : 'Sign Out'}</button>`;
+    document.getElementById('auth-signout-btn').addEventListener('click', Auth.signOut);
+  },
+
+  _clearUserArea() {
+    const area = document.getElementById('auth-user-area');
+    if (area) area.innerHTML = '';
+  },
+};
+
 // ── ROUTER ────────────────────────────────────────────────────
 const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, employees:Employees, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',employees:'Employees',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -416,6 +562,7 @@ const Chat = {
     const teammates = State.employees.filter(e => e.id !== emp.id);
     const allActive = State.tasks.filter(t => t.column !== 'done');
     const memories  = (State.memory[emp.id] || []).slice(-12);
+    const brainFacts = (State.brain?.facts || []).slice(-20);
     return `${emp.system.replace(/Kayro Interactive/g, company)}
 
 ══ LIVE WORKSPACE ══
@@ -428,6 +575,7 @@ ${active.length ? active.map(t=>`  • [${t.column.toUpperCase()}] ${t.title}${t
 
 All team tasks: ${allActive.length} active across ${State.employees.length} employees
 ══════════════════
+${brainFacts.length ? `\n📚 COMPANY KNOWLEDGE BASE:\n${brainFacts.map(f=>`  [${(BRAIN_CATEGORIES[f.category]||{emoji:'•'}).emoji} ${f.category||'general'}] ${f.text}`).join('\n')}\n══════════════════` : ''}
 ${memories.length ? `\n🧠 YOUR MEMORY (things you've learned about this company/user):\n${memories.map(m=>`  • ${m.fact}`).join('\n')}\n══════════════════` : ''}
 
 RULES:
@@ -1785,6 +1933,15 @@ const Settings = {
         <div class="form-group"><label class="form-label">PUBLIC KEY</label><input class="form-input" id="s-ejkey" value="${escHtml(s.ejPublicKey||'')}" placeholder="public_key_xxxxx"></div>
         <button class="btn btn-primary" id="s-save-ej">Save EmailJS Config</button>
       </div>
+      <div class="s-card full">
+        <div class="s-card-title">🔐 Firebase Auth (Optional)</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect Firebase to enable Google Sign-In and persistent accounts. Create a free project at <span style="color:var(--accent)">console.firebase.google.com</span> → Authentication → enable Google provider → Project Settings → copy config.</p>
+        <div class="form-group"><label class="form-label">API KEY</label><input class="form-input" id="s-fb-apikey" placeholder="AIzaSy..." value="${escHtml((s.firebaseConfig?.apiKey)||'')}"></div>
+        <div class="form-group"><label class="form-label">AUTH DOMAIN</label><input class="form-input" id="s-fb-domain" placeholder="your-app.firebaseapp.com" value="${escHtml((s.firebaseConfig?.authDomain)||'')}"></div>
+        <div class="form-group"><label class="form-label">PROJECT ID</label><input class="form-input" id="s-fb-project" placeholder="your-project-id" value="${escHtml((s.firebaseConfig?.projectId)||'')}"></div>
+        <div class="form-group"><label class="form-label">APP ID</label><input class="form-input" id="s-fb-appid" placeholder="1:123456789:web:..." value="${escHtml((s.firebaseConfig?.appId)||'')}"></div>
+        <button class="btn btn-primary" id="s-save-fb">Save Firebase Config</button>
+      </div>
       <div class="s-card full danger-zone">
         <div class="danger-title">⚠️ Danger Zone</div>
         <div class="danger-desc">Reset all data including employees, tasks, sheets, and chat history. This cannot be undone.</div>
@@ -1816,9 +1973,23 @@ const Settings = {
       State.settings.ejPublicKey=document.getElementById('s-ejkey').value.trim();
       save('settings');toast('EmailJS config saved','success');
     });
+    document.getElementById('s-save-fb').addEventListener('click',()=>{
+      const apiKey    = document.getElementById('s-fb-apikey').value.trim();
+      const authDomain= document.getElementById('s-fb-domain').value.trim();
+      const projectId = document.getElementById('s-fb-project').value.trim();
+      const appId     = document.getElementById('s-fb-appid').value.trim();
+      if (apiKey && authDomain && projectId && appId) {
+        State.settings.firebaseConfig = { apiKey, authDomain, projectId, appId };
+      } else {
+        delete State.settings.firebaseConfig;
+      }
+      save('settings');
+      toast('Firebase config saved — reload to activate','success');
+    });
     document.getElementById('s-reset').addEventListener('click',()=>{
       if(!confirm('Reset ALL data? This cannot be undone.'))return;
-      ['employees','tasks','workbook','contacts','chatHistory','settings'].forEach(k=>localStorage.removeItem('kayro_'+k));
+      ['employees','tasks','workbook','contacts','chatHistory','settings','brain','memory'].forEach(k=>localStorage.removeItem('kayro_'+k));
+      localStorage.removeItem('kayro_auth_user');
       location.reload();
     });
   },
@@ -1971,68 +2142,243 @@ const DesignStudio = {
 };
 
 // ══════════════════════════════════════════════════════════════
-//  PAGE: BRAIN (Memory)
+//  PAGE: BRAIN (Knowledge Base)
 // ══════════════════════════════════════════════════════════════
 const BrainPage = {
+  _filterCat: 'all',
+  _searchQ: '',
+
   init(container) {
-    document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn primary" id="brain-feed-btn">📥 Feed the Brain</button>
+      <button class="tb-btn" id="brain-add-btn">+ Add Fact</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
+    document.getElementById('brain-add-btn').addEventListener('click',()=>BrainPage._openAddFact());
+    document.getElementById('brain-feed-btn').addEventListener('click',()=>BrainPage._openFeed());
     container.innerHTML = `<div class="page-scroll" id="brain-page">
-      <div class="section-hdr">
+      <div class="brain-header">
         <div>
-          <div class="section-title">Brain</div>
-          <div class="section-sub">Everything your AI team has learned and remembered. Edit or clear memories per employee.</div>
+          <div class="section-title">Company Brain</div>
+          <div class="section-sub">Your team's collective intelligence. Feed it content, and every AI employee will know it.</div>
         </div>
-        <button class="btn" id="brain-clear-all" style="color:var(--danger)">Clear All Memory</button>
+        <div class="brain-stats" id="brain-stats"></div>
       </div>
-      <div id="brain-grid"></div>
+      <div class="brain-controls">
+        <input class="brain-search" id="brain-search" type="text" placeholder="🔍  Search knowledge base…">
+        <div class="brain-cat-tabs" id="brain-cat-tabs"></div>
+      </div>
+      <div id="brain-facts-grid"></div>
     </div>`;
-    document.getElementById('brain-clear-all').addEventListener('click',()=>{
-      if(confirm('Clear ALL memories for all employees?')){ State.memory={}; save('memory'); BrainPage._render(); toast('Memory cleared','success'); }
+    document.getElementById('brain-search').addEventListener('input', e => {
+      BrainPage._searchQ = e.target.value.trim().toLowerCase();
+      BrainPage._renderFacts();
     });
-    BrainPage._render();
+    BrainPage._filterCat = 'all';
+    BrainPage._searchQ = '';
+    BrainPage._renderTabs();
+    BrainPage._renderFacts();
+    BrainPage._renderStats();
+    // Migrate old memory entries into brain on first visit
+    BrainPage._migrateMemory();
   },
 
-  _render() {
-    const grid = document.getElementById('brain-grid'); if(!grid) return;
-    const emps = State.employees.filter(e=>State.memory[e.id]?.length);
-    if (!emps.length) {
-      grid.innerHTML = `<div class="empty-state">
-        <div class="empty-icon">🧠</div>
-        <div style="font-size:14px;color:var(--text2)">No memories yet</div>
-        <div class="empty-text">As you chat with your AI employees, they'll remember important facts about your business here.</div>
+  destroy() { BrainPage._filterCat = 'all'; BrainPage._searchQ = ''; },
+
+  _migrateMemory() {
+    if (State.brain._migrated) return;
+    const existing = new Set(State.brain.facts.map(f=>f.text));
+    let added = 0;
+    Object.entries(State.memory||{}).forEach(([empId, mems]) => {
+      const emp = getEmp(empId);
+      (mems||[]).forEach(m => {
+        if (m.fact && !existing.has(m.fact)) {
+          State.brain.facts.push({ id:uid(), text:m.fact, category:'business', source:'Memory', sourceAgent:emp?.name||'AI', sourceEmpId:empId, timestamp:m.timestamp||Date.now() });
+          existing.add(m.fact); added++;
+        }
+      });
+    });
+    State.brain._migrated = true;
+    if (added) { save('brain'); }
+  },
+
+  _renderStats() {
+    const el = document.getElementById('brain-stats'); if(!el) return;
+    const total = State.brain.facts.length;
+    const cats = Object.keys(BRAIN_CATEGORIES).map(k => {
+      const count = State.brain.facts.filter(f=>f.category===k).length;
+      return count ? `<span class="brain-stat-pill" style="background:${BRAIN_CATEGORIES[k].color}22;color:${BRAIN_CATEGORIES[k].color}">${BRAIN_CATEGORIES[k].emoji} ${count}</span>` : '';
+    }).filter(Boolean).join('');
+    el.innerHTML = `<span style="font-size:13px;color:var(--text2)">${total} fact${total!==1?'s':''} stored</span>${cats}`;
+  },
+
+  _renderTabs() {
+    const el = document.getElementById('brain-cat-tabs'); if(!el) return;
+    const all = [['all','All','🗂️','var(--accent)'], ...Object.entries(BRAIN_CATEGORIES).map(([k,v])=>[k,v.label,v.emoji,v.color])];
+    el.innerHTML = all.map(([k,label,emoji,color]) => {
+      const count = k==='all' ? State.brain.facts.length : State.brain.facts.filter(f=>f.category===k).length;
+      return `<button class="brain-tab${BrainPage._filterCat===k?' active':''}" data-cat="${k}" style="${BrainPage._filterCat===k?`background:${color}22;color:${color};border-color:${color}40`:''}">${emoji} ${label} <span class="brain-tab-count">${count}</span></button>`;
+    }).join('');
+    el.querySelectorAll('.brain-tab').forEach(btn=>btn.addEventListener('click',()=>{
+      BrainPage._filterCat = btn.dataset.cat;
+      BrainPage._renderTabs();
+      BrainPage._renderFacts();
+    }));
+  },
+
+  _renderFacts() {
+    const grid = document.getElementById('brain-facts-grid'); if(!grid) return;
+    let facts = State.brain.facts.slice().reverse();
+    if (BrainPage._filterCat !== 'all') facts = facts.filter(f=>f.category===BrainPage._filterCat);
+    if (BrainPage._searchQ) facts = facts.filter(f=>(f.text+f.source+f.sourceAgent).toLowerCase().includes(BrainPage._searchQ));
+    if (!facts.length) {
+      grid.innerHTML = `<div class="empty-state"><div class="empty-icon">🧠</div>
+        <div style="font-size:14px;color:var(--text2)">${BrainPage._searchQ||BrainPage._filterCat!=='all'?'No matching facts':'Brain is empty'}</div>
+        <div class="empty-text">${BrainPage._searchQ||BrainPage._filterCat!=='all'?'Try a different search or category.':'Click "📥 Feed the Brain" to extract knowledge from any content, or "+ Add Fact" to add manually.'}</div>
       </div>`; return;
     }
-    grid.innerHTML = `<div class="brain-grid">${emps.map(e=>{
-      const mems = (State.memory[e.id]||[]).slice().reverse();
-      return `<div class="brain-card">
-        <div class="brain-card-hdr">
-          <div class="emp-av" style="background:${e.color}22;color:${e.color};width:32px;height:32px;font-size:13px;flex-shrink:0">${e.name[0]}</div>
-          <div>
-            <div style="font-size:13px;font-weight:700;color:var(--text)">${e.name}</div>
-            <div style="font-size:11px;color:var(--text2)">${mems.length} memories</div>
-          </div>
-          <button class="btn btn-sm brain-clear-emp" data-eid="${e.id}" style="margin-left:auto;color:var(--danger);font-size:10px">Clear</button>
-        </div>
-        <div class="brain-memories">
-          ${mems.map((m,i)=>`
-            <div class="brain-mem" data-eid="${e.id}" data-idx="${State.memory[e.id].length-1-i}">
-              <div class="brain-mem-bullet" style="background:${e.color}"></div>
-              <div class="brain-mem-text">${escHtml(m.fact)}</div>
-              <button class="icon-btn brain-del-mem" data-eid="${e.id}" data-idx="${State.memory[e.id].length-1-i}" style="color:var(--text3);font-size:11px;flex-shrink:0">✕</button>
-            </div>`).join('')}
+    grid.innerHTML = `<div class="brain-facts-list">${facts.map(f=>{
+      const cat = BRAIN_CATEGORIES[f.category] || {emoji:'•',label:f.category||'general',color:'var(--text2)'};
+      const date = new Date(f.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'});
+      return `<div class="brain-fact-card" data-id="${f.id}">
+        <div class="brain-fact-cat-pill" style="background:${cat.color}18;color:${cat.color}">${cat.emoji} ${cat.label}</div>
+        <div class="brain-fact-text">${escHtml(f.text)}</div>
+        <div class="brain-fact-meta">
+          ${f.sourceEmpId?`<div class="brain-fact-av" style="background:${getEmp(f.sourceEmpId)?.color||'#3b82f6'}22;color:${getEmp(f.sourceEmpId)?.color||'#3b82f6'}">${(f.sourceAgent||'?')[0]}</div>`:''}
+          <span>${escHtml(f.source||'Manual')}${f.sourceAgent?' · '+escHtml(f.sourceAgent):''}</span>
+          <span style="margin-left:auto">${date}</span>
+          <button class="brain-fact-del icon-btn" data-id="${f.id}">✕</button>
         </div>
       </div>`;
     }).join('')}</div>`;
-    grid.querySelectorAll('.brain-clear-emp').forEach(btn=>btn.addEventListener('click',()=>{
-      State.memory[btn.dataset.eid]=[]; save('memory'); BrainPage._render(); toast('Memory cleared','success');
+    grid.querySelectorAll('.brain-fact-del').forEach(btn=>btn.addEventListener('click',e=>{
+      e.stopPropagation();
+      State.brain.facts = State.brain.facts.filter(f=>f.id!==btn.dataset.id);
+      save('brain');
+      BrainPage._renderTabs();
+      BrainPage._renderFacts();
+      BrainPage._renderStats();
     }));
-    grid.querySelectorAll('.brain-del-mem').forEach(btn=>btn.addEventListener('click',()=>{
-      const arr=State.memory[btn.dataset.eid]||[];
-      arr.splice(+btn.dataset.idx,1); State.memory[btn.dataset.eid]=arr; save('memory'); BrainPage._render();
+    grid.querySelectorAll('.brain-fact-card').forEach(card=>card.addEventListener('click',()=>{
+      const f = State.brain.facts.find(x=>x.id===card.dataset.id); if(!f) return;
+      BrainPage._openEditFact(f);
     }));
   },
-  destroy() {},
+
+  _openAddFact(prefill={}) {
+    const cats = Object.entries(BRAIN_CATEGORIES).map(([k,v])=>`<option value="${k}" ${prefill.category===k?'selected':''}>${v.emoji} ${v.label}</option>`).join('');
+    Modal.open('Add Knowledge', `
+      <div class="form-group"><label class="form-label">CATEGORY</label>
+        <select class="form-select" id="bf-cat"><option value="business">🏢 Business</option>${cats}</select>
+      </div>
+      <div class="form-group"><label class="form-label">FACT / KNOWLEDGE</label>
+        <textarea class="form-input" id="bf-text" rows="4" placeholder="e.g. Our target customer is B2B SaaS companies with 10-100 employees…" style="resize:vertical">${escHtml(prefill.text||'')}</textarea>
+      </div>
+      <div class="form-group"><label class="form-label">SOURCE (optional)</label>
+        <input class="form-input" id="bf-source" placeholder="e.g. Investor call, strategy doc…" value="${escHtml(prefill.source||'')}">
+      </div>
+      <div style="display:flex;gap:8px;margin-top:16px">
+        <button class="btn btn-primary" id="bf-save">Save to Brain</button>
+        <button class="btn" id="bf-cancel">Cancel</button>
+      </div>`, {
+      onOpen() {
+        document.getElementById('bf-save').addEventListener('click',()=>{
+          const text = (document.getElementById('bf-text').value||'').trim();
+          if (!text) { toast('Enter a fact first','error'); return; }
+          const fact = {
+            id: prefill.id || uid(),
+            text,
+            category: document.getElementById('bf-cat').value,
+            source: document.getElementById('bf-source').value.trim() || 'Manual',
+            sourceAgent: Auth.user?.name || 'You',
+            sourceEmpId: null,
+            timestamp: prefill.timestamp || Date.now(),
+          };
+          if (prefill.id) {
+            const idx = State.brain.facts.findIndex(f=>f.id===prefill.id);
+            if (idx>=0) State.brain.facts[idx] = fact;
+          } else {
+            State.brain.facts.push(fact);
+          }
+          save('brain');
+          Modal.close();
+          BrainPage._renderTabs();
+          BrainPage._renderFacts();
+          BrainPage._renderStats();
+          toast('Saved to Brain ✓','success');
+        });
+        document.getElementById('bf-cancel').addEventListener('click', Modal.close);
+        document.getElementById('bf-text').focus();
+      }
+    });
+  },
+
+  _openEditFact(f) {
+    BrainPage._openAddFact(f);
+  },
+
+  _openFeed() {
+    const emps = State.employees;
+    const empOpts = emps.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');
+    Modal.open('📥 Feed the Brain', `
+      <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Paste any content — a strategy doc, customer interview, market research, meeting notes — and AI will extract key facts into the knowledge base automatically.</p>
+      <div class="form-group"><label class="form-label">WHICH EMPLOYEE ANALYZES THIS?</label>
+        <select class="form-select" id="bfeed-emp">${empOpts}</select>
+      </div>
+      <div class="form-group"><label class="form-label">PASTE YOUR CONTENT</label>
+        <textarea class="form-input" id="bfeed-content" rows="10" placeholder="Paste emails, docs, notes, transcripts, research…" style="resize:vertical;font-size:12px;font-family:var(--mono)"></textarea>
+      </div>
+      <div id="bfeed-status" style="font-size:12px;color:var(--text2);min-height:20px"></div>
+      <div style="display:flex;gap:8px;margin-top:12px">
+        <button class="btn btn-primary" id="bfeed-extract">Extract Knowledge</button>
+        <button class="btn" id="bfeed-cancel">Cancel</button>
+      </div>`, {
+      onOpen() {
+        document.getElementById('bfeed-cancel').addEventListener('click', Modal.close);
+        document.getElementById('bfeed-extract').addEventListener('click', async()=>{
+          const content = (document.getElementById('bfeed-content').value||'').trim();
+          if (!content) { toast('Paste some content first','error'); return; }
+          const empId = document.getElementById('bfeed-emp').value;
+          const emp = getEmp(empId);
+          const btn = document.getElementById('bfeed-extract');
+          const status = document.getElementById('bfeed-status');
+          btn.disabled = true; btn.textContent = 'Extracting…';
+          status.textContent = 'Analyzing with ' + (emp?.name||'AI') + '…';
+          const cats = Object.entries(BRAIN_CATEGORIES).map(([k,v])=>`${k}: ${v.label}`).join(', ');
+          const system = `You are a knowledge extraction engine. Extract key facts, insights, and learnings from content and return them as JSON. Categories: ${cats}. Return ONLY valid JSON in this exact format: {"facts":[{"text":"concise fact","category":"business|market|product|customer|team|process"}]}. Extract 3-15 most important, actionable facts. Be specific and concrete.`;
+          const result = await AI.once([{role:'user',content:`Extract knowledge from this content:
+
+${content.slice(0,8000)}`}], system);
+          btn.disabled = false; btn.textContent = 'Extract Knowledge';
+          let parsed;
+          try {
+            const jsonMatch = result.match(/\{[\s\S]*\}/);
+            parsed = JSON.parse(jsonMatch ? jsonMatch[0] : result);
+          } catch(_) {
+            status.style.color='var(--danger)';
+            status.textContent = 'Could not parse AI response. Try again or add facts manually.';
+            return;
+          }
+          const facts = (parsed?.facts||[]).filter(f=>f?.text);
+          if (!facts.length) { status.textContent = 'No facts extracted. Try with more detailed content.'; return; }
+          const existing = new Set(State.brain.facts.map(f=>f.text));
+          let added = 0;
+          facts.forEach(f=>{
+            if (!existing.has(f.text)) {
+              State.brain.facts.push({ id:uid(), text:f.text, category:f.category||'business', source:'Feed the Brain', sourceAgent:emp?.name||'AI', sourceEmpId:empId, timestamp:Date.now() });
+              added++;
+            }
+          });
+          save('brain');
+          Modal.close();
+          BrainPage._renderTabs();
+          BrainPage._renderFacts();
+          BrainPage._renderStats();
+          toast(`Added ${added} fact${added!==1?'s':''} to Brain ✓`, 'success');
+        });
+      }
+    });
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -2041,6 +2387,7 @@ const BrainPage = {
 loadState();
 Chat.init();
 Settings.updateApiStatus();
+Auth.init();
 
 // Handle invite link
 (function handleInviteLink() {

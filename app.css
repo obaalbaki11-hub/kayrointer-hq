@@ -75,7 +75,8 @@ body{display:flex;background:var(--bg);color:var(--text);font-family:var(--font)
   display:flex;align-items:center;padding:0 20px;gap:12px;
   backdrop-filter:blur(10px);z-index:100;flex-shrink:0;
 }
-.topbar-title{font-size:14px;font-weight:600;color:var(--text);flex:1}
+.topbar-left{display:flex;align-items:center;flex:1;min-width:0}
+.topbar-title{font-size:14px;font-weight:600;color:var(--text)}
 .topbar-right{display:flex;align-items:center;gap:8px}
 .tb-btn{
   background:rgba(255,255,255,0.05);border:1px solid var(--border2);
@@ -771,12 +772,55 @@ td.editing .cell-editor{display:block}
 .skill-cmd-pill:hover{background:rgba(59,130,246,.18);border-color:rgba(59,130,246,.35);color:#90baf8}
 
 
-/* ── BRAIN PAGE ─────────────────────────────────────────────── */
-.brain-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;padding:0 24px 32px}
-.brain-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-.brain-card-hdr{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border)}
-.brain-memories{padding:10px 6px;max-height:360px;overflow-y:auto}
-.brain-mem{display:flex;align-items:flex-start;gap:8px;padding:6px 10px;border-radius:7px;transition:background .1s}
-.brain-mem:hover{background:rgba(255,255,255,.03)}
-.brain-mem-bullet{width:6px;height:6px;border-radius:50%;margin-top:5px;flex-shrink:0}
-.brain-mem-text{font-size:11.5px;color:var(--text2);line-height:1.6;flex:1}
+/* ── BRAIN PAGE (NEW) ────────────────────────────────────────── */
+.brain-header{display:flex;align-items:flex-start;justify-content:space-between;padding:24px 24px 0;gap:16px;flex-wrap:wrap}
+.brain-stats{display:flex;align-items:center;gap:6px;flex-wrap:wrap;padding-top:4px}
+.brain-stat-pill{font-size:11px;padding:3px 9px;border-radius:20px;font-weight:600}
+.brain-controls{padding:16px 24px;display:flex;flex-direction:column;gap:10px}
+.brain-search{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:10px 14px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.brain-search:focus{border-color:var(--accent)}
+.brain-cat-tabs{display:flex;gap:6px;flex-wrap:wrap}
+.brain-tab{font-size:11.5px;padding:5px 12px;border:1px solid var(--border);border-radius:20px;background:transparent;color:var(--text2);cursor:pointer;transition:all .15s;font-family:var(--sans);display:flex;align-items:center;gap:5px}
+.brain-tab:hover{background:rgba(255,255,255,.05);color:var(--text)}
+.brain-tab.active{font-weight:600}
+.brain-tab-count{font-size:10px;background:rgba(255,255,255,.1);padding:1px 5px;border-radius:10px}
+.brain-facts-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:12px;padding:0 24px 32px}
+.brain-fact-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;cursor:pointer;transition:all .15s;display:flex;flex-direction:column;gap:10px}
+.brain-fact-card:hover{border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.03)}
+.brain-fact-cat-pill{font-size:10px;padding:3px 9px;border-radius:20px;font-weight:600;width:fit-content}
+.brain-fact-text{font-size:13px;color:var(--text);line-height:1.6;flex:1}
+.brain-fact-meta{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text3)}
+.brain-fact-av{width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0}
+.brain-fact-del{opacity:0;transition:opacity .1s;color:var(--text3)!important;padding:2px 5px!important}
+.brain-fact-card:hover .brain-fact-del{opacity:1}
+
+/* ── AUTH OVERLAY ────────────────────────────────────────────── */
+.auth-overlay{position:fixed;inset:0;z-index:9999;background:radial-gradient(ellipse at 50% 0%, rgba(59,130,246,.12) 0%, var(--bg) 70%);display:none;align-items:center;justify-content:center;padding:24px}
+.auth-overlay.open{display:flex}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px 36px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,.5)}
+.auth-logo{font-size:32px;font-weight:900;letter-spacing:-1px;color:var(--text)}
+.auth-k{color:var(--accent)}
+.auth-wordmark-sub{font-size:9px;font-weight:700;letter-spacing:4px;color:var(--text3);margin-top:2px;margin-bottom:24px}
+.auth-headline{font-size:22px;font-weight:800;color:var(--text);line-height:1.3;margin-bottom:28px}
+.auth-body{display:flex;flex-direction:column;gap:10px}
+.auth-google-btn{display:flex;align-items:center;justify-content:center;gap:10px;padding:12px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-size:14px;font-weight:500;cursor:pointer;transition:all .15s;font-family:var(--sans)}
+.auth-google-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2)}
+.auth-divider{display:flex;align-items:center;gap:12px;color:var(--text3);font-size:11px}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.auth-input{width:100%;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:9px;padding:11px 14px;color:var(--text);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;box-sizing:border-box}
+.auth-input:focus{border-color:var(--accent)}
+.auth-error{font-size:12px;color:#ef4444;min-height:16px;display:none}
+.auth-btn-primary{flex:1;padding:11px;background:var(--accent);border:none;border-radius:9px;color:#fff;font-weight:700;font-size:14px;cursor:pointer;font-family:var(--sans);transition:opacity .15s}
+.auth-btn-primary:hover{opacity:.85}
+.auth-btn-secondary{flex:1;padding:11px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;color:var(--text);font-weight:600;font-size:14px;cursor:pointer;font-family:var(--sans);transition:all .15s}
+.auth-btn-secondary:hover{background:rgba(255,255,255,.1)}
+.auth-guest-btn{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;padding:4px;font-family:var(--sans);transition:color .15s;text-align:center}
+.auth-guest-btn:hover{color:var(--text2)}
+
+/* ── AUTH USER AREA (TOPBAR) ─────────────────────────────────── */
+.auth-user-area{display:flex;align-items:center;gap:8px;padding:0 16px;border-left:1px solid var(--border);flex-shrink:0}
+.auth-av{width:28px;height:28px;border-radius:50%;object-fit:cover}
+.auth-av-init{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:flex;align-items:center;justify-content:center}
+.auth-user-name{font-size:12px;font-weight:600;color:var(--text2)}
+.auth-signout-btn{font-size:11px;padding:4px 10px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:6px;color:var(--text3);cursor:pointer;font-family:var(--sans);transition:all .15s}
+.auth-signout-btn:hover{background:rgba(255,255,255,.1);color:var(--text)}
