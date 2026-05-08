@@ -860,3 +860,17 @@ td.editing .cell-editor{display:block}
 /* ── LIMIT WALL (chat) ────────────────────────────────────────── */
 .limit-bubble{background:rgba(239,68,68,.08)!important;border:1px solid rgba(239,68,68,.2)!important;color:var(--text)!important}
 .limit-bubble .limit-upgrade-btn{margin-top:8px;font-size:12px;padding:8px 16px}
+
+/* ── CLAUDE MANAGER CARD ─────────────────────────────────────── */
+.hq-manager-card{
+  grid-column: 1 / -1;
+  border-color:rgba(224,117,64,.25)!important;
+  background:linear-gradient(135deg,rgba(224,117,64,.05) 0%,var(--surface) 60%)!important;
+}
+.hq-manager-crown{
+  font-size:10px;font-weight:700;letter-spacing:.6px;
+  color:#e07540;padding:5px 14px;
+  border-bottom:1px solid rgba(224,117,64,.15);
+  background:rgba(224,117,64,.06);
+}
+@media(max-width:700px){.hq-manager-card{grid-column:auto}}

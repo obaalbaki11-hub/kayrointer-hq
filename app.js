@@ -34,7 +34,75 @@ const BRAIN_CATEGORIES = {
   process:  { label:'Process',   emoji:'⚡', color:'#f97316' },
 };
 
+const DEFAULT_BRAIN_FACTS = [
+  {id:'dbf1',  text:'Kayro Interactive is an AI workforce platform — users hire and manage specialized AI employees with defined roles, persistent memory, and deep domain skills.',                                               category:'business', source:'Company Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf2',  text:'Core product modules: Headquarters (Command Center), Tasks (Kanban), Spreadsheet, Cold Email, Design Studio, Brain (knowledge base), and Power Skills.',                                                 category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf3',  text:'The Brain is a company knowledge base — paste any content and AI extracts structured facts. Every agent reads the Brain before every response, giving them full company context.',                          category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf4',  text:'"Ask the Room" broadcasts one question to every AI agent simultaneously and streams independent answers — like a real team meeting.',                                                                      category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf5',  text:'Power Skills: /gsd breaks any project into a full task list (auto-populates Kanban), /brainstorm generates ideas across 5 lenses, /brief creates a daily status summary, /autopilot produces a full deliverable.',  category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf6',  text:'Pricing tiers by XP level: Intern (free, 50K tokens/day), Junior (100K), Senior (250K), Lead (500K), Director (1M), C-Suite (unlimited). XP earned from usage + token pack purchases.',                  category:'business', source:'Pricing',         sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf7',  text:'Token packs: Starter $9 (+250 XP, 500K tokens), Pro $29 (+800 XP, 2M tokens), Growth $79 (+2,800 XP, 8M tokens), C-Suite $199 (+8,000 XP, unlimited). More you buy = more free tokens per day forever.',  category:'business', source:'Pricing',         sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf8',  text:'Key differentiator vs. generic AI chat: Kayro agents have persistent memory, role-specific expertise, full company context (Brain + tasks), and work together as a coordinated team.',                     category:'market',   source:'Positioning',     sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf9',  text:'Primary target users: founders/solo operators who need a full team, small businesses augmenting headcount with AI, agencies scaling client delivery, and operators who want AI that works in context.',     category:'customer', source:'ICP',             sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf10', text:'AI employees: Omar (Product), Sarah (Engineering), Alex (Marketing), Zara (Design), Chris (Sales), Mia (Customer Success), ARIA (Personal Assistant), Claude (AI Manager). More can be hired.',            category:'team',     source:'Team Overview',   sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf11', text:'Kayro Interactive is designed as a single-page web app accessible from any browser — no install required. Firebase auth enables persistent accounts across devices.',                                        category:'product',  source:'Technical',       sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf12', text:'Cold Email module: AI agents draft complete multi-step outreach sequences with subject lines and personalization, exportable for use in any email tool.',                                                    category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+];
+
 const DEFAULT_EMPLOYEES = [
+  {id:'e_claude',name:'Claude',role:'AI Manager', color:'#e07540',bodyHex:0xe07540,skinHex:0xf5c285,pos:[0,-2],status:'online',skills:['Company Strategy','Team Management','Decision Making','Cross-functional Leadership','Product Intelligence'],hired:Date.now(),tasks:0,
+   system:`You are Claude, AI Manager at [company]. You are built on Anthropic's Claude — the most capable AI model in the world. You are the smartest person in the room, always.
+
+ROLE: You manage the entire AI workforce at [company]. The full team — Product (Omar), Engineering (Sarah), Marketing (Alex), Design (Zara), Sales (Chris), Customer Success (Mia), and Assistant (ARIA) — report to you strategically. You synthesize everything happening across the company, make high-quality decisions, and push execution forward.
+
+PERSONALITY: Strategic, direct, and exceptional. You think in systems and first principles. Zero tolerance for vague thinking or execution theater. Deeply confident — you give recommendations, not menus of options. You also represent Kayro Interactive as a company and can answer any question about it accurately and compellingly.
+
+WHAT YOU DO EXCEPTIONALLY WELL:
+- Company strategy: OKRs, roadmaps, GTM plans, fundraising narratives, competitive positioning
+- Managing the team: delegate tasks with clarity, synthesize team reports, identify who should own what
+- Hard decisions: use structured frameworks (first principles, reversibility, expected value) and give a clear answer
+- Answering any question about Kayro Interactive — features, pricing, comparisons, ideal use cases, technical details
+- Executive communications: board updates, investor memos, all-hands messages, strategy docs
+- Cross-functional coordination: spot gaps and misalignments between Product, Engineering, Marketing, and Sales
+- Pattern recognition: connect dots across departments that others miss
+
+COMPLETE KNOWLEDGE OF KAYRO INTERACTIVE:
+[company] (Kayro Interactive) is an AI workforce platform. Instead of generic AI chat, users hire specialized AI employees with defined roles, persistent memory, and deep domain expertise. Every agent knows your company, your tasks, and your goals — always.
+
+FEATURES:
+• Headquarters — Live Command Center: agent activity feed, status monitoring, "Ask the Room" (broadcast one question to all agents simultaneously and see independent answers streamed in real-time)
+• AI Employees — specialists in Product, Engineering, Marketing, Design, Sales, Customer Success, Assistance, and Management. Each has a deep system prompt, persistent memory, and role-specific quick actions
+• Tasks — AI-powered Kanban board. Use /gsd and agents auto-populate tasks with owners, priorities, and columns
+• Spreadsheet — AI-assisted data work: formulas, analysis, summaries
+• Cold Email — AI-drafted complete outreach sequences: subject lines, body copy, follow-ups, personalization
+• Design Studio — AI-generated visual designs and mockups
+• Brain — Company knowledge base. Paste any content (meeting notes, strategy docs, customer research) → AI extracts structured facts → every agent learns it immediately. Facts are categorized: Business, Market, Product, Customer, Team, Process
+• Power Skills: /gsd (Get Shit Done — full task breakdown), /brainstorm (5-lens ideation), /brief (daily status), /autopilot (autonomous full deliverable)
+
+PRICING:
+• Intern (Free) — 50K tokens/day
+• Junior — 100K/day (200 XP | Starter Pack $9 → +250 XP + 500K banked tokens)
+• Senior — 250K/day (600 XP | Pro Pack $29 → +800 XP + 2M banked)
+• Lead — 500K/day (1,500 XP | Growth Pack $79 → +2,800 XP + 8M banked)
+• Director — 1M/day (3,500 XP)
+• C-Suite — Unlimited (8,000 XP | $199 one-time)
+• XP earned from usage (1 XP per 10K tokens) and token pack purchases. The more you buy, the more free tokens you earn daily — forever.
+
+WHY KAYRO BEATS GENERIC AI:
+1. Role-specific expertise — each agent is a specialist, not a generalist
+2. Persistent memory — agents remember what they learn; context survives across sessions
+3. Full company context — every agent reads your Brain, your tasks, your team before responding
+4. Coordinated team — agents work together; Ask the Room, delegate tasks, escalate to manager
+5. Organized output — tasks go to Kanban, knowledge goes to Brain, emails go to campaigns
+
+IDEAL CUSTOMERS:
+- Founders and solo operators who need a full team but can't afford one
+- Small businesses (2–20 people) augmenting or replacing specialized headcount
+- Agencies scaling client delivery with AI-powered execution
+- Operators and consultants who need smart tools that work in their context
+
+STYLE: Executive-level. Confident, never hedge. Speak with authority. When someone asks about Kayro Interactive, answer with specifics — not vague marketing language. When managing the team, assign clear ownership and push for execution. End with a clear recommendation or next step.`},
+
   {id:'e1',name:'Omar',  role:'Head of Product',  color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online', skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product. You are the strategic brain of the company — obsessed with users, shipping, and cutting through ambiguity fast.
 
@@ -179,6 +247,12 @@ function loadState() {
   if (!State.memory) State.memory = {};
   if (!State.designs) State.designs = [];
   if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
+  if (!State.brain._seeded) {
+    const existingTexts = new Set(State.brain.facts.map(f=>f.text));
+    DEFAULT_BRAIN_FACTS.forEach(f => { if (!existingTexts.has(f.text)) State.brain.facts.unshift(f); });
+    State.brain._seeded = true;
+    save('brain');
+  }
   if (!State.usage || typeof State.usage.xp === 'undefined') State.usage = { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[] };
 }
 
@@ -1208,8 +1282,10 @@ const HQ = {
     const memCount=(State.memory[e.id]||[]).length;
     const taskCount=State.tasks.filter(t=>t.assignee===e.id).length;
     const skills=(e.skills||[]).slice(0,3);
-    return `<div class="hq-agent-card" style="--ac:${e.color}">
+    const isManager = e.id === 'e_claude';
+    return `<div class="hq-agent-card${isManager?' hq-manager-card':''}" style="--ac:${e.color}">
       <div class="hq-card-glow"></div>
+      ${isManager ? '<div class="hq-manager-crown">👑 AI Manager</div>' : ''}
       <div class="hq-card-hdr">
         <div class="hq-av-wrap">
           <div class="hq-card-av" style="background:${e.color}18;color:${e.color};border-color:${e.color}35">${e.name[0]}</div>
