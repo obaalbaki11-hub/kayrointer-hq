@@ -641,8 +641,8 @@ const HQ = {
         <div style="font-size:11px;font-weight:600;color:#666;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">OPEN TASKS</div>
         <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">${taskHtml}</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="Modal.close();Router.go('tasks')">Open Task Board</button>
-          <button class="btn" onclick="Modal.close();Router.go('employees')">Manage Team</button>
+          <button class="btn btn-primary" onclick="Modal.close();Router.navigate('tasks')">Open Task Board</button>
+          <button class="btn" onclick="Modal.close();Router.navigate('employees')">Manage Team</button>
           <button class="btn" onclick="Modal.close();document.getElementById('chat-toggle-btn').click()">Open Chat</button>
         </div>
       </div>`);
@@ -743,8 +743,8 @@ const HQ = {
     const W = root.clientWidth || window.innerWidth;
     const H = root.clientHeight || window.innerHeight - 50;
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x04060c);
-    scene.fog = new THREE.FogExp2(0x06080e, 0.018);
+    scene.background = new THREE.Color(0x0e0a06);
+    scene.fog = new THREE.FogExp2(0x1c1408, 0.004);
     const asp = W / H;
     const camera = new THREE.PerspectiveCamera(68, asp, 0.1, 200);
     camera.position.set(0, 1.7, 13);
@@ -756,32 +756,36 @@ const HQ = {
     renderer.physicallyCorrectLights = true;
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.55;
     renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;z-index:1';
     root.appendChild(renderer.domElement);
     HQ._renderer = renderer;
     HQ._renderer = renderer;
 
-    // ── SUITS LIGHTING: low ambient, dramatic warm point lights, high contrast ──
-    scene.add(new THREE.AmbientLight(0x2a1e0e, 1.0));   // very dim warm ambient — deep shadows
-    const sun = new THREE.DirectionalLight(0xfff0d8, 1.2); // weak key for shadow casting only
+    // ── SUITS LIGHTING: rich warm ambient + dramatic focused pools ──
+    scene.add(new THREE.AmbientLight(0x4a3418, 4.0));   // warm amber base — no more pitch black
+    const hemi = new THREE.HemisphereLight(0xfff4d8, 0x2a1c08, 2.5); scene.add(hemi); // sky→ground gradient
+    const sun = new THREE.DirectionalLight(0xfffbf0, 3.5);
     sun.position.set(20, 40, 10); sun.castShadow = true;
     sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, { left:-48, right:48, top:48, bottom:-48, near:.5, far:140 });
     scene.add(sun);
-    // Subtle bounce from window side — keeps walls from being totally black
-    const wbounce = new THREE.DirectionalLight(0x8090a0, 0.6);
+    // Strong bounce from window wall — city light streaming in
+    const wbounce = new THREE.DirectionalLight(0xa0b4cc, 2.2);
     wbounce.position.set(-18, 8, -20); scene.add(wbounce);
+    // Back-fill so far corners stay visible
+    const backfill = new THREE.DirectionalLight(0x8090a0, 1.0);
+    backfill.position.set(0, 6, 20); scene.add(backfill);
 
     function std(c, opts={}) {
       return new THREE.MeshStandardMaterial({ color:c, roughness:opts.r??0.85, metalness:opts.m??0.0, ...(opts.em?{emissive:new THREE.Color(opts.em),emissiveIntensity:opts.ei??1.0}:{}) });
     }
     // ── SUITS PALETTE ─────────────────────────────────────────
     const M = {
-      marble:  std(0xe8e2d8,{r:0.15,m:0.02}),   // polished marble lobby floor
-      carpet:  std(0x141820,{r:0.98}),            // deep charcoal exec carpet
-      carpetB: std(0x1a2238,{r:0.98}),            // navy carpet work zones
-      wallCrm: std(0xf0ede6,{r:0.88}),            // cream painted walls
+      marble:  std(0xece8e2,{r:0.05,m:0.22}),   // polished marble lobby floor — mirror-finish
+      carpet:  std(0x181c22,{r:0.96}),            // deep charcoal exec carpet
+      carpetB: std(0x16202e,{r:0.96}),            // navy carpet work zones
+      wallCrm: std(0xe0dbd0,{r:0.82}),            // warm cream painted walls
       dkWood:  std(0x2e1c0a,{r:0.55}),            // dark mahogany panel
       mdWood:  std(0x6a3e18,{r:0.60}),            // walnut desk surface
       ceoDesk: std(0x3a2212,{r:0.50}),            // CEO executive desk — dark walnut
@@ -791,15 +795,15 @@ const HQ = {
       leathBr: std(0x2e1608,{r:0.68}),            // dark brown leather
       gl:      std(0x7ab8d8,{r:0.04,m:0.08,em:0x44aacc,ei:0.2}), // tinted window glass
       glInt:   std(0x88c0e8,{r:0.02,m:0.05,em:0x66bbdd,ei:0.15}),// interior glass wall
-      ceil:    std(0xf4f2ee,{r:0.95}),            // white ceiling
-      cltWarm: std(0xffe4a0,{r:0.4,em:0xffcc60,ei:1.8}), // warm Edison panel
-      cltCool: std(0xf0f8ff,{r:0.4,em:0xe0f0ff,ei:1.2}), // cool work-zone panel
+      ceil:    std(0xf5f2ec,{r:0.92,em:0xfff8ec,ei:0.12}), // warm white ceiling with subtle bounce
+      cltWarm: std(0xffe8a0,{r:0.35,em:0xffcc50,ei:2.5}), // warm Edison panel — glowing
+      cltCool: std(0xf0f8ff,{r:0.35,em:0xdcefff,ei:1.8}), // cool work-zone panel — bright
       dt:      std(0xb8a080,{r:0.55}),            // regular desk — light oak
       de:      std(0x181818,{r:0.18,m:0.92}),     // black metal desk legs
       chair:   std(0x0e0e0c,{r:0.60}),            // black task chair
       chairBk: std(0x080808,{r:0.62}),            // chair back
-      mo:      std(0x0e0e14,{r:0.22,m:0.75}),     // monitor bezel
-      sc:      std(0x06101e,{r:0.08,em:0x1848a8,ei:2.0}), // monitor screen glow
+      mo:      std(0x0c0c12,{r:0.18,m:0.80}),     // monitor bezel — sleek
+      sc:      std(0x060e20,{r:0.06,em:0x1858cc,ei:3.5}), // monitor screen — bright blue glow
       sv:      std(0x181a20,{r:0.35,m:0.55}),     // server rack
       ledG:    std(0x00ee66,{r:0.3,em:0x00cc44,ei:2.5}), // green LED
       ledB:    std(0x3388ff,{r:0.3,em:0x1155dd,ei:2.5}), // blue LED
@@ -824,28 +828,34 @@ const HQ = {
 
     const OW=46, OD=32, WH=3.2, WT=.18;
 
-    // ── CEILING LIGHTS — focused Edison pools, Suits drama ─────
-    // Work zone: cool white overhead (tighter range, lower to floor)
+    // ── CEILING LIGHTS — warm Edison pools throughout ─────────
+    // Work zone: bright cool-white overhead
     [[-17,-10],[-10,-10],[-3,-10],[4,-10],
      [-17,-2], [-10,-2], [-3,-2],
      [-17,6],  [-10,6]].forEach(([x,z]) => {
       ab(0.5,.04,1.8,M.cltCool,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xeef4ff,3.0,12); pl.position.set(x,WH-.2,z); scene.add(pl);
+      const pl=new THREE.PointLight(0xeef6ff,6.0,18); pl.position.set(x,WH-.2,z); scene.add(pl);
     });
-    // CEO/exec zone: warm Edison amber — brighter, wider glow
+    // CEO/exec zone: warm amber Edison glow
     [[13,-10],[20,-10],[13,-3],[20,-3],[13,4]].forEach(([x,z]) => {
       ab(0.4,.04,1.6,M.cltWarm,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xffb84a,4.5,14); pl.position.set(x,WH-.25,z); scene.add(pl);
+      const pl=new THREE.PointLight(0xffb84a,9.0,20); pl.position.set(x,WH-.25,z); scene.add(pl);
     });
-    // CEO suite dedicated overhead — warm amber focus on desk
-    const ceoOH1=new THREE.PointLight(0xffa030,8.0,11); ceoOH1.position.set(18.5,WH-.3,-11); scene.add(ceoOH1);
-    const ceoOH2=new THREE.PointLight(0xff9020,5.0,9);  ceoOH2.position.set(14,WH-.3,-7);    scene.add(ceoOH2);
-    // CEO desk lamp (warm gold glow from desk level)
-    const deskLamp=new THREE.PointLight(0xffcc60,4.0,6); deskLamp.position.set(19.5,1.2,-11.5); scene.add(deskLamp);
-    // Lobby warm glow
-    const lobbyPL=new THREE.PointLight(0xffcc80,3.0,14); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
-    // Server room blue glow
-    const srvPL=new THREE.PointLight(0x2244ff,1.5,10); srvPL.position.set(-20,1.5,-14); scene.add(srvPL);
+    // CEO suite dedicated overhead — punchy warm focus
+    const ceoOH1=new THREE.PointLight(0xffa030,20.0,16); ceoOH1.position.set(18.5,WH-.3,-11); scene.add(ceoOH1);
+    const ceoOH2=new THREE.PointLight(0xff9828,14.0,14); ceoOH2.position.set(14,WH-.3,-7);    scene.add(ceoOH2);
+    const ceoOH3=new THREE.PointLight(0xffb040,12.0,14); ceoOH3.position.set(22,WH-.3,-5);    scene.add(ceoOH3);
+    // CEO desk lamp — warm gold at eye level, lines up with lamp model
+    const deskLamp=new THREE.PointLight(0xffcc60,9.0,8); deskLamp.position.set(17.1,1.4,-11.3); scene.add(deskLamp);
+    // Lobby — bright inviting entrance
+    const lobbyPL=new THREE.PointLight(0xffcc80,8.0,22); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
+    const lobbyPL2=new THREE.PointLight(0xffd890,5.0,16); lobbyPL2.position.set(-7,WH-.3,8); scene.add(lobbyPL2);
+    const lobbyPL3=new THREE.PointLight(0xffd890,5.0,16); lobbyPL3.position.set(7,WH-.3,8); scene.add(lobbyPL3);
+    // Center office fill — no dark corridors
+    const fillC=new THREE.PointLight(0xffe0b0,4.0,20); fillC.position.set(0,WH-.3,-2); scene.add(fillC);
+    const fillL=new THREE.PointLight(0xffe0b0,3.0,16); fillL.position.set(-12,WH-.3,2); scene.add(fillL);
+    // Server room blue glow — intense
+    const srvPL=new THREE.PointLight(0x2244ff,4.0,14); srvPL.position.set(-20,1.5,-14); scene.add(srvPL);
 
     // ── FLOOR ──────────────────────────────────────────────────
     ab(OW,.1,OD,M.marble, 0,-.05,0);  // polished marble base
@@ -1053,6 +1063,8 @@ const HQ = {
       ab(.94,.50,.05,M.sc,  18.2+dx,1.32,-12.16);
       ab(.07,.20,.07,M.chrome, 18.2+dx,.90,-12.1);
     });
+    // Monitor blue glow spilling onto face
+    const monGlow=new THREE.PointLight(0x2255cc,2.5,4); monGlow.position.set(18.2,1.32,-11.8); scene.add(monGlow);
     // Laptop / keyboard on desk
     ab(.68,.03,.44,M.mo, 18.8,.84,-11.1);
     ab(.58,.02,.36,std(0x101020,{r:0.15,em:0x102080,ei:0.8}), 18.8,.86,-11.1);
@@ -1426,7 +1438,7 @@ const HQ = {
           HQ._openWorkPanel();
         } else {
           const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
-          if (inCEO) { document.exitPointerLock(); Router.go('tasks'); }
+          if (inCEO) { document.exitPointerLock(); Router.navigate('tasks'); }
         }
       }
     };
@@ -1513,10 +1525,13 @@ const HQ = {
       if (!HQ._active) return;
       requestAnimationFrame(animate);
       t += 0.012;
+      // Subtle Edison lamp flicker — feels alive
+      deskLamp.intensity = 9.0 + Math.sin(t * 5.3) * 0.5 + Math.sin(t * 13.7) * 0.25;
+      ceoOH1.intensity   = 20.0 + Math.sin(t * 2.1) * 0.6;
 
       // Movement
       if (plocked) {
-        const spd = (keys['ShiftLeft'] || keys['ShiftRight']) ? 0.22 : 0.1;
+        const spd = (keys['ShiftLeft'] || keys['ShiftRight']) ? 0.32 : 0.15;
         fwdV.set(-Math.sin(yaw), 0, -Math.cos(yaw));
         rgtV.set(Math.cos(yaw), 0, -Math.sin(yaw));
         moveV.set(0, 0, 0);
