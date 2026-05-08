@@ -303,7 +303,30 @@ const Chat = {
     });
     inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,100)+'px';});
     Chat.renderTabs();
+    Chat._renderSkillsBar();
     if (State.employees.length) Chat.setEmp(State.employees[0].id, false);
+  },
+
+  _renderSkillsBar() {
+    const existing = document.getElementById('chat-skills-bar');
+    if (existing) existing.remove();
+    const bar = document.createElement('div');
+    bar.id = 'chat-skills-bar';
+    bar.className = 'chat-skills-bar';
+    bar.innerHTML = [
+      ['/gsd','Get Shit Done'],
+      ['/brainstorm','Brainstorm'],
+      ['/brief','Daily Brief'],
+      ['/autopilot','Autopilot'],
+    ].map(([cmd,label])=>`<button class="skill-cmd-pill" data-cmd="${cmd} " title="${label}">${cmd}</button>`).join('');
+    const msgs = document.getElementById('chat-messages');
+    if (msgs) msgs.parentNode.insertBefore(bar, msgs);
+    bar.querySelectorAll('.skill-cmd-pill').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById('chat-input');
+        if (inp) { inp.value = btn.dataset.cmd; inp.focus(); inp.style.height = 'auto'; }
+      });
+    });
   },
   toggle() {
     const panel = document.getElementById('chat-panel');
@@ -501,12 +524,109 @@ RULES:
     });
   },
 
+  // ── SKILLS — slash commands with specialized system prompts ─────
+  SKILLS: {
+    '/gsd': (args, emps) => `
+
+══ SKILL: GET SHIT DONE (GSD) ══
+Project: "${args||'what was just discussed'}"
+
+Act as a senior PM. Produce:
+1. Task breakdown — 6-10 specific, actionable tasks with clear titles
+2. For each task: Owner (pick from ${emps.map(e=>e.name+' — '+e.role).join(', ')}), Priority (🔴 High / 🟡 Medium / 🟢 Low), Effort (1-5 days)
+3. Dependencies and blockers between tasks
+4. START TODAY: the 3 tasks to kick off immediately for momentum
+
+Format as a clean list. Then at the end, for each task output one line:
+📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+════════════════════`,
+
+    '/brainstorm': (args) => `
+
+══ SKILL: BRAINSTORM MODE ══
+Topic: "${args||'the topic just discussed'}"
+
+Generate ideas across 5 distinct lenses — 3 ideas each:
+🔥 BOLD — unconventional, surprising, polarizing
+💰 REVENUE — highest business value, fastest to monetize
+👤 USER — starts from real user pain, highest empathy
+⚡ QUICK WIN — achievable this week with current resources
+🚀 10X — 10x bigger than what we'd normally attempt
+
+For each idea: one punchy sentence + one-line rationale.
+End with: ⭐ TOP PICK: [idea] — [why it wins over the rest]
+════════════════════`,
+
+    '/brief': () => `
+
+══ SKILL: DAILY BRIEF ══
+Generate a crisp morning brief:
+
+📊 TEAM STATUS — who is working on what, any blockers right now
+🔥 TOP 3 TODAY — the 3 most critical things to accomplish today
+⚠️ AT RISK — what's in danger of slipping this week
+💡 QUICK WINS — tasks we can close out fast for momentum
+📅 DEADLINES — time-sensitive items coming up
+
+Use actual task names and team member names. Keep it tight — like a 3-minute standup.
+End with: NEXT ACTION: [the single most important thing to do right now]
+════════════════════`,
+
+    '/autopilot': () => `
+
+══ SKILL: AUTOPILOT ══
+Work autonomously right now. No summaries — do the actual work:
+1. Pick your highest-impact active task
+2. Produce the complete deliverable (write the full email / code / doc / copy — not an outline)
+3. Flag what you need from others to stay unblocked
+4. List 2-3 concrete follow-up tasks to queue next
+
+Start immediately. The deliverable should be ready to use as-is.
+════════════════════`,
+  },
+
+  _getSkillInject(text) {
+    const emps = State.employees;
+    for (const [cmd, handler] of Object.entries(Chat.SKILLS)) {
+      if (text === cmd || text.startsWith(cmd + ' ') || text.startsWith(cmd + '\n')) {
+        const args = text.slice(cmd.length).trim();
+        return handler(args, emps);
+      }
+    }
+    return '';
+  },
+
+  _extractTasks(text) {
+    const lines = text.split('\n');
+    const taskLines = lines.filter(l => l.includes('📌 TASK:'));
+    if (!taskLines.length) return;
+    let created = 0;
+    taskLines.forEach(line => {
+      const tm = line.match(/📌 TASK:\s*([^|]+)/);
+      const om = line.match(/OWNER:\s*([^|]+)/);
+      const pm = line.match(/PRIORITY:\s*([^|]+)/i);
+      if (!tm) return;
+      const title = tm[1].trim();
+      if (!title || State.tasks.find(t => t.title === title)) return;
+      const ownerName = om?.[1].trim();
+      const prioRaw = pm?.[1].trim().toLowerCase()||'';
+      const assignee = State.employees.find(e => e.name === ownerName)?.id || State.employees[0]?.id;
+      const priority = prioRaw.includes('high')||prioRaw.includes('🔴') ? 'high'
+                     : prioRaw.includes('low')||prioRaw.includes('🟢') ? 'low' : 'medium';
+      State.tasks.push({id:'gsd_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),title,column:'todo',priority,assignee,created:Date.now(),tags:['gsd']});
+      created++;
+    });
+    if (created) { save('tasks'); toast(`✅ ${created} task${created>1?'s':''} added to board from /gsd`,'success',4000); }
+  },
+
   async send() {
     const inp = document.getElementById('chat-input');
     const text = inp.value.trim(); if(!text||!Chat.activeEmpId) return;
     const e = getEmp(Chat.activeEmpId); if(!e) return;
     inp.value = ''; inp.style.height = 'auto';
     Chat.addBubble(Chat.activeEmpId, e.name, e.color, text, true);
+    const skillInject = Chat._getSkillInject(text);
+    if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
     // typing indicator
     const msgs = document.getElementById('chat-messages');
     const typing = document.createElement('div');
@@ -516,13 +636,14 @@ RULES:
       <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
     msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
     const history = (State.chatHistory[Chat.activeEmpId]||[]).slice(-20);
+    const sysPrompt = Chat._buildSystemPrompt(e) + skillInject;
     let full = '';
     const bubble = document.createElement('div');
     bubble.className = 'msg';
     bubble.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
       <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble" id="stream-bubble" style="white-space:pre-wrap"></div></div>`;
     const tn = document.createTextNode('');
-    for await (const chunk of AI.stream(history, Chat._buildSystemPrompt(e))) {
+    for await (const chunk of AI.stream(history, sysPrompt)) {
       document.getElementById('chat-typing')?.remove();
       if (!bubble.isConnected) { msgs.appendChild(bubble); }
       tn.textContent += chunk; full += chunk;
@@ -535,1090 +656,337 @@ RULES:
     State.chatHistory[Chat.activeEmpId].push({role:'assistant',content:full});
     save_('chatHistory');
     Chat._extractMemories(Chat.activeEmpId, full);
+    Chat._extractTasks(full);
   }
 };
 function save_(k){save(k);}
 
 // ══════════════════════════════════════════════════════════════
-//  PAGE: HQ (3D Virtual Office)
+//  PAGE: HQ (Command Center)
 // ══════════════════════════════════════════════════════════════
 const HQ = {
-  _active: false,
-  _renderer: null,
   _clock: null,
-  _ceoDesk: null,
+  _simInterval: null,
+  _taskTimer: null,
+  _feedLog: [],
 
+  // ── GUEST MANAGEMENT ─────────────────────────────────────────
   _refreshGuests() {
     const guests = HQ._getGuests();
-    const el = document.getElementById('hq-guests');
+    const el = document.getElementById('hq-guests-sidebar');
     if (!el) return;
-    if (!guests.length) { el.innerHTML = ''; return; }
-    el.innerHTML = guests.map(g=>
+    el.innerHTML = guests.length ? guests.map(g=>
       `<div style="display:flex;align-items:center;gap:6px;padding:3px 0">
-        <div style="width:7px;height:7px;border-radius:50%;background:${g.color||'#22c55e'};flex-shrink:0"></div>
-        <span style="font-size:11px;color:#aaa;font-family:monospace;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(g.name)}</span>
+        <div style="width:7px;height:7px;border-radius:50%;background:${g.color||'#22c55e'}"></div>
+        <span style="font-size:11px;color:#aaa;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${escHtml(g.name)}</span>
         <span style="font-size:9px;color:#555">GUEST</span>
-      </div>`).join('');
+      </div>`).join('') : '';
   },
-
-  _getGuests() {
-    try { return JSON.parse(localStorage.getItem('kayro_guests')||'[]'); } catch{ return []; }
-  },
-
-  _saveGuests(guests) {
-    try { localStorage.setItem('kayro_guests', JSON.stringify(guests)); } catch{}
-  },
-
-  _openInvite() {
-    const company = State.settings.companyName || 'Kayro Interactive';
-    const guests = HQ._getGuests();
-    // Build invite URL with company config encoded
-    const config = btoa(JSON.stringify({
-      company,
-      employees: State.employees.map(e=>({id:e.id,name:e.name,role:e.role,color:e.color}))
-    })).replace(/=/g,'');
-    const baseUrl = window.location.href.split('?')[0].split('#')[0];
-    const inviteUrl = `${baseUrl}?invite=${config}`;
-
-    const guestHtml = guests.length
-      ? `<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:8px;font-family:monospace">GUESTS IN YOUR OFFICE</div>
-          ${guests.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:4px">
-            <div style="width:8px;height:8px;border-radius:50%;background:${g.color||'#22c55e'}"></div>
-            <span style="font-size:13px;color:#ccc;flex:1">${escHtml(g.name)}</span>
-            <button onclick="HQ._removeGuest(${i})" style="background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#555'">Remove</button>
-          </div>`).join('')}
-        </div>` : '';
-
-    Modal.open('Invite to Your Office', `
-      <div style="padding:4px 0">
-        ${guestHtml}
-        <div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">INVITE LINK</div>
-        <div style="display:flex;gap:8px;margin-bottom:12px">
-          <input id="invite-url-input" value="${escHtml(inviteUrl)}" readonly
-            style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:11px;color:#888;font-family:monospace;outline:none">
-          <button onclick="navigator.clipboard.writeText(document.getElementById('invite-url-input').value).then(()=>{this.textContent='Copied!';this.style.background='rgba(34,197,94,.2)';setTimeout(()=>{this.textContent='Copy';this.style.background=''},2000)})"
-            style="padding:10px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;font-family:sans-serif">Copy</button>
-        </div>
-        <div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:20px">Anyone with this link can access <b style="color:#888">${escHtml(company)} HQ</b> and chat with your AI employees. They get read-only access to your team — each conversation is private to them.</div>
-        <div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">ADD GUEST MANUALLY</div>
-        <div style="display:flex;gap:8px">
-          <input id="guest-name-inp" placeholder="Guest name" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;outline:none;font-family:sans-serif">
-          <button onclick="HQ._addGuest();Modal.close();HQ._openInvite()" style="padding:10px 18px;background:#fff;color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;font-family:sans-serif">Add</button>
-        </div>
-      </div>`);
-  },
-
+  _getGuests() { try{return JSON.parse(localStorage.getItem('kayro_guests')||'[]');}catch{return [];} },
+  _saveGuests(g) { try{localStorage.setItem('kayro_guests',JSON.stringify(g));}catch{} },
   _addGuest() {
-    const inp = document.getElementById('guest-name-inp');
-    if (!inp || !inp.value.trim()) return;
-    const guests = HQ._getGuests();
-    const colors = ['#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444','#f97316'];
-    guests.push({ name: inp.value.trim(), color: colors[guests.length % colors.length], joined: Date.now() });
-    HQ._saveGuests(guests);
-    HQ._refreshGuests();
-    toast(`${inp.value.trim()} added to the office`, 'success');
+    const inp=document.getElementById('guest-name-inp');
+    if(!inp||!inp.value.trim())return;
+    const guests=HQ._getGuests();
+    const colors=['#22c55e','#f59e0b','#a855f7','#06b6d4','#ef4444','#f97316'];
+    guests.push({name:inp.value.trim(),color:colors[guests.length%colors.length],joined:Date.now()});
+    HQ._saveGuests(guests); HQ._refreshGuests();
+    toast(inp.value.trim()+' added to the office','success');
   },
-
   _removeGuest(i) {
-    const guests = HQ._getGuests();
-    guests.splice(i, 1);
-    HQ._saveGuests(guests);
-    HQ._refreshGuests();
-    Modal.close();
+    const guests=HQ._getGuests(); guests.splice(i,1); HQ._saveGuests(guests); Modal.close();
+  },
+  _openInvite() {
+    const company=State.settings.companyName||'Kayro Interactive';
+    const guests=HQ._getGuests();
+    const config=btoa(JSON.stringify({company,employees:State.employees.map(e=>({id:e.id,name:e.name,role:e.role,color:e.color}))})).replace(/=/g,'');
+    const baseUrl=window.location.href.split('?')[0].split('#')[0];
+    const inviteUrl=`${baseUrl}?invite=${config}`;
+    const guestHtml=guests.length?`<div style="margin-bottom:16px"><div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:8px;font-family:monospace">GUESTS</div>${guests.map((g,i)=>`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:rgba(255,255,255,.03);border-radius:7px;margin-bottom:4px"><div style="width:8px;height:8px;border-radius:50%;background:${g.color||'#22c55e'}"></div><span style="font-size:13px;color:#ccc;flex:1">${escHtml(g.name)}</span><button onclick="HQ._removeGuest(${i})" style="background:none;border:none;color:#555;cursor:pointer;font-size:11px;padding:2px 6px;border-radius:4px">Remove</button></div>`).join('')}</div>`:'';
+    Modal.open('Invite to Your Office',`<div style="padding:4px 0">${guestHtml}<div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">INVITE LINK</div><div style="display:flex;gap:8px;margin-bottom:12px"><input id="invite-url-input" value="${escHtml(inviteUrl)}" readonly style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:11px;color:#888;font-family:monospace;outline:none"><button onclick="navigator.clipboard.writeText(document.getElementById('invite-url-input').value).then(()=>{this.textContent='Copied!';this.style.background='rgba(34,197,94,.2)';setTimeout(()=>{this.textContent='Copy';this.style.background=''},2000)})" style="padding:10px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:8px;color:#fff;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap">Copy</button></div><div style="font-size:12px;color:#555;line-height:1.7;margin-bottom:20px">Anyone with this link can access <b style="color:#888">${escHtml(company)} HQ</b> and chat with your AI employees.</div><div style="font-size:11px;font-weight:600;color:#555;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">ADD GUEST</div><div style="display:flex;gap:8px"><input id="guest-name-inp" placeholder="Guest name" style="flex:1;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:8px;padding:10px 12px;font-size:13px;color:#fff;outline:none"><button onclick="HQ._addGuest();Modal.close();HQ._openInvite()" style="padding:10px 18px;background:#fff;color:#000;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">Add</button></div></div>`);
   },
 
-  _openWorkPanel() {
-    const todoTasks = State.tasks.filter(t=>t.column==='todo'||t.column==='inprogress').slice(0,6);
-    const taskHtml = todoTasks.length
-      ? todoTasks.map(t=>`<div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid rgba(255,255,255,.07)"><div style="width:7px;height:7px;border-radius:50%;background:${t.column==='inprogress'?'#22c55e':'#f59e0b'};flex-shrink:0"></div><span style="font-size:13px;color:#e8e2d4;flex:1">${escHtml(t.title)}</span><span style="font-size:10px;color:#555;font-family:monospace;text-transform:uppercase">${t.column}</span></div>`).join('')
-      : '<div style="color:#555;font-size:13px;text-align:center;padding:20px">No open tasks — your team is on it.</div>';
-    Modal.open('Your Office', `
-      <div style="padding:4px 0">
-        <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;padding:16px;background:rgba(200,160,64,.06);border:1px solid rgba(200,160,64,.18);border-radius:10px">
-          <div style="font-size:28px">☕</div>
-          <div><div style="font-size:16px;font-weight:700;color:#f0e8d4">Good day, Omar</div><div style="font-size:12px;color:#888;margin-top:2px">${State.tasks.filter(t=>t.column!=='done').length} open tasks · ${State.employees.length} employees online</div></div>
-        </div>
-        <div style="font-size:11px;font-weight:600;color:#666;letter-spacing:1.5px;margin-bottom:10px;font-family:monospace">OPEN TASKS</div>
-        <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:20px">${taskHtml}</div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" onclick="Modal.close();Router.navigate('tasks')">Open Task Board</button>
-          <button class="btn" onclick="Modal.close();Router.navigate('employees')">Manage Team</button>
-          <button class="btn" onclick="Modal.close();document.getElementById('chat-toggle-btn').click()">Open Chat</button>
-        </div>
-      </div>`);
-  },
-
+  // ── LIFECYCLE ─────────────────────────────────────────────────
   init(container) {
-    container.innerHTML = '<div class="page-fill" id="hq-root"></div>';
-    const root = document.getElementById('hq-root');
-    if (window.THREE) { HQ._build(root); }
-    else {
-      const s = document.createElement('script');
-      s.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      s.onload = () => HQ._build(root);
-      document.head.appendChild(s);
-    }
+    HQ.render(container);
+    HQ._startClock();
+    HQ._startSim();
+    HQ._startTaskAssignment();
   },
 
   destroy() {
-    HQ._active = false;
     clearInterval(HQ._clock);
-    HQ._clock = null;
-    if (HQ._cleanup) { HQ._cleanup(); HQ._cleanup = null; }
-    if (document.pointerLockElement) { try { document.exitPointerLock(); } catch(e) {} }
-    if (HQ._renderer) {
-      HQ._renderer.dispose();
-      try { HQ._renderer.forceContextLoss(); } catch(e) {}
-    }
-    HQ._renderer = null;
+    clearInterval(HQ._simInterval);
+    clearTimeout(HQ._taskTimer);
+    HQ._feedLog = [];
   },
 
-  _build(root) {
-    HQ._active = true;
-    const emps = State.employees;
-    const statuses = emps.map(() => Math.random() > 0.4 ? 'working' : 'idle');
-    const getTaskLabel = (emp) => {
-      const t = State.tasks.find(t => t.assignee === emp.id && t.column === 'inprogress')
-             || State.tasks.find(t => t.assignee === emp.id && t.column !== 'done');
-      return t ? t.title : null;
+  _startClock() {
+    const DAYS=['SUN','MON','TUE','WED','THU','FRI','SAT'];
+    const MONTHS=['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+    const upd=()=>{
+      const n=new Date();
+      const cl=document.getElementById('hq-clock');
+      const dt=document.getElementById('hq-date');
+      if(cl) cl.textContent=String(n.getHours()).padStart(2,'0')+':'+String(n.getMinutes()).padStart(2,'0');
+      if(dt) dt.textContent=DAYS[n.getDay()]+' · '+MONTHS[n.getMonth()]+' '+n.getDate();
     };
+    upd(); HQ._clock=setInterval(upd,30000);
+  },
 
-    const company = State.settings.companyName || 'Kayro Interactive';
-    const activeTasks = State.tasks.filter(t=>t.column!=='done').length;
-    root.innerHTML = `
-      <div class="fp-enter" id="fp-enter">
-        <div class="fp-enter-logo">${company[0]||'K'}</div>
-        <div class="fp-enter-title">${company} HQ</div>
-        <div class="fp-enter-sub">${emps.length} employees online · ${activeTasks} active tasks</div>
-        <div class="fp-enter-keys">
-          <span class="fp-key">W A S D</span> Walk &nbsp;
-          <span class="fp-key">SHIFT</span> Run &nbsp;
-          <span class="fp-key">E</span> Talk to employee &nbsp;
-          <span class="fp-key">ESC</span> Pause
+  // ── COMMAND CENTER RENDER ─────────────────────────────────────
+  render(container) {
+    const emps=State.employees;
+    const company=State.settings.companyName||'Kayro Interactive';
+    const activeTasks=State.tasks.filter(t=>t.column!=='done').length;
+    const doneTasks=State.tasks.filter(t=>t.column==='done').length;
+    const memTotal=Object.values(State.memory||{}).reduce((s,a)=>s+(a?.length||0),0);
+
+    // topbar: add invite + brief buttons
+    document.getElementById('topbar-right').innerHTML=`
+      <button class="tb-btn" id="hq-tb-invite">🔗 Invite</button>
+      <button class="tb-btn" id="hq-tb-brief">📋 Brief</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('hq-tb-invite')?.addEventListener('click',()=>HQ._openInvite());
+    document.getElementById('hq-tb-brief')?.addEventListener('click',()=>{
+      const aria=State.employees.find(e=>e.role.includes('Assistant'))||State.employees[0];
+      if(!aria)return;
+      Chat.open(aria.id);
+      setTimeout(()=>{const inp=document.getElementById('chat-input');if(inp){inp.value='/brief';Chat.send();}},300);
+    });
+    document.getElementById('chat-toggle-btn')?.addEventListener('click',()=>Chat.toggle());
+
+    container.innerHTML=`<div class="hq-root page-scroll">
+
+      <!-- HEADER ROW -->
+      <div class="hq-header">
+        <div class="hq-company-block">
+          <div class="hq-company-av">${(company[0]||'K').toUpperCase()}</div>
+          <div>
+            <div class="hq-company-name">${escHtml(company)}</div>
+            <div class="hq-company-meta">AI Command Center &nbsp;·&nbsp; <span id="hq-clock">--:--</span> &nbsp;·&nbsp; <span id="hq-date">---</span></div>
+          </div>
         </div>
-        <div class="fp-enter-btn" id="fp-enter-btn">▶ Enter Office</div>
-      </div>
-
-      <div class="fp-crosshair" id="fp-crosshair">+</div>
-      <div class="fp-interact" id="fp-interact"></div>
-
-      <div class="fp-feed" id="fp-feed"></div>
-
-      <canvas id="fp-minimap" class="fp-minimap" width="130" height="86"></canvas>
-
-      <div class="sim-panel">
-        <div class="sim-time" id="hq-sp-clock">--:--</div>
-        <div class="sim-date" id="hq-sp-date">--</div>
-        <div class="sim-divider"></div>
-        <div class="sim-stat-row"><span class="sim-stat-lbl">ONLINE</span><span class="sim-stat-val">${emps.length}</span></div>
-        <div class="sim-stat-row"><span class="sim-stat-lbl">TASKS</span><span class="sim-stat-val">${activeTasks}</span></div>
-        <div class="sim-divider"></div>
-        <div id="hq-guests" style="margin-bottom:6px"></div>
-        <button class="sim-panel-btn" id="sp-invite-btn" style="margin-bottom:5px;background:rgba(200,160,64,.15);border-color:rgba(200,160,64,.3);color:#c8a040">INVITE</button>
-        <button class="sim-panel-btn" id="sp-board-btn">STANDUP</button>
-      </div>
-
-      <div class="sim-bottom">
-        <span class="sim-co">${company}</span>
-        <span class="sim-hint" id="fp-hint">Click ▶ Enter Office</span>
-      </div>
-      <div id="hq-ntags"></div>`;
-
-    // sp-board-btn listener set up in first-person controls block below
-
-    const updateClock = () => {
-      const n = new Date();
-      const DAYS = ['SUN','MON','TUE','WED','THU','FRI','SAT'];
-      const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
-      const cl = document.getElementById('hq-sp-clock');
-      const dt = document.getElementById('hq-sp-date');
-      if (cl) cl.textContent = String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
-      if (dt) dt.textContent = DAYS[n.getDay()] + ' · ' + MONTHS[n.getMonth()] + ' ' + n.getFullYear();
-    };
-    updateClock();
-    HQ._clock = setInterval(updateClock, 30000);
-
-    // THREE.JS SCENE
-    const THREE = window.THREE;
-    const W = root.clientWidth || window.innerWidth;
-    const H = root.clientHeight || window.innerHeight - 50;
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0e0a06);
-    scene.fog = new THREE.FogExp2(0x1c1408, 0.004);
-    const asp = W / H;
-    const camera = new THREE.PerspectiveCamera(68, asp, 0.1, 200);
-    camera.position.set(0, 1.7, 13);
-    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-    renderer.setSize(W, H);
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    renderer.physicallyCorrectLights = true;
-    renderer.outputEncoding = THREE.sRGBEncoding;
-    renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.55;
-    renderer.domElement.style.cssText = 'position:absolute;top:0;left:0;z-index:1';
-    root.appendChild(renderer.domElement);
-    HQ._renderer = renderer;
-    HQ._renderer = renderer;
-
-    // ── SUITS LIGHTING: rich warm ambient + dramatic focused pools ──
-    scene.add(new THREE.AmbientLight(0x4a3418, 4.0));   // warm amber base — no more pitch black
-    const hemi = new THREE.HemisphereLight(0xfff4d8, 0x2a1c08, 2.5); scene.add(hemi); // sky→ground gradient
-    const sun = new THREE.DirectionalLight(0xfffbf0, 3.5);
-    sun.position.set(20, 40, 10); sun.castShadow = true;
-    sun.shadow.mapSize.set(2048, 2048);
-    Object.assign(sun.shadow.camera, { left:-48, right:48, top:48, bottom:-48, near:.5, far:140 });
-    scene.add(sun);
-    // Strong bounce from window wall — city light streaming in
-    const wbounce = new THREE.DirectionalLight(0xa0b4cc, 2.2);
-    wbounce.position.set(-18, 8, -20); scene.add(wbounce);
-    // Back-fill so far corners stay visible
-    const backfill = new THREE.DirectionalLight(0x8090a0, 1.0);
-    backfill.position.set(0, 6, 20); scene.add(backfill);
-
-    function std(c, opts={}) {
-      return new THREE.MeshStandardMaterial({ color:c, roughness:opts.r??0.85, metalness:opts.m??0.0, ...(opts.em?{emissive:new THREE.Color(opts.em),emissiveIntensity:opts.ei??1.0}:{}) });
-    }
-    // ── SUITS PALETTE ─────────────────────────────────────────
-    const M = {
-      marble:  std(0xece8e2,{r:0.05,m:0.22}),   // polished marble lobby floor — mirror-finish
-      carpet:  std(0x181c22,{r:0.96}),            // deep charcoal exec carpet
-      carpetB: std(0x16202e,{r:0.96}),            // navy carpet work zones
-      wallCrm: std(0xe0dbd0,{r:0.82}),            // warm cream painted walls
-      dkWood:  std(0x2e1c0a,{r:0.55}),            // dark mahogany panel
-      mdWood:  std(0x6a3e18,{r:0.60}),            // walnut desk surface
-      ceoDesk: std(0x3a2212,{r:0.50}),            // CEO executive desk — dark walnut
-      brass:   std(0xc8a040,{r:0.25,m:0.75}),     // gold / brass trim
-      chrome:  std(0xc4c8cc,{r:0.12,m:0.92}),     // chrome / steel
-      leather: std(0x0c0c0a,{r:0.65}),            // black leather
-      leathBr: std(0x2e1608,{r:0.68}),            // dark brown leather
-      gl:      std(0x7ab8d8,{r:0.04,m:0.08,em:0x44aacc,ei:0.2}), // tinted window glass
-      glInt:   std(0x88c0e8,{r:0.02,m:0.05,em:0x66bbdd,ei:0.15}),// interior glass wall
-      ceil:    std(0xf5f2ec,{r:0.92,em:0xfff8ec,ei:0.12}), // warm white ceiling with subtle bounce
-      cltWarm: std(0xffe8a0,{r:0.35,em:0xffcc50,ei:2.5}), // warm Edison panel — glowing
-      cltCool: std(0xf0f8ff,{r:0.35,em:0xdcefff,ei:1.8}), // cool work-zone panel — bright
-      dt:      std(0xb8a080,{r:0.55}),            // regular desk — light oak
-      de:      std(0x181818,{r:0.18,m:0.92}),     // black metal desk legs
-      chair:   std(0x0e0e0c,{r:0.60}),            // black task chair
-      chairBk: std(0x080808,{r:0.62}),            // chair back
-      mo:      std(0x0c0c12,{r:0.18,m:0.80}),     // monitor bezel — sleek
-      sc:      std(0x060e20,{r:0.06,em:0x1858cc,ei:3.5}), // monitor screen — bright blue glow
-      sv:      std(0x181a20,{r:0.35,m:0.55}),     // server rack
-      ledG:    std(0x00ee66,{r:0.3,em:0x00cc44,ei:2.5}), // green LED
-      ledB:    std(0x3388ff,{r:0.3,em:0x1155dd,ei:2.5}), // blue LED
-      sofa:    std(0x0c0c0a,{r:0.70}),            // black leather sofa
-      sofaPil: std(0xc8a040,{r:0.55}),            // gold cushion accent
-      cnt:     std(0xdad4c8,{r:0.55,m:0.05}),     // stone counter
-      app:     std(0xd4d0cc,{r:0.18,m:0.72}),     // stainless appliance
-      wb:      std(0xf8f8f4,{r:0.88}),            // whiteboard
-      wbf:     std(0x181818,{r:0.28,m:0.72}),     // whiteboard metal frame
-      rug:     std(0x0a1020,{r:0.98}),            // deep navy area rug
-      rugRed:  std(0x5a1010,{r:0.98}),            // CEO red area rug
-      pp:      std(0x7a3010,{r:0.88}),            // dark terracotta pot
-      pl:      std(0x1a6e32,{r:0.78}),            // deep green plant
-      ct:      std(0x1c1208,{r:0.40,m:0.12}),     // dark walnut coffee table
-      trophy:  std(0xd4a020,{r:0.18,m:0.80}),     // gold trophy
-      pn:      std(0x060606,{r:0.82}),             // near-black pants / hair
-      namepl:  std(0xb89030,{r:0.20,m:0.80}),     // gold nameplate
-      frame:   std(0x100c08,{r:0.42,m:0.30}),     // dark picture frame
-    };
-    function ab(w,h,d,material,x,y,z,ry) { const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),material); m.position.set(x,y,z); if(ry) m.rotation.y=ry; m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
-    function cy(r,h,material,x,y,z,sg) { const m=new THREE.Mesh(new THREE.CylinderGeometry(r,r,h,sg||12),material); m.position.set(x,y,z); m.castShadow=true; m.receiveShadow=true; scene.add(m); return m; }
-
-    const OW=46, OD=32, WH=3.2, WT=.18;
-
-    // ── CEILING LIGHTS — warm Edison pools throughout ─────────
-    // Work zone: bright cool-white overhead
-    [[-17,-10],[-10,-10],[-3,-10],[4,-10],
-     [-17,-2], [-10,-2], [-3,-2],
-     [-17,6],  [-10,6]].forEach(([x,z]) => {
-      ab(0.5,.04,1.8,M.cltCool,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xeef6ff,6.0,18); pl.position.set(x,WH-.2,z); scene.add(pl);
-    });
-    // CEO/exec zone: warm amber Edison glow
-    [[13,-10],[20,-10],[13,-3],[20,-3],[13,4]].forEach(([x,z]) => {
-      ab(0.4,.04,1.6,M.cltWarm,x,WH-.01,z);
-      const pl=new THREE.PointLight(0xffb84a,9.0,20); pl.position.set(x,WH-.25,z); scene.add(pl);
-    });
-    // CEO suite dedicated overhead — punchy warm focus
-    const ceoOH1=new THREE.PointLight(0xffa030,20.0,16); ceoOH1.position.set(18.5,WH-.3,-11); scene.add(ceoOH1);
-    const ceoOH2=new THREE.PointLight(0xff9828,14.0,14); ceoOH2.position.set(14,WH-.3,-7);    scene.add(ceoOH2);
-    const ceoOH3=new THREE.PointLight(0xffb040,12.0,14); ceoOH3.position.set(22,WH-.3,-5);    scene.add(ceoOH3);
-    // CEO desk lamp — warm gold at eye level, lines up with lamp model
-    const deskLamp=new THREE.PointLight(0xffcc60,9.0,8); deskLamp.position.set(17.1,1.4,-11.3); scene.add(deskLamp);
-    // Lobby — bright inviting entrance
-    const lobbyPL=new THREE.PointLight(0xffcc80,8.0,22); lobbyPL.position.set(0,WH-.3,11); scene.add(lobbyPL);
-    const lobbyPL2=new THREE.PointLight(0xffd890,5.0,16); lobbyPL2.position.set(-7,WH-.3,8); scene.add(lobbyPL2);
-    const lobbyPL3=new THREE.PointLight(0xffd890,5.0,16); lobbyPL3.position.set(7,WH-.3,8); scene.add(lobbyPL3);
-    // Center office fill — no dark corridors
-    const fillC=new THREE.PointLight(0xffe0b0,4.0,20); fillC.position.set(0,WH-.3,-2); scene.add(fillC);
-    const fillL=new THREE.PointLight(0xffe0b0,3.0,16); fillL.position.set(-12,WH-.3,2); scene.add(fillL);
-    // Server room blue glow — intense
-    const srvPL=new THREE.PointLight(0x2244ff,4.0,14); srvPL.position.set(-20,1.5,-14); scene.add(srvPL);
-
-    // ── FLOOR ──────────────────────────────────────────────────
-    ab(OW,.1,OD,M.marble, 0,-.05,0);  // polished marble base
-    // Work-zone carpets
-    ab(28,.12,20,M.carpetB, -8,0,-2);      // engineering / design carpet
-    ab(12,.12,12,M.carpetB, 4,0,-10);      // meeting + center
-    // CEO suite plush carpet (very dark, luxury)
-    ab(15,.14,14,M.carpet, 17,0,-7);
-    // Lobby marble accent (keep marble, add rug)
-    ab(8,.12,6,M.rug, 0,.01,10);
-
-    // ── CEILING ────────────────────────────────────────────────
-    ab(OW,.14,OD,M.ceil, 0,WH+.07,0);
-    // Subtle ceiling grid (coffered look)
-    const cgrid=std(0xe0dcd6,{r:0.9});
-    for(let gx=-21;gx<=21;gx+=3.0) ab(0.06,.04,OD,cgrid,gx,WH+.01,0);
-    for(let gz=-15;gz<=15;gz+=3.0) ab(OW,.04,0.06,cgrid,0,WH+.01,gz);
-
-    // ══════════════════════════════════════════════════════════
-    //  NYC SKYLINE — visible through back windows, Suits night
-    // ══════════════════════════════════════════════════════════
-    const bldMat = std(0x050810,{r:0.95});
-    const winLit  = std(0xffcc88,{r:0.5,em:0xffaa44,ei:2.5});
-    const winDim  = std(0x334466,{r:0.5,em:0x223355,ei:0.8});
-    const winOff  = std(0x0a0e18,{r:0.9});
-    // City buildings [x, height, width, z_offset]
-    [[-24,22,5,-38],[-17,38,6,-44],[-10,28,5,-36],[-4,50,7,-48],
-     [4,32,5,-40],[10,42,6,-44],[17,25,5,-36],[23,18,4,-40],
-     [-28,14,4,-52],[-19,20,4,-50],[-8,16,3,-54],[0,24,5,-50],
-     [8,18,4,-52],[20,16,3,-48],[28,12,3,-54]].forEach(([x,h,w,zoff])=>{
-      const bx=new THREE.Mesh(new THREE.BoxGeometry(w,h,4),bldMat);
-      bx.position.set(x,h/2-5,zoff); scene.add(bx);
-      // Window grid on facade facing us
-      const cols=Math.floor(w/1.2), rows=Math.floor(h/1.8);
-      for(let r=0;r<rows;r++) for(let c=0;c<cols;c++){
-        const lit=Math.random();
-        const wm=new THREE.Mesh(new THREE.BoxGeometry(.45,.55,.1),
-          lit>.55?winLit:lit>.3?winDim:winOff);
-        wm.position.set(x-w/2+.7+c*1.2, h/2-5-h+1.4+r*1.8, zoff-1.9);
-        scene.add(wm);
-      }
-    });
-    // Ground plane for city (dark road reflection)
-    const cityGnd=new THREE.Mesh(new THREE.PlaneGeometry(200,80),
-      std(0x060810,{r:0.05,m:0.8}));
-    cityGnd.rotation.x=-Math.PI/2; cityGnd.position.set(0,-5,-55); scene.add(cityGnd);
-    // Moon / ambient sky glow
-    const moonGlow=new THREE.PointLight(0x3355aa,0.8,80);
-    moonGlow.position.set(-30,30,-50); scene.add(moonGlow);
-
-    // ── EXTERIOR WALLS + WINDOWS ───────────────────────────────
-    // Back wall solid sections (between windows)
-    ab(5,WH,WT,M.dkWood, -OW/2+2.5,WH/2,-OD/2);   // left end panel
-    ab(5,WH,WT,M.dkWood,  OW/2-2.5,WH/2,-OD/2);   // right end panel
-    ab(OW,.4,WT,M.dkWood, 0,WH-.2,-OD/2);           // top fascia strip
-    ab(OW,.5,WT,M.dkWood, 0,.25,-OD/2);             // sill base strip
-    // Giant floor-to-ceiling window panels — TRANSPARENT glass
-    const glWin=new THREE.MeshPhysicalMaterial ?
-      new THREE.MeshPhysicalMaterial({color:0x88ccee,roughness:0.02,metalness:0.05,
-        transparent:true,opacity:0.18,transmission:0.9,
-        envMapIntensity:1.0}) :
-      std(0x88ccee,{r:0.02,m:0.05,em:0x224466,ei:0.05});
-    [[-18],[-9],[0],[9],[18]].forEach(([x])=>{
-      const glM=new THREE.Mesh(new THREE.BoxGeometry(7.4,WH*.95,0.06),glWin);
-      glM.position.set(x,WH*.48,-OD/2+.04); scene.add(glM);
-      ab(7.6,.1,0.2,M.brass, x,WH-.08,-OD/2+.1);   // top frame brass
-      ab(7.6,.1,0.2,M.brass, x,0.05,-OD/2+.1);      // bottom frame
-      ab(.08,WH*.95,0.2,M.brass, x-3.8,WH*.48,-OD/2+.1); // left mullion
-      ab(.08,WH*.95,0.2,M.brass, x+3.8,WH*.48,-OD/2+.1); // right mullion
-    });
-    // Side walls
-    ab(WT,WH,OD,M.wallCrm, -OW/2,WH/2,0);   // left
-    ab(WT,WH,OD,M.wallCrm,  OW/2,WH/2,0);   // right
-    // Side windows on right wall (CEO light)
-    [[-OD/2+4,-8],[-OD/2+4,-2]].forEach(([_,z])=>{
-      ab(WT,2.0,4.5,M.gl, OW/2,WH*.55,z);
-    });
-    // Front walls
-    ab(10,WH,WT,M.wallCrm, -OW/2+5,WH/2,OD/2);
-    ab(10,WH,WT,M.wallCrm,  OW/2-5,WH/2,OD/2);
-    // Dark wood wainscoting on all walls (lower third)
-    [[OW,0,-OD/2],[OW,0,OD/2],[-OW/2,0,0,Math.PI/2],[OW/2,0,0,Math.PI/2]].forEach(([w,_,z,ry])=>{
-      const wm = ab(ry?OD:w,0.9,0.1,M.dkWood,ry?_:0,0.45,z); if(ry) wm.rotation.y=ry;
-    });
-
-    // ── INTERIOR PARTITIONS ────────────────────────────────────
-    // Server room (back-left)
-    ab(10,WH,WT,M.wallCrm, -OW/2+5,WH/2,-OD/2+5.5);
-    ab(WT,WH,5.5,M.wallCrm,-OW/2+10,WH/2,-OD/2+2.75);
-    // Meeting room glass walls (center)
-    ab(WT,WH,10,M.glInt, -1,WH/2,-4);
-    ab(WT,WH,10,M.glInt,  7,WH/2,-4);
-    ab(8,WH,WT,M.glInt, 3,WH/2,-9.0);
-    // ── CEO SUITE WALLS (back-right, enclosed) ─────────────────
-    ab(WT,WH,16,M.dkWood, 10,WH/2,-8);     // left wall of CEO suite
-    ab(14,WH,WT,M.dkWood, 17,WH/2,-0.1);   // front wall with door gap
-    // CEO suite glass strip (prestige look-in)
-    ab(WT,WH,5,M.glInt, 10,WH/2,-2.5);     // glass panel at front
-    // Kitchen half-wall
-    ab(10,1.5,WT,M.wallCrm, 16,0.75,OD/2-3);
-
-    // ── DESK + CHAIR FUNCTIONS ─────────────────────────────────
-    function desk(x,z,ry=0) {
-      const c=Math.cos(ry),s=Math.sin(ry);
-      // Surface (light oak)
-      ab(2.0,.08,.9,M.dt,x,.74,z,ry);
-      // Modesty panel
-      ab(1.6,.5,.04,M.dkWood,x,.5,z-c*.4,ry);
-      // Metal hairpin legs
-      [[.88,.38],[-.88,.38],[.88,-.38],[-.88,-.38]].forEach(([dx,dz])=>
-        ab(.04,.74,.04,M.de,x+dx*c-dz*s,.37,z+dx*s+dz*c));
-      // Monitor
-      ab(.86,.50,.07,M.mo,x,1.06,z-c*.30,ry);
-      ab(.76,.44,.04,M.sc,x,1.06,z-c*.28,ry);
-      ab(.05,.18,.05,M.chrome,x,.84,z-c*.22,ry);
-      // Keyboard + mouse pad
-      ab(.54,.02,.22,M.de,x,.76,z+c*.14,ry);
-      ab(.1,.02,.12,M.chrome,x+.34*c,.76,z+.34*s,ry);
-    }
-    function chair(x,z,ry=0) {
-      const c=Math.cos(ry),s=Math.sin(ry);
-      ab(.56,.12,.54,M.chair,x,.74,z);
-      ab(.56,.62,.08,M.chairBk,x,1.08,z-c*.30,ry);
-      // Armrests
-      [[.30,0],[-.30,0]].forEach(([dx])=>{
-        ab(.08,.04,.48,M.chrome,x+dx*c,.86,z+dx*s,ry);
-      });
-      // Gas cylinder + base
-      cy(.04,.74,M.chrome,x,.37,z,6);
-      for(let a=0;a<5;a++){const ag=a/5*Math.PI*2;ab(.32,.04,.07,M.chrome,x+Math.cos(ag)*.24,.04,z+Math.sin(ag)*.24,ag);}
-    }
-
-    // ── SERVER ROOM (back-left) ────────────────────────────────
-    const SX=-OW/2+2, SZ=-OD/2+2;
-    for(let col=0;col<4;col++) {
-      for(let rack=0;rack<3;rack++) {
-        ab(.58,2.3,.46,M.sv, SX+col*1.6+rack*.64,.02,SZ);
-        for(let j=0;j<9;j++) {
-          if(Math.random()>.35) {
-            const lm=rack%2===0?M.ledG:M.ledB;
-            ab(.07,.04,.04,lm, SX+col*1.6+rack*.64+.22,.1+j*.26,SZ-.24);
-          }
-        }
-      }
-      ab(2,.08,.5,M.dt, SX+col*1.6+.6,2.35,SZ);
-    }
-
-    // ── ENGINEERING WORKSPACE (left wing, 3 rows × 3 desks) ───
-    [[-19,-7],[-14,-7],[-9,-7],
-     [-19,-2],[-14,-2],[-9,-2],
-     [-19,3], [-14,3]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
-
-    // ── DESIGN AREA (center-left) ─────────────────────────────
-    [[-3,3],[-3,0]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
-    // Design whiteboard (engineering wall)
-    ab(3.2,1.5,.08,M.wb, -19,1.65,-OD/2+.1);
-    ab(3.4,1.7,.06,M.wbf, -19,1.65,-OD/2+.12);
-    // Second whiteboard
-    ab(2.6,1.3,.08,M.wb, -OW/2+.1,1.6,-3);
-    ab(2.8,1.5,.06,M.wbf, -OW/2+.12,1.6,-3);
-
-    // ── MEETING ROOM (center, behind glass) ───────────────────
-    ab(6,.08,1.8,M.dt, 3,.72,-4);
-    [3,-1.5,0,1.5,4.5,6].forEach(x=>cy(.07,.72,M.de,x,.36,-4));
-    for(let i=0;i<6;i++) {
-      ab(.52,.1,.52,M.chair, -1+i*1.2,.72,-5.4);
-      ab(.52,.58,.07,M.chairBk, -1+i*1.2,1.03,-5.72);
-      cy(.04,.72,M.de,-1+i*1.2,.36,-5.4,6);
-      ab(.52,.1,.52,M.chair, -1+i*1.2,.72,-2.6);
-      ab(.52,.58,.07,M.chairBk, -1+i*1.2,1.03,-2.28);
-      cy(.04,.72,M.de,-1+i*1.2,.36,-2.6,6);
-    }
-    ab(2.8,1.5,.08,M.mo, 3,1.72,-8.94);
-    ab(2.56,1.32,.06,M.sc, 3,1.72,-8.9);
-    ab(2.2,1.1,.08,M.wb, 3,1.55,.1);
-    ab(2.4,1.3,.06,M.wbf, 3,1.55,.12);
-    // Meeting room rug
-    ab(9,.04,8,M.rug, 3,.04,-4);
-
-    // ══════════════════════════════════════════════════════════
-    //  OMAR'S CEO SUITE — back-right, 14×16 units, most impressive
-    // ══════════════════════════════════════════════════════════
-    // Dark wood accent wall behind desk (back wall inside CEO suite)
-    ab(14,.12,0.16,M.dkWood, 17,0,-OD/2+.1);      // floor trim
-    for(let p=0;p<7;p++) ab(1.8,WH-0.3,0.08,M.dkWood,11+p*2,WH/2+0.15,-OD/2+.06); // wood panels
-
-    // Massive L-shaped executive desk — dark mahogany
-    // Main desk slab
-    ab(4.0,.12,1.4,M.ceoDesk, 18.5,.76,-11.5);
-    // Return (L extension)
-    ab(1.4,.12,3.2,M.ceoDesk, 20.3,.76,-9.8);
-    // Brass edge trim
-    ab(4.04,.04,0.06,M.brass, 18.5,.82,-11.5);
-    ab(0.06,.04,3.24,M.brass, 20.3,.82,-9.8);
-    // Desk legs (solid dark wood panels, not sticks)
-    [[1.8,.60],[-1.8,.60],[1.8,-.60],[-1.8,-.60]].forEach(([dx,dz])=>
-      ab(.18,.76,.18,M.ceoDesk,18.5+dx,.38,-11.5+dz));
-    // Green leather desk pad
-    ab(2.4,.04,.9,std(0x1a3020,{r:0.85}), 18.2,.83,-11.5);
-    // Gold desk nameplate "OMAR"
-    ab(.7,.05,.2,M.namepl, 17.8,.84,-11.3);
-    // Dual wide monitors (large screens)
-    [[-.52,0],[.52,0]].forEach(([dx])=>{
-      ab(1.04,.58,.08,M.mo, 18.2+dx,1.32,-12.2);
-      ab(.94,.50,.05,M.sc,  18.2+dx,1.32,-12.16);
-      ab(.07,.20,.07,M.chrome, 18.2+dx,.90,-12.1);
-    });
-    // Monitor blue glow spilling onto face
-    const monGlow=new THREE.PointLight(0x2255cc,2.5,4); monGlow.position.set(18.2,1.32,-11.8); scene.add(monGlow);
-    // Laptop / keyboard on desk
-    ab(.68,.03,.44,M.mo, 18.8,.84,-11.1);
-    ab(.58,.02,.36,std(0x101020,{r:0.15,em:0x102080,ei:0.8}), 18.8,.86,-11.1);
-    // Desk lamp (visible model — bronze arm + warm bulb)
-    cy(.06,.62,std(0xb08030,{r:0.3,m:0.7}), 17.1,.94,-11.3,6);   // lamp arm
-    cy(.12,.08,std(0xffe8a0,{r:0.3,em:0xffcc60,ei:3.0}), 17.1,1.26,-11.3,8);  // lamp shade glow
-    ab(.18,.04,.18,std(0x6a4818,{r:0.5,m:0.4}), 17.1,.84,-11.3);  // lamp base
-    // Coffee mug on desk
-    cy(.06,.1,std(0xf0ece8,{r:0.7}), 17.6,.85,-11.0,8);
-    cy(.055,.08,std(0x1a1210,{r:0.8}), 17.6,.88,-11.0,8);  // coffee inside
-    // "WORK" zone marker (invisible, just marks the desk position for interaction)
-    HQ._ceoDesk = new THREE.Vector3(19.5, 1.7, -10.8);
-
-    // CEO leather chair — black high-back
-    ab(.68,.12,.66,M.leather, 19.5,.77,-10.8);        // seat
-    ab(.68,1.2,.1,M.leather,  19.5,1.35,-11.12);      // tall back
-    ab(.08,1.2,.08,M.chrome,  19.5,.60,-10.8);        // center post
-    for(let a=0;a<5;a++){
-      const ag=a/5*Math.PI*2;
-      ab(.34,.05,.08,M.chrome, 19.5+Math.cos(ag)*.28,.05,-10.8+Math.sin(ag)*.28,ag);
-    }
-    [-.30,.30].forEach(dx=>{
-      ab(.1,.06,.5,M.chrome, 19.5+dx,.88,-10.8);      // armrests
-    });
-
-    // Visitor chairs (2 black leather across the desk)
-    [[17.5,.74,-13.0],[19.3,.74,-13.0]].forEach(([x,y,z])=>{
-      ab(.58,.12,.56,M.leather,x,y,z);
-      ab(.58,.8,.1,M.leather,  x,y+.48,z-.28);
-      ab(.06,.78,.06,M.chrome, x,y-.34,z,6);
-    });
-
-    // Full bookshelf wall (right wall, floor to ceiling)
-    ab(.22,WH,4.4,M.dkWood, OW/2-.14,WH/2,-9);   // main unit
-    ab(.22,WH,4.0,M.dkWood, OW/2-.14,WH/2,-14.5); // second unit
-    [.22,.66,1.10,1.54,1.98,2.42,2.72].forEach(y=>{
-      ab(.18,.04,4.4,M.brass, OW/2-.14,y,-9);    // shelf
-      [0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x1a5a6b,0x8b4a1a,0x3a1a6b].forEach((c,i)=>{
-        ab(.06,.24,.4,std(c,{r:0.88}), OW/2-.2,y+.14,-11.2+i*.54);
-      });
-    });
-    [.22,.66,1.10,1.54,1.98,2.42].forEach(y=>{
-      ab(.18,.04,4.0,M.brass, OW/2-.14,y,-14.5);
-      [0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x1a5a6b].forEach((c,i)=>{
-        ab(.06,.24,.6,std(c,{r:0.88}), OW/2-.2,y+.14,-16.5+i*.68);
-      });
-    });
-    // Trophies on top of bookshelf
-    [-9.6,-8.8,-8.2].forEach((z,i)=>{
-      cy(.06,.28,M.trophy, OW/2-.4,WH+.15,z,8);    // trophy base
-      cy(.04,.12,M.trophy, OW/2-.4,WH+.43,z,6);
-      cy(.12,.08,M.trophy, OW/2-.4,WH+.55,z,8);
-    });
-
-    // CEO lounge seating area (front of suite)
-    // L-shaped sofa
-    ab(3.2,.5,.84,M.sofa,  13.5,.25,-3.2);          // long sofa
-    ab(3.2,.72,.1,M.sofa,  13.5,.61,-3.62);          // sofa back
-    ab(.84,.5,2.0,M.sofa,  11.42,.25,-4.8);          // side sofa
-    ab(.1,.72,2.0,M.sofa,  11.06,.61,-4.8);          // side back
-    // Gold cushion accents
-    [12.0,13.2,14.4].forEach(x=>ab(.5,.26,.44,M.sofaPil,x,.61,-3.3));
-    // Dark walnut coffee table
-    ab(1.8,.08,0.9,M.ct, 13.2,.58,-2.0);
-    ab(.06,.58,.06,M.chrome,12.6,.28,-1.7); ab(.06,.58,.06,M.chrome,13.8,.28,-1.7);
-    ab(.06,.58,.06,M.chrome,12.6,.28,-2.3); ab(.06,.58,.06,M.chrome,13.8,.28,-2.3);
-    // CEO area rug
-    ab(7,.06,6,M.rugRed, 13.5,.03,-5);
-
-    // Framed artwork on CEO wall
-    [[16.5,WH*.7,-.08],[18.5,WH*.7,-.08]].forEach(([x,y])=>{
-      ab(1.0,1.2,.04,M.frame,x,y,-OD/2+.16);
-      ab(.8,1.0,.03,std(0x4a3820,{r:0.9}),x,y,-OD/2+.18);
-    });
-
-    // ── SALES / MARKETING (center-right, outside CEO) ─────────
-    [[5,-4],[5,0],[5,4],[8,-4],[8,0]].forEach(([x,z])=>{ desk(x,z); chair(x,z+1.15); });
-    // Sales huddle table
-    ab(1.4,.08,1.4,M.mdWood, 6.5,.72,-7.5);
-    cy(.04,.72,M.chrome,5.8,.36,-7.5,6); cy(.04,.72,M.chrome,7.2,.36,-7.5,6);
-    cy(.04,.72,M.chrome,6.5,.36,-8.2,6); cy(.04,.72,M.chrome,6.5,.36,-6.8,6);
-    for(let a=0;a<4;a++){const ag=a*Math.PI/2; chair(6.5+Math.cos(ag)*1.4,-7.5+Math.sin(ag)*1.4,ag+Math.PI);}
-    ab(1.8,.06,6,M.rugRed, 6.5,.03,-3.5);
-
-    // ── BREAK ROOM / KITCHEN (front-right) ────────────────────
-    ab(8,.9,.68,M.cnt, OW/2-4,.45,OD/2-2.2);
-    ab(.68,.9,6,M.cnt, OW/2-.34,.45,OD/2-5);
-    ab(8,.06,.68,M.dt, OW/2-4,.91,OD/2-2.2);
-    ab(.68,.06,6,M.dt, OW/2-.34,.91,OD/2-5);
-    ab(.54,.62,.42,M.app, OW/2-1.5,.95,OD/2-2.0);  // microwave
-    ab(.54,1.28,.52,M.app, OW/2-.8,.64,OD/2-2.0);   // fridge
-    ab(.24,.5,.2,M.mo, OW/2-4,.95,OD/2-2.0);         // coffee machine
-    ab(.07,.07,.07,M.ledG, OW/2-4,1.45,OD/2-1.92);
-    for(let i=0;i<4;i++) {
-      cy(.2,.06,M.chair, OW/2-5.5+i*1.4,.9,OD/2-3.8,8);
-      cy(.04,.9,M.chrome, OW/2-5.5+i*1.4,.45,OD/2-3.8);
-    }
-
-    // ── RECEPTION LOBBY (front-center) ────────────────────────
-    // Marble reception desk
-    ab(4.0,.96,.8,M.dkWood, 0,.48,OD/2-3);
-    ab(4.0,.08,.8,std(0xe8e2d8,{r:0.2,m:0.05}), 0,.96,OD/2-3);   // marble top
-    ab(4.0,.96,.1,M.brass, 0,.48,OD/2-2.62);                       // brass front strip
-    // Lobby sofas (black leather)
-    [[-7,OD/2-4.5],[7,OD/2-4.5]].forEach(([x,z])=>{
-      ab(2.8,.5,.84,M.sofa,x,.25,z);
-      ab(2.8,.72,.1,M.sofa,x,.61,z+.42);
-      ab(.84,.5,.84,M.sofa,x+1.48,.25,z+.04);
-      ab(1.4,.06,.6,M.ct,x,.55,z-1.2);
-    });
-    ab(7,.08,5.5,M.rug, 0,.04,OD/2-5.5);
-    // Kayro company sign on reception back wall
-    ab(3.0,.5,.08,M.dkWood, 0,2.4,OD/2-.1);
-    ab(.08,.5,3.1,M.dkWood, 0,2.4,OD/2-.1);
-    ab(2.8,.3,.06,M.brass, 0,2.4,OD/2-.06);
-
-    // ── FOCUS PODS (glass phone booths) ────────────────────────
-    [[-5,6],[-5,9]].forEach(([x,z])=>{
-      ab(1.6,WH,.96,M.glInt,x,WH/2,z);
-      ab(.96,WH,WT,M.glInt,x+.5,WH/2,z-0.46);
-      ab(.96,WH,WT,M.glInt,x+.5,WH/2,z+0.46);
-      desk(x-.1,z,Math.PI/2); chair(x+.5,z,Math.PI);
-    });
-
-    // ── BOOKSHELF ROW (left wall) ──────────────────────────────
-    ab(.22,2.4,8,M.dkWood, -OW/2+.14,1.2,-7);
-    [.25,.72,1.18,1.64,2.1].forEach(y=>{
-      ab(.16,.05,8,M.brass,-OW/2+.14,y,-7);
-      for(let i=0;i<10;i++){
-        const c=[0x8b1a1a,0x1a3a8b,0x1a6b2a,0xaa7710,0x5a1a8b,0x116688,0x8b4a1a,0x448844,0x2a2a8b,0x8b2a2a][i];
-        ab(.06,.22,.7,std(c,{r:0.88}),-OW/2+.2,y+.14,-10.5+i*.78);
-      }
-    });
-
-    // ── PING PONG (rec area, replaced with standing desks) ─────
-    ab(3.0,.09,1.6,std(0x2a5020,{r:0.9}), -4,OD/2-5.5,0);   // ping pong
-    ab(.05,.26,1.6,M.chrome, -4,.76,0);
-    [[-1.4,.7],[1.4,.7],[-1.4,-.7],[1.4,-.7]].forEach(([dx,dz])=>ab(.06,.68,.06,M.chrome,-4+dx,.34,dz));
-
-    // ── PLANTS ─────────────────────────────────────────────────
-    function plant(x,z,big=false) {
-      const s=big?1.5:1;
-      // Pot (ceramic dark terracotta)
-      cy(.2*s,.3*s,M.pp,x,.15*s,z,10);
-      cy(.22*s,.04,M.brass,x,.32*s,z,10);   // pot rim (brass)
-      // Stem
-      cy(.07*s,.8*s,M.pl,x,.55*s,z,6);
-      // Top foliage (2 spheres)
-      const lm=new THREE.Mesh(new THREE.SphereGeometry(.36*s,8,6),M.pl);
-      lm.scale.set(1,.7,1); lm.position.set(x,1.1*s,z); lm.castShadow=true; scene.add(lm);
-      const lm2=new THREE.Mesh(new THREE.SphereGeometry(.24*s,7,5),M.pl);
-      lm2.scale.set(1,.65,1); lm2.position.set(x+.18*s,1.0*s,z+.1*s); lm2.castShadow=true; scene.add(lm2);
-    }
-    // CEO suite — statement plants
-    [[-OW/2+1.2,-OD/2+1.5,true],[OW/2-1.2,-OD/2+1.5,true],
-     [-OW/2+1.2,OD/2-1.5,true],[OW/2-1.2,OD/2-1.5,true],
-     // CEO suite plants
-     [11,-14.5,true],[10.5,-1.5,true],
-     // Office floor plants
-     [-14,-4],[-8,5],[0,-10],[-2,6],[-18,0],[-4,13],[-10,10],
-     [-6,-13],[3,-5]].forEach(([x,z,big=false])=>plant(x,z,big));
-
-    // Characters
-    const chars = [];
-    emps.forEach((e, i) => {
-      const g = new THREE.Group();
-      const mB = std(e.bodyHex || 0x3b82f6, {r:0.7});
-      const mS = std(e.skinHex || SKIN[i % SKIN.length], {r:0.8});
-      // Legs
-      [-.08,.08].forEach(dx => {
-        const l=new THREE.Mesh(new THREE.BoxGeometry(.13,.36,.13),M.pn);
-        l.position.set(dx,.18,0); l.castShadow=true; g.add(l);
-      });
-      // Body (shirt)
-      const b=new THREE.Mesh(new THREE.BoxGeometry(.34,.4,.22),mB);
-      b.position.set(0,.54,0); b.castShadow=true; g.add(b);
-      // Collar/neck
-      const nk=new THREE.Mesh(new THREE.BoxGeometry(.10,.10,.10),mS);
-      nk.position.set(0,.75,0); g.add(nk);
-      // Arms
-      [-.26,.26].forEach(dx => {
-        const a=new THREE.Mesh(new THREE.BoxGeometry(.11,.32,.12),mB);
-        a.position.set(dx,.5,0); a.castShadow=true; g.add(a);
-        // hands
-        const hd=new THREE.Mesh(new THREE.BoxGeometry(.09,.09,.09),mS);
-        hd.position.set(dx,.32,0); g.add(hd);
-      });
-      // Head
-      const h=new THREE.Mesh(new THREE.BoxGeometry(.26,.26,.26),mS);
-      h.position.set(0,.86,0); h.castShadow=true; g.add(h);
-      // Hair
-      const hr=new THREE.Mesh(new THREE.BoxGeometry(.28,.10,.28),M.pn);
-      hr.position.set(0,1.0,0); g.add(hr);
-      // Eyes (white + pupil)
-      const ew=std(0xffffff,{r:0.5});
-      const ep=std(0x111111,{r:0.3});
-      [-.06,.06].forEach(dx=>{
-        const eye=new THREE.Mesh(new THREE.BoxGeometry(.05,.04,.03),ew);
-        eye.position.set(dx,.88,.12); g.add(eye);
-        const pupil=new THREE.Mesh(new THREE.BoxGeometry(.025,.025,.03),ep);
-        pupil.position.set(dx,.88,.14); g.add(pupil);
-      });
-      const pos = e.pos || [0, 0];
-      g.position.set(pos[0], 0, pos[1]);
-      g.scale.setScalar(1.55);
-      // Desk-facing rotation: employees face toward screen (generally -Z / toward back wall)
-      const baseRot = pos[0] > 10 ? Math.PI * 0.1 : (pos[0] < -8 ? 0 : Math.PI * 0.05);
-      g.rotation.y = baseRot;
-      g._baseRot = baseRot;
-      scene.add(g); chars.push({ group:g, emp:e });
-    });
-
-    // Name tags + speech bubbles
-    const ntContainer = document.getElementById('hq-ntags');
-    const ntEls = chars.map(({ emp }, i) => {
-      const d = document.createElement('div');
-      d.className = 'ntag';
-      const task = getTaskLabel(emp);
-      const status = statuses[i];
-      d.innerHTML = `
-        <div class="ntag-chip">
-          <div class="ntag-dot" style="background:${emp.color}"></div>
-          <span>${escHtml(emp.name)}</span>
-          <div class="ntag-status-dot ${status}"></div>
+        <div class="hq-stats-row">
+          <div class="hq-stat"><div class="hq-stat-n" id="hq-sn-agents">${emps.length}</div><div class="hq-stat-l">Agents</div></div>
+          <div class="hq-stat"><div class="hq-stat-n" id="hq-sn-active">${activeTasks}</div><div class="hq-stat-l">Active</div></div>
+          <div class="hq-stat"><div class="hq-stat-n" id="hq-sn-done">${doneTasks}</div><div class="hq-stat-l">Done</div></div>
+          <div class="hq-stat"><div class="hq-stat-n">${memTotal}</div><div class="hq-stat-l">Memories</div></div>
         </div>
-        ${task ? `<div class="ntag-task">${escHtml(task.length > 36 ? task.slice(0,36)+'…' : task)}</div>` : ''}`;
-      d.addEventListener('click', () => Chat.open(emp.id));
-      ntContainer.appendChild(d);
-      return d;
-    });
+      </div>
 
-    // Speech bubbles (created separately so they layer above nametags)
-    const bubbleEls = chars.map(({ emp }) => {
-      const b = document.createElement('div');
-      b.className = 'sim-bubble';
-      b.style.cssText = `border-color:${emp.color}40;opacity:0;transition:opacity .4s`;
-      ntContainer.appendChild(b);
-      return b;
-    });
+      <!-- MAIN LAYOUT -->
+      <div class="hq-layout">
 
-    // ── SIMULATION ENGINE ─────────────────────────────────────
-    const SIM_PHRASES = {
-      'Head of Product':    ['Writing PRD v2...','Sprint planning ✓','Reviewing user stories','Roadmap sync','OKR check-in','Backlog groomed','User interview done ✓','Feature scoped ✓','Wireframe review','Strategy doc sent'],
-      'Lead Engineer':      ['Reviewing PR #'+Math.ceil(Math.random()*300+100),'Fixing memory leak','Refactoring auth module','Writing unit tests','Deploy to staging ✓','Build passing ✓','Merged to main ✓','Architecture review','Code review done ✓','Hotfix pushed'],
-      'Head of Marketing':  ['Writing launch copy','A/B test running...','Email campaign live ✓','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓','Campaign brief sent','Partnership outreach'],
-      'UI/UX Designer':     ['In Figma — new flows','Component library updated','User testing running','Design review done ✓','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide v2 live','Motion specs sent','UX audit complete'],
-      'Head of Sales':      ['Discovery call live','Proposal sent ✓','Following up 12 leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓','Contract sent','Outreach sequence live'],
-      'Customer Success':   ['Onboarding call ✓','NPS survey sent','Churn risk flagged ⚠️','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score: green','Renewal secured ✓','Escalation handled'],
-      'Personal Assistant': ['Daily brief ready ✓','Meetings scheduled','Notes distributed','Research complete','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared ✓','Travel booked','Deck formatted'],
+        <!-- AGENT GRID -->
+        <div class="hq-agent-grid" id="hq-agent-grid">
+          ${emps.map(e=>HQ._agentCard(e)).join('')}
+          <div class="hq-agent-card hq-hire-card" id="hq-hire-card">
+            <div class="hq-hire-plus">＋</div>
+            <div class="hq-hire-label">Hire New Agent</div>
+            <div class="hq-hire-sub">Expand your AI workforce</div>
+          </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <div class="hq-sidebar">
+
+          <!-- ASK THE ROOM -->
+          <div class="hq-panel">
+            <div class="hq-panel-hdr">
+              <span class="hq-panel-title">ASK THE ROOM</span>
+              <span class="hq-panel-badge">${emps.length} agents</span>
+            </div>
+            <div class="hq-panel-body">
+              <textarea class="hq-ask-inp" id="hq-ask-input" rows="2" placeholder="Send a question to your entire team at once…"></textarea>
+              <button class="btn btn-primary btn-full" id="hq-ask-btn" style="margin-top:8px">↑ Ask Everyone</button>
+            </div>
+          </div>
+
+          <!-- LIVE FEED -->
+          <div class="hq-panel">
+            <div class="hq-panel-hdr">
+              <span class="hq-live-dot"></span>
+              <span class="hq-panel-title">LIVE ACTIVITY</span>
+            </div>
+            <div class="hq-feed-list" id="hq-feed-list"></div>
+          </div>
+
+          <!-- SKILLS REFERENCE -->
+          <div class="hq-panel">
+            <div class="hq-panel-hdr"><span class="hq-panel-title">POWER SKILLS (type in chat)</span></div>
+            <div class="hq-panel-body hq-skills-ref">
+              ${[['/gsd','Break any project into a full sprint plan'],
+                 ['/brainstorm','5-angle idea generation on any topic'],
+                 ['/brief','Morning brief — status, priorities, risks'],
+                 ['/autopilot','Agent works autonomously on their tasks']
+                ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>`;
+
+    // Wire events
+    container.querySelectorAll('.hq-chat-btn').forEach(b=>b.addEventListener('click',()=>Chat.open(b.dataset.eid)));
+    container.querySelectorAll('.hq-cmd-btn').forEach(b=>b.addEventListener('click',()=>{
+      Chat.open(b.dataset.eid);
+      setTimeout(()=>{const inp=document.getElementById('chat-input');if(inp){inp.value=b.dataset.cmd;Chat.send();}},300);
+    }));
+    document.getElementById('hq-hire-card')?.addEventListener('click',Employees.openHireModal);
+    document.getElementById('hq-ask-btn')?.addEventListener('click',HQ._askRoom);
+    document.getElementById('hq-ask-input')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();HQ._askRoom();}});
+  },
+
+  _agentCard(e) {
+    const task=State.tasks.find(t=>t.assignee===e.id&&t.column==='inprogress')
+            ||State.tasks.find(t=>t.assignee===e.id&&t.column==='todo');
+    const memCount=(State.memory[e.id]||[]).length;
+    const taskCount=State.tasks.filter(t=>t.assignee===e.id).length;
+    const skills=(e.skills||[]).slice(0,3);
+    return `<div class="hq-agent-card" style="--ac:${e.color}">
+      <div class="hq-card-glow"></div>
+      <div class="hq-card-hdr">
+        <div class="hq-av-wrap">
+          <div class="hq-card-av" style="background:${e.color}18;color:${e.color};border-color:${e.color}35">${e.name[0]}</div>
+          <div class="hq-online-dot"></div>
+        </div>
+        <div class="hq-card-info">
+          <div class="hq-card-name">${escHtml(e.name)}</div>
+          <div class="hq-card-role">${escHtml(e.role)}</div>
+        </div>
+        <div class="hq-card-pills">
+          ${memCount?`<div class="hq-badge">🧠 ${memCount}</div>`:''}
+          <div class="hq-badge">${taskCount} tasks</div>
+        </div>
+      </div>
+      <div class="hq-card-activity ${task?'active':''}">
+        <div class="hq-act-dot"></div>
+        <div class="hq-act-txt" id="hq-wo-${e.id}">${task?escHtml(task.title.length>48?task.title.slice(0,48)+'…':task.title):'Ready — waiting for work'}</div>
+      </div>
+      ${skills.length?`<div class="hq-card-chips">${skills.map(s=>`<span class="hq-chip">${escHtml(s)}</span>`).join('')}</div>`:''}
+      <div class="hq-card-btns">
+        <button class="btn btn-primary btn-sm hq-chat-btn" data-eid="${e.id}">💬 Chat</button>
+        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/gsd ">/gsd</button>
+        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/brainstorm ">/brainstorm</button>
+        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/autopilot">/auto</button>
+      </div>
+    </div>`;
+  },
+
+  // ── SIMULATION ────────────────────────────────────────────────
+  _addFeedItem(emp, text) {
+    HQ._feedLog.unshift({name:emp.name,color:emp.color,text,t:Date.now()});
+    if(HQ._feedLog.length>16) HQ._feedLog.pop();
+    HQ._renderFeed();
+    const wo=document.getElementById(`hq-wo-${emp.id}`);
+    if(wo){ wo.textContent=text; wo.closest('.hq-card-activity')?.classList.add('active'); }
+  },
+
+  _renderFeed() {
+    const el=document.getElementById('hq-feed-list'); if(!el)return;
+    const ago=t=>{const s=Math.floor((Date.now()-t)/1000);return s<60?'just now':Math.floor(s/60)+'m ago';};
+    el.innerHTML=HQ._feedLog.map(f=>`
+      <div class="hq-feed-item">
+        <div class="hq-feed-av" style="background:${f.color}18;color:${f.color}">${f.name[0]}</div>
+        <div class="hq-feed-body">
+          <span class="hq-feed-who">${escHtml(f.name)}</span>
+          <span class="hq-feed-what"> ${escHtml(f.text)}</span>
+          <div class="hq-feed-ago">${ago(f.t)}</div>
+        </div>
+      </div>`).join('');
+  },
+
+  _startSim() {
+    const SIM={
+      'Head of Product':   ['Writing PRD v2…','Sprint planning ✓','Reviewing user stories','Roadmap sync','OKR check-in','Backlog groomed','User interview done ✓','Feature scoped ✓','Wireframe review','Strategy doc sent'],
+      'Lead Engineer':     ['Reviewing PR #'+(Math.ceil(Math.random()*300+100)),'Fixing memory leak','Refactoring auth module','Writing unit tests','Deploy to staging ✓','Build passing ✓','Merged to main ✓','Architecture review','Code review done ✓','Hotfix pushed'],
+      'Head of Marketing': ['Writing launch copy','A/B test running…','Email campaign live ✓','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓','Campaign brief sent','Partnership outreach'],
+      'UI/UX Designer':    ['In Figma — new flows','Component library updated','User testing running','Design review done ✓','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide v2 live','Motion specs sent','UX audit complete'],
+      'Head of Sales':     ['Discovery call live','Proposal sent ✓','Following up 12 leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓','Contract sent','Outreach sequence live'],
+      'Customer Success':  ['Onboarding call ✓','NPS survey sent','Churn risk flagged ⚠️','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score: green','Renewal secured ✓','Escalation handled'],
+      'Personal Assistant':['Daily brief ready ✓','Meetings scheduled','Notes distributed','Research complete','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared ✓','Travel booked','Deck formatted'],
     };
-    const BOSS_TASKS = [
-      {from:'Sarah',  text:'Architecture proposal for new API — needs your sign-off'},
-      {from:'Zara',   text:'Homepage redesign v3 ready — please review in Figma'},
-      {from:'Alex',   text:'Q3 campaign brief needs your go-ahead before it goes live'},
-      {from:'Chris',  text:'New enterprise pricing deck — approve before Friday'},
-      {from:'Mia',    text:'High-value client at risk of churn — need your call today'},
-      {from:'Sarah',  text:'Sprint goals for next 2 weeks — finalize and sign off'},
-      {from:'Zara',   text:'Design system v2 update — review before Monday standup'},
-      {from:'Alex',   text:'New ad creative needs approval — budget locks Friday'},
-      {from:'Chris',  text:'Hot deal closing this week — review proposal terms'},
-      {from:'Mia',    text:'Customer success playbook v2 — your review requested'},
-      {from:'Sarah',  text:'Which tech debt items do we tackle this quarter?'},
-      {from:'Alex',   text:'Influencer collab opportunity — your call on strategic fit'},
-      {from:'Chris',  text:'Board deck needs product slides — urgent'},
-      {from:'Zara',   text:'New icon set ready — quick approval needed'},
+    const phrase=e=>{const l=SIM[e.role]||['Working…'];return l[Math.floor(Math.random()*l.length)];};
+    State.employees.forEach((e,i)=>setTimeout(()=>{if(!document.getElementById('hq-feed-list'))return;HQ._addFeedItem(e,phrase(e));},600+i*900));
+    HQ._simInterval=setInterval(()=>{
+      if(!document.getElementById('hq-feed-list')){clearInterval(HQ._simInterval);return;}
+      const e=State.employees[Math.floor(Math.random()*State.employees.length)];
+      HQ._addFeedItem(e,phrase(e));
+    },5500);
+  },
+
+  _startTaskAssignment() {
+    const TASKS=[
+      {from:'Sarah',text:'Architecture proposal for new API — needs your sign-off'},
+      {from:'Zara',text:'Homepage redesign v3 ready — please review in Figma'},
+      {from:'Alex',text:'Q3 campaign brief needs your go-ahead before it goes live'},
+      {from:'Chris',text:'New enterprise pricing deck — approve before Friday'},
+      {from:'Mia',text:'High-value client at risk of churn — need your call today'},
+      {from:'Sarah',text:'Sprint goals for next 2 weeks — finalize and sign off'},
+      {from:'Zara',text:'Design system v2 — review before Monday standup'},
+      {from:'Alex',text:'New ad creative needs approval — budget locks Friday'},
+      {from:'Chris',text:'Hot deal closing this week — review proposal terms'},
+      {from:'Mia',text:'Customer success playbook v2 — your review requested'},
     ];
-    const getPhrase = (emp) => {
-      const list = SIM_PHRASES[emp.role] || ['Working hard...','In a meeting','On it ✓'];
-      return list[Math.floor(Math.random()*list.length)];
-    };
-    const feedEl = document.getElementById('fp-feed');
-    const feedLog = [];
-    const addFeedItem = (emp, text) => {
-      feedLog.unshift({ name:emp.name, color:emp.color, text });
-      if (feedLog.length > 6) feedLog.pop();
-      if (feedEl) feedEl.innerHTML = feedLog.map(f=>
-        `<div class="fp-feed-item"><span class="fp-feed-dot" style="background:${f.color}"></span><b>${escHtml(f.name)}</b> ${escHtml(f.text)}</div>`
-      ).join('');
-    };
-    const showBubble = (i) => {
-      if (!HQ._active || i >= chars.length) return;
-      const { emp } = chars[i];
-      const text = getPhrase(emp);
-      const b = bubbleEls[i];
-      b.textContent = text;
-      b.style.opacity = '1';
-      addFeedItem(emp, text);
-      setTimeout(() => { if (b) b.style.opacity = '0'; }, 9000);
-    };
-    // Task assignment — employees assign tasks to Omar
-    const assignToOmar = () => {
-      if (!HQ._active) return;
-      const t = BOSS_TASKS[Math.floor(Math.random()*BOSS_TASKS.length)];
-      const assignerEmp = emps.find(e=>e.name===t.from) || emps[1];
-      const taskTitle = t.text;
-      toast(`📋 ${t.from} → you: "${taskTitle}"`, 'info', 8000);
-      addFeedItem(assignerEmp, `Assigned you: "${taskTitle.slice(0,38)}..."`);
-      // Add to task board if not duplicate
-      if (!State.tasks.find(st=>st.title===taskTitle)) {
-        const newTask = { id:'at_'+Date.now(), title:taskTitle, column:'todo', priority:'high',
-          assignee: emps[0]?.id || 'e1', created: Date.now(), tags:['from:'+t.from] };
-        State.tasks.push(newTask);
+    const assign=()=>{
+      if(!document.getElementById('hq-feed-list'))return;
+      const t=TASKS[Math.floor(Math.random()*TASKS.length)];
+      const emp=State.employees.find(e=>e.name===t.from)||State.employees[1];
+      toast(`📋 ${t.from} → you: "${t.text.slice(0,50)}…"`,'info',8000);
+      HQ._addFeedItem(emp,`→ Omar: "${t.text.slice(0,38)}…"`);
+      if(!State.tasks.find(st=>st.title===t.text)){
+        State.tasks.push({id:'at_'+Date.now(),title:t.text,column:'todo',priority:'high',
+          assignee:State.employees[0]?.id||'e1',created:Date.now(),tags:['from:'+t.from]});
         save('tasks');
+        const sn=document.getElementById('hq-sn-active');
+        if(sn) sn.textContent=State.tasks.filter(t=>t.column!=='done').length;
       }
     };
-    // Stagger initial bubbles
-    chars.forEach((_, i) => setTimeout(() => { if(HQ._active) showBubble(i); }, 1500 + i * 1800));
-    const simInterval = setInterval(() => {
-      if (!HQ._active) { clearInterval(simInterval); return; }
-      showBubble(Math.floor(Math.random()*chars.length));
-    }, 7000);
-    // First task assigned after 20s, then every 35-60s
-    let taskTimer;
-    const scheduleNextTask = () => {
-      taskTimer = setTimeout(() => {
-        if (!HQ._active) return;
-        assignToOmar();
-        scheduleNextTask();
-      }, 35000 + Math.random() * 25000);
+    const scheduleNext=()=>{
+      HQ._taskTimer=setTimeout(()=>{assign();if(document.getElementById('hq-feed-list'))scheduleNext();},40000+Math.random()*20000);
     };
-    setTimeout(() => { if(HQ._active) { assignToOmar(); scheduleNextTask(); } }, 20000);
-    const oldCleanup = HQ._cleanup;
-    HQ._cleanup = () => {
-      clearInterval(simInterval);
-      clearTimeout(taskTimer);
-      if(oldCleanup) oldCleanup();
-    };
+    setTimeout(()=>{assign();scheduleNext();},22000);
+  },
 
-    // ── FIRST-PERSON CONTROLS ─────────────────────────────────
-    let plocked = false;
-    let yaw = 0, pitch = 0;
-    const playerPos = new THREE.Vector3(0, 1.7, 13);
-    const keys = {};
-    let nearEmpRef = null;
-
-    document.getElementById('sp-board-btn').addEventListener('click', () => Employees.showStandup());
-    document.getElementById('sp-invite-btn').addEventListener('click', () => HQ._openInvite());
-    // Load and show any existing guests
-    HQ._refreshGuests();
-
-    const enterBtn = document.getElementById('fp-enter-btn');
-    const enterEl = document.getElementById('fp-enter');
-    const crossEl = document.getElementById('fp-crosshair');
-    const interactEl = document.getElementById('fp-interact');
-    const hintEl = document.getElementById('fp-hint');
-
-    const lockCanvas = () => renderer.domElement.requestPointerLock();
-    if (enterBtn) enterBtn.addEventListener('click', lockCanvas);
-
-    const onPLC = () => {
-      plocked = document.pointerLockElement === renderer.domElement;
-      if (enterEl) enterEl.style.display = plocked ? 'none' : 'flex';
-      if (crossEl) crossEl.style.opacity = plocked ? '1' : '0';
-      if (hintEl) hintEl.textContent = plocked ? 'ESC — release mouse' : 'Click ▶ Enter Office to start';
-    };
-    const onMM = e => {
-      if (!plocked) return;
-      yaw -= e.movementX * 0.002;
-      pitch = Math.max(-0.88, Math.min(0.88, pitch - e.movementY * 0.002));
-    };
-    const onKD = e => {
-      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-      keys[e.code] = true;
-      if (['Space','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)) e.preventDefault();
-      if (e.code === 'KeyE' && nearEmpRef) { Chat.open(nearEmpRef.id); }
-      else if (e.code === 'KeyE') {
-        const deskPos = HQ._ceoDesk;
-        const deskDist = deskPos ? Math.hypot(playerPos.x-deskPos.x, playerPos.z-deskPos.z) : 99;
-        if (deskDist < 3.5) {
-          document.exitPointerLock();
-          HQ._openWorkPanel();
-        } else {
-          const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
-          if (inCEO) { document.exitPointerLock(); Router.navigate('tasks'); }
+  // ── ASK THE ROOM ─────────────────────────────────────────────
+  _askRoom() {
+    const inp=document.getElementById('hq-ask-input');
+    const q=inp?.value.trim();
+    if(!q)return;
+    if(!State.settings.apiKey){toast('Add your API key in ⚙️ Settings first','error');return;}
+    inp.value='';
+    toast(`Asking your team: "${q.slice(0,40)}…"`,'info',3000);
+    Modal.open('Ask the Room',`
+      <div style="padding:4px 0">
+        <div style="font-size:13px;color:#888;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:16px;line-height:1.5">"${escHtml(q)}"</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${State.employees.map(e=>`
+            <div style="display:flex;gap:10px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+              <div style="width:36px;height:36px;border-radius:10px;background:${e.color}18;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0">${e.name[0]}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:11.5px;font-weight:700;color:${e.color};margin-bottom:5px">${escHtml(e.name)} <span style="color:#555;font-weight:400">· ${escHtml(e.role)}</span></div>
+                <div id="atr-${e.id}" style="font-size:12.5px;color:#888;line-height:1.7;white-space:pre-wrap">thinking…</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`);
+    State.employees.forEach((e,i)=>{
+      setTimeout(async()=>{
+        const el=document.getElementById(`atr-${e.id}`); if(!el)return;
+        const sys=Chat._buildSystemPrompt(e)+'\n\nIMPORTANT: Answer in 2-4 sentences max. Be direct and specific from your role perspective. No preamble.';
+        let resp='';
+        for await(const chunk of AI.stream([{role:'user',content:q}],sys)){
+          if(!document.getElementById(`atr-${e.id}`))return;
+          resp+=chunk; el.textContent=resp;
         }
-      }
-    };
-    const onKU = e => { keys[e.code] = false; };
-
-    document.addEventListener('pointerlockchange', onPLC);
-    document.addEventListener('mousemove', onMM);
-    document.addEventListener('keydown', onKD);
-    document.addEventListener('keyup', onKU);
-
-    HQ._cleanup = () => {
-      document.removeEventListener('pointerlockchange', onPLC);
-      document.removeEventListener('mousemove', onMM);
-      document.removeEventListener('keydown', onKD);
-      document.removeEventListener('keyup', onKU);
-    };
-
-    // ── MINIMAP ───────────────────────────────────────────────
-    const mmCanvas = document.getElementById('fp-minimap');
-    const mmCtx = mmCanvas ? mmCanvas.getContext('2d') : null;
-    const OWH = OW / 2, ODH = OD / 2;
-    function drawMinimap() {
-      if (!mmCtx) return;
-      const mW = mmCanvas.width, mH = mmCanvas.height;
-      const scX = mW / OW, scZ = mH / OD;
-      mmCtx.fillStyle = 'rgba(8,12,20,0.95)';
-      mmCtx.fillRect(0, 0, mW, mH);
-      // office border
-      mmCtx.strokeStyle = 'rgba(255,255,255,0.1)';
-      mmCtx.lineWidth = 1;
-      mmCtx.strokeRect(0, 0, mW, mH);
-      // employees
-      chars.forEach(({ group, emp }) => {
-        const cx = (group.position.x + OWH) * scX;
-        const cz = (group.position.z + ODH) * scZ;
-        mmCtx.fillStyle = emp.color;
-        mmCtx.beginPath(); mmCtx.arc(cx, cz, 3, 0, Math.PI * 2); mmCtx.fill();
-      });
-      // player
-      const px = (playerPos.x + OWH) * scX;
-      const pz = (playerPos.z + ODH) * scZ;
-      mmCtx.fillStyle = '#ffffff';
-      mmCtx.beginPath(); mmCtx.arc(px, pz, 4, 0, Math.PI * 2); mmCtx.fill();
-      // direction
-      mmCtx.strokeStyle = '#fff';
-      mmCtx.lineWidth = 1.5;
-      mmCtx.beginPath(); mmCtx.moveTo(px, pz);
-      mmCtx.lineTo(px - Math.sin(yaw) * 9, pz - Math.cos(yaw) * 9); mmCtx.stroke();
-    }
-
-    // ── NAME TAGS + BUBBLES ───────────────────────────────────
-    const tmpV = new THREE.Vector3();
-    const cW = renderer.domElement.clientWidth;
-    const cH = renderer.domElement.clientHeight;
-    function updateTags() {
-      chars.forEach(({ group }, i) => {
-        // name tag
-        tmpV.set(group.position.x, group.position.y + 2.5, group.position.z);
-        tmpV.project(camera);
-        const behind = tmpV.z > 1;
-        const sx = (tmpV.x * .5 + .5) * cW;
-        const sy = (-tmpV.y * .5 + .5) * cH;
-        ntEls[i].style.left = sx + 'px';
-        ntEls[i].style.top = sy + 'px';
-        ntEls[i].style.opacity = behind ? '0' : '1';
-        // speech bubble (higher up)
-        tmpV.set(group.position.x, group.position.y + 3.8, group.position.z);
-        tmpV.project(camera);
-        const bx = (tmpV.x * .5 + .5) * cW;
-        const by = (-tmpV.y * .5 + .5) * cH;
-        bubbleEls[i].style.left = bx + 'px';
-        bubbleEls[i].style.top = by + 'px';
-        if (behind) bubbleEls[i].style.opacity = '0';
-      });
-    }
-
-    // ── ANIMATION LOOP ────────────────────────────────────────
-    let t = 0;
-    const fwdV = new THREE.Vector3();
-    const rgtV = new THREE.Vector3();
-    const moveV = new THREE.Vector3();
-
-    (function animate() {
-      if (!HQ._active) return;
-      requestAnimationFrame(animate);
-      t += 0.012;
-      // Subtle Edison lamp flicker — feels alive
-      deskLamp.intensity = 9.0 + Math.sin(t * 5.3) * 0.5 + Math.sin(t * 13.7) * 0.25;
-      ceoOH1.intensity   = 20.0 + Math.sin(t * 2.1) * 0.6;
-
-      // Movement
-      if (plocked) {
-        const spd = (keys['ShiftLeft'] || keys['ShiftRight']) ? 0.32 : 0.15;
-        fwdV.set(-Math.sin(yaw), 0, -Math.cos(yaw));
-        rgtV.set(Math.cos(yaw), 0, -Math.sin(yaw));
-        moveV.set(0, 0, 0);
-        if (keys['KeyW'] || keys['ArrowUp'])    moveV.addScaledVector(fwdV, spd);
-        if (keys['KeyS'] || keys['ArrowDown'])  moveV.addScaledVector(fwdV, -spd);
-        if (keys['KeyA'] || keys['ArrowLeft'])  moveV.addScaledVector(rgtV, -spd);
-        if (keys['KeyD'] || keys['ArrowRight']) moveV.addScaledVector(rgtV, spd);
-        playerPos.add(moveV);
-        playerPos.x = Math.max(-OWH + 1, Math.min(OWH - 1, playerPos.x));
-        playerPos.z = Math.max(-ODH + 1, Math.min(ODH - 1, playerPos.z));
-      }
-
-      camera.position.copy(playerPos);
-      camera.rotation.order = 'YXZ';
-      camera.rotation.y = yaw;
-      camera.rotation.x = pitch;
-
-      // Characters — typing animation + face player when near
-      chars.forEach(({ group, emp }, i) => {
-        const dx = playerPos.x - group.position.x;
-        const dz = playerPos.z - group.position.z;
-        const dist = Math.sqrt(dx*dx + dz*dz);
-        if (dist < 6 && plocked) {
-          // Turn to face player
-          const targetY = Math.atan2(dx, dz);
-          let diff = targetY - group.rotation.y;
-          while (diff > Math.PI) diff -= Math.PI*2;
-          while (diff < -Math.PI) diff += Math.PI*2;
-          group.rotation.y += diff * 0.09;
-          group.position.y = Math.sin(t*1.2+i)*0.015;
-        } else {
-          // Typing bob: rhythmic up-down suggesting keystrokes
-          const typSpd = 3.2 + (i%3)*0.5;
-          const typAmt = 0.03 + Math.sin(t*0.3+i)*0.01;
-          group.position.y = Math.abs(Math.sin(t*typSpd+i*1.4))*typAmt - 0.01;
-          // Occasional head turn (looking at second monitor / checking notes)
-          if (Math.sin(t*0.18+i*2.7) > 0.95) {
-            group.rotation.y += (Math.sin(t*0.5+i)*0.35 - group.rotation.y + group._baseRot) * 0.04;
-          } else {
-            // Return to desk-facing direction
-            const brot = group._baseRot || 0;
-            group.rotation.y += (brot - group.rotation.y) * 0.03;
-          }
-        }
-      });
-      // In CEO office — show "Your Office" hint
-      const deskPos2 = HQ._ceoDesk;
-      const nearDesk = deskPos2 && Math.hypot(playerPos.x-deskPos2.x, playerPos.z-deskPos2.z) < 3.5;
-      const inCEO = playerPos.x > 10 && playerPos.x < 24 && playerPos.z < -1 && playerPos.z > -16;
-      if (interactEl && nearEmpRef === null) {
-        if (nearDesk && plocked) {
-          interactEl.textContent = 'E — Sit at your desk';
-          interactEl.style.opacity = '1';
-        } else if (inCEO && plocked) {
-          interactEl.textContent = 'E — Your CEO Office';
-          interactEl.style.opacity = '1';
-        } else {
-          interactEl.style.opacity = '0';
-        }
-      }
-
-      // Proximity detection
-      nearEmpRef = null;
-      let nearDist = 4.5;
-      chars.forEach(({ group, emp }) => {
-        const dx = group.position.x - playerPos.x;
-        const dz = group.position.z - playerPos.z;
-        const d = Math.sqrt(dx * dx + dz * dz);
-        if (d < nearDist) { nearDist = d; nearEmpRef = emp; }
-      });
-      if (interactEl) {
-        if (nearEmpRef && plocked) {
-          interactEl.textContent = `Press E — ${nearEmpRef.name} · ${nearEmpRef.role}`;
-          interactEl.style.opacity = '1';
-        } else {
-          interactEl.style.opacity = '0';
-        }
-      }
-
-      drawMinimap();
-      updateTags();
-      renderer.render(scene, camera);
-    })();
+      },i*950);
+    });
   },
 };
 
-// ══════════════════════════════════════════════════════════════
+
 //  PAGE: EMPLOYEES
 // ══════════════════════════════════════════════════════════════
 const Employees = {
