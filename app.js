@@ -262,7 +262,7 @@ STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT 
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', platformApiKey:'', companyName:'Kayro Interactive', ejServiceId:'', ejTemplateId:'', ejPublicKey:'' },
+  settings: { apiKey:'', platformApiKey:'', proxyUrl:'', companyName:'Kayro Interactive', ejServiceId:'', ejTemplateId:'', ejPublicKey:'' },
   employees: [],
   tasks: [],
   workbook: { activeTab:0, tabs:[{name:'Sheet1',cells:{}}] },
@@ -351,25 +351,33 @@ const AI = {
     };
   },
   async *stream(messages, system) {
+    const proxyUrl   = (State.settings.proxyUrl||'').trim();
     const platformKey = (State.settings.platformApiKey||'').trim();
-    const userKey = (State.settings.apiKey||'').trim();
-    const hasSub = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
-    // Subscribers use Kayro's platform key; others use their own
-    const key = (platformKey && hasSub) ? platformKey : (platformKey && !userKey) ? '' : userKey;
-    if (!key) {
-      if (platformKey && !hasSub) {
-        yield '⚠️ Subscribe to Kayro to get AI access — no API key needed.\n\nClick ⚡ Upgrade in the sidebar to get started.';
-      } else {
-        yield '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key (starts with sk-ant-) → Save Key.\n\nOr subscribe to Kayro — subscribers get AI access without setting up a key.';
+    const userKey    = (State.settings.apiKey||'').trim();
+    const hasSub     = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
+
+    let apiUrl, fetchHeaders;
+    if (proxyUrl) {
+      // Proxy mode — key stored in the worker, not sent from browser
+      apiUrl = proxyUrl;
+      fetchHeaders = { 'Content-Type': 'application/json' };
+    } else {
+      const key = (platformKey && hasSub) ? platformKey : userKey;
+      if (!key) {
+        yield platformKey && !hasSub
+          ? '⚠️ Subscribe to unlock AI access — no API key needed.\n\nClick ⚡ Upgrade in the sidebar.'
+          : '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr set up a Proxy URL in Settings to bypass browser restrictions.';
+        return;
       }
-      return;
+      if (!key.startsWith('sk-')) { yield '⚠️ Invalid key format — should start with sk-ant-'; return; }
+      apiUrl = 'https://api.anthropic.com/v1/messages';
+      fetchHeaders = AI._headers(key);
     }
-    if (!key.startsWith('sk-')) { yield '⚠️ Invalid API key format.\n\nYour key should start with sk-ant-  — check Settings.'; return; }
+
     try {
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
+      const res = await fetch(apiUrl, {
         method: 'POST',
-        mode: 'cors',
-        headers: AI._headers(key),
+        headers: fetchHeaders,
         body: JSON.stringify({
           model: State.settings.model || 'claude-3-5-sonnet-20241022',
           max_tokens: 2048,
@@ -382,10 +390,10 @@ const AI = {
         let body = {};
         try { body = await res.json(); } catch(_) {}
         const msg = body?.error?.message || `HTTP ${res.status}`;
-        const hint = res.status===401 ? '\n\nYour API key is invalid or expired — get a new one at console.anthropic.com'
-                   : res.status===429 ? '\n\nRate limit hit — wait a moment and try again'
-                   : res.status===403 ? '\n\nAccess denied — check your API key permissions'
-                   : '\n\nCheck your API key in Settings.';
+        const hint = res.status===401 ? '\n\n→ Key is invalid/expired. Get a new one at console.anthropic.com'
+                   : res.status===429 ? '\n\n→ Rate limit — wait a moment and retry'
+                   : res.status===403 ? '\n\n→ No access to this model — try Claude 3.5 Sonnet in Settings'
+                   : '';
         yield `⚠️ API error (${res.status}): ${msg}${hint}`;
         return;
       }
@@ -412,9 +420,9 @@ const AI = {
       const msg = e.message || String(e);
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
       if (isSafari) {
-        yield `⚠️ Safari blocked the API request.\n\nSafari's privacy protections block cross-origin API calls.\n\n🔧 Quick fixes:\n1. Switch to Chrome or Firefox (recommended)\n2. Or in Safari: Settings → Privacy → uncheck "Prevent Cross-Site Tracking"\n\nError: ${msg}`;
-      } else if (msg.includes('fetch') || msg.includes('network') || msg.includes('CORS') || msg.toLowerCase().includes('failed')) {
-        yield `⚠️ Network error — cannot reach Anthropic API.\n\nPossible causes:\n• No internet connection\n• Browser is blocking cross-origin requests\n• Try Chrome if you're on another browser\n\nError: ${msg}`;
+        yield `⚠️ Safari blocked the request — switch to Chrome or Firefox, or set up a Proxy URL in Settings.`;
+      } else if (msg.toLowerCase().includes('failed') || msg.includes('fetch') || msg.includes('network')) {
+        yield `⚠️ Blocked by browser extension or network.\n\n🔧 Fix: Open this page in a Chrome Incognito window (⌘⇧N) — extensions are disabled there.\n\nOr go to ⚙️ Settings → set up a Proxy URL (Cloudflare Worker) to bypass this permanently.`;
       } else {
         yield `⚠️ Error: ${msg}`;
       }
@@ -2666,11 +2674,34 @@ const Settings = {
             </optgroup>
           </select>
         </div>
+        <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 16px;margin-bottom:4px">
+          <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:.5px;margin-bottom:6px">⚡ PROXY URL — FIX BROWSER EXTENSION BLOCKING</div>
+          <input class="form-input" id="s-proxy-url" type="text" value="${escHtml(s.proxyUrl||'')}" placeholder="https://your-worker.your-name.workers.dev" autocomplete="off" spellcheck="false">
+          <div class="form-hint" style="margin-top:8px;line-height:1.7">
+            If API calls are blocked by extensions or your network, deploy a free <b>Cloudflare Worker</b> as a proxy.<br>
+            <b>How:</b> Go to <b>workers.cloudflare.com</b> → Create Worker → paste this script → add secret <code>ANTHROPIC_KEY</code> = your API key → copy the Worker URL here.
+          </div>
+          <div style="margin-top:10px;position:relative">
+            <pre id="s-worker-script" style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:10px;font-family:var(--mono);color:var(--text2);overflow-x:auto;line-height:1.6;white-space:pre;margin:0">export default {
+  async fetch(req, env) {
+    const h = {'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'};
+    if (req.method==='OPTIONS') return new Response(null,{headers:{...h,'Access-Control-Allow-Methods':'POST'}});
+    const resp = await fetch('https://api.anthropic.com/v1/messages',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','x-api-key':env.ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
+      body: await req.text(),
+    });
+    return new Response(resp.body,{status:resp.status,headers:{...h,'Content-Type':resp.headers.get('Content-Type')}});
+  }
+};</pre>
+            <button onclick="navigator.clipboard.writeText(document.getElementById('s-worker-script').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Script',2000)})" style="position:absolute;top:8px;right:8px;padding:3px 10px;background:rgba(255,255,255,.1);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font)">Copy Script</button>
+          </div>
+        </div>
         <div style="display:flex;gap:8px">
           <button class="btn btn-primary" id="s-save-key">Save Keys</button>
           <button class="btn" id="s-test-key">Test Connection</button>
         </div>
-        <div id="s-key-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+        <div id="s-key-status" style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5"></div>
       </div>
       <div class="s-card full">
         <div class="s-card-title">✉️ Email (Optional — EmailJS)</div>
@@ -2699,57 +2730,53 @@ const Settings = {
       save('settings');document.getElementById('brand-name').textContent=State.settings.companyName;toast('Saved','success');
     });
     document.getElementById('s-save-key').addEventListener('click',()=>{
-      const pk = document.getElementById('s-platform-key').value.trim();
-      const k  = document.getElementById('s-apikey').value.trim();
-      const m  = document.getElementById('s-model').value;
+      const pk  = document.getElementById('s-platform-key').value.trim();
+      const k   = document.getElementById('s-apikey').value.trim();
+      const m   = document.getElementById('s-model').value;
+      const px  = document.getElementById('s-proxy-url').value.trim();
       State.settings.platformApiKey = pk;
       State.settings.apiKey = k;
       State.settings.model = m;
+      State.settings.proxyUrl = px;
       try { localStorage.setItem('kayro_settings', JSON.stringify(State.settings)); } catch(_) {}
       Settings.updateApiStatus();
-      toast('Keys saved ✓','success');
+      toast('Saved ✓','success');
     });
     document.getElementById('s-test-key').addEventListener('click',async()=>{
       const st=document.getElementById('s-key-status');
-      // Always read live from inputs — don't require Save first
       const pk=(document.getElementById('s-platform-key').value||'').trim();
       const k=(document.getElementById('s-apikey').value||'').trim();
-      const m=document.getElementById('s-model').value||'claude-haiku-4-5-20251001';
+      const m=document.getElementById('s-model').value||'claude-3-5-sonnet-20241022';
+      const px=(document.getElementById('s-proxy-url').value||'').trim();
       const testKey=pk||k;
-      if(!testKey){st.textContent='❌ Paste an API key above first';st.style.color='var(--red,#ef4444)';return;}
-      st.textContent='Testing connection…';st.style.color='var(--text2)';
+      if(!px && !testKey){st.innerHTML='❌ Paste an API key above first (or set a Proxy URL)';st.style.color='var(--red,#ef4444)';return;}
+      st.textContent='Testing…';st.style.color='var(--text2)';
+      const apiUrl = px || 'https://api.anthropic.com/v1/messages';
+      const hdrs = px
+        ? {'Content-Type':'application/json'}
+        : {'Content-Type':'application/json','x-api-key':testKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'};
       try {
-        const res=await fetch('https://api.anthropic.com/v1/messages',{
-          method:'POST',
-          headers:{
-            'Content-Type':'application/json',
-            'x-api-key':testKey,
-            'anthropic-version':'2023-06-01',
-            'anthropic-dangerous-allow-browser':'true',
-          },
-          body:JSON.stringify({
-            model:m,
-            max_tokens:16,
-            messages:[{role:'user',content:'Reply with only the word: connected'}],
-          }),
+        const res=await fetch(apiUrl,{
+          method:'POST',headers:hdrs,
+          body:JSON.stringify({model:m,max_tokens:16,messages:[{role:'user',content:'Say: connected'}]}),
         });
         if(res.ok){
-          st.textContent='✅ Connected! Key works — model: '+m;
+          st.textContent='✅ Connected! '+(px?'Proxy working':'Key works')+' · model: '+m;
           st.style.color='var(--green,#22c55e)';
         } else {
           const body=await res.json().catch(()=>({}));
-          const msg=body?.error?.message||'Unknown';
-          if(res.status===401){st.textContent='❌ 401 Invalid key — check you copied it fully from console.anthropic.com';}
-          else if(res.status===403){st.textContent='❌ 403 No access to this model — try selecting Haiku 4.5 in the dropdown';}
-          else{st.textContent='❌ HTTP '+res.status+': '+msg;}
+          const msg=body?.error?.message||'Unknown error';
+          if(res.status===401)st.textContent='❌ 401 — key is wrong or expired. Re-copy from console.anthropic.com';
+          else if(res.status===403)st.textContent='❌ 403 — no access to this model. Switch to Claude 3.5 Sonnet in the dropdown';
+          else st.textContent='❌ HTTP '+res.status+': '+msg;
           st.style.color='var(--red,#ef4444)';
         }
       } catch(e){
         const isSafari=/^((?!chrome|android).)*safari/i.test(navigator.userAgent);
         if(isSafari){
-          st.innerHTML='❌ Safari blocked it — <b>open this page in Chrome or Firefox</b> and it will work';
+          st.innerHTML='❌ Safari blocked it — open this page in <b>Chrome or Firefox</b>';
         } else {
-          st.textContent='❌ Network error: '+(e.message||'Failed to reach api.anthropic.com — check your internet connection');
+          st.innerHTML='❌ Blocked by a browser extension.<br>→ Try <b>Chrome Incognito (⌘⇧N)</b> — extensions off by default.<br>→ Or deploy the Cloudflare Worker above and paste the URL in Proxy URL.';
         }
         st.style.color='var(--red,#ef4444)';
       }
