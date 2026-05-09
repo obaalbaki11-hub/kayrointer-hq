@@ -2684,14 +2684,27 @@ const Settings = {
           <div style="margin-top:10px;position:relative">
             <pre id="s-worker-script" style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:10px;font-family:var(--mono);color:var(--text2);overflow-x:auto;line-height:1.6;white-space:pre;margin:0">export default {
   async fetch(req, env) {
-    const h = {'Access-Control-Allow-Origin':'*','Access-Control-Allow-Headers':'*'};
-    if (req.method==='OPTIONS') return new Response(null,{headers:{...h,'Access-Control-Allow-Methods':'POST'}});
-    const resp = await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json','x-api-key':env.ANTHROPIC_KEY,'anthropic-version':'2023-06-01'},
-      body: await req.text(),
+    const cors = {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'POST, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type',
+    };
+    if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    if (req.method !== 'POST') return new Response('POST only', { status: 405, headers: cors });
+    const body = await req.text();
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': env.ANTHROPIC_KEY,
+        'anthropic-version': '2023-06-01',
+      },
+      body,
     });
-    return new Response(resp.body,{status:resp.status,headers:{...h,'Content-Type':resp.headers.get('Content-Type')}});
+    return new Response(resp.body, {
+      status: resp.status,
+      headers: { ...cors, 'Content-Type': resp.headers.get('Content-Type') || 'application/json' },
+    });
   }
 };</pre>
             <button onclick="navigator.clipboard.writeText(document.getElementById('s-worker-script').textContent).then(()=>{this.textContent='Copied!';setTimeout(()=>this.textContent='Copy Script',2000)})" style="position:absolute;top:8px;right:8px;padding:3px 10px;background:rgba(255,255,255,.1);border:1px solid var(--border);border-radius:5px;color:var(--text2);font-size:10px;cursor:pointer;font-family:var(--font)">Copy Script</button>
