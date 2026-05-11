@@ -1624,6 +1624,7 @@ Make every post sound like a real person, not a marketing team. No buzzwords.
     Chat._extractMemories(Chat.activeEmpId, full);
     Chat._extractTasks(full);
     Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
+    try { KayroEvents.emit('agent_reply', {emp: getEmp(Chat.activeEmpId), text: full}); } catch(_) {}
     // Log real activity to HQ feed
     try {
       const feedEmp = getEmp(Chat.activeEmpId);
@@ -2217,7 +2218,7 @@ const Tasks = {
         e.preventDefault();col.classList.remove('drag-over');
         const tid=e.dataTransfer.getData('text/plain');
         const task=State.tasks.find(t=>t.id===tid);
-        if(task){task.column=col.dataset.col;save('tasks');Tasks.render();}
+        if(task){const prev=task.column;task.column=col.dataset.col;save('tasks');Tasks.render();if(col.dataset.col==='done'&&prev!=='done')try{KayroEvents.emit('task_done',task);}catch(_){}}
       });
     });
     wrap.querySelectorAll('.t-ai-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();Tasks.aiUpdate(btn.dataset.tid);}));
@@ -2261,6 +2262,7 @@ const Tasks = {
           const newTask={id:uid(),title,desc:document.getElementById('t-desc').value.trim(),column:'todo',assignee:document.getElementById('t-assignee').value||null,priority:document.getElementById('t-priority').value,aiUpdates:[],createdAt:new Date().toISOString().slice(0,10)};
           State.tasks.push(newTask);
           save('tasks');Modal.close();Tasks.render();toast('Task added');
+          try{KayroEvents.emit('task_created',newTask);}catch(_){}
           try{const ae=newTask.assignee?getEmp(newTask.assignee):null;if(ae)HQ._addFeedItem(ae,`New task assigned: "${title.slice(0,50)}"`);}catch(_){}
         });
       }
@@ -4719,6 +4721,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
     const count = document.getElementById('apo-count');
     const people = ApolloPage._results;
     if (!people.length) { wrap.innerHTML = '<div class="apollo-empty" style="padding:40px">No results found.</div>'; toolbar.style.display = 'none'; return; }
+    try { KayroEvents.emit('leads_found', people); } catch(_) {}
     toolbar.style.display = 'flex';
     count.textContent = `${people.length} result${people.length!==1?'s':''}`;
     const COLS = ['#4f8cff','#10d98a','#f59e0b','#ef4444','#a855f7'];
@@ -4970,20 +4973,52 @@ const MetaPage = {
 // ══════════════════════════════════════════════════════════════
 //  PAGE: AUTOMATIONS — Social Scheduler + Integrations + Webhooks
 // ══════════════════════════════════════════════════════════════
+// ── GLOBAL EVENT BUS ──────────────────────────────────────────
+const KayroEvents = {
+  _h: {},
+  on(ev, fn) { (this._h[ev]=this._h[ev]||[]).push(fn); },
+  emit(ev, data) { (this._h[ev]||[]).forEach(fn => { try { fn(data); } catch(_){} }); },
+};
+
+function _timeAgo(ts) {
+  const s=Math.floor((Date.now()-ts)/1000);
+  if(s<60) return s+'s ago';
+  if(s<3600) return Math.floor(s/60)+'m ago';
+  if(s<86400) return Math.floor(s/3600)+'h ago';
+  return Math.floor(s/86400)+'d ago';
+}
+
 const AutomationsPage = {
-  _tab: 'social',
+  _tab: 'workflows',
   _schedInterval: null,
 
+  WORKFLOWS: [
+    { id:'slack-task-done',    icon:'💬', name:'Slack: Task Completed',      category:'Notifications', trigger:'Task moved to Done',          action:'Send Slack notification with task title',           requires:'slackWebhookUrl' },
+    { id:'discord-task-done',  icon:'🟣', name:'Discord: Task Completed',    category:'Notifications', trigger:'Task moved to Done',          action:'Send Discord notification',                         requires:'discordWebhookUrl' },
+    { id:'task-slack-created', icon:'✅', name:'Slack: New Task Created',    category:'Notifications', trigger:'New task added to board',     action:'Announce new task in Slack',                        requires:'slackWebhookUrl' },
+    { id:'slack-new-lead',     icon:'🔍', name:'Slack: New Lead Found',      category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Post lead name, email & company to Slack',          requires:'slackWebhookUrl' },
+    { id:'discord-new-lead',   icon:'🎯', name:'Discord: New Lead',          category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Post lead to Discord channel',                       requires:'discordWebhookUrl' },
+    { id:'zapier-new-lead',    icon:'⚡', name:'Zapier: Route New Leads',    category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Fire Zapier webhook → 5,000+ apps',                 requires:'zapierWebhookUrl' },
+    { id:'make-new-lead',      icon:'🔄', name:'Make: Route New Leads',      category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Fire Make.com webhook',                             requires:'makeWebhookUrl' },
+    { id:'airtable-new-lead',  icon:'🗃️', name:'Airtable: Capture Leads',   category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Add lead row directly to Airtable base',            requires:'airtableKey' },
+    { id:'hubspot-new-lead',   icon:'🧡', name:'HubSpot: Create Contact',    category:'Lead Capture',  trigger:'Hunter.io finds any lead',   action:'Route to HubSpot via Zapier webhook',               requires:'zapierWebhookUrl' },
+    { id:'slack-agent-reply',  icon:'🤖', name:'Slack: Mirror Agent Replies',category:'Agents',        trigger:'AI employee sends a reply',  action:'Forward reply to Slack channel',                    requires:'slackWebhookUrl' },
+    { id:'email-digest',       icon:'📧', name:'Daily Email Digest',         category:'Reports',       trigger:'Every day at a chosen time', action:'Email open task summary to you',                    requires:'platformEjServiceId', config:{ hour:'09', email:'' } },
+    { id:'recurring-post',     icon:'📅', name:'Recurring Social Post',      category:'Social',        trigger:'Every X days (auto-timer)',  action:'AI writes + schedules post on chosen platform',     requires:'', config:{ days:7, platform:'instagram', topic:'' } },
+  ],
+
   init(container) {
-    if (!State.automations) State.automations = { scheduledPosts:[], integrations:{} };
-    if (!State.automations.integrations) State.automations.integrations = {};
+    if (!State.automations) State.automations = { scheduledPosts:[], integrations:{}, workflows:{}, runLog:[] };
+    ['scheduledPosts','runLog'].forEach(k=>{if(!Array.isArray(State.automations[k]))State.automations[k]=[];});
+    ['integrations','workflows'].forEach(k=>{if(!State.automations[k]||typeof State.automations[k]!=='object')State.automations[k]={};});
     const ig = State.automations.integrations;
 
-    container.innerHTML = `<div class="page-scroll"><div style="max-width:1100px;margin:0 auto;padding:8px 0">
+    container.innerHTML = `<div class="page-scroll"><div style="max-width:1150px;margin:0 auto;padding:8px 0">
       <div class="auto-tab-bar">
-        <button class="auto-tab${AutomationsPage._tab==='social'?' active':''}" data-tab="social">📅 Social Scheduler</button>
+        <button class="auto-tab${AutomationsPage._tab==='workflows'?' active':''}" data-tab="workflows">⚡ Workflows</button>
+        <button class="auto-tab${AutomationsPage._tab==='social'?' active':''}" data-tab="social">📅 Social Queue</button>
         <button class="auto-tab${AutomationsPage._tab==='integrations'?' active':''}" data-tab="integrations">🔌 Integrations</button>
-        <button class="auto-tab${AutomationsPage._tab==='webhooks'?' active':''}" data-tab="webhooks">🔗 Webhooks</button>
+        <button class="auto-tab${AutomationsPage._tab==='log'?' active':''}" data-tab="log">📋 Run Log</button>
       </div>
       <div id="auto-body"></div>
     </div></div>`;
@@ -4997,35 +5032,128 @@ const AutomationsPage = {
 
     AutomationsPage._renderTab();
     AutomationsPage._startScheduler();
+    AutomationsPage._registerEvents();
   },
 
   destroy() {
     clearInterval(AutomationsPage._schedInterval);
   },
 
-  _save() {
-    try { localStorage.setItem('kayro_automations', JSON.stringify(State.automations)); } catch(_) {}
+  _save() { try { localStorage.setItem('kayro_automations', JSON.stringify(State.automations)); } catch(_){} },
+
+  _log(icon, msg, status='ok') {
+    if (!State.automations.runLog) State.automations.runLog = [];
+    State.automations.runLog.unshift({ id:uid(), ts:Date.now(), icon, msg, status });
+    if (State.automations.runLog.length > 300) State.automations.runLog = State.automations.runLog.slice(0,300);
+    AutomationsPage._save();
   },
 
+  _wfOn(id) { return !!(State.automations.workflows||{})[id]?.enabled; },
+  _wfCfg(id) { return (State.automations.workflows||{})[id]?.config || {}; },
+  _wfRan(id) { if (!State.automations.workflows[id]) State.automations.workflows[id]={enabled:false,runs:0}; State.automations.workflows[id].runs=(State.automations.workflows[id].runs||0)+1; State.automations.workflows[id].lastRun=Date.now(); AutomationsPage._save(); },
+
+  // ── EVENT BUS REGISTRATIONS ───────────────────────────────────
+  _registered: false,
+  _registerEvents() {
+    if (AutomationsPage._registered) return;
+    AutomationsPage._registered = true;
+
+    KayroEvents.on('task_done', task => {
+      const ig = State.automations.integrations || {};
+      if (AutomationsPage._wfOn('slack-task-done') && ig.slackWebhookUrl) {
+        const emp = task.assignee ? getEmp(task.assignee) : null;
+        fetch(ig.slackWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`✅ *Task Done* — ${task.title}${emp?' ('+emp.name+')':''}`})})
+          .then(()=>{ AutomationsPage._wfRan('slack-task-done'); AutomationsPage._log('💬','Slack: task done — '+task.title); })
+          .catch(e=>AutomationsPage._log('💬','Slack task notify failed: '+e.message,'error'));
+      }
+      if (AutomationsPage._wfOn('discord-task-done') && ig.discordWebhookUrl) {
+        fetch(ig.discordWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:`✅ **Task Done** — ${task.title}`})})
+          .then(()=>{ AutomationsPage._wfRan('discord-task-done'); AutomationsPage._log('🟣','Discord: task done — '+task.title); })
+          .catch(e=>AutomationsPage._log('🟣','Discord task notify failed: '+e.message,'error'));
+      }
+    });
+
+    KayroEvents.on('task_created', task => {
+      const ig = State.automations.integrations || {};
+      if (AutomationsPage._wfOn('task-slack-created') && ig.slackWebhookUrl) {
+        fetch(ig.slackWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`📋 *New Task* — ${task.title}`})})
+          .then(()=>{ AutomationsPage._wfRan('task-slack-created'); AutomationsPage._log('✅','Slack: new task announced — '+task.title); })
+          .catch(e=>AutomationsPage._log('✅','Slack new task failed: '+e.message,'error'));
+      }
+    });
+
+    KayroEvents.on('leads_found', async leads => {
+      const ig = State.automations.integrations || {};
+      for (const lead of leads) {
+        if (AutomationsPage._wfOn('slack-new-lead') && ig.slackWebhookUrl) {
+          fetch(ig.slackWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`🔍 *New Lead*\n*Name:* ${(lead.first_name||'')+' '+(lead.last_name||'')}\n*Email:* ${lead.email}\n*Company:* ${lead.company||'—'}\n*Title:* ${lead.title||'—'}`})})
+            .then(()=>{ AutomationsPage._wfRan('slack-new-lead'); AutomationsPage._log('🔍','Slack: lead sent — '+lead.email); })
+            .catch(e=>AutomationsPage._log('🔍','Slack lead failed: '+e.message,'error'));
+        }
+        if (AutomationsPage._wfOn('discord-new-lead') && ig.discordWebhookUrl) {
+          fetch(ig.discordWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:`🎯 **New Lead** — ${lead.email} @ ${lead.company||'—'}`})})
+            .then(()=>{ AutomationsPage._wfRan('discord-new-lead'); AutomationsPage._log('🎯','Discord: lead sent — '+lead.email); })
+            .catch(e=>AutomationsPage._log('🎯','Discord lead failed: '+e.message,'error'));
+        }
+        if (AutomationsPage._wfOn('zapier-new-lead') && ig.zapierWebhookUrl) {
+          fetch(ig.zapierWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'lead_found',...lead})})
+            .then(()=>{ AutomationsPage._wfRan('zapier-new-lead'); AutomationsPage._log('⚡','Zapier: lead routed — '+lead.email); })
+            .catch(e=>AutomationsPage._log('⚡','Zapier lead failed: '+e.message,'error'));
+        }
+        if (AutomationsPage._wfOn('make-new-lead') && ig.makeWebhookUrl) {
+          fetch(ig.makeWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'lead_found',...lead})})
+            .then(()=>{ AutomationsPage._wfRan('make-new-lead'); AutomationsPage._log('🔄','Make: lead routed — '+lead.email); })
+            .catch(e=>AutomationsPage._log('🔄','Make lead failed: '+e.message,'error'));
+        }
+        if (AutomationsPage._wfOn('airtable-new-lead') && ig.airtableKey && ig.airtableBaseId) {
+          fetch(`https://api.airtable.com/v0/${ig.airtableBaseId}/${encodeURIComponent(ig.airtableTableName||'Leads')}`, {
+            method:'POST', headers:{'Authorization':'Bearer '+ig.airtableKey,'Content-Type':'application/json'},
+            body:JSON.stringify({fields:{Email:lead.email,'First Name':lead.first_name||'','Last Name':lead.last_name||'',Title:lead.title||'',Company:lead.company||'',Confidence:lead.confidence||0,Source:'Kayro Hunter.io',Date:new Date().toISOString().split('T')[0]}})
+          }).then(()=>{ AutomationsPage._wfRan('airtable-new-lead'); AutomationsPage._log('🗃️','Airtable: lead added — '+lead.email); })
+            .catch(e=>AutomationsPage._log('🗃️','Airtable lead failed: '+e.message,'error'));
+        }
+        if (AutomationsPage._wfOn('hubspot-new-lead') && ig.zapierWebhookUrl) {
+          fetch(ig.zapierWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({event:'hubspot_create_contact',email:lead.email,firstname:lead.first_name||'',lastname:lead.last_name||'',jobtitle:lead.title||'',company:lead.company||''})})
+            .then(()=>{ AutomationsPage._wfRan('hubspot-new-lead'); AutomationsPage._log('🧡','HubSpot: contact queued — '+lead.email); })
+            .catch(e=>AutomationsPage._log('🧡','HubSpot contact failed: '+e.message,'error'));
+        }
+      }
+    });
+
+    KayroEvents.on('agent_reply', ({emp, text}) => {
+      const ig = State.automations.integrations || {};
+      if (AutomationsPage._wfOn('slack-agent-reply') && ig.slackWebhookUrl) {
+        fetch(ig.slackWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`🤖 *${emp?.name||'AI Agent'}*: ${text.slice(0,500)}`})})
+          .then(()=>{ AutomationsPage._wfRan('slack-agent-reply'); AutomationsPage._log('🤖','Slack: agent reply forwarded from '+(emp?.name||'agent')); })
+          .catch(e=>AutomationsPage._log('🤖','Slack agent reply failed: '+e.message,'error'));
+      }
+    });
+  },
+
+  // ── SCHEDULER ─────────────────────────────────────────────────
   _startScheduler() {
     clearInterval(AutomationsPage._schedInterval);
-    AutomationsPage._schedInterval = setInterval(() => AutomationsPage._runDue(), 60000);
+    AutomationsPage._schedInterval = setInterval(() => {
+      AutomationsPage._runDue();
+      AutomationsPage._runRecurring();
+      AutomationsPage._runDigest();
+    }, 60000);
   },
 
   async _runDue() {
     const now = Date.now();
-    const due = (State.automations.scheduledPosts || []).filter(p => p.status === 'scheduled' && p.scheduledAt <= now);
+    const due = (State.automations.scheduledPosts||[]).filter(p => p.status==='scheduled' && p.scheduledAt<=now);
     for (const post of due) {
-      post.status = 'sending';
-      AutomationsPage._save();
+      post.status = 'sending'; AutomationsPage._save();
       try {
         await AutomationsPage._executePost(post);
-        post.status = 'sent';
-        toast(`✅ Posted to ${post.platform}: "${post.caption.slice(0,40)}…"`, 'success', 5000);
+        post.status = 'sent'; post.sentAt = Date.now();
+        toast(`✅ Auto-posted to ${post.platform}`, 'success', 4000);
+        AutomationsPage._log('📅', 'Auto-posted to '+post.platform+': '+post.caption.slice(0,60));
         try { const ae=State.employees[0]; if(ae) HQ._addFeedItem(ae,`Auto-posted to ${post.platform}: "${post.caption.slice(0,40)}"`); } catch(_){}
       } catch(e) {
-        post.status = 'failed';
-        post.error = e.message;
+        post.status = 'failed'; post.error = e.message;
+        AutomationsPage._log('📅','Post failed: '+e.message,'error');
       }
       AutomationsPage._save();
     }
@@ -5033,389 +5161,442 @@ const AutomationsPage = {
 
   async _executePost(post) {
     const ig = State.automations.integrations;
-    const payload = { platform: post.platform, video_url: post.videoUrl, image_url: post.imageUrl, caption: post.caption, hashtags: post.hashtags, scheduled_at: new Date(post.scheduledAt).toISOString() };
-
-    // Direct channels
-    if (post.platform === 'slack' && ig.slackWebhookUrl) {
-      await fetch(ig.slackWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: `*${post.caption}*\n${post.videoUrl||post.imageUrl||''}` }) });
+    const payload = { platform:post.platform, video_url:post.videoUrl, caption:post.caption, hashtags:post.hashtags, scheduled_at:new Date(post.scheduledAt).toISOString() };
+    if (post.platform==='slack' && ig.slackWebhookUrl) {
+      await fetch(ig.slackWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:`*${post.caption}*\n${post.videoUrl||''}`})});
       return;
     }
-    if (post.platform === 'discord' && ig.discordWebhookUrl) {
-      await fetch(ig.discordWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content: `${post.caption}\n${post.videoUrl||post.imageUrl||''}` }) });
+    if (post.platform==='discord' && ig.discordWebhookUrl) {
+      await fetch(ig.discordWebhookUrl, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:`${post.caption}\n${post.videoUrl||''}`})});
       return;
     }
-
-    // All social platforms route through Zapier or Make webhook
-    const webhookUrl = ig.zapierWebhookUrl || ig.makeWebhookUrl;
-    if (!webhookUrl) throw new Error(`No webhook configured for ${post.platform}. Add a Zapier or Make webhook in Integrations.`);
-    const res = await fetch(webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    const wh = ig.zapierWebhookUrl || ig.makeWebhookUrl;
+    if (!wh) throw new Error(`No webhook configured for ${post.platform}. Add Zapier or Make in Integrations.`);
+    const res = await fetch(wh, {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
+  },
+
+  _runRecurring() {
+    if (!AutomationsPage._wfOn('recurring-post')) return;
+    const cfg = AutomationsPage._wfCfg('recurring-post');
+    const lastRun = (State.automations.workflows['recurring-post']||{}).lastRun || 0;
+    if (Date.now() - lastRun < (cfg.days||7)*86400000) return;
+    AutomationsPage._wfRan('recurring-post');
+    const platform = cfg.platform || 'instagram';
+    const topic = cfg.topic || (State.settings.companyName||'Kayro Interactive');
+    const emp = State.employees.find(e=>e.role.toLowerCase().includes('market'))||State.employees[0];
+    AI.once([{role:'user',content:`Write a ${platform} post about: ${topic}. Format:\nCAPTION:\n[text]\nHASHTAGS:\n[tags]`}], emp?.system||'You are a social media expert.')
+      .then(result => {
+        const cm=result.match(/CAPTION:\n([\s\S]+?)(?=\nHASHTAGS:|$)/);
+        const hm=result.match(/HASHTAGS:\n([\s\S]+?)$/);
+        const caption=cm?.[1]?.trim()||topic; const hashtags=hm?.[1]?.trim()||'';
+        const post={id:uid(),platform,caption,hashtags,videoUrl:'',scheduledAt:Date.now(),status:'scheduled',createdAt:Date.now()};
+        if(!State.automations.scheduledPosts) State.automations.scheduledPosts=[];
+        State.automations.scheduledPosts.push(post); AutomationsPage._save();
+        AutomationsPage._log('📅',`Recurring post queued for ${platform}: "${caption.slice(0,60)}"`);
+        toast(`✨ Recurring post queued for ${platform}`,'success');
+      });
+  },
+
+  _runDigest() {
+    if (!AutomationsPage._wfOn('email-digest')) return;
+    const cfg = AutomationsPage._wfCfg('email-digest');
+    const now = new Date();
+    if (String(now.getHours()).padStart(2,'0') !== (cfg.hour||'09')) return;
+    const dayKey = 'kayro_digest_'+now.toDateString();
+    if (localStorage.getItem(dayKey)) return;
+    localStorage.setItem(dayKey,'1');
+    const open = State.tasks.filter(t=>t.column!=='done').map(t=>t.title).join(', ')||'None';
+    const done = State.tasks.filter(t=>t.column==='done').length;
+    const toEmail = cfg.email || State.settings.ownerEmail || '';
+    if (!toEmail) return;
+    const svcId=State.settings.platformEjServiceId||State.settings.ejServiceId;
+    const tplId=State.settings.platformEjTemplateId||State.settings.ejTemplateId;
+    const pubKey=State.settings.platformEjPublicKey||State.settings.ejPublicKey;
+    if (!svcId||!tplId||!pubKey) return;
+    import('https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js').then(()=>{
+      window.emailjs?.init({publicKey:pubKey});
+      window.emailjs?.send(svcId,tplId,{to_email:toEmail,subject:'Kayro Daily Digest',message:`Open tasks:\n${open}\n\nCompleted: ${done} tasks`});
+      AutomationsPage._wfRan('email-digest'); AutomationsPage._log('📧','Daily digest sent to '+toEmail);
+    }).catch(()=>{});
   },
 
   _renderTab() {
     const el = document.getElementById('auto-body'); if (!el) return;
-    if (AutomationsPage._tab === 'social') AutomationsPage._renderSocial(el);
-    else if (AutomationsPage._tab === 'integrations') AutomationsPage._renderIntegrations(el);
-    else AutomationsPage._renderWebhooks(el);
+    if (AutomationsPage._tab==='workflows') AutomationsPage._renderWorkflows(el);
+    else if (AutomationsPage._tab==='social') AutomationsPage._renderSocial(el);
+    else if (AutomationsPage._tab==='integrations') AutomationsPage._renderIntegrations(el);
+    else AutomationsPage._renderLog(el);
   },
 
-  // ── SOCIAL SCHEDULER ──────────────────────────────────────────
+  // ── WORKFLOWS TAB ─────────────────────────────────────────────
+  _renderWorkflows(el) {
+    const ig = State.automations.integrations || {};
+    const wf = State.automations.workflows || {};
+    const enabledCount = AutomationsPage.WORKFLOWS.filter(w=>wf[w.id]?.enabled).length;
+    const _reqOk = w => !w.requires || !!(ig[w.requires] || State.settings[w.requires]);
+    const byCategory = {};
+    AutomationsPage.WORKFLOWS.forEach(w => { (byCategory[w.category]=byCategory[w.category]||[]).push(w); });
+
+    el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
+      <div>
+        <div style="font-size:20px;font-weight:800;color:var(--text1);letter-spacing:-.5px">Automation Workflows</div>
+        <div style="font-size:13px;color:var(--text2);margin-top:3px">Toggle ON — workflows fire automatically when conditions are met</div>
+      </div>
+      <div style="background:${enabledCount?'rgba(16,217,138,.1)':'rgba(255,255,255,.05)'};border:1px solid ${enabledCount?'rgba(16,217,138,.25)':'var(--border)'};border-radius:20px;padding:8px 18px;font-size:13px;font-weight:700;color:${enabledCount?'var(--green)':'var(--text2)'}">
+        ${enabledCount} Active
+      </div>
+    </div>
+    ${Object.entries(byCategory).map(([cat, workflows]) => `
+      <div style="margin-bottom:24px">
+        <div class="wf-cat-label">${cat}</div>
+        <div class="wf-grid">
+          ${workflows.map(w => {
+            const enabled = !!(wf[w.id]?.enabled);
+            const ok = _reqOk(w);
+            const runs = wf[w.id]?.runs || 0;
+            const lastRun = wf[w.id]?.lastRun;
+            return `
+            <div class="wf-card ${enabled?'wf-card--on':''}">
+              <div class="wf-card-top">
+                <div class="wf-icon">${w.icon}</div>
+                <div class="wf-info">
+                  <div class="wf-name">${w.name}</div>
+                  <div class="wf-runs">${runs>0?runs+' run'+(runs!==1?'s':'')+(lastRun?' · '+_timeAgo(lastRun):''):'Never run'}</div>
+                </div>
+                <label class="wf-toggle-wrap">
+                  <input type="checkbox" class="wf-chk" data-id="${w.id}" ${enabled?'checked':''}${!ok&&!enabled?' disabled':''}>
+                  <span class="wf-track"><span class="wf-thumb"></span></span>
+                </label>
+              </div>
+              <div class="wf-flow">
+                <div class="wf-trigger"><span class="wf-label">WHEN</span>${w.trigger}</div>
+                <div class="wf-arr">→</div>
+                <div class="wf-action"><span class="wf-label">THEN</span>${w.action}</div>
+              </div>
+              ${!ok?`<div class="wf-req-warn">⚠️ Requires <b>${w.requires}</b> — set it in <b>Integrations</b> first</div>`:''}
+              ${w.config?`<button class="btn btn-sm wf-cfg-btn" data-id="${w.id}" style="margin-top:8px">⚙️ Configure</button>`:''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>`).join('')}`;
+
+    el.querySelectorAll('.wf-chk').forEach(chk => {
+      chk.addEventListener('change', () => {
+        const id = chk.dataset.id;
+        if (!State.automations.workflows[id]) State.automations.workflows[id] = {enabled:false,runs:0};
+        State.automations.workflows[id].enabled = chk.checked;
+        AutomationsPage._save();
+        chk.closest('.wf-card')?.classList.toggle('wf-card--on', chk.checked);
+        toast(chk.checked ? 'Workflow enabled ✓' : 'Workflow disabled', chk.checked?'success':'');
+      });
+    });
+    el.querySelectorAll('.wf-cfg-btn').forEach(btn => btn.addEventListener('click', () => AutomationsPage._openWorkflowConfig(btn.dataset.id)));
+  },
+
+  _openWorkflowConfig(id) {
+    const wf = AutomationsPage.WORKFLOWS.find(w=>w.id===id); if (!wf?.config) return;
+    const saved = (State.automations.workflows[id]||{}).config || {};
+    const cfg = {...wf.config, ...saved};
+    let fields = '';
+    if (id === 'email-digest') {
+      fields = `
+        <div class="form-group"><label class="form-label">SEND AT HOUR</label>
+          <select class="form-input" id="wfc-hour">${Array.from({length:24},(_,i)=>`<option value="${String(i).padStart(2,'0')}"${cfg.hour===String(i).padStart(2,'0')?' selected':''}>${String(i).padStart(2,'0')}:00</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label class="form-label">SEND TO EMAIL</label>
+          <input class="form-input" id="wfc-email" value="${escHtml(cfg.email||State.settings.ownerEmail||'')}" placeholder="you@company.com">
+        </div>`;
+    } else if (id === 'recurring-post') {
+      fields = `
+        <div class="form-group"><label class="form-label">PLATFORM</label>
+          <select class="form-input" id="wfc-platform">${['instagram','tiktok','youtube','twitter','facebook','linkedin'].map(p=>`<option value="${p}"${cfg.platform===p?' selected':''}>${AutomationsPage._platIcon(p)} ${p}</option>`).join('')}</select>
+        </div>
+        <div class="form-group"><label class="form-label">POST EVERY X DAYS</label>
+          <input class="form-input" id="wfc-days" type="number" min="1" max="90" value="${cfg.days||7}">
+        </div>
+        <div class="form-group"><label class="form-label">TOPIC / THEME</label>
+          <input class="form-input" id="wfc-topic" value="${escHtml(cfg.topic||'')}" placeholder="e.g. AI productivity tips, ${State.settings.companyName||'our product'} features">
+        </div>`;
+    }
+    Modal.open(`Configure: ${wf.name}`, `${fields}<button class="btn btn-primary" style="margin-top:12px" id="wfc-save">Save Config</button>`);
+    document.getElementById('wfc-save').addEventListener('click', () => {
+      if (!State.automations.workflows[id]) State.automations.workflows[id]={enabled:false,runs:0};
+      if (id==='email-digest') State.automations.workflows[id].config={hour:document.getElementById('wfc-hour').value, email:document.getElementById('wfc-email').value.trim()};
+      else if (id==='recurring-post') State.automations.workflows[id].config={platform:document.getElementById('wfc-platform').value, days:parseInt(document.getElementById('wfc-days').value)||7, topic:document.getElementById('wfc-topic').value.trim()};
+      AutomationsPage._save(); Modal.close(); toast('Config saved ✓','success');
+    });
+  },
+
+  // ── SOCIAL QUEUE TAB ──────────────────────────────────────────
   _renderSocial(el) {
     const posts = State.automations.scheduledPosts || [];
     const ig = State.automations.integrations || {};
-    const hasZapier = !!(ig.zapierWebhookUrl || ig.makeWebhookUrl);
+    const hasWebhook = !!(ig.zapierWebhookUrl || ig.makeWebhookUrl);
     const hasSlack = !!ig.slackWebhookUrl;
     const hasDiscord = !!ig.discordWebhookUrl;
 
     el.innerHTML = `
-    <div class="auto-two-col">
-      <div class="auto-panel">
-        <div class="auto-panel-title">Queue a Post</div>
-        ${!hasZapier && !hasSlack && !hasDiscord ? `<div class="auto-notice">⚠️ Connect a Zapier or Make webhook in <b>Integrations</b> to post to Instagram, TikTok, YouTube & Twitter automatically.</div>` : ''}
-        <div class="form-group">
-          <label class="form-label">PLATFORM</label>
+    <div class="auto-two-col" style="align-items:flex-start">
+      <div class="auto-panel" style="flex:1;min-width:280px">
+        <div class="auto-panel-title">New Post</div>
+        ${!hasWebhook&&!hasSlack&&!hasDiscord?`<div class="auto-notice">⚠️ No webhook connected yet. Slack & Discord work directly — add them in <b>Integrations</b>. For Instagram/TikTok/YouTube, add a Zapier webhook.</div>`:''}
+        <div class="form-group"><label class="form-label">PLATFORM</label>
           <select class="form-input" id="sched-platform">
-            <option value="instagram">📸 Instagram</option>
-            <option value="tiktok">🎵 TikTok</option>
-            <option value="youtube">📺 YouTube Shorts</option>
-            <option value="twitter">🐦 Twitter / X</option>
-            <option value="facebook">📘 Facebook</option>
-            <option value="linkedin">💼 LinkedIn</option>
-            <option value="slack">💬 Slack</option>
-            <option value="discord">🟣 Discord</option>
+            <option value="instagram">📸 Instagram</option><option value="tiktok">🎵 TikTok</option>
+            <option value="youtube">📺 YouTube Shorts</option><option value="twitter">🐦 Twitter / X</option>
+            <option value="facebook">📘 Facebook</option><option value="linkedin">💼 LinkedIn</option>
+            <option value="slack">💬 Slack</option><option value="discord">🟣 Discord</option>
           </select>
         </div>
-        <div class="form-group">
-          <label class="form-label">VIDEO OR IMAGE URL</label>
-          <input class="form-input" id="sched-video" placeholder="https://... (Kling video URL, Cloudinary, S3, etc.)">
-          <div class="form-hint" style="margin-top:4px">Generate a video in Kling AI → copy the URL → paste here</div>
+        <div class="form-group"><label class="form-label">TOPIC (for AI)</label>
+          <input class="form-input" id="sched-topic" placeholder="e.g. Why AI replaces your marketing team">
         </div>
-        <div class="form-group">
-          <label class="form-label">CAPTION</label>
-          <textarea class="form-textarea" id="sched-caption" placeholder="Write your post caption…" style="min-height:80px"></textarea>
+        <div class="form-group"><label class="form-label">CAPTION</label>
+          <textarea class="form-textarea" id="sched-caption" placeholder="Write caption or click ✨ AI Generate…" style="min-height:80px"></textarea>
         </div>
-        <div class="form-group">
-          <label class="form-label">HASHTAGS</label>
-          <input class="form-input" id="sched-hashtags" placeholder="#ai #saas #kayrointeractive">
+        <div class="form-group"><label class="form-label">HASHTAGS</label>
+          <input class="form-input" id="sched-hashtags" placeholder="#ai #saas #startup">
         </div>
-        <div class="form-group">
-          <label class="form-label">SCHEDULE DATE & TIME</label>
+        <div class="form-group"><label class="form-label">VIDEO / IMAGE URL (optional)</label>
+          <input class="form-input" id="sched-video" placeholder="Kling URL, Cloudinary, S3…">
+        </div>
+        <div class="form-group"><label class="form-label">SCHEDULE DATE & TIME</label>
           <input class="form-input" id="sched-time" type="datetime-local">
         </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" id="sched-add-btn">📅 Schedule Post</button>
-          <button class="btn" id="sched-ai-btn">✨ AI Write Caption</button>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button class="btn btn-primary" id="sched-add-btn">📅 Schedule</button>
           <button class="btn btn-green" id="sched-now-btn">▶ Post Now</button>
+          <button class="btn" id="sched-ai-btn">✨ AI Generate</button>
         </div>
         <div id="sched-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
-
-        <div class="auto-how-box" style="margin-top:20px">
-          <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:1px;margin-bottom:10px">HOW AUTONOMOUS POSTING WORKS</div>
-          <div class="auto-step"><span class="auto-step-num">1</span><span>Go to <b>Integrations</b> → paste your Zapier or Make webhook URL</span></div>
-          <div class="auto-step"><span class="auto-step-num">2</span><span>In Zapier/Make, create a flow: <b>Webhook received → Post to [Instagram/TikTok/YouTube]</b></span></div>
-          <div class="auto-step"><span class="auto-step-num">3</span><span>Generate videos in <b>Kling AI</b> → copy the video URL</span></div>
-          <div class="auto-step"><span class="auto-step-num">4</span><span>Schedule posts here → Kayro fires the webhook at the right time, the platform posts automatically</span></div>
-          <div class="auto-step"><span class="auto-step-num">5</span><span><b>You don't need to be there.</b> The app fires it in the background.</span></div>
-        </div>
       </div>
-
-      <div class="auto-panel" style="flex:1.3">
+      <div class="auto-panel" style="flex:1.4">
         <div class="auto-panel-title" style="display:flex;align-items:center;justify-content:space-between">
-          Post Queue
-          <span style="font-size:11px;color:var(--text2)">${posts.length} post${posts.length!==1?'s':''} queued</span>
+          <span>Post Queue <span style="font-size:11px;font-weight:400;color:var(--text3)">${posts.length} total</span></span>
+          ${posts.some(p=>p.status==='sent')?`<button class="btn btn-sm btn-danger" onclick="AutomationsPage._clearDone()">Clear Sent</button>`:''}
         </div>
-        ${posts.length === 0
-          ? `<div class="auto-empty">No posts scheduled yet. Queue one on the left.</div>`
-          : `<div class="sched-list">${posts.slice().reverse().map(p => `
+        ${posts.length===0
+          ?`<div class="auto-empty"><div style="font-size:32px;margin-bottom:8px">📭</div><div>No posts queued.</div><div style="font-size:12px;color:var(--text3);margin-top:4px">Schedule one on the left, or enable <b>Recurring Social Post</b> in Workflows.</div></div>`
+          :`<div class="sched-list">${posts.slice().reverse().map(p=>`
             <div class="sched-row ${p.status}">
+              <div class="sched-plat-badge">${AutomationsPage._platIcon(p.platform)}</div>
               <div class="sched-row-left">
-                <div class="sched-plat">${AutomationsPage._platIcon(p.platform)} ${p.platform}</div>
-                <div class="sched-caption-preview">${escHtml(p.caption.slice(0,60))}${p.caption.length>60?'…':''}</div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:3px">
+                  <span class="sched-plat">${p.platform}</span>
+                  <span class="sched-status-badge sched-sb-${p.status}">${p.status}</span>
+                </div>
+                <div class="sched-caption-preview">${escHtml((p.caption||'').slice(0,80))}${(p.caption||'').length>80?'…':''}</div>
                 <div class="sched-time-row">
                   ${p.status==='scheduled'?`🕐 ${new Date(p.scheduledAt).toLocaleString()}`:
-                    p.status==='sent'?`<span style="color:var(--green)">✅ Sent ${new Date(p.sentAt||p.scheduledAt).toLocaleString()}</span>`:
+                    p.status==='sent'?`<span style="color:var(--green)">✅ ${new Date(p.sentAt||p.scheduledAt).toLocaleString()}</span>`:
                     p.status==='sending'?`<span style="color:var(--accent)">⏳ Sending…</span>`:
-                    `<span style="color:var(--red)">❌ Failed: ${escHtml(p.error||'unknown')}</span>`}
+                    `<span style="color:var(--red)">❌ ${escHtml(p.error||'Failed')}</span>`}
                 </div>
               </div>
-              <div style="display:flex;flex-direction:column;gap:4px">
+              <div style="flex-shrink:0">
                 ${p.status==='scheduled'?`<button class="btn btn-sm btn-danger" onclick="AutomationsPage._cancelPost('${p.id}')">Cancel</button>`:''}
                 ${p.status==='failed'?`<button class="btn btn-sm" onclick="AutomationsPage._retryPost('${p.id}')">Retry</button>`:''}
               </div>
-            </div>`).join('')}
-          </div>`}
+            </div>`).join('')}</div>`}
       </div>
     </div>`;
 
-    // Set default scheduled time to 1 hour from now
-    const dt = document.getElementById('sched-time');
-    if (dt && !dt.value) {
-      const d = new Date(Date.now() + 3600000);
-      dt.value = d.toISOString().slice(0,16);
-    }
-
-    document.getElementById('sched-add-btn').addEventListener('click', () => AutomationsPage._schedulePost(false));
-    document.getElementById('sched-now-btn').addEventListener('click', () => AutomationsPage._schedulePost(true));
-    document.getElementById('sched-ai-btn').addEventListener('click', () => AutomationsPage._aiCaption());
+    const dt=document.getElementById('sched-time');
+    if(dt&&!dt.value){const d=new Date(Date.now()+3600000);dt.value=d.toISOString().slice(0,16);}
+    document.getElementById('sched-add-btn').addEventListener('click',()=>AutomationsPage._schedulePost(false));
+    document.getElementById('sched-now-btn').addEventListener('click',()=>AutomationsPage._schedulePost(true));
+    document.getElementById('sched-ai-btn').addEventListener('click',()=>AutomationsPage._aiCaption());
   },
 
-  _platIcon(p) { return {instagram:'📸',tiktok:'🎵',youtube:'📺',twitter:'🐦',facebook:'📘',linkedin:'💼',slack:'💬',discord:'🟣'}[p]||'📱'; },
+  _platIcon(p){return{instagram:'📸',tiktok:'🎵',youtube:'📺',twitter:'🐦',facebook:'📘',linkedin:'💼',slack:'💬',discord:'🟣'}[p]||'📱';},
 
   async _schedulePost(now) {
-    const platform = document.getElementById('sched-platform').value;
-    const videoUrl = document.getElementById('sched-video').value.trim();
-    const caption  = document.getElementById('sched-caption').value.trim();
-    const hashtags = document.getElementById('sched-hashtags').value.trim();
-    const dtVal    = document.getElementById('sched-time').value;
-    const status   = document.getElementById('sched-status');
-    if (!caption) { toast('Add a caption', 'error'); return; }
-    const scheduledAt = now ? Date.now() : new Date(dtVal).getTime();
-    if (!now && (!dtVal || isNaN(scheduledAt))) { toast('Set a schedule date/time', 'error'); return; }
-    const post = { id: uid(), platform, videoUrl, caption, hashtags, scheduledAt, status:'scheduled', createdAt:Date.now() };
-    if (!State.automations.scheduledPosts) State.automations.scheduledPosts = [];
-    State.automations.scheduledPosts.push(post);
-    AutomationsPage._save();
-    if (now) {
-      status.textContent = '⏳ Posting now…';
-      post.status = 'sending';
-      try {
+    const platform=document.getElementById('sched-platform').value;
+    const videoUrl=document.getElementById('sched-video').value.trim();
+    const caption=document.getElementById('sched-caption').value.trim();
+    const hashtags=document.getElementById('sched-hashtags').value.trim();
+    const dtVal=document.getElementById('sched-time').value;
+    const status=document.getElementById('sched-status');
+    if(!caption){toast('Add a caption','error');return;}
+    const scheduledAt=now?Date.now():new Date(dtVal).getTime();
+    if(!now&&(!dtVal||isNaN(scheduledAt))){toast('Set a schedule date/time','error');return;}
+    const post={id:uid(),platform,videoUrl,caption,hashtags,scheduledAt,status:'scheduled',createdAt:Date.now()};
+    if(!State.automations.scheduledPosts)State.automations.scheduledPosts=[];
+    State.automations.scheduledPosts.push(post);AutomationsPage._save();
+    if(now){
+      status.textContent='⏳ Posting now…';post.status='sending';
+      try{
         await AutomationsPage._executePost(post);
-        post.status = 'sent'; post.sentAt = Date.now();
-        status.innerHTML = `<span style="color:var(--green)">✅ Posted to ${platform}!</span>`;
-        toast('Posted! ✓', 'success');
-      } catch(e) {
-        post.status = 'failed'; post.error = e.message;
-        status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+        post.status='sent';post.sentAt=Date.now();
+        status.innerHTML=`<span style="color:var(--green)">✅ Posted to ${platform}!</span>`;
+        toast('Posted! ✓','success');
+        AutomationsPage._log('📅','Posted to '+platform+': '+caption.slice(0,60));
+      }catch(e){
+        post.status='failed';post.error=e.message;
+        status.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`;
+        AutomationsPage._log('📅','Post failed: '+e.message,'error');
       }
       AutomationsPage._save();
     } else {
-      toast(`Scheduled for ${new Date(scheduledAt).toLocaleString()} ✓`, 'success');
+      toast(`Scheduled for ${new Date(scheduledAt).toLocaleString()} ✓`,'success');
+      AutomationsPage._log('📅','Scheduled '+platform+' post for '+new Date(scheduledAt).toLocaleString());
     }
     AutomationsPage._renderTab();
   },
 
   async _aiCaption() {
-    const platform = document.getElementById('sched-platform').value;
-    const videoUrl = document.getElementById('sched-video').value.trim();
-    const existing = document.getElementById('sched-caption').value.trim();
-    const company = State.settings.companyName || 'Kayro Interactive';
-    const emp = State.employees.find(e=>e.role.toLowerCase().includes('market'))||State.employees[0];
-    const prompt = `Write a ${platform} post caption for ${company}.${videoUrl?' The post includes a video.':''} ${existing?'Context: '+existing:''}
-Requirements:
-- Platform: ${platform}
-- Hook in first line (no "Check this out!" or emojis as openers unless very strategic)
-- Max 150 words
-- End with a clear CTA
-- Write hashtags separately after the caption (5-8 relevant ones)
-
+    const platform=document.getElementById('sched-platform').value;
+    const topic=document.getElementById('sched-topic').value.trim();
+    const existing=document.getElementById('sched-caption').value.trim();
+    const company=State.settings.companyName||'Kayro Interactive';
+    const emp=State.employees.find(e=>e.role.toLowerCase().includes('market'))||State.employees[0];
+    const btn=document.getElementById('sched-ai-btn');
+    if(btn){btn.disabled=true;btn.textContent='Writing…';}
+    try{
+      const result=await AI.once([{role:'user',content:`Write a ${platform} post for ${company}.${topic?' Topic: '+topic:''}${existing?' Context: '+existing:''}
 Format:
 CAPTION:
-[caption text]
-
+[hook + body + CTA, max 150 words]
 HASHTAGS:
-[hashtags]`;
-    toast('Writing caption…');
-    const result = await AI.once([{role:'user',content:prompt}], emp?.system || `You are a social media expert at ${company}.`);
-    const captionMatch = result.match(/CAPTION:\n([\s\S]+?)(?=\nHASHTAGS:|$)/);
-    const hashMatch = result.match(/HASHTAGS:\n([\s\S]+?)$/);
-    if (captionMatch) document.getElementById('sched-caption').value = captionMatch[1].trim();
-    if (hashMatch) document.getElementById('sched-hashtags').value = hashMatch[1].trim();
-    toast('Caption written ✓', 'success');
+[5-8 tags]`}], emp?.system||`You are a social media expert at ${company}.`);
+      const cm=result.match(/CAPTION:\n([\s\S]+?)(?=\nHASHTAGS:|$)/);
+      const hm=result.match(/HASHTAGS:\n([\s\S]+?)$/);
+      if(cm)document.getElementById('sched-caption').value=cm[1].trim();
+      if(hm)document.getElementById('sched-hashtags').value=hm[1].trim();
+      toast('Caption written ✓','success');
+    }finally{if(btn){btn.disabled=false;btn.textContent='✨ AI Generate';}}
   },
 
-  _cancelPost(id) { State.automations.scheduledPosts = (State.automations.scheduledPosts||[]).filter(p=>p.id!==id); AutomationsPage._save(); AutomationsPage._renderTab(); },
-  async _retryPost(id) { const p=(State.automations.scheduledPosts||[]).find(x=>x.id===id); if(!p)return; p.status='scheduled'; p.scheduledAt=Date.now(); await AutomationsPage._runDue(); AutomationsPage._renderTab(); },
+  _cancelPost(id){State.automations.scheduledPosts=(State.automations.scheduledPosts||[]).filter(p=>p.id!==id);AutomationsPage._save();AutomationsPage._renderTab();},
+  _clearDone(){State.automations.scheduledPosts=(State.automations.scheduledPosts||[]).filter(p=>p.status!=='sent');AutomationsPage._save();AutomationsPage._renderTab();},
+  async _retryPost(id){const p=(State.automations.scheduledPosts||[]).find(x=>x.id===id);if(!p)return;p.status='scheduled';p.scheduledAt=Date.now();await AutomationsPage._runDue();AutomationsPage._renderTab();},
 
-  // ── INTEGRATIONS ──────────────────────────────────────────────
+  // ── INTEGRATIONS TAB ──────────────────────────────────────────
   _renderIntegrations(el) {
     const ig = State.automations.integrations || {};
-    const conn = (k) => ig[k] ? '<span style="color:var(--green);font-size:10px;font-weight:700">● CONNECTED</span>' : '<span style="color:var(--text3);font-size:10px;font-weight:700">○ NOT SET</span>';
-
-    const INTEGRATIONS = [
-      { id:'zapier',   name:'Zapier',      icon:'⚡', color:'#ff4a00', desc:'Connect 5,000+ apps. Set up a Zap to receive Kayro webhooks.', fields:[{key:'zapierWebhookUrl',label:'Webhook URL',ph:'https://hooks.zapier.com/hooks/catch/…',type:'url'}], guide:'zapier.com → Webhooks by Zapier → Catch Hook → copy URL' },
-      { id:'make',     name:'Make',        icon:'🔄', color:'#6d00cc', desc:'Connect 1,500+ apps via Make (Integromat) scenarios.', fields:[{key:'makeWebhookUrl',label:'Webhook URL',ph:'https://hook.eu1.make.com/…',type:'url'}], guide:'make.com → Create scenario → Webhooks → Custom webhook → copy URL' },
-      { id:'slack',    name:'Slack',       icon:'💬', color:'#4a154b', desc:'Send messages to Slack channels directly from agents.', fields:[{key:'slackWebhookUrl',label:'Incoming Webhook URL',ph:'https://hooks.slack.com/services/…',type:'url'}], guide:'Slack → Apps → Incoming Webhooks → Add to Slack → copy URL' },
-      { id:'discord',  name:'Discord',     icon:'🟣', color:'#5865f2', desc:'Post to Discord channels via webhook.', fields:[{key:'discordWebhookUrl',label:'Webhook URL',ph:'https://discord.com/api/webhooks/…',type:'url'}], guide:'Discord → Server Settings → Integrations → Webhooks → New Webhook → copy URL' },
-      { id:'twilio',   name:'Twilio SMS',  icon:'📱', color:'#f22f46', desc:'Send SMS messages from your agents.', fields:[{key:'twilioSid',label:'Account SID',ph:'ACxxxxxxxxx',type:'text'},{key:'twilioToken',label:'Auth Token',ph:'your_auth_token',type:'password'},{key:'twilioFrom',label:'From Number',ph:'+1234567890',type:'tel'},{key:'twilioTo',label:'Default To Number',ph:'+1234567890',type:'tel'}], guide:'twilio.com → Console → Account Info → copy SID and Auth Token' },
-      { id:'notion',   name:'Notion',      icon:'📝', color:'#fff',    desc:'Create pages and update databases in Notion.', fields:[{key:'notionKey',label:'Integration Token',ph:'secret_…',type:'password'},{key:'notionDbId',label:'Database ID (optional)',ph:'xxxxxxxx-xxxx-…',type:'text'}], guide:'notion.com → Settings → Integrations → New integration → copy token' },
-      { id:'airtable', name:'Airtable',    icon:'🗃️', color:'#18bfff', desc:'Read/write Airtable bases and tables.', fields:[{key:'airtableKey',label:'API Key',ph:'pat…',type:'password'},{key:'airtableBaseId',label:'Base ID',ph:'appXXXXXXXX',type:'text'},{key:'airtableTableName',label:'Table Name',ph:'Table 1',type:'text'}], guide:'airtable.com → Account → API → Personal access token' },
-      { id:'hubspot',  name:'HubSpot',     icon:'🧡', color:'#ff7a59', desc:'Create contacts, deals and activities in HubSpot CRM.', fields:[{key:'hubspotKey',label:'Private App Token',ph:'pat-na1-…',type:'password'}], guide:'HubSpot → Settings → Integrations → Private Apps → Create app → copy token' },
-      { id:'github',   name:'GitHub',      icon:'⬡',  color:'#6e40c9', desc:'Create issues, pull requests and comments.', fields:[{key:'githubToken',label:'Personal Access Token',ph:'ghp_…',type:'password'},{key:'githubRepo',label:'Default Repo (owner/repo)',ph:'omarbaalbaki/myrepo',type:'text'}], guide:'github.com → Settings → Developer settings → Personal access tokens → Generate' },
+    const _dot = k => ig[k]?`<span class="int-dot int-dot--on"></span>Connected`:`<span class="int-dot"></span>Not set`;
+    const INTS = [
+      {id:'zapier',  name:'Zapier',     icon:'⚡',color:'#ff4a00',desc:'5,000+ apps. One webhook = every app.',fields:[{key:'zapierWebhookUrl',label:'Webhook URL',ph:'https://hooks.zapier.com/hooks/catch/…',type:'url'}],guide:'zapier.com → Webhooks by Zapier → Catch Hook → Copy URL'},
+      {id:'make',    name:'Make',       icon:'🔄',color:'#6d00cc',desc:'1,500+ apps. Visual automation builder.',fields:[{key:'makeWebhookUrl',label:'Webhook URL',ph:'https://hook.eu1.make.com/…',type:'url'}],guide:'make.com → New scenario → Webhooks → Custom webhook → Copy URL'},
+      {id:'slack',   name:'Slack',      icon:'💬',color:'#4a154b',desc:'Direct messages to channels — no Zapier.',fields:[{key:'slackWebhookUrl',label:'Incoming Webhook URL',ph:'https://hooks.slack.com/services/…',type:'url'}],guide:'Slack → Apps → Incoming Webhooks → Add to Slack → Copy URL'},
+      {id:'discord', name:'Discord',    icon:'🟣',color:'#5865f2',desc:'Post to Discord channels directly.',fields:[{key:'discordWebhookUrl',label:'Webhook URL',ph:'https://discord.com/api/webhooks/…',type:'url'}],guide:'Discord → Server Settings → Integrations → Webhooks → New Webhook'},
+      {id:'airtable',name:'Airtable',   icon:'🗃️',color:'#18bfff',desc:'Leads auto-added to your base on find.',fields:[{key:'airtableKey',label:'Personal Access Token',ph:'pat…',type:'password'},{key:'airtableBaseId',label:'Base ID',ph:'appXXXXXXXX',type:'text'},{key:'airtableTableName',label:'Table Name',ph:'Leads',type:'text'}],guide:'airtable.com → Account → API → Personal access tokens'},
+      {id:'twilio',  name:'Twilio SMS', icon:'📱',color:'#f22f46',desc:'Send SMS alerts from agents.',fields:[{key:'twilioSid',label:'Account SID',ph:'ACxxxxxxxxx',type:'text'},{key:'twilioToken',label:'Auth Token',ph:'…',type:'password'},{key:'twilioFrom',label:'From Number',ph:'+1234567890',type:'tel'},{key:'twilioTo',label:'To Number',ph:'+1234567890',type:'tel'}],guide:'twilio.com → Console → Account Info'},
+      {id:'notion',  name:'Notion',     icon:'📝',color:'#fff',   desc:'Create pages in Notion databases.',fields:[{key:'notionKey',label:'Integration Token',ph:'secret_…',type:'password'},{key:'notionDbId',label:'Database ID',ph:'xxxxxxxx-…',type:'text'}],guide:'notion.com → Settings → Integrations → New integration → Copy token'},
+      {id:'hubspot', name:'HubSpot',    icon:'🧡',color:'#ff7a59',desc:'CRM contacts from leads (via Zapier).',fields:[{key:'hubspotKey',label:'Private App Token',ph:'pat-na1-…',type:'password'}],guide:'HubSpot → Settings → Integrations → Private Apps → Create → Copy token'},
+      {id:'github',  name:'GitHub',     icon:'⬡', color:'#6e40c9',desc:'Create issues in your repositories.',fields:[{key:'githubToken',label:'Personal Access Token',ph:'ghp_…',type:'password'},{key:'githubRepo',label:'Default Repo',ph:'owner/repo',type:'text'}],guide:'github.com → Settings → Developer settings → Personal access tokens'},
     ];
 
     el.innerHTML = `
-    <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent)">
-      💡 <b>How it works:</b> Connect Zapier or Make first — this unlocks 5,000+ integrations (Instagram, TikTok, YouTube, Salesforce, etc.) via webhook. Native integrations below (Slack, Twilio, Notion, etc.) work directly without Zapier.
+    <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent);margin-bottom:20px">
+      💡 <b>Start here:</b> Connect <b>Zapier</b> or <b>Make</b> (one webhook = 5,000+ apps). Connect <b>Slack</b> or <b>Discord</b> for instant direct notifications. Then go to <b>Workflows</b> and enable rules.
     </div>
     <div class="int-grid">
-      ${INTEGRATIONS.map(intg => `
-        <div class="int-card" id="int-card-${intg.id}">
+      ${INTS.map(intg=>{
+        const connected=!!ig[intg.fields[0].key];
+        return `<div class="int-card${connected?' int-card--connected':''}">
           <div class="int-card-hdr">
             <div class="int-icon" style="background:${intg.color}22;border:1px solid ${intg.color}33;color:${intg.color}">${intg.icon}</div>
-            <div style="flex:1">
+            <div style="flex:1;min-width:0">
               <div class="int-name">${intg.name}</div>
-              ${conn(intg.fields[0].key)}
+              <div class="int-conn-row">${_dot(intg.fields[0].key)}</div>
             </div>
             <button class="btn btn-sm int-toggle-btn" data-id="${intg.id}">Configure</button>
           </div>
           <div class="int-desc">${intg.desc}</div>
           <div class="int-form" id="int-form-${intg.id}" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
             <div class="form-hint" style="margin-bottom:10px">📖 ${intg.guide}</div>
-            ${intg.fields.map(f => `
-              <div class="form-group" style="margin-bottom:8px">
-                <label class="form-label">${f.label}</label>
-                <input class="form-input" id="int-${f.key}" type="${f.type}" value="${escHtml(ig[f.key]||'')}" placeholder="${f.ph}">
-              </div>`).join('')}
-            <div style="display:flex;gap:8px;margin-top:4px">
+            ${intg.fields.map(f=>`<div class="form-group" style="margin-bottom:8px">
+              <label class="form-label">${f.label}</label>
+              <input class="form-input" id="int-${f.key}" type="${f.type}" value="${escHtml(ig[f.key]||'')}" placeholder="${f.ph}">
+            </div>`).join('')}
+            <div style="display:flex;gap:8px;margin-top:6px">
               <button class="btn btn-primary btn-sm int-save-btn" data-id="${intg.id}" data-keys="${intg.fields.map(f=>f.key).join(',')}">Save</button>
               <button class="btn btn-sm int-test-btn" data-id="${intg.id}">Test</button>
             </div>
-            <div class="int-status" id="int-status-${intg.id}" style="font-size:12px;margin-top:6px;color:var(--text2)"></div>
+            <div class="int-status" id="int-status-${intg.id}"></div>
           </div>
-        </div>`).join('')}
+        </div>`;
+      }).join('')}
     </div>`;
 
-    // Toggle forms
-    el.querySelectorAll('.int-toggle-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const form = document.getElementById(`int-form-${btn.dataset.id}`);
-        const isOpen = form.style.display !== 'none';
-        el.querySelectorAll('.int-form').forEach(f => f.style.display='none');
-        form.style.display = isOpen ? 'none' : 'block';
-        btn.textContent = isOpen ? 'Configure' : 'Close';
+    el.querySelectorAll('.int-toggle-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const form=document.getElementById(`int-form-${btn.dataset.id}`);
+        const isOpen=form.style.display!=='none';
+        el.querySelectorAll('.int-form').forEach(f=>f.style.display='none');
+        el.querySelectorAll('.int-toggle-btn').forEach(b=>b.textContent='Configure');
+        if(!isOpen){form.style.display='block';btn.textContent='Close';}
       });
     });
-
-    // Save handlers
-    el.querySelectorAll('.int-save-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const keys = btn.dataset.keys.split(',');
-        if (!State.automations.integrations) State.automations.integrations = {};
-        keys.forEach(k => { State.automations.integrations[k] = document.getElementById(`int-${k}`)?.value.trim()||''; });
+    el.querySelectorAll('.int-save-btn').forEach(btn=>{
+      btn.addEventListener('click',()=>{
+        const keys=btn.dataset.keys.split(',');
+        if(!State.automations.integrations)State.automations.integrations={};
+        keys.forEach(k=>{State.automations.integrations[k]=document.getElementById(`int-${k}`)?.value.trim()||'';});
         AutomationsPage._save();
-        const status = document.getElementById(`int-status-${btn.dataset.id}`);
-        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Saved</span>';
-        toast('Integration saved ✓', 'success');
+        const st=document.getElementById(`int-status-${btn.dataset.id}`);
+        if(st)st.innerHTML='<span style="color:var(--green)">✅ Saved</span>';
+        toast('Saved ✓','success');
+        AutomationsPage._renderTab();
       });
     });
-
-    // Test handlers
-    el.querySelectorAll('.int-test-btn').forEach(btn => {
-      btn.addEventListener('click', () => AutomationsPage._testIntegration(btn.dataset.id));
-    });
+    el.querySelectorAll('.int-test-btn').forEach(btn=>btn.addEventListener('click',()=>AutomationsPage._testIntegration(btn.dataset.id)));
   },
 
   async _testIntegration(id) {
-    const ig = State.automations.integrations || {};
-    const status = document.getElementById(`int-status-${id}`);
-    if (status) { status.textContent = '⏳ Testing…'; status.style.color='var(--text2)'; }
-    try {
-      if (id === 'zapier' || id === 'make') {
-        const url = ig.zapierWebhookUrl || ig.makeWebhookUrl;
-        if (!url) throw new Error('No webhook URL saved');
-        await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({test:true, source:'Kayro Interactive', message:'Test webhook from Kayro'}) });
-        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Webhook fired — check your Zap/scenario history</span>';
-      } else if (id === 'slack') {
-        if (!ig.slackWebhookUrl) throw new Error('No Slack webhook URL saved');
-        await fetch(ig.slackWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:'👋 Test from Kayro Interactive — integration connected!'}) });
-        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Message sent to Slack!</span>';
-      } else if (id === 'discord') {
-        if (!ig.discordWebhookUrl) throw new Error('No Discord webhook URL saved');
-        await fetch(ig.discordWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content:'👋 Test from Kayro Interactive — Discord integration connected!'}) });
-        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Message sent to Discord!</span>';
-      } else {
-        if (status) status.innerHTML = '<span style="color:var(--amber)">ℹ️ Click Save first, then use the integration in an agent chat</span>';
+    const ig=State.automations.integrations||{};
+    const st=document.getElementById(`int-status-${id}`);
+    if(st){st.textContent='⏳ Testing…';st.style.color='var(--text2)';}
+    try{
+      if(id==='zapier'||id==='make'){
+        const url=ig.zapierWebhookUrl||ig.makeWebhookUrl;
+        if(!url)throw new Error('No webhook URL saved yet');
+        await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({test:true,source:'Kayro Interactive'})});
+        if(st)st.innerHTML='<span style="color:var(--green)">✅ Fired — check your Zap/scenario history</span>';
+      }else if(id==='slack'){
+        if(!ig.slackWebhookUrl)throw new Error('No Slack webhook URL saved');
+        await fetch(ig.slackWebhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'👋 Test from *Kayro Interactive* — Slack is connected!'})});
+        if(st)st.innerHTML='<span style="color:var(--green)">✅ Message sent to Slack!</span>';
+      }else if(id==='discord'){
+        if(!ig.discordWebhookUrl)throw new Error('No Discord webhook URL saved');
+        await fetch(ig.discordWebhookUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({content:'👋 Test from **Kayro Interactive** — Discord is connected!'})});
+        if(st)st.innerHTML='<span style="color:var(--green)">✅ Message sent to Discord!</span>';
+      }else if(id==='airtable'){
+        if(!ig.airtableKey||!ig.airtableBaseId)throw new Error('Save API key and Base ID first');
+        const res=await fetch(`https://api.airtable.com/v0/${ig.airtableBaseId}/${encodeURIComponent(ig.airtableTableName||'Leads')}`,{method:'POST',headers:{'Authorization':'Bearer '+ig.airtableKey,'Content-Type':'application/json'},body:JSON.stringify({fields:{Email:'test@kayro.ai','First Name':'Test',Source:'Kayro Test',Date:new Date().toISOString().split('T')[0]}})});
+        if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Airtable error');}
+        if(st)st.innerHTML='<span style="color:var(--green)">✅ Test record added to Airtable!</span>';
+      }else{
+        if(st)st.innerHTML='<span style="color:var(--text2)">ℹ️ Save credentials, then enable a Workflow to use this integration</span>';
       }
-    } catch(e) {
-      if (status) status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+      AutomationsPage._log('🔌','Test '+id+': OK');
+    }catch(e){
+      if(st)st.innerHTML=`<span style="color:var(--red)">❌ ${e.message}</span>`;
+      AutomationsPage._log('⚠️','Test '+id+' failed: '+e.message,'error');
     }
   },
 
-  // ── WEBHOOKS ──────────────────────────────────────────────────
-  _renderWebhooks(el) {
-    const ig = State.automations.integrations || {};
+  // ── RUN LOG TAB ───────────────────────────────────────────────
+  _renderLog(el) {
+    const log = State.automations.runLog || [];
     el.innerHTML = `
-    <div class="auto-two-col">
-      <div class="auto-panel" style="flex:1">
-        <div class="auto-panel-title">Fire a Custom Webhook</div>
-        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Send any data to any URL — Zapier, Make, n8n, your own server. Your agents can trigger these too.</p>
-        <div class="form-group">
-          <label class="form-label">URL</label>
-          <input class="form-input" id="wh-url" placeholder="https://hooks.zapier.com/…" value="${escHtml(ig.zapierWebhookUrl||ig.makeWebhookUrl||'')}">
-        </div>
-        <div class="form-group">
-          <label class="form-label">METHOD</label>
-          <select class="form-input" id="wh-method">
-            <option value="POST">POST</option>
-            <option value="GET">GET</option>
-            <option value="PUT">PUT</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label class="form-label">PAYLOAD (JSON)</label>
-          <textarea class="form-textarea" id="wh-body" style="min-height:120px;font-family:var(--mono);font-size:12px" placeholder='{\n  "action": "post_video",\n  "platform": "instagram",\n  "video_url": "https://…",\n  "caption": "Check this out!"\n}'></textarea>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-primary" id="wh-fire-btn">🚀 Fire Webhook</button>
-          <button class="btn" id="wh-ai-payload-btn">✨ AI Build Payload</button>
-        </div>
-        <div id="wh-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
-      </div>
-      <div class="auto-panel" style="flex:1">
-        <div class="auto-panel-title">What You Can Trigger</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${[
-            ['📸 Instagram post','Send video + caption → Zapier posts for you'],
-            ['🎵 TikTok upload','Send video URL → Make/Zapier uploads to TikTok'],
-            ['📺 YouTube Shorts','Video + title + description → auto-upload'],
-            ['🐦 Twitter/X post','Text/video → post from your account'],
-            ['💼 LinkedIn post','Text/video → publish to your profile/company page'],
-            ['📊 Google Sheets row','Append lead data, metrics, logs'],
-            ['📝 Notion page','Create a new page in any database'],
-            ['🗃️ Airtable record','Add rows to any base'],
-            ['🧡 HubSpot contact','Create CRM contacts from lead data'],
-            ['📱 SMS via Twilio','Send text messages to any number'],
-            ['💬 Slack message','Notify your team in any channel'],
-            ['⚙️ Any API','Send to any webhook-compatible service'],
-          ].map(([action, desc]) => `
-            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
-              <div style="font-size:14px;flex-shrink:0">${action.split(' ')[0]}</div>
-              <div>
-                <div style="font-size:12.5px;font-weight:600;color:var(--text)">${action.split(' ').slice(1).join(' ')}</div>
-                <div style="font-size:11.5px;color:var(--text2)">${desc}</div>
-              </div>
-            </div>`).join('')}
-        </div>
-      </div>
-    </div>`;
-
-    document.getElementById('wh-fire-btn').addEventListener('click', async () => {
-      const url = document.getElementById('wh-url').value.trim();
-      const method = document.getElementById('wh-method').value;
-      const bodyStr = document.getElementById('wh-body').value.trim();
-      const status = document.getElementById('wh-status');
-      if (!url) { toast('Enter a webhook URL', 'error'); return; }
-      status.textContent = '⏳ Firing…';
-      try {
-        const opts = { method, headers:{'Content-Type':'application/json'} };
-        if (bodyStr && method !== 'GET') opts.body = bodyStr;
-        const res = await fetch(url, opts);
-        status.innerHTML = `<span style="color:var(--green)">✅ Response: ${res.status} ${res.statusText}</span>`;
-        toast('Webhook fired ✓', 'success');
-      } catch(e) {
-        status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
-      }
-    });
-
-    document.getElementById('wh-ai-payload-btn').addEventListener('click', async () => {
-      const emp = State.employees[0];
-      const company = State.settings.companyName || 'Kayro Interactive';
-      const result = await AI.once([{role:'user',content:`Build a sample JSON webhook payload for a social media video post from ${company}. Include: action, platform (instagram), video_url (example URL), caption, hashtags array, and timestamp. Return ONLY valid JSON, no explanation.`}], emp?.system||'You are a JSON assistant. Return only valid JSON.');
-      const clean = result.replace(/```json\n?|```/g,'').trim();
-      document.getElementById('wh-body').value = clean;
-      toast('Payload generated ✓', 'success');
-    });
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <div style="font-size:15px;font-weight:700;color:var(--text1)">Run Log <span style="font-weight:400;color:var(--text3);font-size:13px">${log.length} events</span></div>
+      ${log.length>0?`<button class="btn btn-sm btn-danger" onclick="AutomationsPage._clearLog()">Clear Log</button>`:''}
+    </div>
+    ${log.length===0
+      ?`<div class="auto-empty"><div style="font-size:32px;margin-bottom:8px">📋</div><div>No automation runs yet.</div><div style="font-size:12px;color:var(--text3);margin-top:4px">Enable workflows — every action appears here in real-time.</div></div>`
+      :`<div class="log-list">${log.map(e=>`
+        <div class="log-row log-row--${e.status||'ok'}">
+          <div class="log-icon">${e.icon||'⚡'}</div>
+          <div class="log-msg">${escHtml(e.msg)}</div>
+          <div class="log-time">${_timeAgo(e.ts)}</div>
+        </div>`).join('')}</div>`}`;
   },
+  _clearLog(){State.automations.runLog=[];AutomationsPage._save();AutomationsPage._renderTab();},
 };
 
 // ══════════════════════════════════════════════════════════════
