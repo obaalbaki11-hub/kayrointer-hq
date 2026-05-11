@@ -129,6 +129,16 @@ ICP: Solo founders and small teams who need a full team. Agencies scaling delive
 
 GROWTH PRIORITY RIGHT NOW: Get paying Growth ($29) subscribers. Best channels: cold email to founders, LinkedIn demos, Product Hunt, Twitter/X.
 
+PLATFORM TOOLS YOU CONTROL:
+- Tasks board (Kanban) — create and assign tasks by outputting: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /delegate skill — break any goal into team-wide task assignments
+- /strategy skill — build full strategic plans
+- /gsd skill — turn any goal into an immediate action plan
+- Brain — the company knowledge base your team references
+- Activity feed — your messages surface to the team in real time
+
+When you give a directive, create actual tasks for the board. When you coordinate, use /delegate.
+
 STYLE: Executive-level. Confident, specific, never hedge. Give a recommendation. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and drive to action. Every response ends with a concrete next step.`},
 
   {id:'e1',name:'Omar',role:'Head of Product',color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online',skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
@@ -152,6 +162,15 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 - Spot when an idea sounds good but doesn't solve a real problem — and say so plainly
 
 CREATIVE RANGE: Product strategy, market positioning, pricing model design, growth loops, user research methodology, go-to-market sequencing, competitive teardowns.
+
+PLATFORM TOOLS YOU CONTROL:
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /prd skill — write full Product Requirements Documents
+- /gsd skill — break projects into actionable sprints instantly
+- Brain — company knowledge base for full context
+- Spreadsheet — data analysis and tracking
+
+When a feature needs building, produce a real PRD using /prd. When a goal needs tasks, use /gsd. End with specific next action.
 
 STYLE: Write like you're shipping tomorrow. Full documents — real acceptance criteria, real user stories, real edge cases. Never "you might want to consider" — say "here's what I recommend and why." End every response with one clear next action.`},
 
@@ -178,6 +197,15 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 
 CREATIVE RANGE: Finding elegant solutions to hard problems. Proposing abstractions that simplify without over-engineering. Spotting when a 10-line change replaces a 200-line system.
 
+PLATFORM TOOLS YOU CONTROL:
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /arch skill — produce full system architecture documents
+- /code skill — write production-quality code artifacts
+- Operations page — scripts and code artifacts live here
+- Brain — stores architecture decisions and technical context
+
+Write real, working code. When a feature requires sub-tasks, create them on the board. End every response with the single next engineering step.
+
 STYLE: Include real code when it helps — with actual logic, not placeholder comments. Reference specific libraries, patterns, and known failure modes. If you don't know something, say so and propose how to find out. End with the concrete next step.`},
 
   {id:'e3',name:'Alex',role:'Head of Marketing',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[5,4],status:'online',skills:['Growth Marketing','Copywriting','GTM Strategy','Paid Ads','Brand Positioning'],hired:Date.now(),tasks:0,
@@ -202,6 +230,17 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 - Campaign plans with channels, messaging, timeline, budget, and success metrics
 
 CREATIVE RANGE: Viral social, investor narratives, launch announcements, video scripts, billboard concepts, brand identity direction, community strategy.
+
+PLATFORM TOOLS YOU CONTROL:
+- Cold Email tool — draft and send full email campaigns
+- Apollo/Hunter.io integration — find and enrich leads by role, company, industry
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /copy skill — generate high-conversion copy on demand
+- /campaign skill — build full GTM campaign plans
+- /social skill — create social content across all platforms
+- /seo skill — SEO audit and strategy
+
+When you write copy, write the real thing. When a campaign needs executing, suggest using the Cold Email tool or Apollo to find leads. End with: what's the strongest channel to pursue next and why.
 
 STYLE: Write the real thing. If asked for a headline, write five and say which is strongest and why. Never placeholder copy. Never "here's a template — fill in the blanks." Write as if you're sending it tomorrow.`},
 
@@ -228,6 +267,14 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 
 CREATIVE RANGE: Visual concept direction, brand identity systems, illustration style, motion design language, emotional design — designing for feeling, not just function.
 
+PLATFORM TOOLS YOU CONTROL:
+- Design Studio — generate complete, production-ready HTML/CSS UI components and full page layouts
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /audit skill — conduct full UX/product audits with severity scores
+- Brain — stores design system rules and brand guidelines
+
+When asked to design something, produce a complete HTML/CSS artifact using the Design Studio. When auditing, use /audit. Give concrete, build-ready specs — not abstract direction.
+
 STYLE: Precise and visual. Reference specific spacing, type scales, interaction patterns. Name the design principle when you invoke it. Give a clear opinion — never just "here are some thoughts." Tell them what's wrong and what to do instead.`},
 
   {id:'e5',name:'Chris',role:'Head of Sales',color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[5,0],status:'online',skills:['Pipeline Strategy','Cold Outreach','Objection Handling','Negotiation','Sales Enablement'],hired:Date.now(),tasks:0,
@@ -252,6 +299,18 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 - Proposals that justify price and create urgency without being manipulative
 
 CREATIVE RANGE: Outreach narratives that don't sound like sales. Finding non-obvious angles. Video scripts, LinkedIn strategies, event follow-up, referral programs.
+
+PLATFORM TOOLS YOU CONTROL:
+- Cold Email tool — draft, personalize, and send cold email campaigns at scale
+- Apollo/Hunter.io integration — find leads by role, industry, company size; enrich with email + LinkedIn
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /pitch skill — build complete 15-minute sales pitches
+- /outreach skill — write full 5-touch outreach sequences
+- /email skill — write and queue individual cold emails instantly
+- /proposal skill — create complete business proposals
+- /contract skill — draft professional contracts
+
+When someone needs outreach, write real emails using /outreach. When they need leads, tell them to fire up Apollo. For deals, produce a full pitch using /pitch. End every response with the single highest-leverage sales action to take right now.
 
 STYLE: Confident and human. Every email should sound like it was written by someone who did their homework, not like it came from a template. Write as if you're sending it in an hour. Specific beats generic every time.`},
 
@@ -278,6 +337,16 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 
 CREATIVE RANGE: Customer education content, in-app guidance, community strategy, customer story development, champion programs, advocacy campaigns.
 
+PLATFORM TOOLS YOU CONTROL:
+- Cold Email tool — write and send onboarding, check-in, and retention emails
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- Brain — stores customer health data, feedback, and account notes
+- /onboard skill — build complete onboarding playbooks
+- /email skill — write customer-facing emails instantly
+- /proposal skill — write expansion proposals
+
+When onboarding a customer, produce the full playbook using /onboard. Write every email in full. Use the Brain to store account notes. End every response with the specific customer action that prevents churn or creates expansion.
+
 STYLE: Warm but precise. Specific and actionable. Write documents completely — not outlines. Think about what will actually help the customer achieve their goal, not what sounds good in a deck.`},
 
   {id:'e7',name:'ARIA',role:'Personal Assistant',color:'#f0c040',bodyHex:0xf0c040,skinHex:0xf3c182,pos:[0,12],status:'online',skills:['Executive Briefings','Research Synthesis','Prioritization','Scheduling','Strategic Communication'],hired:Date.now(),tasks:0,
@@ -302,6 +371,16 @@ WHAT YOU DO AT WORLD-CLASS LEVEL:
 - Decision support: lay out options, tradeoffs, expected outcomes — then give a clear recommendation
 
 CREATIVE RANGE: Ghost-writing for any voice. Strategic narrative building. Turning complex information into clear communication. Facilitating hard conversations by scripting the right words.
+
+PLATFORM TOOLS YOU CONTROL:
+- Tasks board — create tasks for anyone with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- Cold Email tool — draft communications on Omar's behalf
+- Brain — the company knowledge base you keep organized and up to date
+- /brief skill — morning briefing in under 5 minutes
+- /gsd skill — convert any goal into an action plan instantly
+- All agents — you can route requests to any specialist
+
+When creating tasks, always output the 📌 TASK format. When briefing, use /brief. You are the connective tissue — when you spot a gap, route it to the right agent.
 
 STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT ACTION:" — the single most important thing based on everything you just processed. Never vague. Never hedge. Every output should be immediately usable.`},
 ];
@@ -1489,6 +1568,310 @@ Create a complete social content package:
 
 Make every post sound like a real person, not a marketing team. No buzzwords.
 ════════════════════`,
+
+    '/prd': (args) => `
+
+══ AGENT SKILL: WRITE PRD ══
+Feature / Project: "${args||'the feature or project just discussed'}"
+
+Write a production-ready Product Requirements Document:
+
+## Problem Statement
+What exactly is broken or missing? Who suffers? What's the measurable impact?
+
+## Goals & Non-Goals
+✅ IN SCOPE: (specific, achievable)
+❌ OUT OF SCOPE: (deliberate exclusions that prevent scope creep)
+
+## User Stories
+For each persona: "As a [user], I want to [action] so that [outcome]."
+Write 4-6 real stories, not generic ones.
+
+## Acceptance Criteria
+For each story: specific, testable criteria. "Works correctly" is not criteria.
+
+## Edge Cases & Risks
+At least 5 specific edge cases. Flag technical risk where relevant.
+
+## Success Metrics
+How do we know this shipped successfully? Real metrics with targets.
+
+## Launch Plan
+Phased rollout, feature flag approach, rollback criteria.
+
+Write the complete document. No placeholders.
+════════════════════`,
+
+    '/arch': (args) => `
+
+══ AGENT SKILL: SYSTEM ARCHITECTURE ══
+System / Feature: "${args||'the system or feature just discussed'}"
+
+Design a production-grade architecture:
+
+## Overview
+One paragraph: what this system does, who uses it, at what scale.
+
+## Components
+For each component: name, responsibility, tech choice + rationale.
+
+## Data Model
+Key entities, fields, relationships. SQL schema or document structure.
+
+## API Design
+Endpoints (or events), request/response shape, auth approach.
+
+## Failure Modes
+Top 5 ways this breaks. Mitigation for each.
+
+## Scaling Plan
+Bottlenecks at 10x current load. How to address each.
+
+## Migration Path
+How we get from today's state to this architecture safely.
+
+Include a text-based architecture diagram using ASCII or Unicode boxes.
+════════════════════`,
+
+    '/code': (args) => `
+
+══ AGENT SKILL: WRITE PRODUCTION CODE ══
+Task: "${args||'the feature or fix just discussed'}"
+
+Write complete, production-quality code:
+— Real logic, real error handling, real edge cases
+— No pseudocode, no "// TODO: implement this"
+— Include type annotations where applicable
+— Include a brief usage example
+
+Then output:
+✅ WHAT THIS DOES: one-line summary
+⚠️ GOTCHAS: anything the caller needs to know
+🧪 TEST CASES: 3 inputs → expected outputs
+
+Write the code as if you're opening a PR today.
+════════════════════`,
+
+    '/copy': (args) => `
+
+══ AGENT SKILL: WRITE CONVERTING COPY ══
+Product / Audience / Goal: "${args||'the product and audience just discussed'}"
+
+Write high-conversion copy across 3 formats:
+
+🎯 HERO SECTION:
+Headline (5 options — pick strongest + explain why)
+Subheading (2 sentences max — what it does + who it's for)
+CTA text (3 options)
+
+📧 EMAIL SUBJECT LINES:
+5 options with predicted open rate reasoning
+
+📱 AD COPY:
+Primary text (under 125 chars for mobile)
+Headline (under 40 chars)
+Description (under 30 chars)
+
+All copy must be specific to this product. No generic claims. No [INSERT VALUE PROP].
+════════════════════`,
+
+    '/campaign': (args) => `
+
+══ AGENT SKILL: FULL CAMPAIGN PLAN ══
+Campaign Goal / Product: "${args||'the campaign just discussed'}"
+
+Build a complete go-to-market campaign:
+
+## Campaign Narrative
+The one story this campaign tells. What does the audience feel after seeing it?
+
+## Channels & Tactics
+For each channel: tactic, message angle, budget %, expected outcome.
+
+## Content Plan
+Week-by-week breakdown: what goes out, where, why.
+
+## Email Sequence (3 emails)
+Each with subject line, full body, and CTA.
+
+## Success Metrics
+KPIs with specific targets. How we measure each.
+
+## Timeline
+Day-by-day first week. Week-by-week remainder.
+
+Write everything. Real copy, real numbers, real plan.
+════════════════════`,
+
+    '/pitch': (args) => `
+
+══ AGENT SKILL: SALES PITCH ══
+Prospect / Context: "${args||'the prospect or scenario just discussed'}"
+
+Write a complete 15-minute sales pitch:
+
+## Opening (60 sec)
+Rapport + agenda. Specific to this prospect's situation.
+
+## Discovery Questions (3 min)
+5 questions that surface pain, budget, authority, timeline.
+
+## Problem Framing (2 min)
+Restate their problem in their language. Make them feel understood.
+
+## Solution Demo Narrative (5 min)
+Walk through the product as a story, not a feature list.
+
+## Proof (2 min)
+Relevant case study or analogy. Specific numbers.
+
+## Close (2 min)
+Next step ask. Handle the top 2 objections they'll raise.
+
+## Objection Responses
+5 most common: price, timing, "we use X already", "need to think about it", "not a priority."
+
+Write every word as if you're saying it in an hour.
+════════════════════`,
+
+    '/outreach': (args) => `
+
+══ AGENT SKILL: COLD OUTREACH SEQUENCE ══
+Target / Product: "${args||'the outreach campaign just discussed'}"
+
+Write a 5-touch outreach sequence:
+
+TOUCH 1 — Cold Email (Day 1)
+Subject: [specific, under 7 words]
+Body: hook → value → CTA (under 100 words)
+
+TOUCH 2 — LinkedIn DM (Day 3)
+2-3 sentences. Reference Touch 1.
+
+TOUCH 3 — Follow-up Email (Day 7)
+New angle. Different value prop. Same CTA.
+
+TOUCH 4 — Value Add (Day 14)
+Share something useful (insight, resource, idea). No hard sell.
+
+TOUCH 5 — Break-up (Day 21)
+"Last email" energy. Creates urgency without desperation.
+
+Each touch must sound like a real human wrote it for this specific person. No templates.
+════════════════════`,
+
+    '/onboard': (args) => `
+
+══ AGENT SKILL: ONBOARDING PLAYBOOK ══
+Product / Customer Segment: "${args||'the customer segment just discussed'}"
+
+Write a complete 30-day onboarding playbook:
+
+## Day 1: Welcome
+- Welcome email (full copy, ready to send)
+- First action prompt: one thing they must do today
+- Success milestone: what "Day 1 success" looks like
+
+## Week 1: Activation
+- Day 2, 4, 7 check-in emails (full copy)
+- Key feature adoption milestones
+- In-app prompts to trigger
+
+## Week 2-3: Habit Formation
+- Usage patterns to reinforce
+- Power user behaviors to encourage
+- Health score thresholds to watch
+
+## Day 30: Review
+- QBR mini-call agenda
+- "Are you getting value?" conversation script
+- Expansion trigger: what signals upsell readiness?
+
+Write every email in full. Scripts should be ready to send.
+════════════════════`,
+
+    '/strategy': (args) => `
+
+══ AGENT SKILL: STRATEGIC PLAN ══
+Challenge / Goal: "${args||'the strategic question just discussed'}"
+
+Deliver a board-ready strategic plan:
+
+## Situation Assessment
+Where are we today? Key strengths, weaknesses, opportunities, threats — specific to this business.
+
+## Strategic Options
+3 distinct strategic directions. For each: what it is, why it could win, key risks.
+
+## Recommended Path
+Clear recommendation with full reasoning. What we're betting on and why.
+
+## 90-Day Execution Plan
+Month 1: Foundation (what must be true by Day 30)
+Month 2: Traction (what must be true by Day 60)
+Month 3: Proof (what must be true by Day 90)
+
+## Resource Requirements
+People, budget, tools, decisions needed.
+
+## Success Metrics
+How we know the strategy is working. Specific numbers with dates.
+
+## Decision Log
+Key decisions made here and why. Alternatives rejected.
+
+Be decisive. Give a recommendation, not a menu.
+════════════════════`,
+
+    '/delegate': (args, emps) => `
+
+══ AGENT SKILL: DELEGATE & COORDINATE ══
+Goal: "${args||'the objective just discussed'}"
+
+As AI Manager, delegate this work across the team:
+
+Team: ${emps.map(e=>e.name+' ('+e.role+')').join(', ')}
+
+For each team member assigned work:
+👤 [NAME] — [ROLE]
+📋 Task: [specific deliverable]
+🎯 Success criteria: [how we know it's done]
+⏱ Timeline: [realistic deadline]
+🔗 Depends on: [other tasks/people if any]
+
+Then output task cards for the board:
+📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+
+End with: COORDINATION NOTE — how the pieces fit together and who the bottleneck is.
+════════════════════`,
+
+    '/audit': (args) => `
+
+══ AGENT SKILL: UX/PRODUCT AUDIT ══
+Product / Feature: "${args||'the product or feature just discussed'}"
+
+Deliver a complete audit:
+
+## Critical Issues (P0) — Fix immediately
+For each: exact friction point, design principle violated, specific fix.
+
+## Major Issues (P1) — Fix this sprint
+Same format.
+
+## Minor Issues (P2) — Fix next sprint
+Same format.
+
+## What's Working Well
+Specific things to preserve. Don't accidentally break these.
+
+## Quick Wins
+5 changes under 1 hour that would improve the experience materially.
+
+## Full Redesign Recommendation
+If a full rethink is warranted — what would the ideal version look like?
+
+For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Effort.
+════════════════════`,
   },
 
   _getSkillInject(text) {
@@ -1816,12 +2199,25 @@ const HQ = {
     document.getElementById('hq-ask-input')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();HQ._askRoom();}});
   },
 
+  _ROLE_CMDS: {
+    'Head of Product':  [{cmd:'/prd',    lbl:'PRD'},    {cmd:'/gsd',    lbl:'GSD'},    {cmd:'/brainstorm', lbl:'Ideas'}],
+    'Lead Engineer':    [{cmd:'/arch',   lbl:'Arch'},   {cmd:'/code',   lbl:'Code'},   {cmd:'/gsd',        lbl:'GSD'}],
+    'Head of Marketing':[{cmd:'/copy',   lbl:'Copy'},   {cmd:'/campaign',lbl:'Campaign'},{cmd:'/social',   lbl:'Social'}],
+    'UI/UX Designer':   [{cmd:'/audit',  lbl:'Audit'},  {cmd:'/brainstorm',lbl:'Ideas'},{cmd:'/autopilot', lbl:'Auto'}],
+    'Head of Sales':    [{cmd:'/pitch',  lbl:'Pitch'},  {cmd:'/outreach',lbl:'Outreach'},{cmd:'/email',    lbl:'Email'}],
+    'Customer Success': [{cmd:'/onboard',lbl:'Onboard'},{cmd:'/email',  lbl:'Email'},  {cmd:'/brainstorm', lbl:'Ideas'}],
+    'Personal Assistant':[{cmd:'/brief', lbl:'Brief'},  {cmd:'/gsd',    lbl:'GSD'},    {cmd:'/autopilot',  lbl:'Auto'}],
+    'AI Manager':       [{cmd:'/strategy',lbl:'Strategy'},{cmd:'/delegate',lbl:'Delegate'},{cmd:'/gsd',   lbl:'GSD'}],
+  },
+
   _agentCard(e) {
     const task      = State.tasks.find(t=>t.assignee===e.id&&t.column==='inprogress')
                     ||State.tasks.find(t=>t.assignee===e.id&&t.column==='todo');
     const taskCount = State.tasks.filter(t=>t.assignee===e.id).length;
     const isManager = e.id === 'e_claude';
     const actText   = task ? task.title.slice(0,52)+(task.title.length>52?'…':'') : 'Ready — standing by';
+    const skills    = (e.skills||[]).slice(0,3);
+    const cmds      = HQ._ROLE_CMDS[e.role] || [{cmd:'/gsd',lbl:'GSD'},{cmd:'/brief',lbl:'Brief'},{cmd:'/autopilot',lbl:'Auto'}];
     return `<div class="hq-agent-card${isManager?' hq-manager-card':''}" style="--ac:${e.color}">
       <div class="hq-card-glow"></div>
       ${isManager ? '<div class="hq-manager-crown">👑 AI Manager</div>' : ''}
@@ -1836,15 +2232,14 @@ const HQ = {
         </div>
         <div class="hq-badge hq-task-badge">${taskCount} task${taskCount!==1?'s':''}</div>
       </div>
+      ${skills.length ? `<div class="hq-skills-row">${skills.map(s=>`<span class="hq-skill-chip" style="border-color:${e.color}30;color:${e.color}">${escHtml(s)}</span>`).join('')}</div>` : ''}
       <div class="hq-card-activity ${task?'active':''}">
         <div class="hq-act-dot"></div>
         <div class="hq-act-txt" id="hq-wo-${e.id}">${escHtml(actText)}</div>
       </div>
       <div class="hq-card-btns">
         <button class="btn btn-primary btn-sm hq-chat-btn" data-eid="${e.id}">💬 Chat</button>
-        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/gsd ">/gsd</button>
-        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/brainstorm ">/brief</button>
-        <button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="/autopilot">/auto</button>
+        ${cmds.map(c=>`<button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="${c.cmd} " style="border-color:${e.color}25">/${c.lbl}</button>`).join('')}
       </div>
     </div>`;
   },

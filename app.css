@@ -767,6 +767,10 @@ td.editing .cell-editor{display:block}
 .hq-act-txt{font-size:11px;color:var(--text2);line-height:1.4;flex:1;min-width:0;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
+/* Agent skills chips */
+.hq-skills-row{display:flex;flex-wrap:wrap;gap:4px;margin:-2px 0 2px}
+.hq-skill-chip{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;border:1px solid;background:rgba(255,255,255,.03);white-space:nowrap;letter-spacing:0}
+
 /* Card buttons — single tight row */
 .hq-card-btns{display:flex;gap:5px;flex-wrap:nowrap}
 .hq-chat-btn{flex-shrink:0}
