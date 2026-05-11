@@ -607,7 +607,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts','onboarded'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts','onboarded','competitors'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -1248,13 +1248,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -6362,6 +6362,276 @@ HASHTAGS:
         </div>`).join('')}</div>`}`;
   },
   _clearLog(){State.automations.runLog=[];AutomationsPage._save();AutomationsPage._renderTab();},
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: COMPETITIVE INTELLIGENCE
+// ══════════════════════════════════════════════════════════════
+const CompetePage = {
+  _selected: null,
+
+  init(container) {
+    if (!State.competitors) State.competitors = [];
+    container.innerHTML = `<div class="cp-layout">
+      <div class="cp-sidebar">
+        <div class="cp-sb-hdr">
+          <div class="cp-sb-title">Competitors</div>
+          <button class="btn btn-primary btn-sm" id="cp-add-btn">+ Add</button>
+        </div>
+        <div id="cp-list"></div>
+        <div class="cp-your-card" id="cp-your-card"></div>
+      </div>
+      <div class="cp-main" id="cp-main"></div>
+    </div>`;
+
+    document.getElementById('cp-add-btn').addEventListener('click', () => CompetePage._openAdd());
+    CompetePage._renderList();
+    CompetePage._renderYour();
+    if (State.competitors.length) CompetePage._select(State.competitors[0].id);
+    else CompetePage._showEmpty();
+  },
+
+  _renderYour() {
+    const el = document.getElementById('cp-your-card'); if (!el) return;
+    const s = State.settings;
+    const company = s.companyName || 'Your Company';
+    el.innerHTML = `<div class="cp-your-label">YOUR PRODUCT</div>
+      <div class="cp-your-name">${escHtml(company)}</div>
+      <div class="cp-your-site">${escHtml(s.siteUrl||'')}</div>`;
+  },
+
+  _renderList() {
+    const el = document.getElementById('cp-list'); if (!el) return;
+    if (!State.competitors.length) { el.innerHTML = '<div class="cp-empty-list">No competitors yet.<br>Click + Add to start.</div>'; return; }
+    el.innerHTML = State.competitors.map(c => {
+      const lvlColor = c.threat==='high'?'var(--red)':c.threat==='medium'?'var(--amber)':'var(--green)';
+      return `<div class="cp-list-item ${CompetePage._selected===c.id?'cp-list-item--active':''}" data-id="${c.id}">
+        <div class="cp-list-av" style="background:${c.color||'#3b82f6'}22;color:${c.color||'#3b82f6'}">${(c.name||'?')[0]}</div>
+        <div class="cp-list-info">
+          <div class="cp-list-name">${escHtml(c.name)}</div>
+          <div class="cp-list-url">${escHtml(c.url||'')}</div>
+        </div>
+        ${c.threat?`<div class="cp-threat-dot" style="background:${lvlColor}" title="Threat: ${c.threat}"></div>`:''}
+      </div>`;
+    }).join('');
+    el.querySelectorAll('.cp-list-item').forEach(item =>
+      item.addEventListener('click', () => CompetePage._select(item.dataset.id))
+    );
+  },
+
+  _select(id) {
+    CompetePage._selected = id;
+    CompetePage._renderList();
+    const c = State.competitors.find(x => x.id === id);
+    if (!c) return;
+    const main = document.getElementById('cp-main'); if (!main) return;
+    const threatColor = c.threat==='high'?'var(--red)':c.threat==='medium'?'var(--amber)':'var(--green)';
+    const threatLabel = c.threat ? c.threat.charAt(0).toUpperCase()+c.threat.slice(1) : '—';
+
+    main.innerHTML = `<div class="cp-detail">
+      <div class="cp-detail-hdr">
+        <div class="cp-detail-av" style="background:${c.color||'#3b82f6'}22;color:${c.color||'#3b82f6'}">${(c.name||'?')[0]}</div>
+        <div class="cp-detail-meta">
+          <div class="cp-detail-name">${escHtml(c.name)}</div>
+          ${c.url?`<a class="cp-detail-url" href="https://${c.url.replace(/^https?:\/\//,'')}" target="_blank">${escHtml(c.url)}</a>`:''}
+        </div>
+        <div class="cp-detail-actions">
+          ${c.threat?`<span class="cp-threat-badge" style="background:${threatColor}18;color:${threatColor};border-color:${threatColor}30">⚠️ ${threatLabel} Threat</span>`:''}
+          <button class="btn btn-sm" id="cp-analyze-btn">🤖 AI Analyze</button>
+          <button class="btn btn-sm" id="cp-edit-btn">Edit</button>
+          <button class="btn btn-sm btn-danger" id="cp-del-btn">Delete</button>
+        </div>
+      </div>
+
+      ${c.tagline ? `<div class="cp-tagline">"${escHtml(c.tagline)}"</div>` : ''}
+
+      ${c.analysis ? `
+        <div class="cp-sections">
+          ${CompetePage._section('🎯', 'Positioning', c.analysis.positioning)}
+          ${CompetePage._section('💪', 'Strengths', c.analysis.strengths)}
+          ${CompetePage._section('⚠️', 'Weaknesses', c.analysis.weaknesses)}
+          ${CompetePage._section('💰', 'Pricing', c.analysis.pricing)}
+          ${CompetePage._section('🏆', 'How to Beat Them', c.analysis.howToWin, 'win')}
+          ${CompetePage._section('📣', 'Battle Card', c.analysis.battleCard, 'battle')}
+        </div>
+        <div class="cp-vs-row">
+          <div class="cp-vs-col cp-vs-you">
+            <div class="cp-vs-label">✅ YOUR ADVANTAGES</div>
+            <div class="cp-vs-body">${escHtml(c.analysis.ourAdvantages||'Run analysis to populate.')}</div>
+          </div>
+          <div class="cp-vs-divider">VS</div>
+          <div class="cp-vs-col cp-vs-them">
+            <div class="cp-vs-label">⚔️ THEIR ADVANTAGES</div>
+            <div class="cp-vs-body">${escHtml(c.analysis.theirAdvantages||'Run analysis to populate.')}</div>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:12px">Last analyzed: ${c.analyzedAt ? new Date(c.analyzedAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}) : '—'}</div>
+      ` : `<div class="cp-no-analysis">
+        <div style="font-size:32px;margin-bottom:10px">🤖</div>
+        <div style="font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px">No analysis yet</div>
+        <div style="font-size:13px;color:var(--text3);margin-bottom:18px">Click "AI Analyze" to get a full competitive breakdown — positioning, strengths, weaknesses, pricing, and a battle card.</div>
+        <button class="btn btn-primary" id="cp-analyze-btn2">🤖 Run AI Analysis</button>
+      </div>`}
+    </div>`;
+
+    document.getElementById('cp-analyze-btn')?.addEventListener('click', () => CompetePage._analyze(id));
+    document.getElementById('cp-analyze-btn2')?.addEventListener('click', () => CompetePage._analyze(id));
+    document.getElementById('cp-edit-btn')?.addEventListener('click', () => CompetePage._openEdit(id));
+    document.getElementById('cp-del-btn')?.addEventListener('click', () => CompetePage._delete(id));
+  },
+
+  _section(icon, title, content, type='') {
+    if (!content) return '';
+    return `<div class="cp-section ${type?'cp-section--'+type:''}">
+      <div class="cp-section-title">${icon} ${title}</div>
+      <div class="cp-section-body">${escHtml(content)}</div>
+    </div>`;
+  },
+
+  _showEmpty() {
+    const main = document.getElementById('cp-main'); if (!main) return;
+    main.innerHTML = `<div class="cp-welcome">
+      <div style="font-size:48px;margin-bottom:16px">⚔️</div>
+      <div style="font-size:20px;font-weight:800;color:var(--text);margin-bottom:8px">Know Your Competition</div>
+      <div style="font-size:14px;color:var(--text3);max-width:360px;line-height:1.7;margin-bottom:24px">Add your competitors and let AI build complete battle cards — positioning analysis, strengths, weaknesses, pricing breakdowns, and exactly how to beat them in a sales conversation.</div>
+      <button class="btn btn-primary" id="cp-add-empty-btn">+ Add First Competitor</button>
+    </div>`;
+    document.getElementById('cp-add-empty-btn')?.addEventListener('click', () => CompetePage._openAdd());
+  },
+
+  async _analyze(id) {
+    const c = State.competitors.find(x => x.id === id); if (!c) return;
+    const btn = document.getElementById('cp-analyze-btn') || document.getElementById('cp-analyze-btn2');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Analyzing…'; }
+
+    const company = State.settings.companyName || 'our product';
+    const ourDesc = (State.brain?.facts||[]).find(f=>f.text.startsWith('What we do:'))?.text || '';
+    const ourICP  = (State.brain?.facts||[]).find(f=>f.text.startsWith('Ideal customer'))?.text || '';
+
+    const prompt = `You are a world-class competitive analyst. Analyze "${c.name}" as a competitor to ${company}.
+${c.url ? `Their website: ${c.url}` : ''}
+${c.tagline ? `Their tagline: "${c.tagline}"` : ''}
+${c.notes ? `Notes: ${c.notes}` : ''}
+${ourDesc ? `Our product: ${ourDesc}` : ''}
+${ourICP ? `Our ICP: ${ourICP}` : ''}
+
+Return a JSON object (ONLY JSON, no markdown, no commentary) with these exact keys:
+{
+  "positioning": "2-3 sentence summary of how they position themselves in the market",
+  "strengths": "4-6 bullet points of their real strengths (use • prefix)",
+  "weaknesses": "4-6 bullet points of their real weaknesses and gaps (use • prefix)",
+  "pricing": "Description of their pricing model, tiers, and approximate price points",
+  "howToWin": "4-6 specific tactics to use when competing against them directly (use • prefix)",
+  "battleCard": "A sales battle card: what to say when a prospect mentions this competitor. 3-4 specific talking points.",
+  "ourAdvantages": "3-5 clear advantages ${company} has over them (use • prefix)",
+  "theirAdvantages": "2-4 advantages they have over ${company} — be honest (use • prefix)",
+  "threat": "low or medium or high"
+}`;
+
+    let raw = '';
+    for await (const chunk of AI.stream([{role:'user',content:prompt}], 'You are a competitive intelligence expert. Return only valid JSON.', {search: true})) {
+      raw += chunk;
+    }
+
+    try {
+      const jsonMatch = raw.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) throw new Error('No JSON found');
+      const data = JSON.parse(jsonMatch[0]);
+      c.analysis = data;
+      c.threat = data.threat || 'medium';
+      c.analyzedAt = Date.now();
+      save('competitors');
+
+      // Save to Brain
+      State.brain.facts.push({
+        id: uid(),
+        text: `Competitive analysis — ${c.name}: ${data.positioning} Key weaknesses: ${data.weaknesses?.split('\n')[0]||''}. How to win: ${data.howToWin?.split('\n')[0]||''}`,
+        category: 'market',
+        source: `Competitive Intel — ${c.name}`,
+        sourceAgent: 'Competitive Intel',
+        sourceEmpId: null,
+        timestamp: Date.now(),
+      });
+      save('brain');
+
+      CompetePage._renderList();
+      CompetePage._select(id);
+      toast(`✅ ${c.name} analyzed — saved to Brain`, 'success', 4000);
+    } catch(e) {
+      toast('Analysis failed — try again', 'error');
+      if (btn) { btn.disabled = false; btn.textContent = '🤖 AI Analyze'; }
+    }
+  },
+
+  _openAdd() {
+    CompetePage._openForm(null);
+  },
+
+  _openEdit(id) {
+    const c = State.competitors.find(x => x.id === id);
+    CompetePage._openForm(c);
+  },
+
+  _openForm(c) {
+    const colors = ['#3b82f6','#ef4444','#f59e0b','#10b981','#8b5cf6','#ec4899','#06b6d4','#f97316'];
+    const selColor = c?.color || colors[State.competitors.length % colors.length];
+    Modal.open(c ? `Edit — ${c.name}` : 'Add Competitor', `
+      <div class="form-group"><label class="form-label">COMPETITOR NAME</label>
+        <input class="form-input" id="cp-f-name" placeholder="e.g. Marblism" value="${escHtml(c?.name||'')}"></div>
+      <div class="form-group"><label class="form-label">WEBSITE</label>
+        <input class="form-input" id="cp-f-url" placeholder="marblism.com" value="${escHtml(c?.url||'')}"></div>
+      <div class="form-group"><label class="form-label">THEIR TAGLINE / VALUE PROP</label>
+        <input class="form-input" id="cp-f-tagline" placeholder="e.g. AI employees for your business" value="${escHtml(c?.tagline||'')}"></div>
+      <div class="form-group"><label class="form-label">NOTES (optional)</label>
+        <textarea class="form-input" id="cp-f-notes" rows="2" placeholder="What you know about them, key customers, recent news…">${escHtml(c?.notes||'')}</textarea></div>
+      <div class="form-group"><label class="form-label">COLOR</label>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${colors.map(col=>`<div class="color-swatch${col===selColor?' selected':''}" data-color="${col}" style="background:${col}"></div>`).join('')}
+        </div></div>
+      <div class="modal-actions">
+        <button class="btn" id="cp-f-cancel">Cancel</button>
+        <button class="btn btn-primary" id="cp-f-save">${c ? 'Save Changes' : 'Add Competitor'}</button>
+      </div>`, {
+      onOpen() {
+        document.querySelectorAll('.color-swatch').forEach(s => s.addEventListener('click', () => {
+          document.querySelectorAll('.color-swatch').forEach(x => x.classList.remove('selected'));
+          s.classList.add('selected');
+        }));
+        document.getElementById('cp-f-cancel').addEventListener('click', Modal.close);
+        document.getElementById('cp-f-save').addEventListener('click', () => {
+          const name = document.getElementById('cp-f-name').value.trim();
+          if (!name) { toast('Name is required','error'); return; }
+          const color = document.querySelector('.color-swatch.selected')?.dataset.color || selColor;
+          if (c) {
+            c.name = name; c.url = document.getElementById('cp-f-url').value.trim();
+            c.tagline = document.getElementById('cp-f-tagline').value.trim();
+            c.notes = document.getElementById('cp-f-notes').value.trim();
+            c.color = color;
+          } else {
+            State.competitors.push({ id:uid(), name, url:document.getElementById('cp-f-url').value.trim(), tagline:document.getElementById('cp-f-tagline').value.trim(), notes:document.getElementById('cp-f-notes').value.trim(), color, analysis:null, threat:null, analyzedAt:null });
+          }
+          save('competitors');
+          Modal.close();
+          CompetePage._renderList();
+          if (!c) CompetePage._select(State.competitors[State.competitors.length-1].id);
+          else CompetePage._select(c.id);
+        });
+      }
+    });
+  },
+
+  _delete(id) {
+    const c = State.competitors.find(x=>x.id===id); if(!c) return;
+    if (!confirm(`Remove ${c.name} from your competitor list?`)) return;
+    State.competitors = State.competitors.filter(x=>x.id!==id);
+    save('competitors');
+    CompetePage._selected = null;
+    CompetePage._renderList();
+    if (State.competitors.length) CompetePage._select(State.competitors[0].id);
+    else CompetePage._showEmpty();
+  },
+
+  destroy() { CompetePage._selected = null; },
 };
 
 // ══════════════════════════════════════════════════════════════
