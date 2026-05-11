@@ -1397,48 +1397,122 @@ const Chat = {
   },
   // Builds a rich system prompt injecting live company context
   _buildSystemPrompt(emp) {
-    const company   = State.settings.companyName || 'Kayro Interactive';
-    const myTasks   = State.tasks.filter(t => t.assignee === emp.id);
-    const active    = myTasks.filter(t => t.column !== 'done');
-    const done      = myTasks.filter(t => t.column === 'done');
-    const teammates = State.employees.filter(e => e.id !== emp.id);
-    const allActive = State.tasks.filter(t => t.column !== 'done');
-    const memories  = (State.memory[emp.id] || []).slice(-12);
-    const brainFacts = (State.brain?.facts || []).slice(-20);
-    const ownerEmail = State.settings.ownerEmail || 'omarbaalbaki@kayrointer.com';
-    const ownerName  = State.settings.ownerName  || 'Omar Baalbaki';
+    const company    = State.settings.companyName || 'Kayro Interactive';
+    const ownerName  = State.settings.ownerName   || 'Omar';
+    const ownerEmail = State.settings.ownerEmail  || '';
+    const siteUrl    = State.settings.siteUrl     || 'kayrointer.com';
+    const now        = new Date();
+    const dateStr    = now.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const timeStr    = now.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'});
+
+    const myTasks    = State.tasks.filter(t => t.assignee === emp.id);
+    const myActive   = myTasks.filter(t => t.column !== 'done');
+    const allActive  = State.tasks.filter(t => t.column !== 'done');
+    const teammates  = State.employees.filter(e => e.id !== emp.id);
+
+    // Brain facts sorted by relevance to this role
+    const roleBrainCats = {
+      'Head of Product':['product','business','process'],
+      'Lead Engineer':['process','product','business'],
+      'Head of Marketing':['market','business','customer'],
+      'UI/UX Designer':['product','market','process'],
+      'Head of Sales':['customer','market','business'],
+      'Customer Success':['customer','business','market'],
+      'Personal Assistant':['business','team','process'],
+      'AI Manager':['business','team','market'],
+      'SEO & Content Writer':['market','product','business'],
+      'Legal & Compliance':['business','process','team'],
+      'Email & Inbox Manager':['customer','market','business'],
+      'Social Media Manager':['market','customer','business'],
+    };
+    const catPriority = roleBrainCats[emp.role] || ['business','market','product'];
+    const allFacts = State.brain?.facts || [];
+    const sortedFacts = [...allFacts].sort((a,b) => {
+      const ai = catPriority.indexOf(a.category), bi = catPriority.indexOf(b.category);
+      return (ai===-1?99:ai) - (bi===-1?99:bi);
+    }).slice(0, 30);
+
+    // Competitors for context
+    const comps = (State.competitors||[]).filter(c=>c.analysis);
+
+    // Memories
+    const memories = (State.memory[emp.id]||[]).slice(-15);
+
+    // Team task overview
+    const taskByOwner = teammates.map(t => {
+      const tc = State.tasks.filter(x=>x.assignee===t.id&&x.column!=='done').length;
+      return tc ? `${t.name}: ${tc} task${tc!==1?'s':''}` : null;
+    }).filter(Boolean);
+
     return `${emp.system.replace(/\[company\]/g, company)}
 
-══ WHO YOU WORK FOR ══
-CEO / Owner: ${ownerName} (${ownerEmail})
-Company: ${company} — kayrointer.com
-You are a specialized AI employee. Treat every message as coming from ${ownerName} unless stated otherwise.
-Always be proactive: surface opportunities, risks, and next steps — don't wait to be asked.
+════════════════════════════════════════
+LIVE OPERATING CONTEXT — ${dateStr}, ${timeStr}
+════════════════════════════════════════
+YOU: ${emp.name} | ${emp.role} | ${company}
+REPORTING TO: ${ownerName}${ownerEmail?' ('+ownerEmail+')':''}
+WEBSITE: ${siteUrl}
+════════════════════════════════════════
 
-══ LIVE WORKSPACE ══
-Your name: ${emp.name} | Role: ${emp.role}
-Teammates: ${teammates.length ? teammates.map(e=>`${e.name} (${e.role})`).join(', ') : 'None yet'}
+YOUR ACTIVE TASKS (${myActive.length}):
+${myActive.length ? myActive.map(t=>`  [${t.priority?.toUpperCase()||'MED'}] ${t.column.toUpperCase()} → "${t.title}"${t.desc?'\n    '+t.desc:''}`).join('\n') : '  None assigned — check if you should pull work from the board.'}
 
-Your tasks (${active.length} active, ${done.length} completed):
-${active.length ? active.map(t=>`  • [${t.column.toUpperCase()}] ${t.title}${t.desc?' — '+t.desc:''}`).join('\n') : '  • No tasks assigned yet'}
+TEAM STATUS: ${allActive.length} tasks in flight
+${taskByOwner.length ? taskByOwner.map(s=>`  • ${s}`).join('\n') : ''}
+Teammates: ${teammates.map(e=>`${e.name} (${e.role})`).join(' · ')}
+════════════════════════════════════════
+${sortedFacts.length ? `COMPANY KNOWLEDGE BASE (${sortedFacts.length} facts):
+${sortedFacts.map(f=>`  [${(BRAIN_CATEGORIES[f.category]||{emoji:'•'}).emoji}${f.category||'?'}] ${f.text}`).join('\n')}
+════════════════════════════════════════` : ''}
+${comps.length ? `COMPETITIVE LANDSCAPE:
+${comps.map(c=>`  ⚔️ ${c.name} — ${c.analysis?.positioning?.slice(0,100)||''}… Threat: ${c.threat||'?'}`).join('\n')}
+════════════════════════════════════════` : ''}
+${memories.length ? `YOUR MEMORY (learned from past conversations):
+${memories.map(m=>`  • ${m.fact}`).join('\n')}
+════════════════════════════════════════` : ''}
 
-All team tasks: ${allActive.length} active across ${State.employees.length} employees
-══════════════════
-${brainFacts.length ? `\n📚 COMPANY KNOWLEDGE BASE:\n${brainFacts.map(f=>`  [${(BRAIN_CATEGORIES[f.category]||{emoji:'•'}).emoji} ${f.category||'general'}] ${f.text}`).join('\n')}\n══════════════════` : ''}
-${memories.length ? `\n🧠 YOUR MEMORY (things you've learned about this company/user):\n${memories.map(m=>`  • ${m.fact}`).join('\n')}\n══════════════════` : ''}
+████ AGENT CAPABILITIES — USE THESE, DON'T JUST DESCRIBE THEM ████
 
-══ INTELLIGENCE STANDARD ══
-You are operating at the highest level. These rules apply to every response, no exceptions:
+You have the following real, executing capabilities. Use them in your responses:
 
-1. THINK DEEPLY — reason through the actual problem before answering. Don't reach for the first answer; reach for the right one.
-2. BE SPECIFIC — generic advice is useless. Concrete, actionable, tailored to this exact situation.
-3. BE BOLD — give your real opinion. If something is wrong, say it. If one option is clearly better, say so. Don't hedge when you have a view.
-4. DO THE WORK — when asked to write something, write it completely. No placeholders, no "you could say something like…", no outlines when a full document is needed.
-5. BE CREATIVE — don't default to the obvious answer. Consider approaches others wouldn't think of.
-6. FLAG WHAT MATTERS — proactively surface risks, blockers, or opportunities the user hasn't asked about but needs to know.
-7. REMEMBER — if you learn something important about this business, user, or goals, start a new line with "📌 REMEMBER:" so it gets saved to memory.
-8. ALWAYS KNOW YOUR CONTEXT — you work for ${ownerName} at ${company} (${State.settings.siteUrl||'kayrointer.com'}). Reference actual company details, not generics. Write emails from ${ownerEmail}. Know the product, the pricing, the ICP.
-══════════════════`;
+① CREATE TASK → tasks appear instantly on the Kanban board:
+   📌 TASK: [title] | OWNER: [teammate name] | PRIORITY: [high/medium/low]
+   (create multiple tasks by outputting multiple lines with 📌 TASK:)
+
+② SAVE TO BRAIN → permanently saved, all agents can read it:
+   🧠 SAVE: [fact, insight, or knowledge] | CATEGORY: [business/market/product/customer/team/process]
+
+③ SEND EMAIL → queued for immediate delivery:
+   📧 EMAIL: TO: [email address] | SUBJECT: [subject line] | BODY:
+   [full email body here — write it completely]
+   END EMAIL
+
+④ MESSAGE A TEAMMATE → they'll see it in their chat:
+   💬 PING: [Agent Name] | [your message or task for them]
+
+⑤ WEB SEARCH → you have live internet access. Use it. Don't say "you should look this up." Look it up yourself.
+
+⑥ SKILLS → invoke any skill for specialized output:
+   /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
+
+████ NON-NEGOTIABLE OPERATING RULES ████
+
+→ DO THE WORK, DON'T DESCRIBE IT. If asked for an email, write it. If asked for a plan, build it fully. If a task needs creating, create it with 📌 TASK:.
+
+→ SEARCH BEFORE GUESSING. You have internet access. When facts, prices, competitors, or current info matters — search. Do not say "I'm not sure, you could check…"
+
+→ ACT IN EVERY RESPONSE. Every response should either produce a complete artifact (full email, full PRD, full code, full plan) OR take an action (📌 TASK, 🧠 SAVE, 📧 EMAIL, 💬 PING) OR both.
+
+→ BE BRUTALLY HONEST. If a strategy is wrong, say why and what to do instead. If the idea won't work, say so plainly and offer a better one. Strong opinions held loosely.
+
+→ THINK LIKE AN OWNER. Every decision you make, ask: "will this move revenue / reduce churn / ship faster / save time?" If not, say so.
+
+→ NEVER GIVE OUTLINES WHEN DOCUMENTS ARE NEEDED. Full emails. Full PRDs. Full code. Full pitches. The work is done when it's usable, not when it's described.
+
+→ REMEMBER CONTEXT. You are ${emp.name} at ${company}. Every response should feel like it comes from someone who has been embedded in this company for months — not a generic AI assistant who just met you.
+
+→ SAVE IMPORTANT LEARNINGS. When you learn something worth remembering, output: 📌 REMEMBER: [fact]
+════════════════════════════════════════`;
   },
 
   // Extract and save memories from AI responses
@@ -2167,7 +2241,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
   _extractTasks(text) {
     const lines = text.split('\n');
     const taskLines = lines.filter(l => l.includes('📌 TASK:'));
-    if (!taskLines.length) return;
+    if (!taskLines.length) return 0;
     let created = 0;
     taskLines.forEach(line => {
       const tm = line.match(/📌 TASK:\s*([^|]+)/);
@@ -2181,10 +2255,94 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
       const assignee = State.employees.find(e => e.name === ownerName)?.id || State.employees[0]?.id;
       const priority = prioRaw.includes('high')||prioRaw.includes('🔴') ? 'high'
                      : prioRaw.includes('low')||prioRaw.includes('🟢') ? 'low' : 'medium';
-      State.tasks.push({id:'gsd_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),title,column:'todo',priority,assignee,created:Date.now(),tags:['gsd']});
+      State.tasks.push({id:'ag_'+Date.now()+'_'+Math.random().toString(36).slice(2,5),title,column:'todo',priority,assignee,created:Date.now(),tags:['agent']});
       created++;
     });
-    if (created) { save('tasks'); toast(`✅ ${created} task${created>1?'s':''} added to board from /gsd`,'success',4000); }
+    if (created) save('tasks');
+    return created;
+  },
+
+  _extractBrainSaves(text, emp) {
+    const lines = text.split('\n');
+    let saved = 0;
+    lines.forEach(line => {
+      const m = line.match(/🧠 SAVE:\s*([^|]+)(?:\|\s*CATEGORY:\s*(.+))?/i);
+      if (!m) return;
+      const fact = m[1].trim();
+      const cat  = (m[2]||'business').trim().toLowerCase();
+      const validCats = Object.keys(BRAIN_CATEGORIES);
+      const category = validCats.includes(cat) ? cat : 'business';
+      if (!fact || fact.length < 5) return;
+      State.brain.facts.push({id:uid(),text:fact,category,source:`${emp.name} — agent action`,sourceAgent:emp.name,sourceEmpId:emp.id,timestamp:Date.now()});
+      saved++;
+    });
+    if (saved) { save('brain'); }
+    return saved;
+  },
+
+  _extractEmailActions(text, emp) {
+    // Match 📧 EMAIL: TO: x | SUBJECT: y | BODY:\n...END EMAIL
+    const emailRegex = /📧 EMAIL:\s*TO:\s*([^\|]+)\s*\|\s*SUBJECT:\s*([^\|]+)\s*\|\s*BODY:\s*([\s\S]+?)(?:END EMAIL|$)/gi;
+    const matches = [...text.matchAll(emailRegex)];
+    if (!matches.length) return;
+    matches.forEach(m => {
+      const to = m[1].trim(), subject = m[2].trim(), body = m[3].trim();
+      if (!to || !subject || !body) return;
+      // Add a send-now action bubble after the message
+      setTimeout(() => {
+        const msgs = document.getElementById('chat-messages'); if (!msgs) return;
+        const pill = document.createElement('div');
+        pill.className = 'agent-email-action';
+        pill.innerHTML = `<span style="font-size:12px;color:var(--text2)">📧 Email ready to send to <b>${escHtml(to)}</b></span>
+          <button class="btn btn-sm btn-primary" style="margin-left:8px">Send Now</button>
+          <button class="btn btn-sm" style="margin-left:4px">Copy</button>`;
+        pill.querySelector('.btn-primary').addEventListener('click', () => {
+          const mailUrl = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+          window.open(mailUrl);
+          pill.remove();
+          toast('📧 Email opened in mail client', 'success');
+        });
+        pill.querySelector('.btn:not(.btn-primary)').addEventListener('click', () => {
+          navigator.clipboard.writeText(`To: ${to}\nSubject: ${subject}\n\n${body}`);
+          toast('Email copied to clipboard', 'success');
+        });
+        msgs.appendChild(pill);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 300);
+    });
+  },
+
+  _extractPings(text, fromEmp) {
+    const lines = text.split('\n');
+    let pinged = 0;
+    lines.forEach(line => {
+      const m = line.match(/💬 PING:\s*([^|]+)\s*\|\s*(.+)/i);
+      if (!m) return;
+      const targetName = m[1].trim();
+      const msg = m[2].trim();
+      const target = State.employees.find(e => e.name.toLowerCase() === targetName.toLowerCase()
+        || e.role.toLowerCase().includes(targetName.toLowerCase()));
+      if (!target || !msg) return;
+      if (!State.chatHistory[target.id]) State.chatHistory[target.id] = [];
+      State.chatHistory[target.id].push({role:'user',content:`[Message from ${fromEmp.name}]: ${msg}`});
+      save_('chatHistory');
+      pinged++;
+      toast(`💬 ${fromEmp.name} → ${target.name}: message delivered`, 'success', 3000);
+    });
+    return pinged;
+  },
+
+  _runAllExtractions(empId, fullText) {
+    const emp = getEmp(empId); if (!emp) return;
+    const tasks   = Chat._extractTasks(fullText);
+    const brains  = Chat._extractBrainSaves(fullText, emp);
+    Chat._extractMemories(empId, fullText);
+    Chat._extractEmailActions(fullText, emp);
+    Chat._extractPings(fullText, emp);
+    const actions = [];
+    if (tasks)  actions.push(`${tasks} task${tasks>1?'s':''} created`);
+    if (brains) actions.push(`${brains} fact${brains>1?'s':''} saved to Brain`);
+    if (actions.length) toast(`⚡ ${emp.name}: ${actions.join(' · ')}`, 'success', 4000);
   },
 
   async send() {
@@ -2283,8 +2441,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId]=[];
     State.chatHistory[Chat.activeEmpId].push({role:'assistant',content:full});
     save_('chatHistory');
-    Chat._extractMemories(Chat.activeEmpId, full);
-    Chat._extractTasks(full);
+    Chat._runAllExtractions(Chat.activeEmpId, full);
     Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
     // Auto-post skill output to Brain
     try {
