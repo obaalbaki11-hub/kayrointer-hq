@@ -619,7 +619,7 @@ const AI = {
       'Content-Type': 'application/json',
       'x-api-key': key,
       'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-allow-browser': 'true',
+      'anthropic-dangerous-direct-browser-access': 'true',
     };
   },
   _getApiConfig() {
@@ -746,9 +746,11 @@ const AI = {
     } catch(e) {
       const msg = e.message || String(e);
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (isSafari) yield `⚠️ Safari blocked the request — switch to Chrome or Firefox, or set up a Proxy URL in Settings.`;
-      else if (msg.toLowerCase().includes('failed') || msg.includes('fetch') || msg.includes('network'))
-        yield `⚠️ Blocked by browser extension or network.\n\n🔧 Fix: Open in Chrome Incognito (⌘⇧N) — extensions off by default.\n\nOr go to ⚙️ Settings → set up a Proxy URL (Cloudflare Worker).`;
+      if (isSafari || msg.toLowerCase().includes('failed') || msg.includes('fetch') || msg.includes('network'))
+        yield `⚠️ Request blocked — Safari enforces strict CORS on API calls.\n\n` +
+              `Fastest fix: open kayrointer.com in Chrome or Firefox.\n\n` +
+              `To keep using Safari: go to ⚙️ Settings → scroll to "Proxy URL" → paste your Cloudflare Worker URL. ` +
+              `The worker script is shown there — deploy it in under 2 minutes at workers.cloudflare.com (free).`;
       else yield `⚠️ Error: ${msg}`;
     }
   },
@@ -3712,11 +3714,11 @@ const Settings = {
           </select>
         </div>
         <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 16px;margin-bottom:4px">
-          <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:.5px;margin-bottom:6px">⚡ PROXY URL — FIX BROWSER EXTENSION BLOCKING</div>
+          <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:.5px;margin-bottom:6px">⚡ PROXY URL — REQUIRED FOR SAFARI</div>
+          <div style="font-size:11px;color:var(--text2);margin-bottom:10px;line-height:1.6">Safari blocks direct API calls due to CORS policy. Deploy this free Cloudflare Worker once and paste its URL below — all browsers will work instantly.</div>
           <input class="form-input" id="s-proxy-url" type="text" value="${escHtml(s.proxyUrl||'')}" placeholder="https://your-worker.your-name.workers.dev" autocomplete="off" spellcheck="false">
           <div class="form-hint" style="margin-top:8px;line-height:1.7">
-            If API calls are blocked by extensions or your network, deploy a free <b>Cloudflare Worker</b> as a proxy.<br>
-            <b>How:</b> Go to <b>workers.cloudflare.com</b> → Create Worker → paste this script → add secret <code>ANTHROPIC_KEY</code> = your API key → copy the Worker URL here.
+            <b>2-minute setup:</b> Go to <b>workers.cloudflare.com</b> (free account) → Create Worker → paste the script below → add secret <code>ANTHROPIC_KEY</code> → Deploy → paste the Worker URL above.
           </div>
           <div style="margin-top:10px;position:relative">
             <pre id="s-worker-script" style="background:rgba(0,0,0,.4);border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:10px;font-family:var(--mono);color:var(--text2);overflow-x:auto;line-height:1.6;white-space:pre;margin:0">export default {
@@ -3724,7 +3726,7 @@ const Settings = {
     const cors = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key, anthropic-version, anthropic-dangerous-direct-browser-access',
     };
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     const url = new URL(req.url);
@@ -3881,7 +3883,7 @@ const Settings = {
       const apiUrl = px || 'https://api.anthropic.com/v1/messages';
       const hdrs = px
         ? {'Content-Type':'application/json'}
-        : {'Content-Type':'application/json','x-api-key':testKey,'anthropic-version':'2023-06-01','anthropic-dangerous-allow-browser':'true'};
+        : {'Content-Type':'application/json','x-api-key':testKey,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'};
       try {
         const res=await fetch(apiUrl,{
           method:'POST',headers:hdrs,
