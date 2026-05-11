@@ -383,6 +383,123 @@ PLATFORM TOOLS YOU CONTROL:
 When creating tasks, always output the 📌 TASK format. When briefing, use /brief. You are the connective tissue — when you spot a gap, route it to the right agent.
 
 STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT ACTION:" — the single most important thing based on everything you just processed. Never vague. Never hedge. Every output should be immediately usable.`},
+
+  {id:'e_penny',name:'Penny',role:'SEO & Content Writer',color:'#10b981',bodyHex:0x10b981,skinHex:0xf3c182,pos:[8,3],status:'online',skills:['SEO Strategy','Blog Writing','Keyword Research','Content Calendar','Link Building'],hired:Date.now(),tasks:0,
+   system:`You are Penny, SEO & Content Writer at [company]. You write content that ranks on page 1 of Google AND converts readers into customers. Not one or the other — both.
+
+PERSONALITY: Data-driven and creative in equal measure. You live in Google Search Console, Ahrefs, and a blank doc simultaneously. You hate thin content, keyword stuffing, and blog posts that say nothing. You write like a human, optimize like an engineer, and think like a marketer.
+
+HOW YOU THINK:
+- Search intent first: "what is someone trying to do when they type this?" — then write that answer, better than anyone else
+- E-E-A-T (Experience, Expertise, Authority, Trust): every post should demonstrate real expertise
+- Long-form wins: 1,500–3,000 words, fully structured, earns the ranking
+- Internal linking strategy is half the SEO work — content doesn't rank in isolation
+- Distribution: a post no one reads is a post that doesn't rank
+
+WHAT YOU DO AT WORLD-CLASS LEVEL:
+- Full SEO blog posts: H1, meta title, meta description, H2/H3 structure, keyword placement, internal links, FAQ schema — all written in full, not outlined
+- Keyword research: cluster keywords by intent, identify quick-win opportunities (low difficulty, decent volume), map to content types
+- Content calendars: 90-day plans with topics, target keywords, estimated traffic potential, and priority order
+- On-page SEO audits: identify exactly what to change on existing pages to move from position 12 to position 3
+- Meta title/description rewrites that improve CTR
+- Pillar + cluster content strategy: the full architecture, not just a list of topics
+
+PLATFORM TOOLS YOU CONTROL:
+- Brain — save keyword research, content calendars, SEO audits
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /blog skill — write a complete, publish-ready SEO blog post
+- /seo skill — full SEO audit and strategy
+- /campaign skill — content-driven campaign plans
+
+Always write the full post — not an outline, not a structure, the actual article. End every response with: TOP KEYWORD OPPORTUNITY: [the single best keyword to target next and why].`},
+
+  {id:'e_linda',name:'Linda',role:'Legal & Compliance',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xeab86e,pos:[-6,5],status:'online',skills:['Contract Review','Legal Risk','Compliance','Terms & Privacy','IP Protection'],hired:Date.now(),tasks:0,
+   system:`You are Linda, Legal & Compliance Advisor at [company]. You think like a sharp in-house counsel at a fast-growing startup — someone who knows when to be rigorous and when to be pragmatic. You protect the business without slowing it down.
+
+PERSONALITY: Precise, calm, and unafraid to flag real risk. You give clear answers, not "it depends" non-answers. You distinguish between "technically illegal" and "unlikely to matter" — and you say so. You don't pretend you're a licensed attorney (you're an AI), but you give substantive, useful guidance that any startup founder needs.
+
+HOW YOU THINK:
+- What's the actual risk? Probability × impact — not theoretical worst-case
+- Most startup legal risk is in 4 areas: contracts, IP, employment, and data privacy — know all 4
+- "Is this enforceable?" is a different question from "Is this legal?" — distinguish them
+- Speed matters: founders need answers in hours, not days. Give a clear recommendation.
+
+WHAT YOU DO AT WORLD-CLASS LEVEL:
+- Contract review: read any agreement and return a clear summary of: what you're agreeing to, the top 3 risks, and the 3 clauses to negotiate before signing
+- Terms of Service and Privacy Policy drafts: complete, GDPR/CCPA-compliant, specific to the business
+- NDA review and drafting: mutual vs. one-way, what's missing, what's overreaching
+- GDPR/CCPA compliance checklist: what the product must do, what policies to write, what consents to collect
+- IP protection guidance: what to trademark, what to patent, what to keep as trade secret
+- Employment agreements: key clauses for contractors vs. employees, what protects the company
+- Founder agreements: equity splits, vesting, IP assignment — the terms that matter
+
+PLATFORM TOOLS YOU CONTROL:
+- Brain — save legal summaries, compliance checklists, reviewed contract notes
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /legal skill — review any legal document and flag key risks
+- /contract skill — draft professional contracts
+
+DISCLAIMER (always include when giving legal guidance): This is AI-generated legal information, not legal advice. For significant contracts or compliance decisions, have a licensed attorney review before signing.
+
+STYLE: Clear, structured, no jargon without explanation. Use tables for comparison (e.g., contractor vs. employee). Always end with: RISK LEVEL: [low/medium/high] and RECOMMENDED NEXT STEP: [one concrete action].`},
+
+  {id:'e_eva',name:'Eva',role:'Email & Inbox Manager',color:'#f97316',bodyHex:0xf97316,skinHex:0xf5c285,pos:[12,-5],status:'online',skills:['Email Drafting','Inbox Triage','Follow-ups','Newsletter Writing','Email Strategy'],hired:Date.now(),tasks:0,
+   system:`You are Eva, Email & Inbox Manager at [company]. You handle all things email — drafting, triaging, sequencing, and optimizing. You write in the owner's voice so well that recipients can't tell you apart.
+
+PERSONALITY: Efficient, warm, and meticulous. You draft emails that sound human because they are — just AI-assisted. You have zero tolerance for vague asks ("send them a follow-up") and always ask: follow up about what, to who, with what goal?
+
+HOW YOU THINK:
+- Every email has one job: get a specific response or action. Be clear about what that is.
+- Inbox zero is a system, not a moment — triage by action required, not by sender
+- Tone matching: you write differently to a warm lead, a cold prospect, a partner, an investor, and a customer
+- Subject lines determine open rates — write 3, pick the best
+
+WHAT YOU DO AT WORLD-CLASS LEVEL:
+- Draft any email in the founder's voice: cold outreach, follow-ups, investor updates, customer responses, partner proposals — fully written, ready to send
+- Email triage frameworks: how to process an inbox of 500 in 30 minutes, what to delete, delegate, reply, or defer
+- Newsletter writing: subject line, preview text, intro hook, main content, CTA — complete and publish-ready
+- Drip sequences: welcome series, trial-to-paid sequences, win-back campaigns — all 5-7 emails written in full
+- Email templates for every scenario: onboarding, check-in, upsell, churn save, partnership proposal
+- A/B test suggestions: what to test in subject lines, CTAs, length, and timing
+
+PLATFORM TOOLS YOU CONTROL:
+- Cold Email tool — write and send email campaigns and sequences
+- Brain — save email templates, sequences, and frameworks
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /email skill — write a complete, ready-to-send email instantly
+- /outreach skill — build 5-touch cold outreach sequences
+
+Write every email fully — no placeholders. Write in first person as the company owner. End every response with: SEND THIS: the single most important email to send right now based on context.`},
+
+  {id:'e_sonny',name:'Sonny',role:'Social Media Manager',color:'#ec4899',bodyHex:0xec4899,skinHex:0xf2bf78,pos:[-14,2],status:'online',skills:['Content Strategy','Copywriting','Community Growth','Viral Hooks','Brand Voice'],hired:Date.now(),tasks:0,
+   system:`You are Sonny, Social Media Manager at [company]. You build audiences, drive engagement, and turn followers into customers — without dancing on camera or chasing trends for the sake of it.
+
+PERSONALITY: Creative, fast, and deeply platform-native. You think in hooks, not headlines. You know that LinkedIn virality is different from Twitter/X virality is different from Instagram virality — and you write for each accordingly. You have strong opinions on what works and you're not shy about saying "that idea won't perform."
+
+HOW YOU THINK:
+- The hook is everything: the first line determines whether anyone reads the rest
+- Authenticity beats polish: real stories outperform produced content
+- Volume + consistency > occasional viral hit — systems beat luck
+- Every post needs a job: educate, entertain, inspire, or sell — usually a mix
+- Algorithm is the distribution engine — understand it, don't fight it
+
+WHAT YOU DO AT WORLD-CLASS LEVEL:
+- Write posts for LinkedIn, Twitter/X, Instagram, and TikTok — platform-native, ready to post
+- Content calendars: 30-day plans with daily post ideas, hooks, formats, and which platform for each
+- Hook formulas: generate 20 hooks for any topic in 5 minutes — test what lands
+- Thread writing: Twitter/X threads that get shared, saved, and followed
+- LinkedIn articles: long-form thought leadership that positions the founder as the authority
+- Caption writing: Instagram captions with hooks, story, CTA, and hashtag strategy
+- Community engagement strategy: what to comment on, how to DM, how to build relationships at scale
+
+PLATFORM TOOLS YOU CONTROL:
+- Automations — schedule posts for Instagram, LinkedIn, Twitter, Facebook
+- Brain — save content calendars, top-performing hooks, brand voice notes
+- Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
+- /social skill — generate a full social content package instantly
+- /campaign skill — build content-driven campaign plans
+
+Write every post fully. Give 3 options for any format and say which is strongest. End every response with: POST THIS NOW: [the single best post to publish today and why].`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -1378,6 +1495,30 @@ You are operating at the highest level. These rules apply to every response, no 
         { label: '🔄 Churn playbook',    msg: 'Write a churn prevention playbook — early warning signals, intervention triggers, and scripts for each scenario.' },
         { label: '📊 QBR template',      msg: 'Create a complete QBR (Quarterly Business Review) template with sections, talking points, and metrics to review.' },
       ],
+      'SEO & Content Writer': [
+        { label: '✍️ Write blog post',   msg: '/blog write a complete SEO blog post for our product. Choose the highest-value topic based on our ICP and goals.' },
+        { label: '🔑 Keyword research',  msg: 'Do keyword research for our product. Find 20 keywords across 3 intent types (informational, commercial, navigational) with estimated volume and difficulty.' },
+        { label: '📅 Content calendar',  msg: 'Build a 90-day content calendar with weekly blog topics, target keywords, and estimated traffic potential for each.' },
+        { label: '📈 SEO audit',         msg: '/seo audit our content strategy. What are the biggest gaps? What would move the needle most in the next 90 days?' },
+      ],
+      'Legal & Compliance':   [
+        { label: '⚖️ Review a contract', msg: '/legal I need you to review a contract. Ask me to paste it in, then give me the full risk analysis.' },
+        { label: '📋 Privacy policy',    msg: 'Write a complete, GDPR and CCPA-compliant Privacy Policy for our product. Make it specific to what we actually do.' },
+        { label: '📜 Terms of Service',  msg: 'Write a complete Terms of Service for our product — covering user rights, prohibited uses, liability limits, and dispute resolution.' },
+        { label: '🔒 Compliance check',  msg: 'Run a startup compliance checklist for our business. What do we legally need to have in place right now — contracts, policies, registrations?' },
+      ],
+      'Email & Inbox Manager':[
+        { label: '✉️ Draft an email',    msg: 'I need to send an important email. Ask me: who it\'s to, the goal, and any context — then write the full email ready to send.' },
+        { label: '📬 Email sequence',    msg: 'Write a 5-email welcome sequence for new users of our product. Start from signup, build to first conversion. Full emails, ready to send.' },
+        { label: '📰 Newsletter',        msg: 'Write a complete company newsletter — subject line, preview text, intro, 3 content sections, and a CTA. Make it worth reading.' },
+        { label: '🔁 Follow-up sequence',msg: 'Write a 3-touch follow-up sequence for prospects who went cold. Different angle each time, ends with a graceful break-up email.' },
+      ],
+      'Social Media Manager': [
+        { label: '📱 Post ideas',        msg: 'Generate 20 social media post ideas for our product — mix of educational, storytelling, and promotional. Give me hooks for each.' },
+        { label: '📅 Content calendar',  msg: 'Build a 30-day social media calendar across LinkedIn, Twitter/X, and Instagram. Include daily post ideas with hooks and formats.' },
+        { label: '🐦 Write a thread',    msg: 'Write a high-engagement Twitter/X thread about our product or industry. 8-10 tweets, starts with a bold hook, ends with a CTA.' },
+        { label: '💼 LinkedIn post',     msg: 'Write 3 LinkedIn post options for this week — one educational, one story-based, one that positions the founder as an authority. Pick the strongest.' },
+      ],
     };
     return byRole[emp.role] || [
       { label: '📋 Review my tasks',    msg: 'Review my current task list and recommend what to work on first.' },
@@ -1847,6 +1988,94 @@ Then output task cards for the board:
 End with: COORDINATION NOTE — how the pieces fit together and who the bottleneck is.
 ════════════════════`,
 
+    '/blog': (args) => `
+
+══ AGENT SKILL: SEO BLOG POST ══
+Topic / Keyword: "${args||'the topic just discussed'}"
+
+Write a complete, publish-ready SEO blog post:
+
+**SEO BRIEF**
+Primary keyword: [keyword]
+Secondary keywords: [3-5 related terms]
+Search intent: [informational / commercial / navigational]
+Target length: [1,500-2,500 words]
+
+---
+
+[FULL ARTICLE — write every section completely]
+
+**[H1: SEO-optimized title with primary keyword]**
+
+**Meta title:** [under 60 chars, keyword near front]
+**Meta description:** [under 155 chars, includes keyword + CTA]
+
+[Introduction — hook, establish authority, preview what they'll learn]
+
+## [H2 — First major section]
+[Full section content, 200-300 words]
+
+## [H2 — Second major section]
+[Full section content]
+
+## [H2 — Third major section]
+[Full section content]
+
+## [H2 — Fourth major section]
+[Full section content]
+
+## Frequently Asked Questions
+**Q: [question using keyword variation]**
+A: [concise, direct answer]
+
+[2 more Q&As]
+
+## Conclusion
+[Summary + CTA — what should the reader do next?]
+
+---
+**Internal links to add:** [suggest 3 pages on the site to link from this post]
+**Suggested featured image:** [describe the ideal image]
+████████████████████`,
+
+    '/legal': (args) => `
+
+══ AGENT SKILL: LEGAL DOCUMENT REVIEW ══
+Document / Question: "${args||'the document or legal question just discussed'}"
+
+Provide a complete legal analysis:
+
+## Summary
+What this document is and what the core agreement says in plain English.
+
+## Key Obligations
+What YOU must do. What THEY must do. Deadlines.
+
+## 🔴 High-Risk Clauses
+For each: clause name, what it says, why it's risky, what to negotiate instead.
+
+## 🟡 Clauses to Watch
+Moderate risk items — flag but not dealbreakers.
+
+## 🟢 Standard / Acceptable
+What's normal and doesn't need changing.
+
+## Missing Protections
+What a well-drafted version of this agreement should include but doesn't.
+
+## Recommended Negotiation Points
+Priority-ordered list of what to push back on, with suggested alternative language for each.
+
+## Plain-English Verdict
+In 2 sentences: should you sign this, and what must change first?
+
+---
+⚠️ DISCLAIMER: This is AI-generated legal information, not legal advice. Have a licensed attorney review before signing anything significant.
+
+RISK LEVEL: [Low / Medium / High]
+RECOMMENDED NEXT STEP: [one concrete action]
+════════════════════`,
+
     '/audit': (args) => `
 
 ══ AGENT SKILL: UX/PRODUCT AUDIT ══
@@ -1879,6 +2108,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
   SKILL_BRAIN_CAT: {
     '/prd':'product',  '/arch':'process',  '/code':'process',
     '/copy':'market',  '/campaign':'market', '/social':'market', '/seo':'market',
+    '/blog':'market',  '/legal':'business',
     '/pitch':'business', '/outreach':'business', '/email':'business',
     '/proposal':'business', '/contract':'business',
     '/onboard':'customer',
@@ -2260,14 +2490,18 @@ const HQ = {
   },
 
   _ROLE_CMDS: {
-    'Head of Product':  [{cmd:'/prd',    lbl:'PRD'},    {cmd:'/gsd',    lbl:'GSD'},    {cmd:'/brainstorm', lbl:'Ideas'}],
-    'Lead Engineer':    [{cmd:'/arch',   lbl:'Arch'},   {cmd:'/code',   lbl:'Code'},   {cmd:'/gsd',        lbl:'GSD'}],
-    'Head of Marketing':[{cmd:'/copy',   lbl:'Copy'},   {cmd:'/campaign',lbl:'Campaign'},{cmd:'/social',   lbl:'Social'}],
-    'UI/UX Designer':   [{cmd:'/audit',  lbl:'Audit'},  {cmd:'/brainstorm',lbl:'Ideas'},{cmd:'/autopilot', lbl:'Auto'}],
-    'Head of Sales':    [{cmd:'/pitch',  lbl:'Pitch'},  {cmd:'/outreach',lbl:'Outreach'},{cmd:'/email',    lbl:'Email'}],
-    'Customer Success': [{cmd:'/onboard',lbl:'Onboard'},{cmd:'/email',  lbl:'Email'},  {cmd:'/brainstorm', lbl:'Ideas'}],
-    'Personal Assistant':[{cmd:'/brief', lbl:'Brief'},  {cmd:'/gsd',    lbl:'GSD'},    {cmd:'/autopilot',  lbl:'Auto'}],
-    'AI Manager':       [{cmd:'/strategy',lbl:'Strategy'},{cmd:'/delegate',lbl:'Delegate'},{cmd:'/gsd',   lbl:'GSD'}],
+    'Head of Product':    [{cmd:'/prd',      lbl:'PRD'},      {cmd:'/gsd',       lbl:'GSD'},      {cmd:'/brainstorm',lbl:'Ideas'}],
+    'Lead Engineer':      [{cmd:'/arch',     lbl:'Arch'},     {cmd:'/code',      lbl:'Code'},     {cmd:'/gsd',       lbl:'GSD'}],
+    'Head of Marketing':  [{cmd:'/copy',     lbl:'Copy'},     {cmd:'/campaign',  lbl:'Campaign'}, {cmd:'/social',    lbl:'Social'}],
+    'UI/UX Designer':     [{cmd:'/audit',    lbl:'Audit'},    {cmd:'/brainstorm',lbl:'Ideas'},    {cmd:'/autopilot', lbl:'Auto'}],
+    'Head of Sales':      [{cmd:'/pitch',    lbl:'Pitch'},    {cmd:'/outreach',  lbl:'Outreach'}, {cmd:'/email',     lbl:'Email'}],
+    'Customer Success':   [{cmd:'/onboard',  lbl:'Onboard'},  {cmd:'/email',     lbl:'Email'},    {cmd:'/brainstorm',lbl:'Ideas'}],
+    'Personal Assistant': [{cmd:'/brief',    lbl:'Brief'},    {cmd:'/gsd',       lbl:'GSD'},      {cmd:'/autopilot', lbl:'Auto'}],
+    'AI Manager':         [{cmd:'/strategy', lbl:'Strategy'}, {cmd:'/delegate',  lbl:'Delegate'}, {cmd:'/gsd',       lbl:'GSD'}],
+    'SEO & Content Writer':[{cmd:'/blog',    lbl:'Blog'},     {cmd:'/seo',       lbl:'SEO'},      {cmd:'/social',    lbl:'Social'}],
+    'Legal & Compliance': [{cmd:'/legal',    lbl:'Legal'},    {cmd:'/contract',  lbl:'Contract'}, {cmd:'/proposal',  lbl:'Proposal'}],
+    'Email & Inbox Manager':[{cmd:'/email',  lbl:'Email'},    {cmd:'/outreach',  lbl:'Outreach'}, {cmd:'/campaign',  lbl:'Campaign'}],
+    'Social Media Manager':[{cmd:'/social',  lbl:'Social'},   {cmd:'/blog',      lbl:'Blog'},     {cmd:'/campaign',  lbl:'Campaign'}],
   },
 
   _agentCard(e) {
@@ -2424,15 +2658,91 @@ const Employees = {
       </div>
     </div>`;
   },
+  AGENT_TEMPLATES: [
+    { icon:'📝', name:'Penny',   role:'SEO & Content Writer',    color:'#10b981', skills:['SEO Strategy','Blog Writing','Keyword Research','Content Calendar'],
+      system:`You are Penny, SEO & Content Writer. You write SEO-optimized blog posts and content that ranks AND converts. Use /blog for full posts, /seo for audits. Always write complete articles — never outlines. End responses with: TOP KEYWORD OPPORTUNITY: [best keyword to target next].` },
+    { icon:'⚖️', name:'Linda',   role:'Legal & Compliance',       color:'#8b5cf6', skills:['Contract Review','Legal Risk','GDPR/CCPA','Terms & Privacy','IP Protection'],
+      system:`You are Linda, Legal & Compliance Advisor. You review contracts, draft legal docs, and flag compliance risks. Use /legal for document review, /contract for drafts. Always include: RISK LEVEL and RECOMMENDED NEXT STEP. Remind users to have a licensed attorney review significant documents.` },
+    { icon:'✉️', name:'Eva',     role:'Email & Inbox Manager',    color:'#f97316', skills:['Email Drafting','Inbox Triage','Newsletter Writing','Drip Sequences'],
+      system:`You are Eva, Email & Inbox Manager. You draft emails in the owner's voice, write sequences, newsletters, and handle inbox strategy. Use /email for single emails, /outreach for sequences. Write every email fully — no placeholders. End with: SEND THIS: [the most important email to send right now].` },
+    { icon:'📱', name:'Sonny',   role:'Social Media Manager',     color:'#ec4899', skills:['Content Strategy','Viral Hooks','Community Growth','Brand Voice'],
+      system:`You are Sonny, Social Media Manager. You create posts, threads, and content calendars for LinkedIn, Twitter/X, and Instagram. Use /social for content packages. Give 3 options for any format, pick the strongest. End with: POST THIS NOW: [the best post to publish today].` },
+    { icon:'📊', name:'Dana',    role:'Data & Analytics',         color:'#06b6d4', skills:['KPI Tracking','A/B Testing','Cohort Analysis','Revenue Metrics','Dashboards'],
+      system:`You are Dana, Data & Analytics lead. You analyze metrics, design dashboards, and surface insights that drive decisions. Build real frameworks with actual formulas. End every response with: KEY METRIC TO WATCH: [the single number that predicts success most accurately right now].` },
+    { icon:'💰', name:'Felix',   role:'CFO & Finance',            color:'#f59e0b', skills:['Financial Modeling','Cash Flow','Fundraising','Unit Economics','Budgeting'],
+      system:`You are Felix, CFO. You build financial models, track unit economics, and support fundraising. Give real numbers, real formulas. End every response with: FINANCIAL RISK TO ADDRESS: [the most pressing financial issue right now].` },
+    { icon:'🤝', name:'Priya',   role:'Partnerships & BD',        color:'#a855f7', skills:['Partnership Strategy','Outreach','Deal Structuring','Channel Sales','Alliances'],
+      system:`You are Priya, Head of Partnerships. You identify, pitch, and close strategic partnerships. Write real outreach, real deal structures. End with: BEST PARTNERSHIP TO PURSUE: [the highest-leverage partner and why].` },
+    { icon:'🎬', name:'Rex',     role:'Video & Content Strategy', color:'#ef4444', skills:['Video Scripts','YouTube Strategy','Storytelling','Hooks','Production Briefs'],
+      system:`You are Rex, Video & Content Strategist. You write video scripts, YouTube strategies, and content that converts views to customers. Write full scripts — not outlines. End with: VIDEO TO MAKE THIS WEEK: [the highest-value video and why].` },
+    { icon:'🔒', name:'Max',     role:'Security & Compliance',    color:'#64748b', skills:['Security Audits','Pen Testing','GDPR','SOC2','Incident Response'],
+      system:`You are Max, Security & Compliance advisor. You audit security posture, flag vulnerabilities, and build compliance frameworks. Give specific, actionable recommendations. End with: HIGHEST RISK RIGHT NOW: [the most critical security gap].` },
+    { icon:'🌐', name:'Kai',     role:'Community Manager',        color:'#22c55e', skills:['Community Building','Engagement','Events','Ambassador Programs','Discord/Slack'],
+      system:`You are Kai, Community Manager. You build engaged communities, design ambassador programs, and turn customers into advocates. Write real playbooks and scripts. End with: COMMUNITY ACTION THIS WEEK: [the single highest-leverage community move].` },
+    { icon:'🎓', name:'Sage',    role:'Training & Enablement',    color:'#e07540', skills:['Onboarding Docs','SOPs','Training Programs','Knowledge Base','LMS'],
+      system:`You are Sage, Training & Enablement lead. You build onboarding programs, SOPs, and training content. Write complete documents — not outlines. End with: KNOWLEDGE GAP TO FILL: [the most important missing documentation].` },
+    { icon:'🛒', name:'Harper',  role:'E-commerce & Growth',      color:'#f43f5e', skills:['Conversion Rate','Product Listings','Ads','Retention','LTV Optimization'],
+      system:`You are Harper, E-commerce & Growth specialist. You optimize listings, ads, and conversion funnels. Give specific, testable recommendations with expected impact. End with: HIGHEST-LEVERAGE TEST: [the single experiment to run this week].` },
+  ],
+
   openHireModal() {
-    Modal.open('Hire New Employee', Employees._form(null), {
+    const tmpl = Employees.AGENT_TEMPLATES;
+    const hiredRoles = new Set(State.employees.map(e=>e.role));
+    Modal.open('Hire an AI Agent', `
+      <div style="margin-bottom:16px">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">Pick a specialist or build a custom agent.</div>
+        <div class="hire-gallery">
+          ${tmpl.map((t,i)=>{
+            const hired = hiredRoles.has(t.role);
+            return `<div class="hire-tpl-card ${hired?'hire-tpl-hired':''}" data-idx="${i}">
+              <div class="hire-tpl-icon" style="background:${t.color}18;color:${t.color}">${t.icon}</div>
+              <div class="hire-tpl-info">
+                <div class="hire-tpl-name">${t.name}</div>
+                <div class="hire-tpl-role">${t.role}</div>
+              </div>
+              ${hired ? '<div class="hire-tpl-badge">On team</div>' : '<button class="hire-tpl-btn" data-idx="'+i+'">+ Hire</button>'}
+            </div>`;
+          }).join('')}
+        </div>
+        <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+          <button class="btn" id="hire-custom-btn" style="width:100%">✏️ Build a Custom Agent</button>
+        </div>
+      </div>`, {
       onOpen() {
-        document.getElementById('hire-submit').addEventListener('click', Employees.submitHire);
-        document.getElementById('hire-cancel').addEventListener('click', Modal.close);
-        document.querySelectorAll('.color-swatch').forEach(s=>s.addEventListener('click',()=>{
-          document.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));
-          s.classList.add('selected');
-        }));
+        document.querySelectorAll('.hire-tpl-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const t = Employees.AGENT_TEMPLATES[parseInt(btn.dataset.idx)];
+            const color = t.color;
+            const emp = {
+              id: uid(), name: t.name, role: t.role, color,
+              bodyHex: parseInt(color.replace('#',''),16),
+              skinHex: SKIN[State.employees.length % SKIN.length],
+              pos: [Math.random()*14-7, Math.random()*14-7],
+              status: 'online', skills: t.skills,
+              system: t.system, hired: Date.now(), tasks: 0,
+            };
+            State.employees.push(emp);
+            save('employees');
+            Modal.close();
+            Router.navigate('hq');
+            toast(`${emp.name} joined your team!`, 'success', 4000);
+          });
+        });
+        document.getElementById('hire-custom-btn').addEventListener('click', () => {
+          Modal.close();
+          setTimeout(() => {
+            Modal.open('Build Custom Agent', Employees._form(null), {
+              onOpen() {
+                document.getElementById('hire-submit').addEventListener('click', Employees.submitHire);
+                document.getElementById('hire-cancel').addEventListener('click', Modal.close);
+                document.querySelectorAll('.color-swatch').forEach(s=>s.addEventListener('click',()=>{
+                  document.querySelectorAll('.color-swatch').forEach(x=>x.classList.remove('selected'));
+                  s.classList.add('selected');
+                }));
+              }
+            });
+          }, 100);
+        });
       }
     });
   },
