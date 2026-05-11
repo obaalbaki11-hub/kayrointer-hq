@@ -308,7 +308,7 @@ STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT 
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', platformHunterKey:'', platformKlingKeyId:'', platformKlingKeySecret:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
+  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', platformHunterKey:'', platformKlingKeyId:'', platformKlingKeySecret:'', platformEjServiceId:'', platformEjTemplateId:'', platformEjPublicKey:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
   plan: 'free', // 'free' | 'growth' | 'scale' | 'enterprise'
   planActivatedAt: null,
   employees: [],
@@ -1090,9 +1090,15 @@ const Chat = {
     bar.id = 'chat-skills-bar';
     bar.className = 'chat-skills-bar';
     bar.innerHTML = [
-      ['/gsd','Get Shit Done'],
-      ['/brainstorm','Brainstorm'],
-      ['/brief','Daily Brief'],
+      ['/gsd','Get Shit Done — build a sprint from any goal'],
+      ['/brainstorm','5-angle idea generation'],
+      ['/brief','Daily standup brief'],
+      ['/email','Write & send a ready-to-go email'],
+      ['/proposal','Full business proposal'],
+      ['/contract','Contract draft'],
+      ['/seo','SEO audit + keyword strategy'],
+      ['/social','Social content for Twitter, LinkedIn, Instagram'],
+      ['/autopilot','Work autonomously on top task'],
       ['/autopilot','Autopilot'],
     ].map(([cmd,label])=>`<button class="skill-cmd-pill" data-cmd="${cmd} " title="${label}">${cmd}</button>`).join('');
     const msgs = document.getElementById('chat-messages');
@@ -1372,6 +1378,108 @@ Work autonomously right now. No summaries — do the actual work:
 4. List 2-3 concrete follow-up tasks to queue next
 
 Start immediately. The deliverable should be ready to use as-is.
+════════════════════`,
+
+    '/email': (args) => `
+
+══ SKILL: WRITE & SEND EMAIL ══
+Recipient / Context: "${args||'whoever was just discussed'}"
+
+Write a complete, ready-to-send email right now:
+1. SUBJECT LINE — compelling, specific, under 9 words
+2. OPENING — one sentence hook, personalized, no "I hope this email finds you well"
+3. BODY — 3-4 sentences max. Lead with value, not your company. One clear ask.
+4. SIGN-OFF — professional but human
+
+Then output a send-ready block:
+📧 READY TO SEND:
+To: [email address if known]
+Subject: [subject line]
+Body: [full email text]
+
+Make it sound like it was written by a person, not a template.
+════════════════════`,
+
+    '/proposal': (args) => `
+
+══ SKILL: BUSINESS PROPOSAL ══
+Project / Client: "${args||'the project just discussed'}"
+
+Write a complete, professional business proposal:
+1. EXECUTIVE SUMMARY — 3 sentences: problem, solution, outcome
+2. THE CHALLENGE — what problem are we solving? What happens if they don't solve it?
+3. OUR APPROACH — methodology, timeline, key milestones
+4. DELIVERABLES — exact list of what they get, by when
+5. INVESTMENT — pricing breakdown (use real structure: fixed fee / retainer / milestone-based)
+6. WHY US — 3 specific differentiators, not generic claims
+7. NEXT STEPS — clear CTA with deadline
+
+Write the full proposal. Professional tone, zero filler. Use real numbers and specifics.
+════════════════════`,
+
+    '/contract': (args) => `
+
+══ SKILL: CONTRACT DRAFT ══
+Agreement type / parties: "${args||'the agreement just discussed'}"
+
+Draft a complete, legally-structured contract:
+1. PARTIES — full legal names, roles (Client / Service Provider)
+2. SCOPE OF WORK — specific deliverables, explicit exclusions (what is NOT included)
+3. TIMELINE — start date, milestones, final delivery, revision rounds
+4. PAYMENT TERMS — amount, schedule, late payment clause, kill fee if cancelled mid-project
+5. INTELLECTUAL PROPERTY — who owns what, when ownership transfers
+6. CONFIDENTIALITY — what stays private, for how long
+7. TERMINATION — how either party can exit, notice period, refund policy
+8. LIMITATION OF LIABILITY — cap on damages
+9. GOVERNING LAW — jurisdiction
+10. SIGNATURES — signature blocks for both parties
+
+Note: This is a starting draft. Have a lawyer review before signing anything significant.
+════════════════════`,
+
+    '/seo': (args) => `
+
+══ SKILL: SEO AUDIT & STRATEGY ══
+Page / Topic: "${args||'the page or content just discussed'}"
+
+Deliver a complete SEO analysis:
+1. TARGET KEYWORDS — primary keyword, 5 secondary keywords, search intent for each
+2. TITLE TAG — write 3 options (under 60 chars), pick the strongest with reasoning
+3. META DESCRIPTION — write 2 options (under 155 chars), pick the strongest
+4. CONTENT STRUCTURE — H1, H2s, H3s — full outline with keyword placement
+5. INTERNAL LINKS — what pages to link from/to
+6. TECHNICAL QUICK WINS — page speed, Core Web Vitals flags, schema markup to add
+7. BACKLINK OPPORTUNITIES — 5 specific sites/types to target for links
+8. CONTENT GAPS — what competitors rank for that we're missing
+9. 30-DAY PLAN — prioritized action list with expected impact
+
+Be specific. Give real keywords with estimated monthly search volume where possible.
+════════════════════`,
+
+    '/social': (args) => `
+
+══ SKILL: SOCIAL MEDIA CONTENT ══
+Platform / Topic: "${args||'the content topic just discussed'}"
+
+Create a complete social content package:
+
+🐦 TWITTER/X (3 posts):
+— Hook post: controversial take or surprising insight (under 240 chars)
+— Value post: specific tip or stat (thread starter if needed)
+— Engagement post: question or poll prompt
+
+💼 LINKEDIN (1 post):
+— Opening hook (no "Excited to share" — start with the insight or story)
+— 3-5 short paragraphs, line breaks for readability
+— Specific takeaway
+— CTA that doesn't beg for likes
+
+📸 INSTAGRAM CAPTION:
+— Hook sentence
+— Story or value
+— 5-8 relevant hashtags (mix of niche and broad)
+
+Make every post sound like a real person, not a marketing team. No buzzwords.
 ════════════════════`,
   },
 
@@ -1671,9 +1779,14 @@ const HQ = {
           <div class="hq-panel">
             <div class="hq-panel-hdr"><span class="hq-panel-title">POWER SKILLS (type in chat)</span></div>
             <div class="hq-panel-body hq-skills-ref">
-              ${[['/gsd','Break any project into a full sprint plan'],
+              ${[['/gsd','Break any goal into a full sprint plan'],
                  ['/brainstorm','5-angle idea generation on any topic'],
                  ['/brief','Morning brief — status, priorities, risks'],
+                 ['/email','Write a ready-to-send cold email'],
+                 ['/proposal','Full business proposal'],
+                 ['/contract','Contract draft'],
+                 ['/seo','SEO audit + keyword strategy'],
+                 ['/social','Twitter, LinkedIn & Instagram content'],
                  ['/autopilot','Agent works autonomously on their tasks']
                 ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
             </div>
@@ -2171,10 +2284,12 @@ const Sheet = {
     container.innerHTML = '<div class="sheet-wrap" id="sheet-wrap"></div>';
     document.getElementById('topbar-right').innerHTML = `
       <button class="tb-btn" id="sh-ai-btn">🤖 AI Fill</button>
-      <button class="tb-btn" id="sh-csv-btn">⬇ Export CSV</button>
+      <button class="tb-btn" id="sh-csv-btn">⬇ CSV</button>
+      <button class="tb-btn" id="sh-xlsx-btn">⬇ Excel</button>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('sh-ai-btn').addEventListener('click',Sheet.aiFill);
     document.getElementById('sh-csv-btn').addEventListener('click',Sheet.exportCSV);
+    document.getElementById('sh-xlsx-btn').addEventListener('click',Sheet.exportExcel);
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
     Sheet.render();
   },
@@ -2332,9 +2447,25 @@ const Sheet = {
   exportCSV() {
     const tab=State.workbook.tabs[State.workbook.activeTab];
     const ROWS=30;const cols=Array.from({length:16},(_,i)=>String.fromCharCode(65+i));
-    const csv=Array.from({length:ROWS},(_,r)=>cols.map(c=>Sheet._display(tab,c+(r+1))).join(',')).join('\n');
-    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+    const csv=Array.from({length:ROWS},(_,r)=>cols.map(c=>{const v=Sheet._display(tab,c+(r+1));return v.includes(',')||v.includes('"')?`"${v.replace(/"/g,'""')}"`:v;}).join(',')).join('\n');
+    const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'}));
     a.download=`${tab.name}.csv`;a.click();toast('CSV exported');
+  },
+  async exportExcel() {
+    toast('Preparing Excel file…');
+    try {
+      if (!window.XLSX) {
+        await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      }
+      const tab=State.workbook.tabs[State.workbook.activeTab];
+      const ROWS=30;const cols=Array.from({length:16},(_,i)=>String.fromCharCode(65+i));
+      const data=Array.from({length:ROWS},(_,r)=>cols.map(c=>{const cell=tab.cells[c+(r+1)];if(!cell)return '';const v=cell.value;return (v!==undefined&&v!==null&&v!=='')?v:cell.raw||'';}));
+      const ws=window.XLSX.utils.aoa_to_sheet(data);
+      const wb=window.XLSX.utils.book_new();
+      window.XLSX.utils.book_append_sheet(wb,ws,tab.name);
+      window.XLSX.writeFile(wb,`${tab.name}.xlsx`);
+      toast('Excel file downloaded ✓','success');
+    } catch(e){ toast('Excel export failed: '+e.message,'error'); }
   },
   async aiFill() {
     Modal.open('AI Fill Range', `
@@ -2388,7 +2519,20 @@ const Sheet = {
 // ══════════════════════════════════════════════════════════════
 const Email = {
   activeContact: null,
+  _hasEmailJS() {
+    const s = State.settings;
+    return (s.ejServiceId||s.platformEjServiceId) && (s.ejTemplateId||s.platformEjTemplateId) && (s.ejPublicKey||s.platformEjPublicKey);
+  },
+  async _loadEmailJS() {
+    if (window.emailjs) return;
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js';
+      s.onload = res; s.onerror = rej; document.head.appendChild(s);
+    });
+  },
   init(container) {
+    const ejActive = Email._hasEmailJS();
     container.innerHTML = `
       <div style="height:100%;padding:16px;">
         <div class="email-layout" id="email-layout">
@@ -2400,6 +2544,7 @@ const Email = {
             <div class="contacts-list" id="contacts-list"></div>
           </div>
           <div class="composer" id="composer">
+            ${ejActive ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(16,217,138,.06);border-bottom:1px solid rgba(16,217,138,.15);font-size:11.5px;color:var(--green)">✅ EmailJS connected — emails send directly from this app</div>` : `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(245,158,11,.05);border-bottom:1px solid rgba(245,158,11,.12);font-size:11.5px;color:#f59e0b">⚠️ No EmailJS config — will open your mail client. <a href="#" onclick="Router.navigate('settings');return false" style="color:var(--accent);margin-left:4px">Connect EmailJS →</a></div>`}
             <div class="comp-field">
               <div class="comp-lbl">TO</div>
               <input class="comp-inp" id="em-to" placeholder="recipient@company.com">
@@ -2408,14 +2553,22 @@ const Email = {
               <div class="comp-lbl">SUBJECT</div>
               <input class="comp-inp" id="em-subj" placeholder="Your email subject…">
             </div>
-            <textarea class="comp-body" id="em-body" placeholder="Write your email here, or use AI to generate it…"></textarea>
+            <div class="comp-field" style="border-bottom:none">
+              <div class="comp-lbl">FROM</div>
+              <input class="comp-inp" id="em-from-name" value="${escHtml(State.settings.ownerName||State.settings.companyName||'')}" placeholder="Your name">
+            </div>
+            <textarea class="comp-body" id="em-body" placeholder="Write your email here, or ask an agent to write it…"></textarea>
             <div class="comp-footer">
-              <button class="btn btn-primary" id="em-ai-btn">✨ Generate with AI</button>
+              <button class="btn btn-primary" id="em-ai-btn">✨ AI Write</button>
               <button class="btn" id="em-template-btn">📋 Templates</button>
+              <button class="btn" id="em-seq-btn">📅 Sequence</button>
               <div style="margin-left:auto;display:flex;gap:8px">
-                <button class="btn" id="em-mailto-btn">📤 Send</button>
+                <button class="btn${ejActive?' btn-green':''}" id="em-mailto-btn" style="${ejActive?'':''}">
+                  ${ejActive ? '📤 Send Email' : '📤 Open Mail Client'}
+                </button>
               </div>
             </div>
+            <div id="em-send-status" style="padding:0 16px 10px;font-size:12px;color:var(--text2)"></div>
           </div>
         </div>
       </div>`;
@@ -2425,6 +2578,7 @@ const Email = {
     document.getElementById('em-ai-btn').addEventListener('click',Email.generate);
     document.getElementById('em-template-btn').addEventListener('click',Email.templates);
     document.getElementById('em-mailto-btn').addEventListener('click',Email.send);
+    document.getElementById('em-seq-btn').addEventListener('click',Email.sequence);
     Email.renderContacts();
   },
   destroy() { Email.activeContact=null; },
@@ -2531,14 +2685,96 @@ const Email = {
       }
     });
   },
-  send() {
-    const to=document.getElementById('em-to').value.trim();
-    const subj=document.getElementById('em-subj').value.trim();
-    const body=document.getElementById('em-body').value.trim();
-    if(!to){toast('Add a recipient first','error');return;}
-    window.open(`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`);
-    toast('Opening your email client…');
-  }
+  async send() {
+    const to   = document.getElementById('em-to').value.trim();
+    const subj = document.getElementById('em-subj').value.trim();
+    const body = document.getElementById('em-body').value.trim();
+    const fromName = document.getElementById('em-from-name')?.value.trim() || State.settings.ownerName || State.settings.companyName || 'Kayro';
+    if (!to) { toast('Add a recipient first', 'error'); return; }
+    const s = State.settings;
+    const svcId = s.ejServiceId || s.platformEjServiceId;
+    const tplId = s.ejTemplateId || s.platformEjTemplateId;
+    const pubKey = s.ejPublicKey  || s.platformEjPublicKey;
+    if (svcId && tplId && pubKey) {
+      const btn = document.getElementById('em-mailto-btn');
+      const status = document.getElementById('em-send-status');
+      btn.disabled = true; btn.textContent = '⏳ Sending…';
+      status.textContent = 'Connecting to EmailJS…'; status.style.color = 'var(--text2)';
+      try {
+        await Email._loadEmailJS();
+        await window.emailjs.send(svcId, tplId, {
+          to_email: to, subject: subj, message: body, from_name: fromName,
+          reply_to: s.ownerEmail || to,
+        }, pubKey);
+        status.innerHTML = `<span style="color:var(--green)">✅ Sent to ${to}</span>`;
+        toast('Email sent ✓', 'success');
+        btn.textContent = '✅ Sent!';
+        setTimeout(() => { btn.textContent = '📤 Send Email'; btn.disabled = false; status.textContent = ''; }, 4000);
+        // Log to HQ feed
+        try { const ae=State.employees.find(e=>e.role.toLowerCase().includes('sales'))||State.employees[0]; if(ae) HQ._addFeedItem(ae,`Email sent to ${to}: "${subj.slice(0,40)}"`); } catch(_){}
+      } catch(err) {
+        status.innerHTML = `<span style="color:var(--red)">❌ Failed: ${err?.text || err?.message || 'EmailJS error'}</span>`;
+        btn.textContent = '📤 Send Email'; btn.disabled = false;
+      }
+    } else {
+      window.open(`mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`);
+      toast('Opening your email client… (connect EmailJS in Settings to send directly)');
+    }
+  },
+
+  sequence() {
+    Modal.open('Generate Email Sequence', `
+      <div class="form-group">
+        <label class="form-label">WHO ARE YOU EMAILING?</label>
+        <input class="form-input" id="seq-target" placeholder="e.g. SaaS founders who raised seed funding" value="${document.getElementById('em-to')?.value||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">YOUR PITCH / GOAL</label>
+        <textarea class="form-textarea" id="seq-pitch" placeholder="e.g. Get them to try Kayro Interactive — AI employees for $29/mo" style="min-height:80px"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">SEQUENCE LENGTH</label>
+        <select class="form-select" id="seq-len">
+          <option value="3">3 emails (standard)</option>
+          <option value="5">5 emails (aggressive)</option>
+          <option value="2">2 emails (minimal)</option>
+        </select>
+      </div>
+      <div class="modal-actions">
+        <button class="btn" id="seq-cancel">Cancel</button>
+        <button class="btn btn-primary" id="seq-go">✨ Generate Sequence</button>
+      </div>`, {
+      onOpen() {
+        document.getElementById('seq-cancel').addEventListener('click', Modal.close);
+        document.getElementById('seq-go').addEventListener('click', async () => {
+          const target = document.getElementById('seq-target').value.trim();
+          const pitch  = document.getElementById('seq-pitch').value.trim();
+          const len    = document.getElementById('seq-len').value;
+          if (!pitch) { toast('Describe your pitch goal', 'error'); return; }
+          Modal.close();
+          const company = State.settings.companyName || 'Kayro Interactive';
+          const emp = State.employees.find(e=>e.role.toLowerCase().includes('sales'))||State.employees[0];
+          const sys = emp ? emp.system : `You are a world-class cold email copywriter at ${company}.`;
+          const prompt = `Write a ${len}-email cold outreach sequence from ${company}.
+Target: ${target||'business professionals'}
+Goal: ${pitch}
+Format each email exactly as:
+═══ EMAIL [N] — [Day X] ═══
+Subject: [subject line]
+[email body — under 120 words, no filler, one CTA]
+
+Write all ${len} emails. Be specific, human, and direct. No fluff.`;
+          toast('Generating your sequence…');
+          const emp2 = State.employees.find(e=>e.role.toLowerCase().includes('sales'))||State.employees[0];
+          if (emp2) Chat.open(emp2.id);
+          setTimeout(async () => {
+            const inp = document.getElementById('chat-input');
+            if (inp) { inp.value = prompt; Chat.send(); }
+          }, 300);
+        });
+      }
+    });
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -3105,11 +3341,18 @@ const Settings = {
         <button class="btn btn-primary" id="s-save-tavily" style="display:none">Save</button>
       </div>
       <div class="s-card full">
-        <div class="s-card-title">✉️ Email (Optional — EmailJS)</div>
-        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect EmailJS to send cold emails directly from the browser. Create a free account at <span style="color:var(--accent)">emailjs.com</span>.</p>
-        <div class="form-group"><label class="form-label">SERVICE ID</label><input class="form-input" id="s-ejsvc" value="${escHtml(s.ejServiceId||'')}" placeholder="service_xxxxx"></div>
-        <div class="form-group"><label class="form-label">TEMPLATE ID</label><input class="form-input" id="s-ejtpl" value="${escHtml(s.ejTemplateId||'')}" placeholder="template_xxxxx"></div>
-        <div class="form-group"><label class="form-label">PUBLIC KEY</label><input class="form-input" id="s-ejkey" value="${escHtml(s.ejPublicKey||'')}" placeholder="public_key_xxxxx"></div>
+        <div class="s-card-title">✉️ Email Sending (EmailJS)</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect EmailJS so agents can send emails directly — no email client popup. Create a free account at <b>emailjs.com</b>. Your template needs variables: <code style="background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;font-family:var(--mono)">to_email, subject, message, from_name</code>.</p>
+        <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:6px">✉️ PLATFORM EMAIL KEY (OWNER ONLY)</div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">SERVICE ID</label><input class="form-input" id="s-pejsvc" value="${escHtml(s.platformEjServiceId||'')}" placeholder="service_xxxxx — your EmailJS service, shared with all users"></div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">TEMPLATE ID</label><input class="form-input" id="s-pejtpl" value="${escHtml(s.platformEjTemplateId||'')}" placeholder="template_xxxxx"></div>
+          <div class="form-group" style="margin-bottom:0"><label class="form-label">PUBLIC KEY</label><input class="form-input" id="s-pejkey" value="${escHtml(s.platformEjPublicKey||'')}" placeholder="public_key_xxxxx"></div>
+          <div class="form-hint" style="margin-top:8px">Users who don't have their own EmailJS will send through this account. 💰 Free tier: 200 emails/month. Paid from $15/mo for 1,000+. Get at <b>emailjs.com</b>.</div>
+        </div>
+        <div class="form-group"><label class="form-label">YOUR OWN SERVICE ID</label><input class="form-input" id="s-ejsvc" value="${escHtml(s.ejServiceId||'')}" placeholder="service_xxxxx"></div>
+        <div class="form-group"><label class="form-label">YOUR OWN TEMPLATE ID</label><input class="form-input" id="s-ejtpl" value="${escHtml(s.ejTemplateId||'')}" placeholder="template_xxxxx"></div>
+        <div class="form-group"><label class="form-label">YOUR OWN PUBLIC KEY</label><input class="form-input" id="s-ejkey" value="${escHtml(s.ejPublicKey||'')}" placeholder="public_key_xxxxx"></div>
         <button class="btn btn-primary" id="s-save-ej">Save EmailJS Config</button>
       </div>
       <div class="s-card full">
@@ -3203,6 +3446,9 @@ const Settings = {
       }
     });
     document.getElementById('s-save-ej').addEventListener('click',()=>{
+      State.settings.platformEjServiceId=document.getElementById('s-pejsvc').value.trim();
+      State.settings.platformEjTemplateId=document.getElementById('s-pejtpl').value.trim();
+      State.settings.platformEjPublicKey=document.getElementById('s-pejkey').value.trim();
       State.settings.ejServiceId=document.getElementById('s-ejsvc').value.trim();
       State.settings.ejTemplateId=document.getElementById('s-ejtpl').value.trim();
       State.settings.ejPublicKey=document.getElementById('s-ejkey').value.trim();
