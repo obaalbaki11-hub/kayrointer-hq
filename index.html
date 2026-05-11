@@ -134,9 +134,6 @@ nav{
   line-height:1;margin-bottom:4px;
   font-family:var(--sans);
 }
-.p-price-annual{display:none}
-.billing-annual .p-price-monthly{display:none}
-.billing-annual .p-price-annual{display:block}
 .p-period{font-size:14px;font-weight:400;color:var(--text2);letter-spacing:0}
 .p-desc{font-size:12.5px;color:var(--text2);line-height:1.6;margin:12px 0 20px}
 .p-credits{
@@ -312,7 +309,7 @@ footer{
   <div class="nav-right">
     <a class="nav-link" href="#features">Features</a>
     <a class="nav-link" href="#pricing">Pricing</a>
-    <a class="nav-link" href="#tokens">Tokens</a>
+    <a class="nav-link" href="#how">How it works</a>
     <a class="nav-link" href="#enterprise" style="color:#c8a040">Enterprise</a>
     <div class="nav-sep"></div>
     <a class="nav-signin" href="#" onclick="openAuth('login');return false">Sign in</a>
@@ -328,94 +325,81 @@ footer{
   </div>
 
   <h1 class="hero-h1">
-    Hire AI employees.<br>
-    <span class="hero-h1-dim">Pay only for what they do.</span>
+    Your AI Workforce,<br>
+    <span class="hero-h1-dim">Ready to Work.</span>
   </h1>
 
-  <p class="hero-sub">Each plan includes a monthly credit allowance. Top up anytime — no waste, no surprise bills.</p>
+  <p class="hero-sub">Hire specialized AI employees with defined roles, persistent memory, and real domain expertise. Not a chatbot — a full team.</p>
   <div class="hero-trust">
-    <span>7-day free trial</span>·<span>no credit card required</span>·<span>cancel anytime</span>
-  </div>
-
-  <!-- Billing toggle -->
-  <div class="billing-toggle">
-    <span class="billing-label">Monthly</span>
-    <div class="toggle-track" id="billing-track" onclick="toggleBilling()">
-      <div class="toggle-thumb"></div>
-    </div>
-    <span class="billing-label">Annual</span>
-    <span class="annual-badge" id="annual-badge" style="opacity:.4">SAVE 20%</span>
+    <span>Start free</span>·<span>no credit card required</span>·<span>cancel anytime</span>
   </div>
 
   <!-- Pricing cards -->
   <div class="pricing-wrap" id="pricing-wrap">
     <div class="pricing-grid">
 
-      <!-- Starter -->
+      <!-- Free -->
       <div class="p-card">
-        <div class="p-tier">Starter</div>
+        <div class="p-tier">Free</div>
         <div class="p-price p-price-monthly">$0<span class="p-period">/mo</span></div>
-        <div class="p-price p-price-annual">$0<span class="p-period">/mo</span></div>
-        <div class="p-desc">Connect your own Anthropic key. Full platform access, no token limit.</div>
+        <div class="p-desc">Bring your own Anthropic key and get full access to the platform. No limits on employees or features.</div>
         <div class="p-credits">
-          <span class="p-credits-label">TOKENS / MO</span>
-          <span class="p-credits-val">∞ (your key)</span>
+          <span class="p-credits-label">MESSAGES / DAY</span>
+          <span class="p-credits-val">10</span>
         </div>
         <ul class="p-features">
-          <li><span class="pf-check">✓</span>3 AI employees</li>
+          <li><span class="pf-check">✓</span>Unlimited AI employees</li>
           <li><span class="pf-check">✓</span>Kanban task board</li>
-          <li><span class="pf-check">✓</span>AI spreadsheets &amp; email</li>
-          <li><span class="pf-check">✓</span>3D HQ office</li>
-          <li><span class="pf-check">✓</span>Brain memory layer</li>
-          <li><span class="pf-x">✗</span><span style="color:#333">Managed tokens</span></li>
-          <li><span class="pf-x">✗</span><span style="color:#333">Custom personalities</span></li>
+          <li><span class="pf-check">✓</span>Spreadsheet, Cold Email, Design Studio</li>
+          <li><span class="pf-check">✓</span>Brain knowledge base</li>
+          <li><span class="pf-check">✓</span>Power Skills (/gsd /brief /brainstorm)</li>
+          <li><span class="pf-x">✗</span><span style="color:#333">Claude included (own key required)</span></li>
+          <li><span class="pf-x">✗</span><span style="color:#333">Web search &amp; integrations</span></li>
         </ul>
-        <a class="p-btn" href="#" onclick="openAuth('signup');return false">Start free</a>
+        <a class="p-btn" href="app.html">Start free</a>
       </div>
 
       <!-- Growth — popular -->
       <div class="p-card popular">
         <div class="p-popular-label">MOST POPULAR</div>
         <div class="p-tier" style="color:#fff">Growth</div>
-        <div class="p-price p-price-monthly">$49<span class="p-period">/mo</span></div>
-        <div class="p-price p-price-annual">$39<span class="p-period">/mo</span></div>
-        <div class="p-desc">For founders running a real operation on AI. Tokens included — no API key needed.</div>
+        <div class="p-price p-price-monthly">$29<span class="p-period">/mo</span></div>
+        <div class="p-desc">Claude is fully included — we pay the tokens. Zero setup, just launch and go.</div>
         <div class="p-credits" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)">
-          <span class="p-credits-label">TOKENS / MO</span>
-          <span class="p-credits-val">2,000 tokens</span>
+          <span class="p-credits-label">MESSAGES / DAY</span>
+          <span class="p-credits-val">100</span>
         </div>
         <ul class="p-features">
-          <li><span class="pf-check">✓</span><strong>10 AI employees</strong></li>
-          <li><span class="pf-check">✓</span><strong>2,000 tokens / month included</strong></li>
-          <li><span class="pf-check">✓</span>No API key required</li>
-          <li><span class="pf-check">✓</span>Custom AI personalities</li>
-          <li><span class="pf-check">✓</span>Priority AI responses</li>
-          <li><span class="pf-check">✓</span>Token top-ups available</li>
+          <li><span class="pf-check">✓</span><strong>Claude AI included — no API key needed</strong></li>
+          <li><span class="pf-check">✓</span><strong>100 messages / day</strong></li>
+          <li><span class="pf-check">✓</span>Internet search for agents (5/day)</li>
+          <li><span class="pf-check">✓</span>Apollo.io lead search integration</li>
+          <li><span class="pf-check">✓</span>Meta Ads Manager integration</li>
+          <li><span class="pf-check">✓</span>All core features + Power Skills</li>
           <li><span class="pf-check">✓</span>Email support</li>
         </ul>
-        <a class="p-btn primary" href="mailto:sales@kayrointer.com?subject=Growth Plan">Get Growth →</a>
+        <a class="p-btn primary" href="app.html">Get Growth →</a>
       </div>
 
       <!-- Scale -->
       <div class="p-card">
         <div class="p-tier">Scale</div>
-        <div class="p-price p-price-monthly">$149<span class="p-period">/mo</span></div>
-        <div class="p-price p-price-annual">$119<span class="p-period">/mo</span></div>
-        <div class="p-desc">For teams running entire departments on AI. More tokens, more power.</div>
+        <div class="p-price p-price-monthly">$99<span class="p-period">/mo</span></div>
+        <div class="p-desc">Full power. Bring your own Claude + Kling keys. Built for teams running entire operations on AI.</div>
         <div class="p-credits">
-          <span class="p-credits-label">TOKENS / MO</span>
-          <span class="p-credits-val">10,000 tokens</span>
+          <span class="p-credits-label">MESSAGES / DAY</span>
+          <span class="p-credits-val">500</span>
         </div>
         <ul class="p-features">
-          <li><span class="pf-check">✓</span><strong>Unlimited AI employees</strong></li>
-          <li><span class="pf-check">✓</span><strong>10,000 tokens / month</strong></li>
+          <li><span class="pf-check">✓</span><strong>500 messages / day</strong></li>
+          <li><span class="pf-check">✓</span><strong>Kling AI video generation</strong></li>
+          <li><span class="pf-check">✓</span>Internet search (15/day)</li>
+          <li><span class="pf-check">✓</span>5 team seats</li>
           <li><span class="pf-check">✓</span>Everything in Growth</li>
-          <li><span class="pf-check">✓</span>Custom branding</li>
-          <li><span class="pf-check">✓</span>Advanced analytics</li>
-          <li><span class="pf-check">✓</span>Dedicated account manager</li>
-          <li><span class="pf-check">✓</span>SLA + Slack support</li>
+          <li><span class="pf-check">✓</span>Bring your own Claude API key</li>
+          <li><span class="pf-check">✓</span>Priority support</li>
         </ul>
-        <a class="p-btn" href="mailto:sales@kayrointer.com?subject=Scale Plan">Get Scale →</a>
+        <a class="p-btn" href="app.html">Get Scale →</a>
       </div>
 
     </div>
@@ -424,7 +408,7 @@ footer{
 
 <!-- FEATURES SECTION -->
 <section class="feat-section" id="features">
-  <p class="feat-section-sub">Six AI employees, each with their own expertise, personality, and memory — ready to work.</p>
+  <p class="feat-section-sub">Eight AI specialists — Product, Engineering, Marketing, Design, Sales, Customer Success, Personal Assistant, and AI Manager — each with their own expertise, memory, and domain knowledge.</p>
   <div class="feat-grid">
 
     <!-- Hire & Fire -->
@@ -433,126 +417,157 @@ footer{
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
       <div class="feat-title">Hire &amp; Fire Employees</div>
-      <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. They remember context across every conversation.</div>
+      <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. 8 specialists included — Product, Engineering, Marketing, Design, Sales, CS, Assistant, Manager. Add more any time.</div>
       <div class="feat-preview">
-        <div><span class="fp-blue">POST</span> <span class="fp-white">/hire {name: "Jordan", role: "DevOps"}</span></div>
-        <div><span class="fp-green">✓ Jordan is now online</span></div>
+        <div><span class="fp-green">● ONLINE</span> <span class="fp-white">Sarah — Lead Engineer</span></div>
+        <div><span class="fp-dim">→</span> <span class="fp-white">3 tasks in progress</span></div>
+      </div>
+    </div>
+
+    <!-- Brain -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1a1a2e">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#818cf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96-.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-1.66z"/><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96-.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-1.66z"/></svg>
+      </div>
+      <div class="feat-title">Brain — Company Memory</div>
+      <div class="feat-desc">Paste any document, strategy, or data. AI extracts structured facts into a company knowledge base that every agent reads automatically before every reply.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">📌</span> <span class="fp-white">ICP: solo founders, small teams</span></div>
+        <div><span class="fp-dim">🏢</span> <span class="fp-white">Growth plan is the best seller</span></div>
+      </div>
+    </div>
+
+    <!-- Ask the Room -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#0d2a1a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#34d399" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="feat-title">Ask the Room</div>
+      <div class="feat-desc">Broadcast one question to your entire AI team simultaneously. Each agent responds from their own expertise — like a real company standup in seconds.</div>
+      <div class="feat-preview">
+        <div><span class="fp-orange">You:</span> <span class="fp-white">What's the biggest risk this week?</span></div>
+        <div><span class="fp-green">8 agents responding…</span></div>
       </div>
     </div>
 
     <!-- Kanban -->
     <div class="feat-card">
       <div class="feat-icon-wrap" style="background:#14321e">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22c55e" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="10" y="3" width="5" height="12" rx="1"/><rect x="17" y="3" width="5" height="16" rx="1"/></svg>
       </div>
       <div class="feat-title">Kanban Task Board</div>
-      <div class="feat-desc">Drag-and-drop tasks between To Do, In Progress, Review, and Done. AI employees update task status in natural language.</div>
+      <div class="feat-desc">Assign tasks to any agent. Drag between To Do, In Progress, Review, Done. Use /gsd to auto-generate a full sprint from any goal in seconds.</div>
       <div class="feat-preview">
-        <div><span class="fp-green">●</span> <span class="fp-white">IN PROGRESS — 4 tasks</span></div>
-        <div><span class="fp-dim">→</span> <span class="fp-white">Assigned to Sarah, Omar</span></div>
+        <div><span class="fp-green">● IN PROGRESS</span> <span class="fp-white">4 tasks</span></div>
+        <div><span class="fp-dim">/gsd</span> <span class="fp-white">→ 8 tasks created ✓</span></div>
       </div>
     </div>
 
-    <!-- Spreadsheets -->
-    <div class="feat-card">
-      <div class="feat-icon-wrap" style="background:#2d1f0a">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
-      </div>
-      <div class="feat-title">AI Spreadsheets</div>
-      <div class="feat-desc">Full Excel-like grid with formula support — SUM, IF, AVERAGE, and more. Ask AI to fill ranges or analyze data instantly.</div>
-      <div class="feat-preview">
-        <div><span class="fp-blue">=SUM(B2:B10)</span> <span class="fp-dim">→</span> <span class="fp-white">84,200</span></div>
-        <div><span class="fp-orange">AI:</span> <span class="fp-white">"Fill Q3 projections"</span></div>
-      </div>
-    </div>
-
-    <!-- Cold Email -->
+    <!-- Cold Email + Hunter -->
     <div class="feat-card">
       <div class="feat-icon-wrap" style="background:#2d1020">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f472b6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
       </div>
-      <div class="feat-title">Cold Email Composer</div>
-      <div class="feat-desc">Generate personalized outreach with AI. Set the tone, add context, and send directly — or use your own EmailJS config.</div>
+      <div class="feat-title">Cold Email + Lead Finder</div>
+      <div class="feat-desc">AI writes complete multi-step outreach sequences with subject lines. Hunter.io integration finds verified email addresses by domain or name — export directly to your contact list.</div>
       <div class="feat-preview">
-        <div><span class="fp-blue">TO:</span> <span class="fp-white">james@acmecorp.com</span></div>
-        <div><span class="fp-blue">TONE:</span> <span class="fp-white">Professional + Punchy</span></div>
+        <div><span class="fp-blue">Hunter:</span> <span class="fp-white">found 14 emails @acmecorp.com</span></div>
+        <div><span class="fp-green">✓ Exported to Cold Email</span></div>
       </div>
     </div>
 
-    <!-- 3D HQ -->
+    <!-- Design Studio -->
     <div class="feat-card">
       <div class="feat-icon-wrap" style="background:#1e1436">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
       </div>
-      <div class="feat-title">3D Headquarters</div>
-      <div class="feat-desc">A live isometric office where your AI team works. Name tags, status badges, speech bubbles, and a daily standup panel.</div>
+      <div class="feat-title">Design Studio</div>
+      <div class="feat-desc">Describe any UI and your designer agent generates complete, working HTML/CSS. Landing pages, dashboards, email templates, components — live preview in-app, copy code instantly.</div>
       <div class="feat-preview">
-        <div><span class="fp-green">WORKING</span> <span class="fp-dim">·</span> <span class="fp-white">Sarah · 09:41</span></div>
-        <div><span class="fp-dim">feat:</span> <span class="fp-white">Merge branch 'main'</span></div>
+        <div><span class="fp-blue">Zara:</span> <span class="fp-white">Designing pricing page…</span></div>
+        <div><span class="fp-green">✓ Preview ready — copy code</span></div>
       </div>
     </div>
 
-    <!-- Smart Chat -->
+    <!-- Power Skills -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#2d1800">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="feat-title">Power Skills</div>
+      <div class="feat-desc">Slash commands that trigger specialized AI workflows: /gsd builds a full sprint plan, /brainstorm generates ideas across 5 lenses, /brief runs a daily standup, /autopilot makes agents work autonomously.</div>
+      <div class="feat-preview">
+        <div><span class="fp-orange">/gsd</span> <span class="fp-white">Launch new pricing page</span></div>
+        <div><span class="fp-green">→ 7 tasks created, assigned ✓</span></div>
+      </div>
+    </div>
+
+    <!-- AI Spreadsheets -->
     <div class="feat-card">
       <div class="feat-icon-wrap" style="background:#0a2428">
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#22d3ee" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
       </div>
-      <div class="feat-title">Smart AI Chat</div>
-      <div class="feat-desc">Talk to any employee in the sliding chat panel. Powered by Claude — each employee has a unique system prompt and memory.</div>
+      <div class="feat-title">AI Spreadsheets</div>
+      <div class="feat-desc">Full Excel-like grid with formula support — SUM, IF, AVERAGE, VLOOKUP. Ask AI to fill ranges, build projections, or analyze any data set in plain English.</div>
       <div class="feat-preview">
-        <div><span class="fp-blue">You:</span> <span class="fp-white">What's blocking the launch?</span></div>
-        <div><span class="fp-green">Sarah:</span> <span class="fp-white">Still need design QA sign-off</span></div>
+        <div><span class="fp-blue">=SUM(B2:B10)</span> <span class="fp-dim">→</span> <span class="fp-white">84,200</span></div>
+        <div><span class="fp-green">AI: "Fill Q3 projections" ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Internet Search -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#14321e">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      </div>
+      <div class="feat-title">Agents with Internet Access</div>
+      <div class="feat-desc">Every AI agent can search the web in real time via Tavily. Find leads, research competitors, pull pricing, read news — agents surface what they find directly in chat.</div>
+      <div class="feat-preview">
+        <div><span class="fp-green">🔍 Searching:</span> <span class="fp-white">SaaS competitors pricing 2026</span></div>
+        <div><span class="fp-dim">→</span> <span class="fp-white">Found 8 results…</span></div>
       </div>
     </div>
 
   </div>
 </section>
 
-<!-- OFFICE CTA STRIP -->
+<!-- HQ CTA STRIP -->
 <div class="office-strip">
-  <div class="office-strip-label">// your headquarters</div>
-  <h2 class="office-strip-h">See your AI team at work</h2>
-  <p class="office-strip-sub">A live 3D office where your employees show their status, active tasks, and daily standup — in real time.</p>
+  <div class="office-strip-label">// command center</div>
+  <h2 class="office-strip-h">Run your business from one screen</h2>
+  <p class="office-strip-sub">Your AI team's live activity, tasks, chat, and power skills — all in one command center. Ask the room, run a sprint, ship a design. Right now.</p>
   <a class="office-btn" href="app.html">Launch HQ →</a>
-  <a class="office-btn ghost" href="#" onclick="openAuth('signup');return false">Sign up free</a>
+  <a class="office-btn ghost" href="#" onclick="openAuth('signup');return false">Start free</a>
 </div>
 
-<!-- TOKEN TOP-UP SECTION -->
-<section id="tokens" style="max-width:940px;margin:0 auto 96px;padding:0 28px">
+<!-- HOW TO GET STARTED -->
+<section id="how" style="max-width:940px;margin:0 auto 96px;padding:0 28px">
   <div style="text-align:center;margin-bottom:48px">
-    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:12px;text-transform:uppercase">// tokens</div>
-    <h2 style="font-size:clamp(26px,4vw,42px);font-weight:800;color:#fff;letter-spacing:-1.5px;margin-bottom:12px">Run out? Top up.</h2>
-    <p style="font-size:14px;color:#666;max-width:480px;margin:0 auto;line-height:1.7">Tokens power every AI interaction — messages, tasks, summaries. Buy more any time. <strong style="color:#888">Tokens never expire.</strong></p>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:12px;text-transform:uppercase">// get started in 60 seconds</div>
+    <h2 style="font-size:clamp(26px,4vw,42px);font-weight:800;color:#fff;letter-spacing:-1.5px;margin-bottom:12px">Launch your AI team.</h2>
+    <p style="font-size:14px;color:#666;max-width:480px;margin:0 auto;line-height:1.7">No installs. No setup. Open the app, hire your first agent, and start delegating.</p>
   </div>
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:32px">
-    <!-- Lite Pack -->
-    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:26px;text-align:center">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#555;font-weight:600;text-transform:uppercase;margin-bottom:14px">LITE PACK</div>
-      <div style="font-size:36px;font-weight:800;color:#fff;letter-spacing:-2px;margin-bottom:4px">$5</div>
-      <div style="font-size:13px;color:#22c55e;font-weight:600;margin-bottom:10px">500 tokens</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:20px">~200 messages or<br>50 full task completions</div>
-      <a href="mailto:sales@kayrointer.com?subject=Token Top-Up: Lite 500" style="display:block;padding:10px;background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:13px;font-weight:600;color:#888;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='#888'">Buy Lite Pack</a>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:40px">
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:28px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:800;color:#333;margin-bottom:14px">01</div>
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">Open the app</div>
+      <div style="font-size:13px;color:#555;line-height:1.7">Go to kayrointer.com/app.html — no download, works in any browser. Sign in or continue as guest.</div>
     </div>
-    <!-- Standard Pack -->
-    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:26px;text-align:center;position:relative">
-      <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:700;padding:3px 12px;border-radius:0 0 8px 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px">BEST VALUE</div>
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#555;font-weight:600;text-transform:uppercase;margin-bottom:14px;margin-top:8px">STANDARD</div>
-      <div style="font-size:36px;font-weight:800;color:#fff;letter-spacing:-2px;margin-bottom:4px">$12</div>
-      <div style="font-size:13px;color:#22c55e;font-weight:600;margin-bottom:10px">1,500 tokens</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:20px">~600 messages or<br>150 full task completions</div>
-      <a href="mailto:sales@kayrointer.com?subject=Token Top-Up: Standard 1500" style="display:block;padding:10px;background:#fff;border:1px solid #fff;border-radius:8px;font-size:13px;font-weight:600;color:#000;text-decoration:none">Buy Standard</a>
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.25);border-radius:14px;padding:28px;position:relative">
+      <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);background:#fff;color:#000;font-size:9px;font-weight:700;padding:3px 12px;border-radius:0 0 8px 8px;font-family:'JetBrains Mono',monospace;letter-spacing:1px">RECOMMENDED</div>
+      <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:800;color:#444;margin-bottom:14px;margin-top:8px">02</div>
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">Upgrade to Growth</div>
+      <div style="font-size:13px;color:#555;line-height:1.7">$29/mo — Claude is fully included. No API key needed. Go to Settings → enter plan code → instant access.</div>
     </div>
-    <!-- Pro Pack -->
-    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:26px;text-align:center">
-      <div style="font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:#555;font-weight:600;text-transform:uppercase;margin-bottom:14px">PRO PACK</div>
-      <div style="font-size:36px;font-weight:800;color:#fff;letter-spacing:-2px;margin-bottom:4px">$35</div>
-      <div style="font-size:13px;color:#22c55e;font-weight:600;margin-bottom:10px">5,000 tokens</div>
-      <div style="font-size:12px;color:#555;line-height:1.6;margin-bottom:20px">~2,000 messages or<br>500 full task completions</div>
-      <a href="mailto:sales@kayrointer.com?subject=Token Top-Up: Pro 5000" style="display:block;padding:10px;background:none;border:1px solid rgba(255,255,255,.15);border-radius:8px;font-size:13px;font-weight:600;color:#888;text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(255,255,255,.3)';this.style.color='#fff'" onmouseout="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='#888'">Buy Pro Pack</a>
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:28px">
+      <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:800;color:#333;margin-bottom:14px">03</div>
+      <div style="font-size:15px;font-weight:700;color:#fff;margin-bottom:8px">Delegate everything</div>
+      <div style="font-size:13px;color:#555;line-height:1.7">Chat with any agent. Use /gsd to build a sprint plan, /brief for a daily standup, or just ask them to do the work.</div>
     </div>
   </div>
-  <div style="text-align:center;font-size:12px;color:#444;font-family:'JetBrains Mono',monospace">
-    Questions? <a href="mailto:inquire@kayrointer.com" style="color:#666;text-decoration:none;border-bottom:1px solid #333">inquire@kayrointer.com</a>
+  <div style="text-align:center">
+    <a href="app.html" style="display:inline-block;padding:14px 32px;background:#fff;color:#000;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;font-family:'Inter',sans-serif">Launch HQ →</a>
+    <div style="margin-top:14px;font-size:12px;color:#444;font-family:'JetBrains Mono',monospace">Questions? <a href="mailto:inquire@kayrointer.com" style="color:#666;text-decoration:none;border-bottom:1px solid #333">inquire@kayrointer.com</a></div>
   </div>
 </section>
 
@@ -610,7 +625,7 @@ footer{
   <div class="foot-links">
     <a class="foot-link" href="#features">Features</a>
     <a class="foot-link" href="#pricing">Pricing</a>
-    <a class="foot-link" href="#tokens">Tokens</a>
+    <a class="foot-link" href="#how">How it works</a>
     <a class="foot-link" href="#enterprise" style="color:#c8a040">Enterprise</a>
     <a class="foot-link" href="app.html">Launch App</a>
     <a class="foot-link" href="mailto:sales@kayrointer.com">Sales</a>
@@ -669,14 +684,6 @@ footer{
 </div>
 
 <script>
-let isAnnual = false;
-function toggleBilling() {
-  isAnnual = !isAnnual;
-  document.getElementById('billing-track').classList.toggle('annual', isAnnual);
-  document.getElementById('annual-badge').style.opacity = isAnnual ? '1' : '.4';
-  document.getElementById('pricing-wrap').classList.toggle('billing-annual', isAnnual);
-}
-
 function openAuth(tab) {
   document.getElementById('auth-overlay').classList.add('open');
   switchTab(tab || 'login');

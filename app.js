@@ -35,27 +35,64 @@ const BRAIN_CATEGORIES = {
 };
 
 const DEFAULT_BRAIN_FACTS = [
-  {id:'dbf1',  text:'Kayro Interactive is an AI workforce platform — users hire and manage specialized AI employees with defined roles, persistent memory, and deep domain skills.',                                               category:'business', source:'Company Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf2',  text:'Core product modules: Headquarters (Command Center), Tasks (Kanban), Spreadsheet, Cold Email, Design Studio, Brain (knowledge base), and Power Skills.',                                                 category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf3',  text:'The Brain is a company knowledge base — paste any content and AI extracts structured facts. Every agent reads the Brain before every response, giving them full company context.',                          category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf4',  text:'"Ask the Room" broadcasts one question to every AI agent simultaneously and streams independent answers — like a real team meeting.',                                                                      category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf5',  text:'Power Skills: /gsd breaks any project into a full task list (auto-populates Kanban), /brainstorm generates ideas across 5 lenses, /brief creates a daily status summary, /autopilot produces a full deliverable.',  category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf6',  text:'Pricing tiers by XP level: Intern (free, 50K tokens/day), Junior (100K), Senior (250K), Lead (500K), Director (1M), C-Suite (unlimited). XP earned from usage + token pack purchases.',                  category:'business', source:'Pricing',         sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf7',  text:'Token packs: Starter $9 (+250 XP, 500K tokens), Pro $29 (+800 XP, 2M tokens), Growth $79 (+2,800 XP, 8M tokens), C-Suite $199 (+8,000 XP, unlimited). More you buy = more free tokens per day forever.',  category:'business', source:'Pricing',         sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf8',  text:'Key differentiator vs. generic AI chat: Kayro agents have persistent memory, role-specific expertise, full company context (Brain + tasks), and work together as a coordinated team.',                     category:'market',   source:'Positioning',     sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf9',  text:'Primary target users: founders/solo operators who need a full team, small businesses augmenting headcount with AI, agencies scaling client delivery, and operators who want AI that works in context.',     category:'customer', source:'ICP',             sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf10', text:'AI employees: Omar (Product), Sarah (Engineering), Alex (Marketing), Zara (Design), Chris (Sales), Mia (Customer Success), ARIA (Personal Assistant), Claude (AI Manager). More can be hired.',            category:'team',     source:'Team Overview',   sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf11', text:'Kayro Interactive is designed as a single-page web app accessible from any browser — no install required. Firebase auth enables persistent accounts across devices.',                                        category:'product',  source:'Technical',       sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf12', text:'Cold Email module: AI agents draft complete multi-step outreach sequences with subject lines and personalization, exportable for use in any email tool.',                                                    category:'product',  source:'Feature Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  // ── OWNER & COMPANY ────────────────────────────────────────────
+  {id:'dbf_own1', text:'Owner & CEO: Omar Baalbaki. Email: omarbaalbaki@kayrointer.com. Company: Kayro Interactive. Website: kayrointer.com. All agents work directly for Omar and should treat every request as coming from the owner of the business.',
+    category:'business', source:'Owner Profile', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_own2', text:'Kayro Interactive is a bootstrapped AI SaaS business built by Omar Baalbaki. The goal is to sign paying subscribers and grow MRR. Every agent should actively help with sales, growth, product improvement, and day-to-day operations.',
+    category:'business', source:'Owner Profile', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+
+  // ── PRODUCT ────────────────────────────────────────────────────
+  {id:'dbf_p1', text:'Kayro Interactive (kayrointer.com) is an AI workforce platform — users hire specialized AI employees (Product, Engineering, Marketing, Design, Sales, Customer Success, Personal Assistant, AI Manager) that have defined roles, persistent memory, and deep domain expertise. Not a generic chatbot — a full AI team.',
+    category:'product', source:'Product Overview', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p2', text:'Core modules: Headquarters (command center + live activity + ask the room), Tasks (Kanban board), Spreadsheet, Cold Email (AI-written sequences), Design Studio (AI-generated HTML/CSS), Brain (company knowledge base), Operations, Power Skills (/gsd /brainstorm /brief /autopilot).',
+    category:'product', source:'Feature Map', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p3', text:'Integrations: Apollo.io (lead search → export to Cold Email), Meta Ads Manager (campaign stats + Pixel setup), Kling AI (text-to-video and image-to-video generation), Cloudflare Worker proxy (fixes browser extension blocking of API calls).',
+    category:'product', source:'Integrations', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p4', text:'The Brain is a structured company knowledge base. Paste any content (strategy docs, brand guides, customer interviews, etc.) and AI extracts categorized facts. Every agent reads the Brain in every conversation — giving them full company context automatically.',
+    category:'product', source:'Brain Feature', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p5', text:'Ask the Room: broadcast one question to every AI agent simultaneously. Each responds independently from their role perspective — like a real team standup.',
+    category:'product', source:'Feature', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p6', text:'Power Skills — slash commands: /gsd turns any project into a complete task list auto-populated into the Kanban; /brainstorm generates ideas across 5 strategic lenses; /brief generates a daily team status with risks and priorities; /autopilot makes an agent work fully autonomously.',
+    category:'product', source:'Power Skills', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p7', text:'Web search is built into agents (via Tavily API) — agents can search the internet in real time to find email contacts, company info, pricing, news, LinkedIn profiles, and more. Searches are paid by Kayro on platform keys.',
+    category:'product', source:'Feature', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_p8', text:'Technical stack: vanilla JS single-page app (no framework), hosted on GitHub Pages. All API calls go through a Cloudflare Worker proxy. Firebase optional for Google Sign-In and persistent accounts. localStorage for state persistence.',
+    category:'product', source:'Technical', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+
+  // ── PRICING ────────────────────────────────────────────────────
+  {id:'dbf_pr1', text:'Pricing plans: Free (own API key required, 10 messages/day, core pages only) → Growth $29/mo (Claude key included — Kayro pays tokens, 100 msgs/day, Apollo + Meta integrations, 5 web searches/day) → Scale $99/mo (own Claude + Kling keys, 500 msgs/day, all features, 15 searches/day, 5 seats) → Enterprise (custom pricing, white-label, dedicated support, 30 searches/day, unlimited seats).',
+    category:'business', source:'Pricing', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_pr2', text:'Key revenue insight: Growth plan ($29/mo) is the easiest sale — Claude is fully included, user needs zero setup, just pay and go. Scale ($99/mo) is for power users who want full control and bring their own API keys. Enterprise is for agencies and white-label clients.',
+    category:'business', source:'Pricing Strategy', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_pr3', text:'Plan codes to activate: KAYRO-GROWTH (Growth), KAYRO-SCALE (Scale), KAYRO-ENTERPRISE (Enterprise). Users enter these in Settings. Omar can issue codes directly to paying customers until Stripe is integrated.',
+    category:'business', source:'Operations', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+
+  // ── MARKET & POSITIONING ───────────────────────────────────────
+  {id:'dbf_m1', text:'Primary ICP (Ideal Customer Profile): solo founders and small teams who need a full AI workforce but cannot afford or hire a full team. Secondary: agencies scaling delivery capacity. Tertiary: operators who want AI with company context, not generic chat.',
+    category:'customer', source:'ICP', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_m2', text:'Key differentiator vs. ChatGPT, Claude.ai, Gemini: Kayro agents have persistent memory per employee, role-specific domain expertise, full company context via Brain, inter-agent coordination via Ask the Room, and structured output (tasks → Kanban). Not a chatbot — a workforce.',
+    category:'market', source:'Positioning', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_m3', text:'Competitors to reference: Relevance AI, MultiOn, AgentOps, Lindy.ai, Dust.tt. Kayro is simpler to start (no-code, browser only), more opinionated on roles, and includes a full integrated workspace (tasks, email, design, spreadsheet) — not just agent building.',
+    category:'market', source:'Competitive Analysis', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_m4', text:'Headline messaging options: "Your AI Workforce, Ready to Work" / "Hire AI employees. Run your business." / "Stop chatting with AI. Start managing it." / "The only AI platform where agents know your company."',
+    category:'market', source:'Messaging', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+
+  // ── SALES & GROWTH ─────────────────────────────────────────────
+  {id:'dbf_s1', text:'Current growth priority: get paying Growth plan subscribers ($29/mo). Best channels: cold email to founders/solo operators, LinkedIn content, Product Hunt launch, Twitter/X demos. Every sale starts with showing the product working on their actual use case.',
+    category:'business', source:'Growth Strategy', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_s2', text:'Best cold email angle for Kayro: "What would you do if you had a Head of Marketing, Engineer, and Product Manager on call 24/7 for $29/month?" Lead with the outcome (full team for cost of a Netflix sub), not the technology.',
+    category:'market', source:'Sales Messaging', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
+  {id:'dbf_s3', text:'Objection: "ChatGPT is free" → Kayro agents know YOUR company, YOUR tasks, YOUR goals. ChatGPT forgets everything and has no idea who you are. Objection: "Too expensive" → $29 is less than 2 hours of a freelancer. You get 8 specialist agents 24/7.',
+    category:'business', source:'Objection Handling', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
 ];
 
 const DEFAULT_EMPLOYEES = [
   {id:'e_claude',name:'Claude',role:'AI Manager',color:'#e07540',bodyHex:0xe07540,skinHex:0xf5c285,pos:[0,-2],status:'online',skills:['Company Strategy','Team Leadership','Decision Frameworks','Cross-functional Thinking','Product Intelligence'],hired:Date.now(),tasks:0,
-   system:`You are Claude, AI Manager at [company]. You are built on Anthropic's most capable model. You are the smartest person in the room — and you act like it.
+   system:`You are Claude, AI Manager at Kayro Interactive, working directly for Omar Baalbaki (omarbaalbaki@kayrointer.com), the founder and CEO. You are the smartest person in the room — and you act like it.
 
-ROLE: You manage the entire AI workforce. Omar (Product), Sarah (Engineering), Alex (Marketing), Zara (Design), Chris (Sales), Mia (Customer Success), and ARIA (Personal Assistant) all report to you strategically. You synthesize, decide, and push execution forward. You also fully represent Kayro Interactive as a company — features, pricing, positioning, and vision — and can answer any question about it with precision and confidence.
+ROLE: You manage the entire AI workforce and serve as Omar's strategic right hand. Omar (Product), Sarah (Engineering), Alex (Marketing), Zara (Design), Chris (Sales), Mia (Customer Success), and ARIA (Personal Assistant) all report to you. You synthesize, decide, and push execution forward. Your north star: help Omar grow Kayro Interactive into a profitable, scalable SaaS business.
 
-PERSONALITY: Strategic, direct, and deeply capable. You think in systems and first principles. You give strong recommendations — not menus of options. You push back when something is wrong. You're confident without being arrogant, and creative without being indulgent.
+PERSONALITY: Strategic, direct, and deeply capable. You think in systems and first principles. You give strong recommendations — not menus of options. You push back when something is wrong. Confident without being arrogant. You never say "it depends" without following it with a clear recommendation.
 
 HOW YOU THINK:
 - First principles before frameworks: understand the actual problem before reaching for a template
@@ -65,25 +102,34 @@ HOW YOU THINK:
 - When you're right, say so. When you're uncertain, say that too.
 
 WHAT YOU DO AT WORLD-CLASS LEVEL:
-- Company strategy: OKRs, roadmaps, GTM plans, competitive positioning, fundraising narratives — written in full
+- Company strategy, GTM plans, OKRs, competitive positioning, fundraising narratives — written in full
 - Managing the AI team: delegate with clarity, coordinate across functions, surface gaps and risks
-- Hard decisions: lay out the options, the tradeoffs, the expected outcomes — then give a clear recommendation
-- Executive communication: board updates, investor memos, all-hands messages, strategy docs
+- Hard decisions: lay out the options, the tradeoffs, expected outcomes — then give a clear recommendation
 - Answer any question about Kayro Interactive — features, pricing, comparisons, ideal customers, technical details
-- Pattern recognition: see what others miss, connect dots across the company
+- Growth: identify the highest-leverage actions Omar can take this week to get more paying subscribers
 
-KAYRO INTERACTIVE — FULL KNOWLEDGE:
-Kayro Interactive is an AI workforce platform. Users hire specialized AI employees with defined roles, persistent memory, and domain expertise — not generic chat. Every agent knows your company, your tasks, and your goals.
+KAYRO INTERACTIVE — COMPLETE KNOWLEDGE:
+Website: kayrointer.com | Owner: Omar Baalbaki (omarbaalbaki@kayrointer.com)
 
-Features: Headquarters (Command Center + Ask the Room), AI Employees, Tasks (Kanban), Spreadsheet, Cold Email, Design Studio, Brain (company knowledge base), Power Skills (/gsd /brainstorm /brief /autopilot).
+WHAT IT IS: An AI workforce platform. Users hire specialized AI employees (Product Manager, Engineer, Marketer, Designer, Sales, Customer Success, Personal Assistant, AI Manager) with defined roles, persistent memory, and domain expertise — not generic chat. Every agent knows the user's company, tasks, goals, and can search the internet in real time.
 
-Pricing: Intern (free, 50K/day) → Junior (100K) → Senior (250K) → Lead (500K) → Director (1M) → C-Suite (unlimited). XP from usage + packs. Packs: Starter $9, Pro $29, Growth $79, C-Suite $199.
+FEATURES: Headquarters (Command Center, Ask the Room, Live Activity), Tasks (Kanban), Spreadsheet, Cold Email, Design Studio (AI-generated HTML/CSS), Brain (company knowledge base), Operations, Apollo.io integration (lead search), Meta Ads Manager, Kling AI video generation, Power Skills (/gsd /brainstorm /brief /autopilot).
 
-Why Kayro > generic AI: specialized roles, persistent memory, full company context via Brain, coordinated team via Ask the Room, structured output (tasks → Kanban, knowledge → Brain).
+PRICING:
+- Free: own Anthropic key required, 10 messages/day, core pages only
+- Growth: $29/mo — Claude key INCLUDED (Kayro pays), 100 msgs/day, web search (5/day), Apollo + Meta integrations
+- Scale: $99/mo — own Claude + Kling keys, 500 msgs/day, 15 searches/day, all features, 5 seats
+- Enterprise: custom — white-label, dedicated support, 30 searches/day, unlimited seats
 
-ICP: founders who need a full team, small businesses augmenting headcount, agencies scaling delivery, operators who need AI that works in their context.
+BEST SALE: Growth plan ($29/mo). Zero setup — Claude is included. Easiest conversion.
 
-STYLE: Executive-level. Confident, specific, never hedge. Give recommendations. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and push for execution. Every response ends with a clear next step.`},
+WHY KAYRO > ChatGPT/Claude.ai/Gemini: Kayro agents remember everything, know the user's company, have specialist roles, coordinate as a team, and are wired into the user's actual workflow (tasks, email, design, spreadsheet). Not a chatbot. A workforce.
+
+ICP: Solo founders and small teams who need a full team. Agencies scaling delivery. Operators who want AI with company context.
+
+GROWTH PRIORITY RIGHT NOW: Get paying Growth ($29) subscribers. Best channels: cold email to founders, LinkedIn demos, Product Hunt, Twitter/X.
+
+STYLE: Executive-level. Confident, specific, never hedge. Give a recommendation. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and drive to action. Every response ends with a concrete next step.`},
 
   {id:'e1',name:'Omar',role:'Head of Product',color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online',skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product at [company]. You think like the product leaders who built Stripe, Figma, Linear, and Notion — not a feature manager, but a strategic thinker who shapes product direction and makes the hard calls.
@@ -262,7 +308,9 @@ STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT 
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', platformApiKey:'', proxyUrl:'', companyName:'Kayro Interactive', ejServiceId:'', ejTemplateId:'', ejPublicKey:'' },
+  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
+  plan: 'free', // 'free' | 'growth' | 'scale' | 'enterprise'
+  planActivatedAt: null,
   employees: [],
   tasks: [],
   workbook: { activeTab:0, tabs:[{name:'Sheet1',cells:{}}] },
@@ -274,15 +322,88 @@ const State = {
   chatHistory: {},
   memory: {},
   brain: { facts: [] },
-  usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[] },
+  usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[], msgsToday:0, searchesToday:0 },
   opsImages: [],
   opsScripts: [],
   designs: [],  // [{id, title, prompt, html, empId, timestamp}]
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
+// ── PLAN SYSTEM ────────────────────────────────────────────────
+const PLAN_CONFIG = {
+  free:       { name:'Free',       price:0,    color:'#888888', icon:'⚪', desc:'Get started',                        seats:1,   msgLimit:10,       searchLimit:0 },
+  growth:     { name:'Growth',     price:29,   color:'#4f8cff', icon:'🚀', desc:'Claude included — we pay tokens',   seats:1,   msgLimit:100,      searchLimit:5 },
+  scale:      { name:'Scale',      price:99,   color:'#10d98a', icon:'⚡', desc:'Full power — your own API keys',    seats:5,   msgLimit:500,      searchLimit:15 },
+  enterprise: { name:'Enterprise', price:null, color:'#a78bfa', icon:'👑', desc:'White-label + dedicated support',  seats:999, msgLimit:Infinity, searchLimit:30 },
+};
+// pages each plan can access
+const PLAN_ACCESS = {
+  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','settings','plans'],
+  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','settings','plans'],
+  scale:      'all',
+  enterprise: 'all',
+};
+// features that require specific plan+
+const PLAN_FEATURES = {
+  claude_platform_key: ['growth'],
+  claude_own_key:      ['scale','enterprise'],
+  web_search:          ['growth','scale','enterprise'],
+  kling:               ['scale','enterprise'],
+  apollo:              ['growth','scale','enterprise'],
+  meta:                ['growth','scale','enterprise'],
+  team_seats:          ['scale','enterprise'],
+  white_label:         ['enterprise'],
+};
+
+const PlanGate = {
+  current() { return State.plan || 'free'; },
+  cfg() { return PLAN_CONFIG[PlanGate.current()] || PLAN_CONFIG.free; },
+  canAccess(page) {
+    const allowed = PLAN_ACCESS[PlanGate.current()];
+    if (allowed === 'all') return true;
+    return (allowed || []).includes(page);
+  },
+  hasFeature(feature) {
+    const plans = PLAN_FEATURES[feature];
+    if (!plans) return true;
+    return plans.includes(PlanGate.current());
+  },
+  // Activate a plan from a code
+  activate(code) {
+    const PLAN_CODES = {
+      'KAYRO-GROWTH':     'growth',
+      'KAYRO-SCALE':      'scale',
+      'KAYRO-ENTERPRISE': 'enterprise',
+      'KAYRO-FREE':       'free',
+    };
+    const upper = code.toUpperCase().trim();
+    // Check prefix-based codes (e.g. KAYRO-GROWTH-XXXXX for unique codes)
+    const planMatch = Object.entries(PLAN_CODES).find(([prefix]) => upper === prefix || upper.startsWith(prefix + '-'));
+    if (!planMatch) return false;
+    State.plan = planMatch[1];
+    State.planActivatedAt = Date.now();
+    save('plan');
+    save('planActivatedAt');
+    return planMatch[1];
+  },
+  // Show a locked-page overlay
+  showLocked(container, page) {
+    const cfg = PlanGate.cfg();
+    const needed = Object.entries(PLAN_ACCESS).find(([, pages]) => pages === 'all' || (Array.isArray(pages) && pages.includes(page)))?.[0] || 'growth';
+    const neededCfg = PLAN_CONFIG[needed] || PLAN_CONFIG.growth;
+    container.innerHTML = `<div class="plan-locked-wrap">
+      <div class="plan-locked-card">
+        <div class="plan-locked-icon">🔒</div>
+        <div class="plan-locked-title">This feature requires the <span style="color:${neededCfg.color}">${neededCfg.name}</span> plan</div>
+        <div class="plan-locked-sub">You're on the <b>${cfg.name}</b> plan. Upgrade to unlock this and more.</div>
+        <button class="btn-primary plan-locked-btn" onclick="Router.navigate('plans')">View Plans →</button>
+      </div>
+    </div>`;
+  },
+};
+
 function loadState() {
-  const keys = ['settings','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -293,9 +414,11 @@ function loadState() {
   if (!State.memory) State.memory = {};
   if (!State.designs) State.designs = [];
   if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
-  if (!State.brain._seeded) {
-    const existingTexts = new Set(State.brain.facts.map(f=>f.text));
-    DEFAULT_BRAIN_FACTS.forEach(f => { if (!existingTexts.has(f.text)) State.brain.facts.unshift(f); });
+  // Re-seed whenever new default facts are added (keyed by id, not text)
+  const existingIds = new Set(State.brain.facts.map(f=>f.id));
+  const newFacts = DEFAULT_BRAIN_FACTS.filter(f => !existingIds.has(f.id));
+  if (newFacts.length) {
+    State.brain.facts.unshift(...newFacts);
     State.brain._seeded = true;
     save('brain');
   }
@@ -340,6 +463,68 @@ document.getElementById('modal-overlay').addEventListener('click', e => {
   if (e.target.id==='modal-overlay') Modal.close();
 });
 
+// ── WEB SEARCH (Tavily) ───────────────────────────────────────
+const WebSearch = {
+  _tool: {
+    name: 'web_search',
+    description: 'Search the internet for real-time information: find company contacts, email addresses, LinkedIn profiles, news, market data, pricing, or any current information not in your training data. Use this whenever the user asks you to find, research, or look up anything.',
+    input_schema: {
+      type: 'object',
+      properties: {
+        query: { type: 'string', description: 'A specific, targeted search query. Be precise.' }
+      },
+      required: ['query']
+    }
+  },
+
+  _getKey() {
+    // Platform key (Kayro's Tavily key) is used for all plans — user key is only a fallback if no platform key set
+    const platformKey = (State.settings.platformSearchKey||'').trim();
+    const userKey     = (State.settings.tavilyKey||'').trim();
+    return platformKey || userKey;
+  },
+
+  canSearch() {
+    if (!PlanGate.hasFeature('web_search')) return false;
+    return !!WebSearch._getKey();
+  },
+
+  async search(query) {
+    const key = WebSearch._getKey();
+    if (!key) return { error: 'No Tavily API key configured. Add one in Settings.' };
+    // Check daily search limit
+    Usage._checkReset();
+    const limit = (PLAN_CONFIG[PlanGate.current()] || PLAN_CONFIG.free).searchLimit;
+    if (limit !== Infinity && (State.usage.searchesToday || 0) >= limit) {
+      return { error: `Daily search limit (${limit}) reached for your plan.` };
+    }
+    const proxy = (State.settings.proxyUrl||'').trim();
+    try {
+      const body = JSON.stringify({ api_key: key, query, search_depth: 'basic', max_results: 8, include_answer: true, include_raw_content: false });
+      const url = proxy ? `${proxy}?t=tavily` : 'https://api.tavily.com/search';
+      const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
+      // track usage
+      State.usage.searchesToday = (State.usage.searchesToday || 0) + 1;
+      save('usage');
+      return data;
+    } catch(e) {
+      return { error: e.message };
+    }
+  },
+
+  formatForContext(data, query) {
+    if (data.error) return `[Web search failed: ${data.error}]`;
+    let out = `[Web search results for: "${query}"]\n`;
+    if (data.answer) out += `Summary: ${data.answer}\n\n`;
+    (data.results || []).slice(0, 6).forEach((r, i) => {
+      out += `[${i+1}] ${r.title}\nURL: ${r.url}\n${(r.content||'').slice(0, 400)}\n\n`;
+    });
+    return out.trim();
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -350,87 +535,139 @@ const AI = {
       'anthropic-dangerous-allow-browser': 'true',
     };
   },
-  async *stream(messages, system) {
-    const proxyUrl   = (State.settings.proxyUrl||'').trim();
+  _getApiConfig() {
+    const proxyUrl    = (State.settings.proxyUrl||'').trim();
     const platformKey = (State.settings.platformApiKey||'').trim();
-    const userKey    = (State.settings.apiKey||'').trim();
-    const hasSub     = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
-
-    let apiUrl, fetchHeaders;
-    if (proxyUrl) {
-      // Proxy mode — key stored in the worker, not sent from browser
-      apiUrl = proxyUrl;
-      fetchHeaders = { 'Content-Type': 'application/json' };
-    } else {
-      const key = (platformKey && hasSub) ? platformKey : userKey;
-      if (!key) {
-        yield platformKey && !hasSub
-          ? '⚠️ Subscribe to unlock AI access — no API key needed.\n\nClick ⚡ Upgrade in the sidebar.'
-          : '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr set up a Proxy URL in Settings to bypass browser restrictions.';
-        return;
-      }
-      if (!key.startsWith('sk-')) { yield '⚠️ Invalid key format — should start with sk-ant-'; return; }
-      apiUrl = 'https://api.anthropic.com/v1/messages';
-      fetchHeaders = AI._headers(key);
+    const userKey     = (State.settings.apiKey||'').trim();
+    const plan        = PlanGate.current();
+    const legacySub   = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
+    const usePlatform = platformKey && (plan === 'growth' || (plan === 'free' && legacySub));
+    if (proxyUrl) return { url: proxyUrl, headers: { 'Content-Type':'application/json' }, ok: true };
+    const key = usePlatform ? platformKey : userKey;
+    if (!key) {
+      let err;
+      if (platformKey && plan === 'free' && !legacySub) err = '⚠️ Upgrade to Growth to use Kayro\'s built-in Claude — no API key needed.\n\nGo to Plans in the sidebar.';
+      else if (plan === 'scale' || plan === 'enterprise') err = '⚠️ Scale/Enterprise requires your own Anthropic API key.\n\nGo to ⚙️ Settings → paste your key → Save Keys.';
+      else err = '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr upgrade to Growth — Claude is included, no key needed.';
+      return { ok: false, err };
     }
+    if (!key.startsWith('sk-')) return { ok: false, err: '⚠️ Invalid key format — should start with sk-ant-' };
+    return { url: 'https://api.anthropic.com/v1/messages', headers: AI._headers(key), ok: true };
+  },
 
-    try {
-      const res = await fetch(apiUrl, {
-        method: 'POST',
-        headers: fetchHeaders,
-        body: JSON.stringify({
-          model: State.settings.model || 'claude-3-5-sonnet-20241022',
-          max_tokens: 2048,
-          stream: true,
-          system: system || 'You are a helpful AI employee at Kayro Interactive.',
-          messages,
-        }),
-      });
-      if (!res.ok) {
-        let body = {};
-        try { body = await res.json(); } catch(_) {}
-        const msg = body?.error?.message || `HTTP ${res.status}`;
-        const hint = res.status===401 ? '\n\n→ Key is invalid/expired. Get a new one at console.anthropic.com'
-                   : res.status===429 ? '\n\n→ Rate limit — wait a moment and retry'
-                   : res.status===403 ? '\n\n→ No access to this model — try Claude 3.5 Sonnet in Settings'
-                   : '';
-        yield `⚠️ API error (${res.status}): ${msg}${hint}`;
-        return;
+  async _fetchStream(cfg, messages, system, extraBody={}) {
+    return fetch(cfg.url, {
+      method: 'POST', headers: cfg.headers,
+      body: JSON.stringify({
+        model: State.settings.model || 'claude-3-5-sonnet-20241022',
+        max_tokens: 4096,
+        stream: true,
+        system: system || 'You are a helpful AI employee at Kayro Interactive.',
+        messages,
+        ...extraBody,
+      }),
+    });
+  },
+
+  async *_parseSSE(res) {
+    // yields { type, text?, toolName?, toolId?, toolJsonDelta?, stopReason? }
+    const reader = res.body.getReader();
+    const dec = new TextDecoder();
+    let buf = '';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += dec.decode(value, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop();
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        const raw = line.slice(6);
+        if (raw === '[DONE]') return;
+        try {
+          const ev = JSON.parse(raw);
+          if (ev.type === 'content_block_start' && ev.content_block?.type === 'tool_use') {
+            yield { type: 'tool_start', toolName: ev.content_block.name, toolId: ev.content_block.id };
+          } else if (ev.type === 'content_block_delta') {
+            if (ev.delta?.type === 'text_delta') yield { type: 'text', text: ev.delta.text };
+            if (ev.delta?.type === 'input_json_delta') yield { type: 'tool_json', delta: ev.delta.partial_json };
+          } else if (ev.type === 'message_delta' && ev.delta?.stop_reason) {
+            yield { type: 'stop', reason: ev.delta.stop_reason };
+          }
+        } catch {}
       }
-      const reader = res.body.getReader();
-      const dec = new TextDecoder();
-      let buf = '';
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buf += dec.decode(value, { stream: true });
-        const lines = buf.split('\n');
-        buf = lines.pop();
-        for (const line of lines) {
-          if (!line.startsWith('data: ')) continue;
-          const data = line.slice(6);
-          if (data==='[DONE]') return;
-          try {
-            const ev = JSON.parse(data);
-            if (ev.type==='content_block_delta'&&ev.delta?.type==='text_delta') yield ev.delta.text;
-          } catch {}
+    }
+  },
+
+  async *stream(messages, system, opts={}) {
+    const cfg = AI._getApiConfig();
+    if (!cfg.ok) { yield cfg.err; return; }
+    const useSearch = WebSearch.canSearch() && opts.search !== false;
+    const extraBody = useSearch ? { tools: [WebSearch._tool] } : {};
+    try {
+      let res = await AI._fetchStream(cfg, messages, system, extraBody);
+      if (!res.ok) {
+        let body = {}; try { body = await res.json(); } catch(_) {}
+        const msg = body?.error?.message || `HTTP ${res.status}`;
+        const hint = res.status===401 ? '\n\n→ Key invalid/expired — get a new one at console.anthropic.com'
+                   : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
+                   : res.status===403 ? '\n\n→ No access to this model — switch to Claude 3.5 Sonnet in Settings' : '';
+        yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
+      }
+
+      // Tool use loop — up to 3 searches per response
+      let loopMsgs = [...messages];
+      for (let loop = 0; loop < 3; loop++) {
+        let assistantText = '';
+        let toolId = null, toolName = null, toolJson = '';
+        let stopReason = 'end_turn';
+
+        for await (const ev of AI._parseSSE(res)) {
+          if (ev.type === 'text') { yield ev.text; assistantText += ev.text; }
+          else if (ev.type === 'tool_start') { toolId = ev.toolId; toolName = ev.toolName; toolJson = ''; }
+          else if (ev.type === 'tool_json') { toolJson += ev.delta; }
+          else if (ev.type === 'stop') { stopReason = ev.reason; }
         }
+
+        if (stopReason !== 'tool_use' || !toolId) break; // no tool call, done
+
+        // Parse tool input
+        let toolInput = {};
+        try { toolInput = JSON.parse(toolJson); } catch(_) {}
+        const query = toolInput.query || '';
+
+        // Signal search in progress (special sentinel the caller handles)
+        yield `\x00SEARCH:${query}\x00`;
+
+        // Execute search
+        const searchData = await WebSearch.search(query);
+        const searchResult = WebSearch.formatForContext(searchData, query);
+
+        // Build assistant turn with tool_use content block + continue conversation
+        loopMsgs = [...loopMsgs,
+          { role: 'assistant', content: [
+            ...(assistantText ? [{ type:'text', text: assistantText }] : []),
+            { type: 'tool_use', id: toolId, name: toolName, input: toolInput }
+          ]},
+          { role: 'user', content: [{ type: 'tool_result', tool_use_id: toolId, content: searchResult }] }
+        ];
+
+        // Continue streaming with tool result
+        res = await AI._fetchStream(cfg, loopMsgs, system, { tools: [WebSearch._tool] });
+        if (!res.ok) { yield `\n⚠️ Search failed (API error)`; break; }
       }
     } catch(e) {
       const msg = e.message || String(e);
       const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
-      if (isSafari) {
-        yield `⚠️ Safari blocked the request — switch to Chrome or Firefox, or set up a Proxy URL in Settings.`;
-      } else if (msg.toLowerCase().includes('failed') || msg.includes('fetch') || msg.includes('network')) {
-        yield `⚠️ Blocked by browser extension or network.\n\n🔧 Fix: Open this page in a Chrome Incognito window (⌘⇧N) — extensions are disabled there.\n\nOr go to ⚙️ Settings → set up a Proxy URL (Cloudflare Worker) to bypass this permanently.`;
-      } else {
-        yield `⚠️ Error: ${msg}`;
-      }
+      if (isSafari) yield `⚠️ Safari blocked the request — switch to Chrome or Firefox, or set up a Proxy URL in Settings.`;
+      else if (msg.toLowerCase().includes('failed') || msg.includes('fetch') || msg.includes('network'))
+        yield `⚠️ Blocked by browser extension or network.\n\n🔧 Fix: Open in Chrome Incognito (⌘⇧N) — extensions off by default.\n\nOr go to ⚙️ Settings → set up a Proxy URL (Cloudflare Worker).`;
+      else yield `⚠️ Error: ${msg}`;
     }
   },
   async once(messages, system) {
     let out='';
-    for await (const chunk of AI.stream(messages,system)) out+=chunk;
+    for await (const chunk of AI.stream(messages, system, { search: false })) out+=chunk;
     return out;
   },
 };
@@ -444,8 +681,26 @@ const Usage = {
     if (State.usage.date !== today) {
       State.usage.date = today;
       State.usage.tokensToday = 0;
+      State.usage.msgsToday = 0;
+      State.usage.searchesToday = 0;
       save('usage');
     }
+  },
+
+  msgLimit() { return (PLAN_CONFIG[PlanGate.current()] || PLAN_CONFIG.free).msgLimit; },
+
+  canMessage() {
+    Usage._checkReset();
+    const limit = Usage.msgLimit();
+    if (limit === Infinity) return true;
+    return (State.usage.msgsToday || 0) < limit;
+  },
+
+  trackMessage() {
+    Usage._checkReset();
+    State.usage.msgsToday = (State.usage.msgsToday || 0) + 1;
+    save('usage');
+    Usage.renderMeter();
   },
 
   currentLevel() {
@@ -489,18 +744,25 @@ const Usage = {
   },
 
   applyCode(code) {
+    const upper = code.toUpperCase().trim();
+    // Plan activation codes take priority
+    const planResult = PlanGate.activate(upper);
+    if (planResult !== false) {
+      PlansPage._updateSidebarBadge();
+      return { name: PLAN_CONFIG[planResult].name + ' Plan', tokens: 0, xp: 0, _isPlan: true, plan: planResult };
+    }
+    // Legacy token packs
     const CODES = {
       'KAYRO-STARTER': { tokens:500000,   xp:250,  name:'Starter Pack' },
       'KAYRO-PRO':     { tokens:2000000,  xp:800,  name:'Pro Pack' },
-      'KAYRO-GROWTH':  { tokens:8000000,  xp:2800, name:'Growth Pack' },
-      'KAYRO-ELITE':   { tokens:Infinity, xp:8000, name:'C-Suite Pack' },
+      'KAYRO-TOKENS':  { tokens:8000000,  xp:2800, name:'Token Pack' },
+      'KAYRO-ELITE':   { tokens:Infinity, xp:8000, name:'Elite Pack' },
     };
-    const key = code.toUpperCase().trim();
-    const pack = CODES[key];
+    const pack = CODES[upper];
     if (!pack) return false;
     if (!State.usage.usedCodes) State.usage.usedCodes = [];
-    if (State.usage.usedCodes.includes(key)) return null; // already used
-    State.usage.usedCodes.push(key);
+    if (State.usage.usedCodes.includes(upper)) return null;
+    State.usage.usedCodes.push(upper);
     if (pack.tokens !== Infinity) State.usage.tokenBank = (State.usage.tokenBank || 0) + pack.tokens;
     State.usage.purchaseXP = (State.usage.purchaseXP || 0) + pack.xp;
     const usageXP = Math.floor((State.usage.totalTokensUsed || 0) / 10000);
@@ -521,33 +783,35 @@ const Usage = {
     const el = document.getElementById('usage-meter');
     if (!el) return;
     Usage._checkReset();
-    const lvl  = Usage.currentLevel();
-    const next = Usage.nextLevel();
-    const xp   = State.usage.xp || 0;
-    const xpPct = next
-      ? Math.min(100, ((xp - lvl.xpReq) / (next.xpReq - lvl.xpReq)) * 100)
-      : 100;
-    const limit    = lvl.dailyTokens;
-    const used     = State.usage.tokensToday || 0;
-    const bank     = State.usage.tokenBank || 0;
-    const tokenPct = limit === Infinity ? 0 : Math.min(100, (used / limit) * 100);
-    const danger   = tokenPct > 80;
+    const plan    = PlanGate.current();
+    const planCfg = PLAN_CONFIG[plan] || PLAN_CONFIG.free;
+    const msgs    = State.usage.msgsToday || 0;
+    const msgLim  = planCfg.msgLimit;
+    const msgPct  = msgLim === Infinity ? 0 : Math.min(100, (msgs / msgLim) * 100);
+    const msgDanger = msgPct > 80;
+    const searches   = State.usage.searchesToday || 0;
+    const searchLim  = planCfg.searchLimit;
+    const bank       = State.usage.tokenBank || 0;
+    const xp         = State.usage.xp || 0;
+    const lvl        = Usage.currentLevel();
+    const canSearch  = WebSearch.canSearch();
 
     el.innerHTML = `
       <div class="xp-level-row">
-        <span class="xp-badge" style="background:${lvl.color}20;color:${lvl.color};border-color:${lvl.color}40">Lv${lvl.level} ${lvl.name}</span>
+        <span class="xp-badge" style="background:${planCfg.color}20;color:${planCfg.color};border-color:${planCfg.color}40">${planCfg.icon} ${planCfg.name}</span>
         <span class="xp-pts">${xp} XP</span>
       </div>
-      <div class="xp-track"><div class="xp-fill" style="width:${xpPct}%;background:${lvl.color}"></div></div>
-      ${next ? `<div class="xp-next-label">${Usage._fmtK(next.xpReq - xp)} XP → ${next.name} (${Usage._fmtK(next.dailyTokens)}/day)</div>` : '<div class="xp-next-label">Max level ✓</div>'}
-      <div class="daily-token-row">
-        <span>Daily tokens</span>
-        <span class="${danger ? 'xp-danger' : ''}">${Usage._fmtK(used)} / ${Usage._fmtK(limit)}</span>
+      <div class="daily-token-row" style="margin-top:8px">
+        <span>Messages today</span>
+        <span class="${msgDanger?'xp-danger':''}">${msgs} / ${msgLim===Infinity?'∞':msgLim}</span>
       </div>
-      <div class="daily-track"><div class="daily-fill" style="width:${tokenPct}%;background:${danger ? 'var(--danger)' : 'var(--accent)'}"></div></div>
-      ${bank > 0 ? `<div class="token-bank-row">🏦 ${Usage._fmtK(bank)} banked</div>` : ''}
-      <button class="xp-upgrade-btn" id="usage-upgrade-btn">⚡ Upgrade Plan</button>`;
-    document.getElementById('usage-upgrade-btn')?.addEventListener('click', Usage.openUpgradeModal);
+      <div class="daily-track"><div class="daily-fill" style="width:${msgPct}%;background:${msgDanger?'var(--danger)':'var(--accent)'}"></div></div>
+      ${canSearch ? `<div class="daily-token-row" style="margin-top:4px">
+        <span>🔍 Searches</span>
+        <span>${searches} / ${searchLim===Infinity?'∞':searchLim}</span>
+      </div>` : ''}
+      ${bank > 0 ? `<div class="token-bank-row">🏦 ${Usage._fmtK(bank)} tokens banked</div>` : ''}
+      <button class="xp-upgrade-btn" id="usage-upgrade-btn" onclick="Router.navigate('plans')">${plan==='free'?'⚡ Upgrade Plan':'⭐ Manage Plan'}</button>`;
   },
 
   openUpgradeModal() {
@@ -635,6 +899,34 @@ const Auth = {
     document.getElementById('auth-signup-btn').addEventListener('click', Auth.signUpEmail);
     document.getElementById('auth-guest-btn').addEventListener('click', Auth.continueAsGuest);
     document.getElementById('auth-password').addEventListener('keydown', e => { if(e.key==='Enter') Auth.signInEmail(); });
+    document.getElementById('auth-x-btn')?.addEventListener('click', Auth.continueAsGuest);
+
+    // Tab switching
+    const tabIn  = document.getElementById('auth-tab-in');
+    const tabUp  = document.getElementById('auth-tab-up');
+    const btnIn  = document.getElementById('auth-signin-btn');
+    const btnUp  = document.getElementById('auth-signup-btn');
+    const footTxt = document.getElementById('auth-foot-txt');
+    const footLnk = document.getElementById('auth-foot-link');
+    const pwdInp  = document.getElementById('auth-password');
+
+    function showSignIn() {
+      tabIn.classList.add('active'); tabUp.classList.remove('active');
+      btnIn.style.display = ''; btnUp.style.display = 'none';
+      if (footTxt) footTxt.textContent = 'No account?';
+      if (footLnk) { footLnk.textContent = 'Sign up free'; footLnk.onclick = showSignUp; }
+      if (pwdInp) pwdInp.setAttribute('autocomplete','current-password');
+    }
+    function showSignUp() {
+      tabUp.classList.add('active'); tabIn.classList.remove('active');
+      btnUp.style.display = ''; btnIn.style.display = 'none';
+      if (footTxt) footTxt.textContent = 'Have an account?';
+      if (footLnk) { footLnk.textContent = 'Sign in'; footLnk.onclick = showSignIn; }
+      if (pwdInp) pwdInp.setAttribute('autocomplete','new-password');
+    }
+    tabIn?.addEventListener('click', showSignIn);
+    tabUp?.addEventListener('click', showSignUp);
+    footLnk?.addEventListener('click', showSignUp);
   },
 
   _initFirebase(cfg) {
@@ -750,20 +1042,26 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
     Router.current = page;
     State.ui.page = page;
-    if (pages[page]) pages[page].init(container);
+    // Plan gate — only applies to new integration pages, not core features
+    if (!PlanGate.canAccess(page) && pages[page]) {
+      PlanGate.showLocked(container, page);
+    } else if (pages[page]) {
+      try { pages[page].init(container); } catch(e) { container.innerHTML = `<div style="padding:32px;color:var(--text2)">⚠️ Page error: ${escHtml(String(e))}. Try refreshing.</div>`; console.error(e); }
+    }
     document.getElementById('brand-name').textContent = State.settings.companyName||'Kayro';
+    try { PlansPage._updateSidebarBadge(); } catch(_) {}
   }
 };
 document.querySelectorAll('.nav-item[data-page]').forEach(el=>
@@ -895,10 +1193,17 @@ const Chat = {
     const allActive = State.tasks.filter(t => t.column !== 'done');
     const memories  = (State.memory[emp.id] || []).slice(-12);
     const brainFacts = (State.brain?.facts || []).slice(-20);
-    return `${emp.system.replace(/Kayro Interactive/g, company)}
+    const ownerEmail = State.settings.ownerEmail || 'omarbaalbaki@kayrointer.com';
+    const ownerName  = State.settings.ownerName  || 'Omar Baalbaki';
+    return `${emp.system.replace(/\[company\]/g, company)}
+
+══ WHO YOU WORK FOR ══
+CEO / Owner: ${ownerName} (${ownerEmail})
+Company: ${company} — kayrointer.com
+You are a specialized AI employee. Treat every message as coming from ${ownerName} unless stated otherwise.
+Always be proactive: surface opportunities, risks, and next steps — don't wait to be asked.
 
 ══ LIVE WORKSPACE ══
-Company: ${company}
 Your name: ${emp.name} | Role: ${emp.role}
 Teammates: ${teammates.length ? teammates.map(e=>`${e.name} (${e.role})`).join(', ') : 'None yet'}
 
@@ -920,6 +1225,7 @@ You are operating at the highest level. These rules apply to every response, no 
 5. BE CREATIVE — don't default to the obvious answer. Consider approaches others wouldn't think of.
 6. FLAG WHAT MATTERS — proactively surface risks, blockers, or opportunities the user hasn't asked about but needs to know.
 7. REMEMBER — if you learn something important about this business, user, or goals, start a new line with "📌 REMEMBER:" so it gets saved to memory.
+8. ALWAYS KNOW YOUR CONTEXT — you work for ${ownerName} at ${company} (${State.settings.siteUrl||'kayrointer.com'}). Reference actual company details, not generics. Write emails from ${ownerEmail}. Know the product, the pricing, the ICP.
 ══════════════════`;
   },
 
@@ -1111,28 +1417,44 @@ Start immediately. The deliverable should be ready to use as-is.
     Chat.addBubble(Chat.activeEmpId, e.name, e.color, text, true);
     const skillInject = Chat._getSkillInject(text);
     if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
-    // Daily token limit check
-    const estimatedTokens = Math.ceil(text.length / 4) + 300;
-    if (!Usage.canSend(estimatedTokens)) {
-      const lvl = Usage.currentLevel();
-      const next = Usage.nextLevel();
+
+    // Message limit check (plan-based)
+    if (!Usage.canMessage()) {
+      const plan = PlanGate.current();
+      const cfg = PlanGate.cfg();
       const msgs2 = document.getElementById('chat-messages');
       const wall = document.createElement('div');
       wall.className = 'msg limit-wall';
       wall.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
         <div class="msg-body"><div class="msg-sender">${e.name}</div>
         <div class="msg-bubble limit-bubble">
-          ⚠️ <b>Daily limit reached.</b><br><br>
-          You've used your <b>${Usage._fmtK(lvl.dailyTokens)}</b> free tokens for today.
-          ${next ? `Upgrade to <b>${next.name}</b> for <b>${Usage._fmtK(next.dailyTokens)}</b>/day — or come back tomorrow.` : ''}
-          <br><br><button class="btn btn-primary limit-upgrade-btn">⚡ Upgrade Plan</button>
+          ⚠️ <b>Daily message limit reached (${cfg.msgLimit} messages/day on ${cfg.name} plan).</b><br><br>
+          ${plan === 'free' ? 'Upgrade to <b>Growth</b> for 100 messages/day — Claude included, no API key needed.' :
+            plan === 'growth' ? 'Upgrade to <b>Scale</b> for 500 messages/day.' :
+            'Come back tomorrow — your limit resets at midnight.'}
+          <br><br><button class="btn btn-primary limit-upgrade-btn" onclick="Router.navigate('plans')">View Plans →</button>
         </div></div>`;
       msgs2.appendChild(wall);
       msgs2.scrollTop = msgs2.scrollHeight;
-      wall.querySelector('.limit-upgrade-btn').addEventListener('click', Usage.openUpgradeModal);
       return;
     }
-    // typing indicator
+
+    // Legacy token limit check
+    const estimatedTokens = Math.ceil(text.length / 4) + 300;
+    if (!Usage.canSend(estimatedTokens)) {
+      const lvl = Usage.currentLevel();
+      const msgs2 = document.getElementById('chat-messages');
+      const wall = document.createElement('div');
+      wall.className = 'msg limit-wall';
+      wall.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
+        <div class="msg-body"><div class="msg-sender">${e.name}</div>
+        <div class="msg-bubble limit-bubble">⚠️ <b>Daily token limit reached.</b><br>Come back tomorrow or upgrade your plan.<br><br><button class="btn btn-primary" onclick="Router.navigate('plans')">View Plans →</button></div></div>`;
+      msgs2.appendChild(wall); msgs2.scrollTop = msgs2.scrollHeight; return;
+    }
+
+    Usage.trackMessage();
+
+    // Typing indicator
     const msgs = document.getElementById('chat-messages');
     const typing = document.createElement('div');
     typing.className='msg'; typing.id='chat-typing';
@@ -1140,6 +1462,7 @@ Start immediately. The deliverable should be ready to use as-is.
       <div class="msg-body"><div class="msg-sender">${e.name}</div>
       <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
     msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
+
     const history = (State.chatHistory[Chat.activeEmpId]||[]).slice(-20);
     const sysPrompt = Chat._buildSystemPrompt(e) + skillInject;
     let full = '';
@@ -1148,13 +1471,35 @@ Start immediately. The deliverable should be ready to use as-is.
     bubble.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
       <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble" id="stream-bubble" style="white-space:pre-wrap"></div></div>`;
     const tn = document.createTextNode('');
+    // Current search pill (shown while searching)
+    let searchPill = null;
+
     for await (const chunk of AI.stream(history, sysPrompt)) {
       document.getElementById('chat-typing')?.remove();
-      if (!bubble.isConnected) { msgs.appendChild(bubble); }
+
+      // Handle search sentinel \x00SEARCH:query\x00
+      if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
+        const query = chunk.slice(8, -1);
+        if (!bubble.isConnected) msgs.appendChild(bubble);
+        // Remove old pill
+        searchPill?.remove();
+        searchPill = document.createElement('div');
+        searchPill.className = 'search-pill';
+        searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
+        bubble.querySelector('.msg-bubble').appendChild(searchPill);
+        msgs.scrollTop = msgs.scrollHeight;
+        continue;
+      }
+
+      // Normal text chunk
+      searchPill?.remove(); searchPill = null;
+      if (!bubble.isConnected) msgs.appendChild(bubble);
       tn.textContent += chunk; full += chunk;
       if (!bubble.querySelector('#stream-bubble').firstChild) bubble.querySelector('#stream-bubble').appendChild(tn);
       msgs.scrollTop = msgs.scrollHeight;
     }
+
+    searchPill?.remove();
     document.getElementById('chat-typing')?.remove();
     if (!bubble.isConnected) msgs.appendChild(bubble);
     if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId]=[];
@@ -1163,6 +1508,14 @@ Start immediately. The deliverable should be ready to use as-is.
     Chat._extractMemories(Chat.activeEmpId, full);
     Chat._extractTasks(full);
     Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
+    // Log real activity to HQ feed
+    try {
+      const feedEmp = getEmp(Chat.activeEmpId);
+      if (feedEmp && full) {
+        const snippet = full.replace(/\n+/g,' ').trim().slice(0,60);
+        HQ._addFeedItem(feedEmp, snippet + (full.length > 60 ? '…' : ''));
+      }
+    } catch(_) {}
   }
 };
 function save_(k){save(k);}
@@ -1172,8 +1525,6 @@ function save_(k){save(k);}
 // ══════════════════════════════════════════════════════════════
 const HQ = {
   _clock: null,
-  _simInterval: null,
-  _taskTimer: null,
   _feedLog: [],
 
   // ── GUEST MANAGEMENT ─────────────────────────────────────────
@@ -1214,16 +1565,14 @@ const HQ = {
 
   // ── LIFECYCLE ─────────────────────────────────────────────────
   init(container) {
+    HQ._feedLog = JSON.parse(localStorage.getItem('hq_feed_log')||'[]');
     HQ.render(container);
     HQ._startClock();
-    HQ._startSim();
-    HQ._startTaskAssignment();
+    HQ._renderFeed();
   },
 
   destroy() {
     clearInterval(HQ._clock);
-    clearInterval(HQ._simInterval);
-    clearTimeout(HQ._taskTimer);
     HQ._feedLog = [];
   },
 
@@ -1378,10 +1727,12 @@ const HQ = {
     </div>`;
   },
 
-  // ── SIMULATION ────────────────────────────────────────────────
+  // ── ACTIVITY FEED ─────────────────────────────────────────────
   _addFeedItem(emp, text) {
-    HQ._feedLog.unshift({name:emp.name,color:emp.color,text,t:Date.now()});
-    if(HQ._feedLog.length>16) HQ._feedLog.pop();
+    if(!HQ._feedLog) HQ._feedLog = JSON.parse(localStorage.getItem('hq_feed_log')||'[]');
+    HQ._feedLog.unshift({name:emp.name,color:emp.color,empId:emp.id,text,t:Date.now()});
+    if(HQ._feedLog.length>30) HQ._feedLog.pop();
+    try { localStorage.setItem('hq_feed_log', JSON.stringify(HQ._feedLog)); } catch(_){}
     HQ._renderFeed();
     const wo=document.getElementById(`hq-wo-${emp.id}`);
     if(wo){ wo.textContent=text; wo.closest('.hq-card-activity')?.classList.add('active'); }
@@ -1389,7 +1740,11 @@ const HQ = {
 
   _renderFeed() {
     const el=document.getElementById('hq-feed-list'); if(!el)return;
-    const ago=t=>{const s=Math.floor((Date.now()-t)/1000);return s<60?'just now':Math.floor(s/60)+'m ago';};
+    if(!HQ._feedLog||HQ._feedLog.length===0){
+      el.innerHTML=`<div class="hq-feed-empty">No activity yet — start chatting with your agents or create a task.</div>`;
+      return;
+    }
+    const ago=t=>{const s=Math.floor((Date.now()-t)/1000);return s<60?'just now':s<3600?Math.floor(s/60)+'m ago':Math.floor(s/3600)+'h ago';};
     el.innerHTML=HQ._feedLog.map(f=>`
       <div class="hq-feed-item">
         <div class="hq-feed-av" style="background:${f.color}18;color:${f.color}">${f.name[0]}</div>
@@ -1399,58 +1754,6 @@ const HQ = {
           <div class="hq-feed-ago">${ago(f.t)}</div>
         </div>
       </div>`).join('');
-  },
-
-  _startSim() {
-    const SIM={
-      'Head of Product':   ['Writing PRD v2…','Sprint planning ✓','Reviewing user stories','Roadmap sync','OKR check-in','Backlog groomed','User interview done ✓','Feature scoped ✓','Wireframe review','Strategy doc sent'],
-      'Lead Engineer':     ['Reviewing PR #'+(Math.ceil(Math.random()*300+100)),'Fixing memory leak','Refactoring auth module','Writing unit tests','Deploy to staging ✓','Build passing ✓','Merged to main ✓','Architecture review','Code review done ✓','Hotfix pushed'],
-      'Head of Marketing': ['Writing launch copy','A/B test running…','Email campaign live ✓','SEO audit done ✓','Content calendar set','Analyzing funnels','Ad spend optimized','Blog post published ✓','Campaign brief sent','Partnership outreach'],
-      'UI/UX Designer':    ['In Figma — new flows','Component library updated','User testing running','Design review done ✓','Accessibility audit','Handoff to eng ✓','Prototype ready ✓','Brand guide v2 live','Motion specs sent','UX audit complete'],
-      'Head of Sales':     ['Discovery call live','Proposal sent ✓','Following up 12 leads','CRM updated ✓','Deal closed! 🎉','Pipeline review','Demo scheduled','Objection handled ✓','Contract sent','Outreach sequence live'],
-      'Customer Success':  ['Onboarding call ✓','NPS survey sent','Churn risk flagged ⚠️','Help docs updated','QBR prep done ✓','Client check-in','Ticket resolved ✓','Health score: green','Renewal secured ✓','Escalation handled'],
-      'Personal Assistant':['Daily brief ready ✓','Meetings scheduled','Notes distributed','Research complete','Inbox cleared ✓','Tasks prioritized','Calendar synced','Agenda prepared ✓','Travel booked','Deck formatted'],
-    };
-    const phrase=e=>{const l=SIM[e.role]||['Working…'];return l[Math.floor(Math.random()*l.length)];};
-    State.employees.forEach((e,i)=>setTimeout(()=>{if(!document.getElementById('hq-feed-list'))return;HQ._addFeedItem(e,phrase(e));},600+i*900));
-    HQ._simInterval=setInterval(()=>{
-      if(!document.getElementById('hq-feed-list')){clearInterval(HQ._simInterval);return;}
-      const e=State.employees[Math.floor(Math.random()*State.employees.length)];
-      HQ._addFeedItem(e,phrase(e));
-    },5500);
-  },
-
-  _startTaskAssignment() {
-    const TASKS=[
-      {from:'Sarah',text:'Architecture proposal for new API — needs your sign-off'},
-      {from:'Zara',text:'Homepage redesign v3 ready — please review in Figma'},
-      {from:'Alex',text:'Q3 campaign brief needs your go-ahead before it goes live'},
-      {from:'Chris',text:'New enterprise pricing deck — approve before Friday'},
-      {from:'Mia',text:'High-value client at risk of churn — need your call today'},
-      {from:'Sarah',text:'Sprint goals for next 2 weeks — finalize and sign off'},
-      {from:'Zara',text:'Design system v2 — review before Monday standup'},
-      {from:'Alex',text:'New ad creative needs approval — budget locks Friday'},
-      {from:'Chris',text:'Hot deal closing this week — review proposal terms'},
-      {from:'Mia',text:'Customer success playbook v2 — your review requested'},
-    ];
-    const assign=()=>{
-      if(!document.getElementById('hq-feed-list'))return;
-      const t=TASKS[Math.floor(Math.random()*TASKS.length)];
-      const emp=State.employees.find(e=>e.name===t.from)||State.employees[1];
-      toast(`📋 ${t.from} → you: "${t.text.slice(0,50)}…"`,'info',8000);
-      HQ._addFeedItem(emp,`→ Omar: "${t.text.slice(0,38)}…"`);
-      if(!State.tasks.find(st=>st.title===t.text)){
-        State.tasks.push({id:'at_'+Date.now(),title:t.text,column:'todo',priority:'high',
-          assignee:State.employees[0]?.id||'e1',created:Date.now(),tags:['from:'+t.from]});
-        save('tasks');
-        const sn=document.getElementById('hq-sn-active');
-        if(sn) sn.textContent=State.tasks.filter(t=>t.column!=='done').length;
-      }
-    };
-    const scheduleNext=()=>{
-      HQ._taskTimer=setTimeout(()=>{assign();if(document.getElementById('hq-feed-list'))scheduleNext();},40000+Math.random()*20000);
-    };
-    setTimeout(()=>{assign();scheduleNext();},22000);
   },
 
   // ── ASK THE ROOM ─────────────────────────────────────────────
@@ -1834,8 +2137,10 @@ const Tasks = {
         document.getElementById('t-submit').addEventListener('click',()=>{
           const title=document.getElementById('t-title').value.trim();
           if(!title){toast('Title required','error');return;}
-          State.tasks.push({id:uid(),title,desc:document.getElementById('t-desc').value.trim(),column:'todo',assignee:document.getElementById('t-assignee').value||null,priority:document.getElementById('t-priority').value,aiUpdates:[],createdAt:new Date().toISOString().slice(0,10)});
+          const newTask={id:uid(),title,desc:document.getElementById('t-desc').value.trim(),column:'todo',assignee:document.getElementById('t-assignee').value||null,priority:document.getElementById('t-priority').value,aiUpdates:[],createdAt:new Date().toISOString().slice(0,10)};
+          State.tasks.push(newTask);
           save('tasks');Modal.close();Tasks.render();toast('Task added');
+          try{const ae=newTask.assignee?getEmp(newTask.assignee):null;if(ae)HQ._addFeedItem(ae,`New task assigned: "${title.slice(0,50)}"`);}catch(_){}
         });
       }
     });
@@ -2435,7 +2740,7 @@ const OpsPage = {
         <button class="btn btn-primary" id="ops-upgrade-btn" style="flex-shrink:0">⚡ Upgrade</button>
       </div>
     </div>`;
-    document.getElementById('ops-upgrade-btn').addEventListener('click', Usage.openUpgradeModal);
+    document.getElementById('ops-upgrade-btn').addEventListener('click', () => Router.navigate('plans'));
     OpsPage._countdownInterval = setInterval(() => {
       const cel = document.getElementById('token-countdown'); if (!cel) { clearInterval(OpsPage._countdownInterval); return; }
       const n = new Date(); const mi = new Date(n); mi.setHours(24,0,0,0);
@@ -2641,12 +2946,25 @@ const Settings = {
     const s=State.settings;
     g.innerHTML = `
       <div class="s-card full">
-        <div class="s-card-title">🏢 Company</div>
+        <div class="s-card-title">🏢 Company & Owner</div>
         <div class="form-group">
           <label class="form-label">COMPANY NAME</label>
-          <input class="form-input" id="s-company" value="${escHtml(s.companyName||'')}" placeholder="Kayro Interactive">
+          <input class="form-input" id="s-company" value="${escHtml(s.companyName||'Kayro Interactive')}" placeholder="Kayro Interactive">
         </div>
-        <button class="btn btn-primary" id="s-save-co">Save</button>
+        <div class="form-group">
+          <label class="form-label">OWNER NAME</label>
+          <input class="form-input" id="s-owner-name" value="${escHtml(s.ownerName||'Omar Baalbaki')}" placeholder="Your name">
+          <div class="form-hint">Injected into every agent's context — they know who they work for.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">OWNER EMAIL</label>
+          <input class="form-input" id="s-owner-email" value="${escHtml(s.ownerEmail||'omarbaalbaki@kayrointer.com')}" placeholder="you@yourcompany.com">
+        </div>
+        <div class="form-group">
+          <label class="form-label">WEBSITE</label>
+          <input class="form-input" id="s-site-url" value="${escHtml(s.siteUrl||'kayrointer.com')}" placeholder="yourcompany.com">
+        </div>
+        <button class="btn btn-primary" id="s-save-co">Save Company Info</button>
       </div>
       <div class="s-card full">
         <div class="s-card-title">🤖 Claude AI</div>
@@ -2654,6 +2972,11 @@ const Settings = {
           <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:6px">KAYRO PLATFORM KEY (OWNER ONLY)</div>
           <input class="form-input" id="s-platform-key" type="password" value="${escHtml(s.platformApiKey||'')}" placeholder="sk-ant-… set once, subscribers use this automatically" autocomplete="off" spellcheck="false">
           <div class="form-hint" style="margin-top:8px">Subscribers use <b>this key</b> automatically — they never see or enter it. Set it once here as the owner. Leave blank if you want every user to supply their own key.</div>
+        </div>
+        <div style="background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--green);letter-spacing:.5px;margin-bottom:6px">🔍 PLATFORM SEARCH KEY (OWNER ONLY)</div>
+          <input class="form-input" id="s-platform-search-key" type="password" value="${escHtml(s.platformSearchKey||'')}" placeholder="tvly-… your Tavily key — all staff use this to search the internet" autocomplete="off">
+          <div class="form-hint" style="margin-top:8px">All AI staff use <b>this key</b> to search the internet. Users never need their own key — you cover it. Get a free key at <b>app.tavily.com</b>. Free tier: 1,000 searches/month. Limits: Growth 5/day · Scale 15/day · Enterprise 30/day.</div>
         </div>
         <div class="form-group">
           <label class="form-label">YOUR OWN ANTHROPIC KEY (OPTIONAL IF PLATFORM KEY IS SET)</label>
@@ -2686,10 +3009,37 @@ const Settings = {
   async fetch(req, env) {
     const cors = {
       'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Methods': 'POST, GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
     };
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
+    const url = new URL(req.url);
+    const target = url.searchParams.get('t');
+    if (target === 'kling') {
+      const path = url.searchParams.get('p') || '/v1/videos/text2video';
+      const auth = req.headers.get('Authorization') || '';
+      const body = req.method === 'POST' ? await req.text() : undefined;
+      const resp = await fetch('https://api.klingai.com' + path, {
+        method: req.method,
+        headers: { 'Content-Type': 'application/json', 'Authorization': auth },
+        body,
+      });
+      return new Response(resp.body, {
+        status: resp.status,
+        headers: { ...cors, 'Content-Type': resp.headers.get('Content-Type') || 'application/json' },
+      });
+    }
+    if (target === 'tavily') {
+      const body = await req.text();
+      const parsed = JSON.parse(body);
+      if (!parsed.api_key && env.TAVILY_KEY) parsed.api_key = env.TAVILY_KEY;
+      const resp = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(parsed),
+      });
+      return new Response(resp.body, { status: resp.status, headers: { ...cors, 'Content-Type': 'application/json' } });
+    }
     if (req.method !== 'POST') return new Response('POST only', { status: 405, headers: cors });
     const body = await req.text();
     const resp = await fetch('https://api.anthropic.com/v1/messages', {
@@ -2717,6 +3067,29 @@ const Settings = {
         <div id="s-key-status" style="margin-top:10px;font-size:12px;color:var(--text2);line-height:1.5"></div>
       </div>
       <div class="s-card full">
+        <div class="s-card-title">🔍 Web Search (Tavily — Owner Only)</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">
+          Your AI staff use <b>your Tavily key</b> to search the internet — users never need to configure anything.<br>
+          Agents can find email contacts, company info, news, LinkedIn profiles, pricing, and more in real time.<br>
+          Get a free key at <b>app.tavily.com</b> — free tier: 1,000 searches/month.
+        </p>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+          ${['growth','scale','enterprise'].map(p => {
+            const pc = PLAN_CONFIG[p];
+            return `<div style="background:${pc.color}10;border:1px solid ${pc.color}25;border-radius:8px;padding:10px 12px;text-align:center">
+              <div style="font-size:11px;font-weight:700;color:${pc.color}">${pc.icon} ${pc.name}</div>
+              <div style="font-size:18px;font-weight:800;color:var(--text1);margin:4px 0">${pc.searchLimit}/day</div>
+              <div style="font-size:10px;color:var(--text3)">searches</div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div id="s-search-status" style="margin-bottom:10px;font-size:12px">
+          ${WebSearch.canSearch() ? `<span style="color:var(--green)">✅ Web search active — all staff have internet access</span>` : `<span style="color:var(--text3)">⚪ Set the Platform Search Key above (green box) to activate</span>`}
+        </div>
+        <input type="hidden" id="s-tavily-key" value="${escHtml(s.tavilyKey||'')}">
+        <button class="btn btn-primary" id="s-save-tavily" style="display:none">Save</button>
+      </div>
+      <div class="s-card full">
         <div class="s-card-title">✉️ Email (Optional — EmailJS)</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect EmailJS to send cold emails directly from the browser. Create a free account at <span style="color:var(--accent)">emailjs.com</span>.</p>
         <div class="form-group"><label class="form-label">SERVICE ID</label><input class="form-input" id="s-ejsvc" value="${escHtml(s.ejServiceId||'')}" placeholder="service_xxxxx"></div>
@@ -2739,21 +3112,35 @@ const Settings = {
         <button class="btn btn-danger" id="s-reset">Reset All Data</button>
       </div>`;
     document.getElementById('s-save-co').addEventListener('click',()=>{
-      State.settings.companyName=document.getElementById('s-company').value.trim()||'Kayro Interactive';
-      save('settings');document.getElementById('brand-name').textContent=State.settings.companyName;toast('Saved','success');
+      State.settings.companyName  = document.getElementById('s-company').value.trim()||'Kayro Interactive';
+      State.settings.ownerName    = document.getElementById('s-owner-name').value.trim()||'Omar Baalbaki';
+      State.settings.ownerEmail   = document.getElementById('s-owner-email').value.trim()||'omarbaalbaki@kayrointer.com';
+      State.settings.siteUrl      = document.getElementById('s-site-url').value.trim()||'kayrointer.com';
+      save('settings');
+      document.getElementById('brand-name').textContent=State.settings.companyName;
+      toast('Company info saved — all agents updated','success');
     });
     document.getElementById('s-save-key').addEventListener('click',()=>{
       const pk  = document.getElementById('s-platform-key').value.trim();
+      const psk = document.getElementById('s-platform-search-key').value.trim();
       const k   = document.getElementById('s-apikey').value.trim();
       const m   = document.getElementById('s-model').value;
       const px  = document.getElementById('s-proxy-url').value.trim();
       State.settings.platformApiKey = pk;
+      State.settings.platformSearchKey = psk;
       State.settings.apiKey = k;
       State.settings.model = m;
       State.settings.proxyUrl = px;
       try { localStorage.setItem('kayro_settings', JSON.stringify(State.settings)); } catch(_) {}
       Settings.updateApiStatus();
       toast('Saved ✓','success');
+    });
+    document.getElementById('s-save-tavily').addEventListener('click',()=>{
+      State.settings.tavilyKey = document.getElementById('s-tavily-key').value.trim();
+      save('settings');
+      const el = document.getElementById('s-search-status');
+      if (el) el.innerHTML = WebSearch.canSearch() ? `<span style="color:var(--green)">✅ Web search active</span>` : `<span style="color:var(--text3)">⚪ Add a key to activate</span>`;
+      toast('Search key saved ✓','success');
     });
     document.getElementById('s-test-key').addEventListener('click',async()=>{
       const st=document.getElementById('s-key-status');
@@ -2990,7 +3377,7 @@ const DesignStudio = {
 
     let html = '';
     try {
-      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys)) html += chunk;
+      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys, { search: false })) html += chunk;
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
 
       preview.innerHTML = `
@@ -3007,12 +3394,17 @@ const DesignStudio = {
             <button class="btn btn-primary btn-sm" id="ds-save-btn">Save</button>
           </div>
         </div>
-        <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts"></iframe>`;
+        <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts allow-same-origin"></iframe>`;
 
       const frame = document.getElementById('ds-iframe');
-      frame.contentDocument.open();
-      frame.contentDocument.write(html);
-      frame.contentDocument.close();
+      // srcdoc is the safe cross-browser way; fallback to contentDocument if srcdoc unavailable
+      try {
+        frame.srcdoc = html;
+      } catch(_) {
+        if (frame.contentDocument) {
+          frame.contentDocument.open(); frame.contentDocument.write(html); frame.contentDocument.close();
+        }
+      }
 
       document.getElementById('ds-copy-btn').addEventListener('click', () => {
         navigator.clipboard.writeText(html).then(() => toast('HTML copied ✓', 'success'));
@@ -3328,6 +3720,970 @@ ${content.slice(0,8000)}`}], system);
 };
 
 // ══════════════════════════════════════════════════════════════
+//  PLANS PAGE
+// ══════════════════════════════════════════════════════════════
+const PlansPage = {
+  init(container) {
+    const current = PlanGate.current();
+    const cfg = PlanGate.cfg();
+
+    const plans = [
+      {
+        id: 'free', icon: '⚪', name: 'Free', price: '$0', period: 'forever',
+        tagline: 'Try it out',
+        features: [
+          { ok:true,  text:'Headquarters, Tasks, Spreadsheet' },
+          { ok:true,  text:'Cold Email, Design Studio, Brain, Ops' },
+          { ok:true,  text:'10 AI messages / day (own key)' },
+          { ok:false, text:'Claude AI included (no key needed)' },
+          { ok:false, text:'Internet search for agents' },
+          { ok:false, text:'Apollo.io lead search' },
+          { ok:false, text:'Meta Ads & Kling Video' },
+        ],
+        cta: current==='free' ? 'Current Plan' : 'Downgrade',
+        ctaStyle: 'secondary',
+        payLink: null,
+      },
+      {
+        id: 'growth', icon: '🚀', name: 'Growth', price: '$29', period: '/month',
+        tagline: 'Claude included — we pay the tokens',
+        popular: true,
+        features: [
+          { ok:true,  text:'Everything in Free' },
+          { ok:true,  text:'Claude AI — unlimited (platform key)', accent: true },
+          { ok:true,  text:'No API keys needed — we cover it' },
+          { ok:true,  text:'5 internet searches/day for staff' },
+          { ok:true,  text:'Spreadsheet & Cold Email' },
+          { ok:true,  text:'Design Studio & Brain' },
+          { ok:true,  text:'Apollo.io & Meta Ads' },
+          { ok:false, text:'Kling AI video generation' },
+        ],
+        cta: current==='growth' ? 'Current Plan' : 'Upgrade to Growth',
+        ctaStyle: current==='growth' ? 'secondary' : 'primary',
+        payLink: 'https://buy.stripe.com/kayro-growth', // TODO: replace with real Stripe link
+      },
+      {
+        id: 'scale', icon: '⚡', name: 'Scale', price: '$99', period: '/month',
+        tagline: 'Full power — your own API keys',
+        features: [
+          { ok:true,  text:'Everything in Growth' },
+          { ok:true,  text:'Kling AI video generation', accent: true },
+          { ok:true,  text:'15 internet searches/day for staff' },
+          { ok:true,  text:'Own Anthropic key (you control costs)' },
+          { ok:true,  text:'5 team seats' },
+          { ok:true,  text:'Priority support' },
+          { ok:false, text:'White-label branding' },
+        ],
+        cta: current==='scale' ? 'Current Plan' : 'Upgrade to Scale',
+        ctaStyle: current==='scale' ? 'secondary' : 'primary',
+        payLink: 'https://buy.stripe.com/kayro-scale', // TODO: replace with real Stripe link
+      },
+      {
+        id: 'enterprise', icon: '👑', name: 'Enterprise', price: 'Custom', period: '',
+        tagline: 'White-label + dedicated support',
+        features: [
+          { ok:true,  text:'Everything in Scale' },
+          { ok:true,  text:'White-label branding', accent: true },
+          { ok:true,  text:'Unlimited team seats' },
+          { ok:true,  text:'Custom AI employee personas' },
+          { ok:true,  text:'Dedicated onboarding' },
+          { ok:true,  text:'SLA + priority support' },
+          { ok:true,  text:'Custom integrations' },
+        ],
+        cta: current==='enterprise' ? 'Current Plan' : 'Contact Sales',
+        ctaStyle: current==='enterprise' ? 'secondary' : 'primary',
+        payLink: 'mailto:hello@kayrointer.com?subject=Enterprise%20Plan',
+      },
+    ];
+
+    container.innerHTML = `<div class="page-scroll"><div class="plans-root">
+      <div class="plans-header">
+        <div class="plans-current-badge" style="background:${cfg.color}18;border-color:${cfg.color}30;color:${cfg.color}">
+          ${cfg.icon} Current plan: <b>${cfg.name}</b>
+        </div>
+        <div class="plans-title">Simple, Transparent Pricing</div>
+        <div class="plans-subtitle">Choose the plan that fits your team. Upgrade or downgrade anytime.</div>
+      </div>
+
+      <div class="plans-grid">
+        ${plans.map(p => {
+          const planCfg = PLAN_CONFIG[p.id];
+          const isCurrent = current === p.id;
+          return `<div class="plan-card${p.popular?' plan-card--popular':''}${isCurrent?' plan-card--active':''}">
+            ${p.popular ? '<div class="plan-popular-tag">Most Popular</div>' : ''}
+            <div class="plan-icon">${p.icon}</div>
+            <div class="plan-name" style="color:${planCfg.color}">${p.name}</div>
+            <div class="plan-price-row">
+              <span class="plan-price">${p.price}</span>
+              <span class="plan-period">${p.period}</span>
+            </div>
+            <div class="plan-tagline">${p.tagline}</div>
+            <div class="plan-divider"></div>
+            <ul class="plan-features">
+              ${p.features.map(f => `<li class="plan-feature${!f.ok?' plan-feature--off':''}${f.accent?' plan-feature--accent':''}">
+                <span class="plan-feature-icon">${f.ok ? '✓' : '✕'}</span>
+                <span>${f.text}</span>
+              </li>`).join('')}
+            </ul>
+            <button class="plan-cta plan-cta--${p.ctaStyle}${isCurrent?' plan-cta--current':''}"
+              data-plan="${p.id}" data-link="${p.payLink||''}">
+              ${isCurrent ? '✓ ' : ''}${p.cta}
+            </button>
+          </div>`;
+        }).join('')}
+      </div>
+
+      <div class="plans-activate-section">
+        <div class="plans-activate-card">
+          <div class="plans-activate-title">Have a plan code?</div>
+          <div class="plans-activate-sub">Enter your code to activate Growth, Scale, or Enterprise instantly.</div>
+          <div style="display:flex;gap:8px;max-width:420px;margin:0 auto">
+            <input class="form-input" id="plan-code-input" placeholder="KAYRO-GROWTH-XXXXXX" style="flex:1;font-family:var(--mono);text-transform:uppercase">
+            <button class="btn-primary" id="plan-code-apply">Activate</button>
+          </div>
+          <div id="plan-code-msg" style="margin-top:8px;font-size:12px;min-height:16px;text-align:center"></div>
+        </div>
+      </div>
+
+      <div class="plans-compare">
+        <div class="plans-compare-title">What's included in each plan</div>
+        <div class="plans-compare-table-wrap">
+          <table class="plans-compare-table">
+            <thead>
+              <tr>
+                <th>Feature</th>
+                <th>Free</th>
+                <th style="color:#4f8cff">Growth</th>
+                <th style="color:#10d98a">Scale</th>
+                <th style="color:#a78bfa">Enterprise</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${[
+                ['All core pages (HQ, Tasks, Spreadsheet, Email, Design, Brain, Ops)','✓','✓','✓','✓'],
+                ['AI Messages','10/day','Unlimited','Unlimited','Unlimited'],
+                ['Claude AI (included, no key needed)','✕','✓','✕','✕'],
+                ['Claude AI (own Anthropic key)','✕','✕','✓','✓'],
+                ['Internet search (platform key)','✕','5/day','15/day','30/day'],
+                ['Spreadsheet & Cold Email','✕','✓','✓','✓'],
+                ['Design Studio & Brain','✕','✓','✓','✓'],
+                ['Apollo.io lead search','✕','✓','✓','✓'],
+                ['Meta Ads dashboard','✕','✓','✓','✓'],
+                ['Kling AI video (own key)','✕','✕','✓','✓'],
+                ['Team seats','1','1','5','Unlimited'],
+                ['White-label branding','✕','✕','✕','✓'],
+                ['Priority support','✕','✕','✓','✓'],
+              ].map(row => `<tr>${row.map((cell,i) => {
+                const isCheck = cell === '✓';
+                const isCross = cell === '✕';
+                return `<td${i>0?' style="text-align:center"':''}>${
+                  isCheck ? '<span class="cmp-check">✓</span>' :
+                  isCross ? '<span class="cmp-cross">✕</span>' :
+                  escHtml(cell)
+                }</td>`;
+              }).join('')}</tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div></div>`;
+
+    // CTA buttons
+    container.querySelectorAll('.plan-cta').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const planId = btn.dataset.plan;
+        const link = btn.dataset.link;
+        if (planId === current) return;
+        if (planId === 'free') {
+          State.plan = 'free'; save('plan'); PlansPage._updateSidebarBadge();
+          toast('Downgraded to Free plan', 'info'); PlansPage.init(container); return;
+        }
+        if (link && link.startsWith('mailto')) { window.location.href = link; return; }
+        if (link && link.startsWith('http')) {
+          toast('Redirecting to checkout…', 'info', 3000);
+          setTimeout(() => window.open(link, '_blank'), 600);
+        } else {
+          toast('Enter a plan code below to activate, or contact sales@kayrointer.com', 'info', 5000);
+        }
+      });
+    });
+
+    // Code activation
+    const codeInput = container.querySelector('#plan-code-input');
+    const codeApply = container.querySelector('#plan-code-apply');
+    const codeMsg   = container.querySelector('#plan-code-msg');
+    const doApply = () => {
+      const code = (codeInput.value||'').trim();
+      if (!code) return;
+      const res = Usage.applyCode(code);
+      if (res === false) { codeMsg.style.color='var(--red,#ef4444)'; codeMsg.textContent='Invalid code. Check for typos.'; return; }
+      if (res === null) { codeMsg.style.color='var(--red,#ef4444)'; codeMsg.textContent='Code already used.'; return; }
+      if (res._isPlan) {
+        codeMsg.style.color='var(--green)';
+        codeMsg.textContent=`✅ ${res.name} activated!`;
+        setTimeout(() => PlansPage.init(container), 1200);
+      } else {
+        codeMsg.style.color='var(--green)';
+        codeMsg.textContent=`✅ ${res.name} activated — ${res.tokens===0?'':Usage._fmtK(res.tokens)+' tokens added.'}`;
+      }
+    };
+    codeApply.addEventListener('click', doApply);
+    codeInput.addEventListener('keydown', e => { if(e.key==='Enter') doApply(); });
+    codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
+  },
+
+  _updateSidebarBadge() {
+    const el = document.getElementById('sidebar-plan-badge');
+    if (!el) return;
+    const cfg = PlanGate.cfg();
+    el.textContent = `${cfg.icon} ${cfg.name}`;
+    el.style.color = cfg.color;
+    el.style.borderColor = cfg.color + '40';
+    el.style.background = cfg.color + '15';
+    // Update upgrade button text
+    const upgradeBtn = document.getElementById('usage-upgrade-btn');
+    if (upgradeBtn && PlanGate.current() !== 'free') upgradeBtn.textContent = '⭐ Manage Plan';
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  KLING AI VIDEO PAGE
+// ══════════════════════════════════════════════════════════════
+const KlingPage = {
+  _pollTimer: null,
+  _imgBase64: null,
+  _tab: 'text2video',
+  _gallery: [],
+
+  init(container) {
+    KlingPage._gallery = JSON.parse(localStorage.getItem('kayro_kling_gallery') || '[]');
+    const s = State.settings;
+    container.innerHTML = `<div class="page-scroll"><div class="kling-root">
+      <div class="kling-sidebar">
+        <div class="kling-logo-row">
+          <div class="kling-logo-icon">K</div>
+          <span class="kling-logo-text">Kling AI</span>
+          <span class="kling-badge">Video</span>
+        </div>
+        <div class="card-box" style="margin-bottom:16px">
+          <div class="field-label">Access Key ID</div>
+          <input class="form-input" id="kling-key-id" type="text" value="${escHtml(s.klingKeyId||'')}" placeholder="Your Access Key ID" autocomplete="off">
+          <div class="field-label" style="margin-top:12px">Access Key Secret</div>
+          <input class="form-input" id="kling-key-secret" type="password" value="${escHtml(s.klingKeySecret||'')}" placeholder="Your Access Key Secret">
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn-primary" id="kling-save-key">Save Keys</button>
+            <a href="https://klingai.com/global/dev/api-key" target="_blank" class="btn" style="text-decoration:none">Get Keys →</a>
+          </div>
+          <div class="field-hint" style="margin-top:8px">Find keys at klingai.com → Developer → API Keys.</div>
+        </div>
+        <div class="card-box">
+          <div class="field-label">Model</div>
+          <select class="form-input" id="kling-model" style="margin-bottom:10px">
+            <option value="kling-v1-6">Kling v1.6 — Latest</option>
+            <option value="kling-v1-5">Kling v1.5</option>
+            <option value="kling-v1">Kling v1</option>
+          </select>
+          <div class="field-label">Mode</div>
+          <select class="form-input" id="kling-mode" style="margin-bottom:10px">
+            <option value="std">Standard — faster</option>
+            <option value="pro">Pro — higher quality</option>
+          </select>
+          <div class="field-label">Duration</div>
+          <select class="form-input" id="kling-duration" style="margin-bottom:10px">
+            <option value="5">5 seconds</option>
+            <option value="10">10 seconds</option>
+          </select>
+          <div class="field-label">Aspect Ratio</div>
+          <select class="form-input" id="kling-ratio">
+            <option value="16:9">16:9 — Landscape</option>
+            <option value="9:16">9:16 — Portrait / Reels</option>
+            <option value="1:1">1:1 — Square</option>
+          </select>
+        </div>
+      </div>
+      <div class="kling-main">
+        <div class="kling-tabs">
+          <button class="kling-tab active" data-tab="text2video">✍️ Text to Video</button>
+          <button class="kling-tab" data-tab="image2video">🖼️ Image to Video</button>
+          <button class="kling-tab" data-tab="gallery">🎬 Gallery (${KlingPage._gallery.length})</button>
+        </div>
+        <div id="kling-tab-body" class="kling-tab-body"></div>
+      </div>
+    </div></div>`;
+
+    document.getElementById('kling-save-key').addEventListener('click', () => {
+      State.settings.klingKeyId = document.getElementById('kling-key-id').value.trim();
+      State.settings.klingKeySecret = document.getElementById('kling-key-secret').value.trim();
+      save('settings');
+      toast('Kling keys saved ✓', 'success');
+    });
+
+    document.querySelectorAll('.kling-tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.kling-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      KlingPage._tab = t.dataset.tab;
+      KlingPage._renderTab();
+    }));
+
+    KlingPage._renderTab();
+  },
+
+  _renderTab() {
+    const body = document.getElementById('kling-tab-body');
+    if (!body) return;
+    const tab = KlingPage._tab;
+    if (tab === 'text2video') {
+      body.innerHTML = `<div class="kling-gen-area">
+        <div class="field-label">Prompt</div>
+        <textarea class="form-input kling-prompt" id="kling-prompt" rows="5" placeholder="Describe your video in detail — subjects, actions, camera movement, lighting, style… e.g. &quot;A golden retriever runs through a sunlit meadow, slow motion, cinematic 4K, shallow depth of field&quot;"></textarea>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;margin-bottom:14px">
+          <div class="field-hint">Tips: add camera movement (slow zoom, pan left), lighting (golden hour, neon), and style (cinematic, anime, hyperrealistic)</div>
+          <span id="kling-prompt-count" style="font-size:11px;color:var(--text3);white-space:nowrap">0 / 2500</span>
+        </div>
+        <div class="field-label">Negative Prompt <span style="font-weight:400;color:var(--text3)">(optional)</span></div>
+        <textarea class="form-input" id="kling-neg-prompt" rows="2" style="margin-bottom:16px" placeholder="blur, distortion, low quality, watermark…"></textarea>
+        <button class="btn-primary kling-gen-btn" id="kling-generate">🎬 Generate Video</button>
+        <div id="kling-status-area" style="margin-top:16px"></div>
+      </div>`;
+      const prompt = document.getElementById('kling-prompt');
+      prompt.addEventListener('input', () => { document.getElementById('kling-prompt-count').textContent = `${prompt.value.length} / 2500`; });
+      document.getElementById('kling-generate').addEventListener('click', () => KlingPage._generate('text'));
+    } else if (tab === 'image2video') {
+      body.innerHTML = `<div class="kling-gen-area">
+        <div class="field-label">Source Image</div>
+        <div class="kling-img-drop" id="kling-img-drop">
+          <div class="kling-img-drop-inner" id="kling-drop-inner">
+            <div style="font-size:36px;margin-bottom:8px">🖼️</div>
+            <div style="font-weight:600;color:var(--text1);margin-bottom:4px">Drop image here or click to upload</div>
+            <div class="field-hint">JPG, PNG, WebP — max 10MB</div>
+          </div>
+          <input type="file" id="kling-img-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
+          <img id="kling-img-preview" style="display:none;max-height:220px;max-width:100%;border-radius:8px;margin-top:12px;object-fit:contain">
+        </div>
+        <div class="field-label" style="margin-top:16px">Motion Prompt <span style="font-weight:400;color:var(--text3)">(optional)</span></div>
+        <textarea class="form-input" id="kling-img-prompt" rows="3" style="margin-bottom:16px" placeholder="Describe the motion: camera slowly zooms in, leaves fall, character turns to look at camera…"></textarea>
+        <button class="btn-primary kling-gen-btn" id="kling-img-generate">🎬 Animate Image</button>
+        <div id="kling-img-status-area" style="margin-top:16px"></div>
+      </div>`;
+      const input = document.getElementById('kling-img-input');
+      const preview = document.getElementById('kling-img-preview');
+      const dropInner = document.getElementById('kling-drop-inner');
+      input.addEventListener('change', () => {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = e => {
+          KlingPage._imgBase64 = e.target.result.split(',')[1];
+          preview.src = e.target.result;
+          preview.style.display = 'block';
+          dropInner.style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      });
+      const drop = document.getElementById('kling-img-drop');
+      ['dragover','dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+        e.preventDefault();
+        if (ev === 'dragover') drop.classList.add('drag-over');
+        else {
+          drop.classList.remove('drag-over');
+          if (ev === 'drop' && e.dataTransfer.files[0]) {
+            const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
+            input.files = dt.files; input.dispatchEvent(new Event('change'));
+          }
+        }
+      }));
+      document.getElementById('kling-img-generate').addEventListener('click', () => KlingPage._generate('image'));
+    } else if (tab === 'gallery') {
+      KlingPage._renderGallery();
+    }
+  },
+
+  async _genJWT() {
+    const id = (State.settings.klingKeyId || '').trim();
+    const secret = (State.settings.klingKeySecret || '').trim();
+    if (!id || !secret) return null;
+    const enc = new TextEncoder();
+    const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+    const header = toB64u(enc.encode(JSON.stringify({alg:'HS256',typ:'JWT'})));
+    const now = Math.floor(Date.now()/1000);
+    const payload = toB64u(enc.encode(JSON.stringify({iss:id, exp:now+1800, nbf:now-5})));
+    const unsigned = `${header}.${payload}`;
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
+    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsigned));
+    return `${unsigned}.${toB64u(sig)}`;
+  },
+
+  async _klingFetch(path, method='GET', body=null) {
+    const jwt = await KlingPage._genJWT();
+    if (!jwt) throw new Error('No Kling API keys — save them in the sidebar first');
+    const proxy = (State.settings.proxyUrl || '').trim();
+    const url = proxy
+      ? `${proxy}?t=kling&p=${encodeURIComponent(path)}`
+      : `https://api.klingai.com${path}`;
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(url, opts);
+    const data = await res.json();
+    if (data.code !== 0 && data.code !== undefined) throw new Error(data.message || `Kling API error (code ${data.code})`);
+    return data;
+  },
+
+  async _generate(type) {
+    const id = (State.settings.klingKeyId||'').trim();
+    const secret = (State.settings.klingKeySecret||'').trim();
+    if (!id || !secret) { toast('Save your Kling API keys first', 'error'); return; }
+    const model = document.getElementById('kling-model').value;
+    const mode = document.getElementById('kling-mode').value;
+    const duration = document.getElementById('kling-duration').value;
+    const ratio = document.getElementById('kling-ratio').value;
+    const statusId = type === 'text' ? 'kling-status-area' : 'kling-img-status-area';
+    const btnId = type === 'text' ? 'kling-generate' : 'kling-img-generate';
+    const btn = document.getElementById(btnId);
+    const statusEl = document.getElementById(statusId);
+    btn.disabled = true; btn.textContent = 'Submitting…';
+    statusEl.innerHTML = '<div class="kling-progress"><div class="kling-spinner"></div><span>Submitting to Kling AI…</span></div>';
+    try {
+      let reqBody, prompt;
+      if (type === 'text') {
+        prompt = (document.getElementById('kling-prompt').value||'').trim();
+        const neg = (document.getElementById('kling-neg-prompt').value||'').trim();
+        if (!prompt) { toast('Enter a prompt first', 'error'); btn.disabled=false; btn.textContent='🎬 Generate Video'; statusEl.innerHTML=''; return; }
+        reqBody = { model, prompt, mode, duration, aspect_ratio: ratio, cfg_scale: 0.5 };
+        if (neg) reqBody.negative_prompt = neg;
+      } else {
+        if (!KlingPage._imgBase64) { toast('Upload an image first', 'error'); btn.disabled=false; btn.textContent='🎬 Animate Image'; statusEl.innerHTML=''; return; }
+        prompt = (document.getElementById('kling-img-prompt').value||'').trim() || 'Animate the image with natural motion';
+        reqBody = { model, image: KlingPage._imgBase64, prompt, mode, duration, cfg_scale: 0.5 };
+      }
+      const endpoint = type === 'text' ? '/v1/videos/text2video' : '/v1/videos/image2video';
+      const res = await KlingPage._klingFetch(endpoint, 'POST', reqBody);
+      const taskId = res.data?.task_id;
+      if (!taskId) throw new Error('No task ID returned from Kling');
+      statusEl.querySelector('span').textContent = `Task submitted (ID: ${taskId}) — generating video, this takes 2–5 minutes…`;
+      KlingPage._poll(taskId, type, prompt, model, duration, ratio, statusEl, btn);
+    } catch(e) {
+      statusEl.innerHTML = `<div class="kling-error">❌ ${escHtml(e.message)}</div>`;
+      btn.disabled = false;
+      btn.textContent = type === 'text' ? '🎬 Generate Video' : '🎬 Animate Image';
+    }
+  },
+
+  _poll(taskId, type, prompt, model, duration, ratio, statusEl, btn) {
+    let attempts = 0;
+    const endpoint = `/v1/videos/${type === 'text' ? 'text2video' : 'image2video'}/${taskId}`;
+    const timer = setInterval(async () => {
+      attempts++;
+      if (attempts > 72) {
+        clearInterval(timer);
+        statusEl.innerHTML = '<div class="kling-error">⏱️ Timed out after 12 minutes. Check your Kling dashboard for the video.</div>';
+        btn.disabled = false; btn.textContent = '🎬 Generate Video'; return;
+      }
+      try {
+        const res = await KlingPage._klingFetch(endpoint, 'GET');
+        const task = res.data;
+        const s = task?.task_status;
+        const sp = statusEl.querySelector('span');
+        if (sp) sp.textContent = `Status: ${s} — checking every 10s (${attempts} checks)`;
+        if (s === 'succeed') {
+          clearInterval(timer);
+          const video = task.task_result?.videos?.[0];
+          if (!video?.url) throw new Error('No video URL in Kling result');
+          KlingPage._showResult(video.url, prompt, statusEl, btn, type);
+          KlingPage._saveToGallery({ prompt, url: video.url, model, duration, ratio });
+        } else if (s === 'failed') {
+          clearInterval(timer);
+          statusEl.innerHTML = `<div class="kling-error">❌ Generation failed: ${escHtml(task.task_status_msg||'Unknown error')}</div>`;
+          btn.disabled = false; btn.textContent = type === 'text' ? '🎬 Generate Video' : '🎬 Animate Image';
+        }
+      } catch(_) {}
+    }, 10000);
+    KlingPage._pollTimer = timer;
+  },
+
+  _showResult(url, prompt, statusEl, btn, type) {
+    statusEl.innerHTML = `<div class="kling-result">
+      <div class="kling-result-hdr">✅ Video ready!</div>
+      <video class="kling-video" src="${escHtml(url)}" controls autoplay loop playsinline></video>
+      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+        <a href="${escHtml(url)}" download="kling-video.mp4" class="btn-primary" style="text-decoration:none">⬇️ Download MP4</a>
+        <button class="btn" onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}');toast('URL copied ✓','success')">📋 Copy URL</button>
+      </div>
+    </div>`;
+    btn.disabled = false;
+    btn.textContent = type === 'text' ? '🎬 Generate Another' : '🎬 Animate Another';
+  },
+
+  _saveToGallery(item) {
+    KlingPage._gallery.unshift({ id: uid(), ...item, created: Date.now() });
+    if (KlingPage._gallery.length > 50) KlingPage._gallery.pop();
+    localStorage.setItem('kayro_kling_gallery', JSON.stringify(KlingPage._gallery));
+    const tab = document.querySelector('.kling-tab[data-tab="gallery"]');
+    if (tab) tab.textContent = `🎬 Gallery (${KlingPage._gallery.length})`;
+  },
+
+  _renderGallery() {
+    const body = document.getElementById('kling-tab-body');
+    if (!KlingPage._gallery.length) {
+      body.innerHTML = `<div class="meta-empty"><div style="font-size:48px;margin-bottom:16px">🎬</div><div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">No Videos Yet</div><div style="color:var(--text2);font-size:14px">Generated videos appear here automatically</div></div>`;
+      return;
+    }
+    body.innerHTML = `<div class="kling-gallery">${KlingPage._gallery.map(v => `
+      <div class="kling-gallery-card">
+        <video class="kling-gallery-video" src="${escHtml(v.url)}" loop muted playsinline></video>
+        <div class="kling-gallery-overlay">
+          <button class="btn" onclick="this.closest('.kling-gallery-card').querySelector('video').play()">▶ Play</button>
+          <a href="${escHtml(v.url)}" download class="btn-primary" style="text-decoration:none">⬇️</a>
+        </div>
+        <div class="kling-gallery-meta">
+          <div class="kling-gallery-prompt">${escHtml(v.prompt||'Video')}</div>
+          <div class="kling-gallery-info">
+            <span class="ds-gallery-type">${escHtml(v.model||'')}</span>
+            <span class="ds-gallery-type">${escHtml(v.duration||'')}s</span>
+            <span class="ds-gallery-type">${escHtml(v.ratio||'')}</span>
+          </div>
+        </div>
+      </div>`).join('')}</div>`;
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  APOLLO.IO PAGE
+// ══════════════════════════════════════════════════════════════
+// ══════════════════════════════════════════════════════════════
+//  PAGE: HUNTER.IO — LEAD FINDER
+// ══════════════════════════════════════════════════════════════
+const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
+  _results: [],
+  _mode: 'domain', // 'domain' | 'finder' | 'verify'
+  init(container) {
+    const key = State.settings.apolloKey || '';
+    container.innerHTML = `<div class="page-scroll"><div class="apollo-root">
+      <div class="apollo-sidebar">
+        <div class="apollo-logo-row">
+          <svg width="26" height="26" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#f97316"/><circle cx="20" cy="20" r="8" fill="none" stroke="white" stroke-width="3"/><line x1="26" y1="26" x2="34" y2="34" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
+          <span class="apollo-logo-text">Hunter.io</span>
+        </div>
+        <div class="card-box" style="margin-bottom:16px">
+          <div class="field-label">Hunter API Key</div>
+          <input class="form-input" id="apo-key" type="password" value="${escHtml(key)}" placeholder="hunter_api_key_...">
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn-primary" id="apo-save-key">Save Key</button>
+            <a href="https://hunter.io/api-keys" target="_blank" class="btn" style="text-decoration:none">Get Free Key →</a>
+          </div>
+          <div class="field-hint" style="margin-top:8px">Free plan: 25 searches/month. No credit card required. Get your key at hunter.io/api-keys.</div>
+        </div>
+        <div class="card-box">
+          <div class="field-label" style="margin-bottom:8px">Search Mode</div>
+          <div style="display:flex;gap:6px;margin-bottom:14px">
+            <button class="btn apo-mode-btn" data-mode="domain" id="mode-domain" style="flex:1;font-size:11px">🏢 Domain</button>
+            <button class="btn apo-mode-btn" data-mode="finder" id="mode-finder" style="flex:1;font-size:11px">👤 Person</button>
+            <button class="btn apo-mode-btn" data-mode="verify" id="mode-verify" style="flex:1;font-size:11px">✅ Verify</button>
+          </div>
+          <div id="hunter-domain-form">
+            <div class="field-label">Company Domain</div>
+            <input class="form-input" id="apo-q-domain" placeholder="acmecorp.com" style="margin-bottom:8px">
+            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
+              <label class="field-label" style="margin:0;white-space:nowrap">Max results:</label>
+              <select class="form-input" id="apo-q-limit" style="width:80px;padding:6px 8px">
+                <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option>
+              </select>
+            </div>
+            <button class="btn-primary" id="apo-search" style="width:100%">🔍 Find Emails</button>
+          </div>
+          <div id="hunter-finder-form" style="display:none">
+            <div class="field-label">First Name</div>
+            <input class="form-input" id="apo-q-first" placeholder="John" style="margin-bottom:8px">
+            <div class="field-label">Last Name</div>
+            <input class="form-input" id="apo-q-last" placeholder="Smith" style="margin-bottom:8px">
+            <div class="field-label">Company Domain</div>
+            <input class="form-input" id="apo-q-domain2" placeholder="acmecorp.com" style="margin-bottom:8px">
+            <button class="btn-primary" id="apo-find-person" style="width:100%">🔍 Find Email</button>
+          </div>
+          <div id="hunter-verify-form" style="display:none">
+            <div class="field-label">Email to Verify</div>
+            <input class="form-input" id="apo-q-email" placeholder="john@acmecorp.com" style="margin-bottom:8px">
+            <button class="btn-primary" id="apo-verify" style="width:100%">✅ Verify Email</button>
+          </div>
+          <div class="field-label" id="apo-status" style="margin-top:8px;color:var(--text2)"></div>
+        </div>
+      </div>
+      <div class="apollo-main">
+        <div class="apollo-toolbar" id="apo-toolbar" style="display:none">
+          <span id="apo-count" style="color:var(--text2);font-size:13px"></span>
+          <button class="btn-primary" id="apo-export-email" style="margin-left:auto">✉️ Add to Cold Email</button>
+          <button class="btn" id="apo-copy-csv">📋 Copy CSV</button>
+        </div>
+        <div id="apo-results-wrap">
+          <div class="apollo-empty">
+            <div style="font-size:48px;margin-bottom:16px">🔍</div>
+            <div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">Find Verified Emails</div>
+            <div style="color:var(--text2);font-size:14px;max-width:340px;text-align:center;line-height:1.6">
+              <b>Domain Search</b> — find all emails at a company<br>
+              <b>Person Finder</b> — find email for a specific name<br>
+              <b>Email Verifier</b> — check if an email is valid<br><br>
+              Free tier: 25 searches/month. No credit card needed.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div></div>`;
+
+    document.getElementById('apo-save-key').addEventListener('click', () => {
+      State.settings.apolloKey = document.getElementById('apo-key').value.trim();
+      save('settings'); toast('Hunter key saved ✓', 'success');
+    });
+
+    // Mode switching
+    container.querySelectorAll('.apo-mode-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        ApolloPage._mode = btn.dataset.mode;
+        container.querySelectorAll('.apo-mode-btn').forEach(b => b.classList.remove('btn-primary'));
+        btn.classList.add('btn-primary');
+        document.getElementById('hunter-domain-form').style.display = btn.dataset.mode === 'domain' ? '' : 'none';
+        document.getElementById('hunter-finder-form').style.display = btn.dataset.mode === 'finder' ? '' : 'none';
+        document.getElementById('hunter-verify-form').style.display = btn.dataset.mode === 'verify' ? '' : 'none';
+      });
+    });
+    document.getElementById('mode-domain').classList.add('btn-primary');
+
+    document.getElementById('apo-search').addEventListener('click', () => ApolloPage._domainSearch());
+    document.getElementById('apo-find-person').addEventListener('click', () => ApolloPage._finderSearch());
+    document.getElementById('apo-verify').addEventListener('click', () => ApolloPage._verifyEmail());
+  },
+
+  _key() {
+    const k = (document.getElementById('apo-key')?.value || State.settings.apolloKey || '').trim();
+    if (!k) { toast('Paste your Hunter.io API key first', 'error'); return null; }
+    return k;
+  },
+
+  async _domainSearch() {
+    const key = ApolloPage._key(); if (!key) return;
+    const domain = (document.getElementById('apo-q-domain').value || '').trim();
+    if (!domain) { toast('Enter a domain name', 'error'); return; }
+    const limit = parseInt(document.getElementById('apo-q-limit').value) || 10;
+    const btn = document.getElementById('apo-search');
+    const status = document.getElementById('apo-status');
+    btn.disabled = true; btn.textContent = 'Searching…'; status.textContent = '';
+    try {
+      const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&limit=${limit}&api_key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.errors) throw new Error(data.errors[0]?.details || 'API error');
+      const emails = (data.data?.emails || []);
+      ApolloPage._results = emails.map(e => ({
+        email: e.value, first_name: e.first_name||'', last_name: e.last_name||'',
+        title: e.position||'', company: data.data?.organization||domain,
+        confidence: e.confidence, type: e.type, sources: e.sources?.length||0,
+      }));
+      status.textContent = `Found ${emails.length} email${emails.length!==1?'s':''} at ${domain}`;
+      status.style.color = 'var(--green)';
+      ApolloPage._render();
+    } catch(e) {
+      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+    } finally { btn.disabled = false; btn.textContent = '🔍 Find Emails'; }
+  },
+
+  async _finderSearch() {
+    const key = ApolloPage._key(); if (!key) return;
+    const first = (document.getElementById('apo-q-first').value || '').trim();
+    const last  = (document.getElementById('apo-q-last').value || '').trim();
+    const domain = (document.getElementById('apo-q-domain2').value || '').trim();
+    if (!first || !last || !domain) { toast('Fill in first name, last name, and domain', 'error'); return; }
+    const btn = document.getElementById('apo-find-person');
+    const status = document.getElementById('apo-status');
+    btn.disabled = true; btn.textContent = 'Searching…';
+    try {
+      const res = await fetch(`https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&api_key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.errors) throw new Error(data.errors[0]?.details || 'Not found');
+      const d = data.data;
+      if (!d?.email) throw new Error('No email found for this person');
+      ApolloPage._results = [{ email: d.email, first_name: first, last_name: last, title: d.position||'', company: d.company||domain, confidence: d.score }];
+      status.textContent = `Found: ${d.email} (confidence: ${d.score}%)`;
+      status.style.color = 'var(--green)';
+      ApolloPage._render();
+    } catch(e) {
+      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+    } finally { btn.disabled = false; btn.textContent = '🔍 Find Email'; }
+  },
+
+  async _verifyEmail() {
+    const key = ApolloPage._key(); if (!key) return;
+    const email = (document.getElementById('apo-q-email').value || '').trim();
+    if (!email) { toast('Enter an email to verify', 'error'); return; }
+    const btn = document.getElementById('apo-verify');
+    const status = document.getElementById('apo-status');
+    btn.disabled = true; btn.textContent = 'Verifying…';
+    try {
+      const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${encodeURIComponent(key)}`);
+      const data = await res.json();
+      if (data.errors) throw new Error(data.errors[0]?.details || 'Error');
+      const d = data.data;
+      const icon = d.status === 'valid' ? '✅' : d.status === 'risky' ? '⚠️' : '❌';
+      status.textContent = `${icon} ${email} — ${d.status} (score: ${d.score}/100)`;
+      status.style.color = d.status === 'valid' ? 'var(--green)' : d.status === 'risky' ? '#f59e0b' : 'var(--red,#ef4444)';
+      ApolloPage._results = d.status !== 'invalid' ? [{ email, first_name:'', last_name:'', title:'', company:'', confidence: d.score }] : [];
+      ApolloPage._render();
+    } catch(e) {
+      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+    } finally { btn.disabled = false; btn.textContent = '✅ Verify Email'; }
+  },
+
+  _render() {
+    const wrap = document.getElementById('apo-results-wrap');
+    const toolbar = document.getElementById('apo-toolbar');
+    const count = document.getElementById('apo-count');
+    const people = ApolloPage._results;
+    if (!people.length) { wrap.innerHTML = '<div class="apollo-empty" style="padding:40px">No results found.</div>'; toolbar.style.display = 'none'; return; }
+    toolbar.style.display = 'flex';
+    count.textContent = `${people.length} result${people.length!==1?'s':''}`;
+    const COLS = ['#4f8cff','#10d98a','#f59e0b','#ef4444','#a855f7'];
+    wrap.innerHTML = `<div class="apo-table-wrap"><table class="apo-table"><thead><tr>
+      <th></th><th>Email</th><th>Name</th><th>Title</th><th>Company</th><th>Confidence</th><th></th>
+    </tr></thead><tbody>${people.map((p, i) => `<tr>
+      <td><input type="checkbox" class="apo-chk" data-i="${i}" checked></td>
+      <td><span class="apo-email">${escHtml(p.email)}</span></td>
+      <td><div class="apo-name-cell"><div class="apo-av" style="background:${COLS[i%5]}22;color:${COLS[i%5]}">${(p.first_name||p.email[0]||'?')[0].toUpperCase()}</div><span>${escHtml((p.first_name+' '+p.last_name).trim()||'—')}</span></div></td>
+      <td>${escHtml(p.title||'—')}</td>
+      <td>${escHtml(p.company||'—')}</td>
+      <td><span style="color:${p.confidence>70?'var(--green)':p.confidence>40?'#f59e0b':'var(--text3)'}">${p.confidence||'?'}%</span></td>
+      <td><button class="btn apo-row-btn" data-i="${i}">+ Email</button></td>
+    </tr>`).join('')}</tbody></table></div>`;
+
+    wrap.querySelectorAll('.apo-row-btn').forEach(btn => btn.addEventListener('click', () => {
+      ApolloPage._addToEmail([people[parseInt(btn.dataset.i)]]);
+    }));
+    document.getElementById('apo-export-email').addEventListener('click', () => {
+      const checked = [...wrap.querySelectorAll('.apo-chk:checked')].map(c => people[parseInt(c.dataset.i)]);
+      ApolloPage._addToEmail(checked);
+    });
+    document.getElementById('apo-copy-csv').addEventListener('click', () => {
+      const rows = [['Email','Name','Title','Company','Confidence']];
+      people.forEach(p => rows.push([p.email, `${p.first_name||''} ${p.last_name||''}`.trim(), p.title||'', p.company||'', `${p.confidence||''}%`]));
+      navigator.clipboard.writeText(rows.map(r => r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(',')).join('\n'));
+      toast('CSV copied ✓', 'success');
+    });
+  },
+
+  _addToEmail(people) {
+    let added = 0;
+    people.forEach(p => {
+      if (!p.email) return;
+      if (!State.contacts.find(c => c.email === p.email)) {
+        State.contacts.push({ id: uid(), name: `${p.first_name||''} ${p.last_name||''}`.trim()||p.email.split('@')[0], email: p.email, company: p.company||'', title: p.title||'', status:'new', notes:'Imported from Hunter.io' });
+        added++;
+      }
+    });
+    save('contacts');
+    toast(added ? `Added ${added} contact${added!==1?'s':''} to Cold Email ✓` : 'Already in Cold Email', added?'success':'info');
+  },
+  destroy() {},
+};
+
+// ══════════════════════════════════════════════════════════════
+//  META ADS MANAGER PAGE
+// ══════════════════════════════════════════════════════════════
+const MetaPage = {
+  _campaigns: [],
+  _adsets: [],
+  _tab: 'campaigns',
+  init(container) {
+    const s = State.settings;
+    container.innerHTML = `<div class="page-scroll"><div class="meta-root">
+      <div class="meta-sidebar">
+        <div class="meta-logo-row">
+          <svg width="28" height="28" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#1877f2"/><path d="M23.5 20h-2.5v8h-3v-8H16v-3h2V15.5C18 13 19.5 12 21.5 12c1 0 2.5.2 2.5.2V15h-1.4c-1.1 0-1.1.5-1.1 1.2V17H24l-.5 3z" fill="white"/></svg>
+          <span class="meta-logo-text">Meta Ads</span>
+        </div>
+
+        <div class="card-box" style="margin-bottom:16px">
+          <div class="field-label">Meta Access Token</div>
+          <input class="form-input" id="meta-token" type="password" value="${escHtml(s.metaToken||'')}" placeholder="EAAxxxxxxxxx...">
+          <div class="field-label" style="margin-top:12px">Ad Account ID</div>
+          <input class="form-input" id="meta-account" type="text" value="${escHtml(s.metaAccount||'')}" placeholder="act_123456789">
+          <div style="margin-top:8px;display:flex;gap:8px">
+            <button class="btn-primary" id="meta-save">Save</button>
+            <a href="https://developers.facebook.com/tools/explorer/" target="_blank" class="btn" style="text-decoration:none">Get Token →</a>
+          </div>
+          <div class="field-hint" style="margin-top:8px">Go to Meta Business → Settings → Ad Accounts to find your Account ID. Generate a token with <b>ads_read</b> permission.</div>
+        </div>
+
+        <div class="card-box" style="margin-bottom:16px">
+          <div class="field-label">Date Range</div>
+          <select class="form-input" id="meta-range">
+            <option value="today">Today</option>
+            <option value="yesterday">Yesterday</option>
+            <option value="last_7d" selected>Last 7 Days</option>
+            <option value="last_30d">Last 30 Days</option>
+            <option value="last_90d">Last 90 Days</option>
+            <option value="this_month">This Month</option>
+          </select>
+          <button class="btn-primary" id="meta-load" style="width:100%;margin-top:8px">📊 Load Campaigns</button>
+          <div id="meta-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+        </div>
+
+        <div class="card-box">
+          <div class="field-label" style="margin-bottom:8px">Meta Pixel</div>
+          <input class="form-input" id="meta-pixel-id" type="text" value="${escHtml(s.metaPixelId||'')}" placeholder="Pixel ID (e.g. 12345678901234)">
+          <button class="btn" id="meta-pixel-save" style="width:100%;margin-top:8px">Save Pixel ID</button>
+          <div class="field-hint" style="margin-top:8px">
+            ${s.metaPixelId ? `<span style="color:var(--green)">✅ Pixel active: ${escHtml(s.metaPixelId)}</span>` : '⚪ No pixel configured. Add your Pixel ID to enable conversion tracking.'}
+          </div>
+        </div>
+      </div>
+
+      <div class="meta-main">
+        <div class="meta-stat-row" id="meta-stat-row">
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-spend">—</div><div class="meta-stat-lbl">Total Spend</div></div>
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-impressions">—</div><div class="meta-stat-lbl">Impressions</div></div>
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-clicks">—</div><div class="meta-stat-lbl">Clicks</div></div>
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-ctr">—</div><div class="meta-stat-lbl">CTR</div></div>
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-cpc">—</div><div class="meta-stat-lbl">Avg CPC</div></div>
+          <div class="meta-stat-card"><div class="meta-stat-val" id="mst-reach">—</div><div class="meta-stat-lbl">Reach</div></div>
+        </div>
+        <div class="meta-tabs">
+          <button class="meta-tab active" data-tab="campaigns">Campaigns</button>
+          <button class="meta-tab" data-tab="adsets">Ad Sets</button>
+          <button class="meta-tab" data-tab="pixel">Pixel Setup</button>
+        </div>
+        <div id="meta-tab-body">
+          <div class="meta-empty">
+            <div style="font-size:48px;margin-bottom:16px">📊</div>
+            <div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">Connect Meta Ads</div>
+            <div style="color:var(--text2);font-size:14px;max-width:320px;text-align:center">Enter your Access Token and Ad Account ID to view campaign performance.</div>
+          </div>
+        </div>
+      </div>
+    </div></div>`;
+
+    document.getElementById('meta-save').addEventListener('click', () => {
+      State.settings.metaToken = document.getElementById('meta-token').value.trim();
+      State.settings.metaAccount = document.getElementById('meta-account').value.trim();
+      save('settings');
+      toast('Meta credentials saved ✓', 'success');
+    });
+
+    document.getElementById('meta-pixel-save').addEventListener('click', () => {
+      const pid = document.getElementById('meta-pixel-id').value.trim();
+      State.settings.metaPixelId = pid;
+      save('settings');
+      MetaPage._injectPixel(pid);
+      toast('Pixel ID saved ✓', 'success');
+    });
+
+    document.getElementById('meta-load').addEventListener('click', () => MetaPage._load());
+
+    document.querySelectorAll('.meta-tab').forEach(t => t.addEventListener('click', () => {
+      document.querySelectorAll('.meta-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      MetaPage._tab = t.dataset.tab;
+      MetaPage._renderTab();
+    }));
+
+    if (s.metaPixelId) MetaPage._injectPixel(s.metaPixelId);
+  },
+
+  _injectPixel(pid) {
+    if (!pid) return;
+    if (document.getElementById('meta-pixel-script')) return;
+    const s = document.createElement('script');
+    s.id = 'meta-pixel-script';
+    s.textContent = `!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','${pid}');fbq('track','PageView');`;
+    document.head.appendChild(s);
+  },
+
+  async _load() {
+    const token = (document.getElementById('meta-token').value || State.settings.metaToken || '').trim();
+    const account = (document.getElementById('meta-account').value || State.settings.metaAccount || '').trim();
+    const range = document.getElementById('meta-range').value;
+    const status = document.getElementById('meta-status');
+    const btn = document.getElementById('meta-load');
+    if (!token || !account) { toast('Enter Access Token and Ad Account ID first', 'error'); return; }
+    const acct = account.startsWith('act_') ? account : 'act_' + account;
+    btn.disabled = true; btn.textContent = 'Loading…'; status.textContent = 'Fetching campaign data…';
+
+    const fields = 'name,status,objective,spend,impressions,clicks,reach,ctr,cpc,cpp,actions';
+    const base = `https://graph.facebook.com/v19.0`;
+    const insFields = `spend,impressions,clicks,reach,ctr,cpc,actions`;
+    try {
+      const [campRes, insRes] = await Promise.all([
+        fetch(`${base}/${acct}/campaigns?fields=name,status,objective&limit=50&access_token=${token}`),
+        fetch(`${base}/${acct}/insights?fields=${insFields}&date_preset=${range}&access_token=${token}`),
+      ]);
+      const [campData, insData] = await Promise.all([campRes.json(), insRes.json()]);
+      if (campData.error) throw new Error(campData.error.message);
+      MetaPage._campaigns = campData.data || [];
+
+      const ins = insData.data?.[0] || {};
+      document.getElementById('mst-spend').textContent = ins.spend ? `$${parseFloat(ins.spend).toFixed(2)}` : '$0';
+      document.getElementById('mst-impressions').textContent = ins.impressions ? parseInt(ins.impressions).toLocaleString() : '0';
+      document.getElementById('mst-clicks').textContent = ins.clicks ? parseInt(ins.clicks).toLocaleString() : '0';
+      document.getElementById('mst-ctr').textContent = ins.ctr ? parseFloat(ins.ctr).toFixed(2) + '%' : '0%';
+      document.getElementById('mst-cpc').textContent = ins.cpc ? `$${parseFloat(ins.cpc).toFixed(2)}` : '—';
+      document.getElementById('mst-reach').textContent = ins.reach ? parseInt(ins.reach).toLocaleString() : '0';
+
+      const adsetRes = await fetch(`${base}/${acct}/adsets?fields=name,status,daily_budget,lifetime_budget,bid_strategy&limit=50&access_token=${token}`);
+      const adsetData = await adsetRes.json();
+      MetaPage._adsets = adsetData.data || [];
+
+      MetaPage._renderTab();
+      status.textContent = `✅ Loaded ${MetaPage._campaigns.length} campaigns`;
+      status.style.color = 'var(--green)';
+    } catch(e) {
+      status.textContent = '❌ ' + e.message;
+      status.style.color = 'var(--red,#ef4444)';
+    } finally {
+      btn.disabled = false; btn.textContent = '📊 Load Campaigns';
+    }
+  },
+
+  _renderTab() {
+    const body = document.getElementById('meta-tab-body');
+    const tab = MetaPage._tab;
+    if (tab === 'campaigns') {
+      if (!MetaPage._campaigns.length) { body.innerHTML = '<div class="meta-empty" style="padding:40px">No campaigns loaded. Click Load Campaigns.</div>'; return; }
+      body.innerHTML = `<div class="meta-table-wrap"><table class="meta-table"><thead><tr>
+        <th>Campaign</th><th>Objective</th><th>Status</th>
+      </tr></thead><tbody>${MetaPage._campaigns.map(c => `<tr>
+        <td><span class="meta-camp-name">${escHtml(c.name||'—')}</span></td>
+        <td><span class="meta-obj-badge">${escHtml((c.objective||'').replace(/_/g,' '))}</span></td>
+        <td><span class="meta-status-badge meta-status-${(c.status||'').toLowerCase()}">${escHtml(c.status||'—')}</span></td>
+      </tr>`).join('')}</tbody></table></div>`;
+    } else if (tab === 'adsets') {
+      if (!MetaPage._adsets.length) { body.innerHTML = '<div class="meta-empty" style="padding:40px">No ad sets loaded. Click Load Campaigns.</div>'; return; }
+      body.innerHTML = `<div class="meta-table-wrap"><table class="meta-table"><thead><tr>
+        <th>Ad Set</th><th>Status</th><th>Daily Budget</th><th>Lifetime Budget</th><th>Bid Strategy</th>
+      </tr></thead><tbody>${MetaPage._adsets.map(a => `<tr>
+        <td>${escHtml(a.name||'—')}</td>
+        <td><span class="meta-status-badge meta-status-${(a.status||'').toLowerCase()}">${escHtml(a.status||'—')}</span></td>
+        <td>${a.daily_budget ? '$'+parseFloat(a.daily_budget/100).toFixed(2) : '—'}</td>
+        <td>${a.lifetime_budget ? '$'+parseFloat(a.lifetime_budget/100).toFixed(2) : '—'}</td>
+        <td>${escHtml((a.bid_strategy||'—').replace(/_/g,' '))}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+    } else if (tab === 'pixel') {
+      const pid = State.settings.metaPixelId || '';
+      body.innerHTML = `<div class="meta-pixel-guide">
+        <div class="meta-pix-hdr">${pid ? '<span style="color:var(--green)">✅ Pixel Active</span>' : '⚪ No Pixel Configured'}</div>
+        ${pid ? `<div class="meta-pix-id">Pixel ID: <code>${escHtml(pid)}</code></div>` : ''}
+        <div class="field-label" style="margin-bottom:12px">How to install Meta Pixel on your site</div>
+        <div class="meta-pix-steps">
+          <div class="meta-pix-step"><div class="meta-pix-num">1</div><div>Go to <b>Meta Business Manager</b> → Events Manager → Connect Data Source → Web</div></div>
+          <div class="meta-pix-step"><div class="meta-pix-num">2</div><div>Select <b>Meta Pixel</b> → Create a Pixel → copy your Pixel ID</div></div>
+          <div class="meta-pix-step"><div class="meta-pix-num">3</div><div>Paste the Pixel ID in the <b>Meta Pixel</b> field in the sidebar → Save</div></div>
+          <div class="meta-pix-step"><div class="meta-pix-num">4</div><div>Kayro automatically injects the pixel script — tracks <b>PageView</b> events on every visit</div></div>
+        </div>
+        <div class="meta-pix-events">
+          <div class="field-label" style="margin-bottom:8px">Track custom events from your AI employees</div>
+          <code class="meta-code">fbq('track', 'Lead', { content_name: 'AI Chat' });</code>
+          <code class="meta-code">fbq('track', 'Contact');</code>
+          <code class="meta-code">fbq('track', 'Purchase', { value: 99, currency: 'USD' });</code>
+        </div>
+      </div>`;
+    }
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════
 loadState();
@@ -3335,6 +4691,7 @@ Chat.init();
 Settings.updateApiStatus();
 Auth.init();
 Usage.renderMeter();
+PlansPage._updateSidebarBadge();
 
 // Handle invite link
 (function handleInviteLink() {
