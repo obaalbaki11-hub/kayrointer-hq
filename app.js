@@ -490,7 +490,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts','onboarded'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -6055,6 +6055,211 @@ HASHTAGS:
 };
 
 // ══════════════════════════════════════════════════════════════
+//  ONBOARDING WIZARD
+// ══════════════════════════════════════════════════════════════
+const Onboarding = {
+  _step: 1,
+  _data: {},
+
+  check() {
+    if (State.onboarded) return;
+    // Skip if coming via invite link
+    if (new URLSearchParams(window.location.search).get('invite')) return;
+    Onboarding.show();
+  },
+
+  show() {
+    if (document.getElementById('ob-overlay')) return;
+    const el = document.createElement('div');
+    el.id = 'ob-overlay';
+    el.className = 'ob-overlay';
+    document.body.appendChild(el);
+    Onboarding._step = 1;
+    Onboarding._data = {};
+    Onboarding._render();
+  },
+
+  _render() {
+    const el = document.getElementById('ob-overlay');
+    if (!el) return;
+    const steps = [
+      { n:1, title:'Your company', sub:'Let\'s set up your AI headquarters.' },
+      { n:2, title:'What you do', sub:'Give your agents full context.' },
+      { n:3, title:'Your goals', sub:'What do you need help with most?' },
+      { n:4, title:'Quick context', sub:'Anything else your team should know?' },
+    ];
+    const s = steps[Onboarding._step - 1];
+    const d = Onboarding._data;
+
+    const stepDots = steps.map(st =>
+      `<div class="ob-dot ${st.n === Onboarding._step ? 'ob-dot--active' : st.n < Onboarding._step ? 'ob-dot--done' : ''}"></div>`
+    ).join('');
+
+    let body = '';
+    if (Onboarding._step === 1) {
+      body = `
+        <div class="ob-field"><label class="ob-label">COMPANY NAME</label>
+          <input class="ob-input" id="ob-company" placeholder="Acme Inc." value="${escHtml(d.company||'')}"></div>
+        <div class="ob-field"><label class="ob-label">YOUR NAME</label>
+          <input class="ob-input" id="ob-name" placeholder="Alex Johnson" value="${escHtml(d.ownerName||'')}"></div>
+        <div class="ob-row2">
+          <div class="ob-field"><label class="ob-label">YOUR TITLE</label>
+            <input class="ob-input" id="ob-title" placeholder="CEO / Founder" value="${escHtml(d.ownerTitle||'')}"></div>
+          <div class="ob-field"><label class="ob-label">WEBSITE</label>
+            <input class="ob-input" id="ob-site" placeholder="yoursite.com" value="${escHtml(d.site||'')}"></div>
+        </div>`;
+    } else if (Onboarding._step === 2) {
+      const industries = ['SaaS / Software','Agency / Services','E-commerce','Consulting','Media / Content','Real Estate','Healthcare','Finance','Education','Other'];
+      body = `
+        <div class="ob-field"><label class="ob-label">WHAT DOES YOUR COMPANY DO?</label>
+          <textarea class="ob-input ob-textarea" id="ob-desc" placeholder="We help B2B SaaS companies grow by…" rows="3">${escHtml(d.desc||'')}</textarea></div>
+        <div class="ob-row2">
+          <div class="ob-field"><label class="ob-label">INDUSTRY</label>
+            <select class="ob-input ob-select" id="ob-industry">
+              ${industries.map(i=>`<option value="${i}" ${d.industry===i?'selected':''}>${i}</option>`).join('')}
+            </select></div>
+          <div class="ob-field"><label class="ob-label">COMPANY SIZE</label>
+            <select class="ob-input ob-select" id="ob-size">
+              ${['Just me','2–5','6–20','21–50','50+'].map(s=>`<option value="${s}" ${d.size===s?'selected':''}>${s}</option>`).join('')}
+            </select></div>
+        </div>
+        <div class="ob-field"><label class="ob-label">WHO IS YOUR IDEAL CUSTOMER?</label>
+          <input class="ob-input" id="ob-icp" placeholder="Solo founders, small SaaS teams, agencies…" value="${escHtml(d.icp||'')}"></div>`;
+    } else if (Onboarding._step === 3) {
+      const goals = ['Get more customers','Grow revenue','Build the product','Create content','Run marketing campaigns','Manage operations','Customer success & retention','Fundraising / investors','Hire & scale the team','Other'];
+      body = `
+        <div class="ob-field"><label class="ob-label">WHAT DO YOU NEED HELP WITH? <span style="font-weight:400;opacity:.6">(pick all that apply)</span></label>
+          <div class="ob-checks" id="ob-goals">
+            ${goals.map(g=>`<label class="ob-check-item ${(d.goals||[]).includes(g)?'ob-check-item--on':''}">
+              <input type="checkbox" value="${escHtml(g)}" ${(d.goals||[]).includes(g)?'checked':''} style="display:none">
+              <span>${escHtml(g)}</span></label>`).join('')}
+          </div></div>
+        <div class="ob-field" style="margin-top:12px"><label class="ob-label">BIGGEST CHALLENGE RIGHT NOW</label>
+          <textarea class="ob-input ob-textarea" id="ob-challenge" placeholder="Our main bottleneck is…" rows="2">${escHtml(d.challenge||'')}</textarea></div>`;
+    } else if (Onboarding._step === 4) {
+      body = `
+        <div class="ob-field"><label class="ob-label">CURRENT TOOLS YOU USE</label>
+          <input class="ob-input" id="ob-tools" placeholder="Notion, Slack, HubSpot, Stripe…" value="${escHtml(d.tools||'')}"></div>
+        <div class="ob-field"><label class="ob-label">TOP PRIORITY FOR YOUR AI TEAM THIS MONTH</label>
+          <input class="ob-input" id="ob-priority" placeholder="Launch our new pricing page and get 10 paying customers" value="${escHtml(d.priority||'')}"></div>
+        <div class="ob-field"><label class="ob-label">ANYTHING ELSE YOUR AGENTS SHOULD KNOW?</label>
+          <textarea class="ob-input ob-textarea" id="ob-extra" placeholder="We're pre-revenue. Our differentiator is… Our tone is…" rows="3">${escHtml(d.extra||'')}</textarea></div>`;
+    }
+
+    el.innerHTML = `
+      <div class="ob-card">
+        <div class="ob-top">
+          <div class="ob-logo">K</div>
+          <div class="ob-dots">${stepDots}</div>
+        </div>
+        <div class="ob-step-label">Step ${Onboarding._step} of ${steps.length}</div>
+        <div class="ob-title">${s.title}</div>
+        <div class="ob-sub">${s.sub}</div>
+        <div class="ob-body">${body}</div>
+        <div class="ob-footer">
+          ${Onboarding._step > 1 ? '<button class="ob-back-btn" id="ob-back">← Back</button>' : '<div></div>'}
+          <button class="ob-next-btn" id="ob-next">${Onboarding._step === steps.length ? '🚀 Launch My HQ' : 'Continue →'}</button>
+        </div>
+        <button class="ob-skip" id="ob-skip">Skip for now</button>
+      </div>`;
+
+    // Checkbox toggle logic
+    el.querySelectorAll('.ob-check-item').forEach(item => {
+      item.addEventListener('click', () => {
+        item.classList.toggle('ob-check-item--on');
+        item.querySelector('input').checked = item.classList.contains('ob-check-item--on');
+      });
+    });
+
+    document.getElementById('ob-next').addEventListener('click', () => Onboarding._next());
+    document.getElementById('ob-back')?.addEventListener('click', () => { Onboarding._step--; Onboarding._render(); });
+    document.getElementById('ob-skip').addEventListener('click', () => Onboarding._finish(true));
+  },
+
+  _collect() {
+    const d = Onboarding._data;
+    if (Onboarding._step === 1) {
+      d.company   = document.getElementById('ob-company')?.value.trim() || '';
+      d.ownerName = document.getElementById('ob-name')?.value.trim() || '';
+      d.ownerTitle= document.getElementById('ob-title')?.value.trim() || '';
+      d.site      = document.getElementById('ob-site')?.value.trim() || '';
+    } else if (Onboarding._step === 2) {
+      d.desc      = document.getElementById('ob-desc')?.value.trim() || '';
+      d.industry  = document.getElementById('ob-industry')?.value || '';
+      d.size      = document.getElementById('ob-size')?.value || '';
+      d.icp       = document.getElementById('ob-icp')?.value.trim() || '';
+    } else if (Onboarding._step === 3) {
+      d.goals     = [...document.querySelectorAll('#ob-goals input:checked')].map(i=>i.value);
+      d.challenge = document.getElementById('ob-challenge')?.value.trim() || '';
+    } else if (Onboarding._step === 4) {
+      d.tools     = document.getElementById('ob-tools')?.value.trim() || '';
+      d.priority  = document.getElementById('ob-priority')?.value.trim() || '';
+      d.extra     = document.getElementById('ob-extra')?.value.trim() || '';
+    }
+  },
+
+  _next() {
+    Onboarding._collect();
+    if (Onboarding._step === 1 && !Onboarding._data.company) {
+      const inp = document.getElementById('ob-company');
+      inp.style.borderColor = 'var(--red)';
+      inp.focus();
+      toast('Enter your company name to continue', 'error');
+      return;
+    }
+    if (Onboarding._step < 4) { Onboarding._step++; Onboarding._render(); }
+    else Onboarding._finish(false);
+  },
+
+  _finish(skipped) {
+    const d = Onboarding._data;
+
+    // Save to Settings
+    if (d.company)   State.settings.companyName = d.company;
+    if (d.ownerName) State.settings.ownerName   = d.ownerName;
+    if (d.site)      State.settings.siteUrl      = d.site;
+    save('settings');
+
+    // Update sidebar brand
+    if (d.company) {
+      const bn = document.getElementById('brand-name');
+      if (bn) bn.innerHTML = `<span class="brand-k">${d.company[0]}</span>${d.company.slice(1)}`;
+    }
+
+    if (!skipped) {
+      // Feed to Brain
+      const now = Date.now();
+      const emp = State.employees[0];
+      const push = (text, category) => {
+        if (!text || text.length < 3) return;
+        State.brain.facts.push({ id: uid(), text, category, source: 'Onboarding Survey', sourceAgent: emp?.name||'System', sourceEmpId: emp?.id||null, timestamp: now });
+      };
+
+      if (d.company)    push(`Company: ${d.company}${d.site?' — Website: '+d.site:''}${d.ownerName?' — Founded/led by '+d.ownerName+(d.ownerTitle?' ('+d.ownerTitle+')':''):''}`, 'business');
+      if (d.desc)       push(`What we do: ${d.desc}`, 'business');
+      if (d.industry)   push(`Industry: ${d.industry}. Team size: ${d.size||'unknown'}.`, 'business');
+      if (d.icp)        push(`Ideal customer / ICP: ${d.icp}`, 'customer');
+      if (d.goals?.length) push(`Top priorities: ${d.goals.join(', ')}.`, 'business');
+      if (d.challenge)  push(`Biggest current challenge: ${d.challenge}`, 'business');
+      if (d.tools)      push(`Current tools in use: ${d.tools}`, 'process');
+      if (d.priority)   push(`AI team top priority this month: ${d.priority}`, 'business');
+      if (d.extra)      push(`Additional context: ${d.extra}`, 'business');
+
+      save('brain');
+      toast('🧠 Your HQ is ready — agents are briefed!', 'success', 5000);
+    }
+
+    State.onboarded = true;
+    save('settings');
+
+    const el = document.getElementById('ob-overlay');
+    if (el) { el.classList.add('ob-fade-out'); setTimeout(() => el.remove(), 400); }
+
+    Router.navigate('hq');
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
 //  INIT
 // ══════════════════════════════════════════════════════════════
 loadState();
@@ -6064,11 +6269,15 @@ Auth.init();
 Usage.renderMeter();
 PlansPage._updateSidebarBadge();
 
-// Handle invite link
+// Handle invite link, then check onboarding
 (function handleInviteLink() {
   const params = new URLSearchParams(window.location.search);
   const inv = params.get('invite');
-  if (!inv) { Router.navigate('hq'); return; }
+  if (!inv) {
+    Onboarding.check();
+    if (State.onboarded) Router.navigate('hq');
+    return;
+  }
   try {
     const pad = inv + '='.repeat((4 - inv.length % 4) % 4);
     const cfg = JSON.parse(atob(pad));
@@ -6077,7 +6286,6 @@ PlansPage._updateSidebarBadge();
       document.getElementById('brand-name').textContent = cfg.company;
     }
     toast(`Welcome to ${cfg.company||'the'} HQ! You have guest access.`, 'success', 6000);
-    // Clean the URL
     window.history.replaceState({}, '', window.location.pathname);
   } catch(e) {}
   Router.navigate('hq');
