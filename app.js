@@ -325,7 +325,15 @@ const State = {
   usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[], msgsToday:0, searchesToday:0 },
   opsImages: [],
   opsScripts: [],
-  designs: [],  // [{id, title, prompt, html, empId, timestamp}]
+  designs: [],
+  automations: {
+    scheduledPosts: [],  // [{id, platform, videoUrl, caption, hashtags, scheduledAt, status, createdAt}]
+    integrations: {
+      slackWebhookUrl:'', discordWebhookUrl:'', twilioSid:'', twilioToken:'', twilioFrom:'',
+      twilioTo:'', notionKey:'', notionDbId:'', airtableKey:'', airtableBaseId:'', airtableTableName:'',
+      hubspotKey:'', zapierWebhookUrl:'', makeWebhookUrl:'', githubToken:'', githubRepo:'',
+    },
+  },
   ui: { chatOpen:false, chatActiveEmpId:null, page:'hq' },
 };
 
@@ -339,7 +347,7 @@ const PLAN_CONFIG = {
 // pages each plan can access
 const PLAN_ACCESS = {
   free:       ['hq','tasks','spreadsheet','email','design','memory','ops','settings','plans'],
-  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','settings','plans'],
+  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','automations','settings','plans'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -1042,7 +1050,7 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
@@ -4956,6 +4964,457 @@ const MetaPage = {
         </div>
       </div>`;
     }
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: AUTOMATIONS — Social Scheduler + Integrations + Webhooks
+// ══════════════════════════════════════════════════════════════
+const AutomationsPage = {
+  _tab: 'social',
+  _schedInterval: null,
+
+  init(container) {
+    if (!State.automations) State.automations = { scheduledPosts:[], integrations:{} };
+    if (!State.automations.integrations) State.automations.integrations = {};
+    const ig = State.automations.integrations;
+
+    container.innerHTML = `<div class="page-scroll"><div style="max-width:1100px;margin:0 auto;padding:8px 0">
+      <div class="auto-tab-bar">
+        <button class="auto-tab${AutomationsPage._tab==='social'?' active':''}" data-tab="social">📅 Social Scheduler</button>
+        <button class="auto-tab${AutomationsPage._tab==='integrations'?' active':''}" data-tab="integrations">🔌 Integrations</button>
+        <button class="auto-tab${AutomationsPage._tab==='webhooks'?' active':''}" data-tab="webhooks">🔗 Webhooks</button>
+      </div>
+      <div id="auto-body"></div>
+    </div></div>`;
+
+    container.querySelectorAll('.auto-tab').forEach(t => t.addEventListener('click', () => {
+      container.querySelectorAll('.auto-tab').forEach(x => x.classList.remove('active'));
+      t.classList.add('active');
+      AutomationsPage._tab = t.dataset.tab;
+      AutomationsPage._renderTab();
+    }));
+
+    AutomationsPage._renderTab();
+    AutomationsPage._startScheduler();
+  },
+
+  destroy() {
+    clearInterval(AutomationsPage._schedInterval);
+  },
+
+  _save() {
+    try { localStorage.setItem('kayro_automations', JSON.stringify(State.automations)); } catch(_) {}
+  },
+
+  _startScheduler() {
+    clearInterval(AutomationsPage._schedInterval);
+    AutomationsPage._schedInterval = setInterval(() => AutomationsPage._runDue(), 60000);
+  },
+
+  async _runDue() {
+    const now = Date.now();
+    const due = (State.automations.scheduledPosts || []).filter(p => p.status === 'scheduled' && p.scheduledAt <= now);
+    for (const post of due) {
+      post.status = 'sending';
+      AutomationsPage._save();
+      try {
+        await AutomationsPage._executePost(post);
+        post.status = 'sent';
+        toast(`✅ Posted to ${post.platform}: "${post.caption.slice(0,40)}…"`, 'success', 5000);
+        try { const ae=State.employees[0]; if(ae) HQ._addFeedItem(ae,`Auto-posted to ${post.platform}: "${post.caption.slice(0,40)}"`); } catch(_){}
+      } catch(e) {
+        post.status = 'failed';
+        post.error = e.message;
+      }
+      AutomationsPage._save();
+    }
+  },
+
+  async _executePost(post) {
+    const ig = State.automations.integrations;
+    const payload = { platform: post.platform, video_url: post.videoUrl, image_url: post.imageUrl, caption: post.caption, hashtags: post.hashtags, scheduled_at: new Date(post.scheduledAt).toISOString() };
+
+    // Direct channels
+    if (post.platform === 'slack' && ig.slackWebhookUrl) {
+      await fetch(ig.slackWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ text: `*${post.caption}*\n${post.videoUrl||post.imageUrl||''}` }) });
+      return;
+    }
+    if (post.platform === 'discord' && ig.discordWebhookUrl) {
+      await fetch(ig.discordWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ content: `${post.caption}\n${post.videoUrl||post.imageUrl||''}` }) });
+      return;
+    }
+
+    // All social platforms route through Zapier or Make webhook
+    const webhookUrl = ig.zapierWebhookUrl || ig.makeWebhookUrl;
+    if (!webhookUrl) throw new Error(`No webhook configured for ${post.platform}. Add a Zapier or Make webhook in Integrations.`);
+    const res = await fetch(webhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+    if (!res.ok) throw new Error(`Webhook returned ${res.status}`);
+  },
+
+  _renderTab() {
+    const el = document.getElementById('auto-body'); if (!el) return;
+    if (AutomationsPage._tab === 'social') AutomationsPage._renderSocial(el);
+    else if (AutomationsPage._tab === 'integrations') AutomationsPage._renderIntegrations(el);
+    else AutomationsPage._renderWebhooks(el);
+  },
+
+  // ── SOCIAL SCHEDULER ──────────────────────────────────────────
+  _renderSocial(el) {
+    const posts = State.automations.scheduledPosts || [];
+    const ig = State.automations.integrations || {};
+    const hasZapier = !!(ig.zapierWebhookUrl || ig.makeWebhookUrl);
+    const hasSlack = !!ig.slackWebhookUrl;
+    const hasDiscord = !!ig.discordWebhookUrl;
+
+    el.innerHTML = `
+    <div class="auto-two-col">
+      <div class="auto-panel">
+        <div class="auto-panel-title">Queue a Post</div>
+        ${!hasZapier && !hasSlack && !hasDiscord ? `<div class="auto-notice">⚠️ Connect a Zapier or Make webhook in <b>Integrations</b> to post to Instagram, TikTok, YouTube & Twitter automatically.</div>` : ''}
+        <div class="form-group">
+          <label class="form-label">PLATFORM</label>
+          <select class="form-input" id="sched-platform">
+            <option value="instagram">📸 Instagram</option>
+            <option value="tiktok">🎵 TikTok</option>
+            <option value="youtube">📺 YouTube Shorts</option>
+            <option value="twitter">🐦 Twitter / X</option>
+            <option value="facebook">📘 Facebook</option>
+            <option value="linkedin">💼 LinkedIn</option>
+            <option value="slack">💬 Slack</option>
+            <option value="discord">🟣 Discord</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">VIDEO OR IMAGE URL</label>
+          <input class="form-input" id="sched-video" placeholder="https://... (Kling video URL, Cloudinary, S3, etc.)">
+          <div class="form-hint" style="margin-top:4px">Generate a video in Kling AI → copy the URL → paste here</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">CAPTION</label>
+          <textarea class="form-textarea" id="sched-caption" placeholder="Write your post caption…" style="min-height:80px"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">HASHTAGS</label>
+          <input class="form-input" id="sched-hashtags" placeholder="#ai #saas #kayrointeractive">
+        </div>
+        <div class="form-group">
+          <label class="form-label">SCHEDULE DATE & TIME</label>
+          <input class="form-input" id="sched-time" type="datetime-local">
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="sched-add-btn">📅 Schedule Post</button>
+          <button class="btn" id="sched-ai-btn">✨ AI Write Caption</button>
+          <button class="btn btn-green" id="sched-now-btn">▶ Post Now</button>
+        </div>
+        <div id="sched-status" style="margin-top:8px;font-size:12px;color:var(--text2)"></div>
+
+        <div class="auto-how-box" style="margin-top:20px">
+          <div style="font-size:11px;font-weight:700;color:var(--text2);letter-spacing:1px;margin-bottom:10px">HOW AUTONOMOUS POSTING WORKS</div>
+          <div class="auto-step"><span class="auto-step-num">1</span><span>Go to <b>Integrations</b> → paste your Zapier or Make webhook URL</span></div>
+          <div class="auto-step"><span class="auto-step-num">2</span><span>In Zapier/Make, create a flow: <b>Webhook received → Post to [Instagram/TikTok/YouTube]</b></span></div>
+          <div class="auto-step"><span class="auto-step-num">3</span><span>Generate videos in <b>Kling AI</b> → copy the video URL</span></div>
+          <div class="auto-step"><span class="auto-step-num">4</span><span>Schedule posts here → Kayro fires the webhook at the right time, the platform posts automatically</span></div>
+          <div class="auto-step"><span class="auto-step-num">5</span><span><b>You don't need to be there.</b> The app fires it in the background.</span></div>
+        </div>
+      </div>
+
+      <div class="auto-panel" style="flex:1.3">
+        <div class="auto-panel-title" style="display:flex;align-items:center;justify-content:space-between">
+          Post Queue
+          <span style="font-size:11px;color:var(--text2)">${posts.length} post${posts.length!==1?'s':''} queued</span>
+        </div>
+        ${posts.length === 0
+          ? `<div class="auto-empty">No posts scheduled yet. Queue one on the left.</div>`
+          : `<div class="sched-list">${posts.slice().reverse().map(p => `
+            <div class="sched-row ${p.status}">
+              <div class="sched-row-left">
+                <div class="sched-plat">${AutomationsPage._platIcon(p.platform)} ${p.platform}</div>
+                <div class="sched-caption-preview">${escHtml(p.caption.slice(0,60))}${p.caption.length>60?'…':''}</div>
+                <div class="sched-time-row">
+                  ${p.status==='scheduled'?`🕐 ${new Date(p.scheduledAt).toLocaleString()}`:
+                    p.status==='sent'?`<span style="color:var(--green)">✅ Sent ${new Date(p.sentAt||p.scheduledAt).toLocaleString()}</span>`:
+                    p.status==='sending'?`<span style="color:var(--accent)">⏳ Sending…</span>`:
+                    `<span style="color:var(--red)">❌ Failed: ${escHtml(p.error||'unknown')}</span>`}
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:4px">
+                ${p.status==='scheduled'?`<button class="btn btn-sm btn-danger" onclick="AutomationsPage._cancelPost('${p.id}')">Cancel</button>`:''}
+                ${p.status==='failed'?`<button class="btn btn-sm" onclick="AutomationsPage._retryPost('${p.id}')">Retry</button>`:''}
+              </div>
+            </div>`).join('')}
+          </div>`}
+      </div>
+    </div>`;
+
+    // Set default scheduled time to 1 hour from now
+    const dt = document.getElementById('sched-time');
+    if (dt && !dt.value) {
+      const d = new Date(Date.now() + 3600000);
+      dt.value = d.toISOString().slice(0,16);
+    }
+
+    document.getElementById('sched-add-btn').addEventListener('click', () => AutomationsPage._schedulePost(false));
+    document.getElementById('sched-now-btn').addEventListener('click', () => AutomationsPage._schedulePost(true));
+    document.getElementById('sched-ai-btn').addEventListener('click', () => AutomationsPage._aiCaption());
+  },
+
+  _platIcon(p) { return {instagram:'📸',tiktok:'🎵',youtube:'📺',twitter:'🐦',facebook:'📘',linkedin:'💼',slack:'💬',discord:'🟣'}[p]||'📱'; },
+
+  async _schedulePost(now) {
+    const platform = document.getElementById('sched-platform').value;
+    const videoUrl = document.getElementById('sched-video').value.trim();
+    const caption  = document.getElementById('sched-caption').value.trim();
+    const hashtags = document.getElementById('sched-hashtags').value.trim();
+    const dtVal    = document.getElementById('sched-time').value;
+    const status   = document.getElementById('sched-status');
+    if (!caption) { toast('Add a caption', 'error'); return; }
+    const scheduledAt = now ? Date.now() : new Date(dtVal).getTime();
+    if (!now && (!dtVal || isNaN(scheduledAt))) { toast('Set a schedule date/time', 'error'); return; }
+    const post = { id: uid(), platform, videoUrl, caption, hashtags, scheduledAt, status:'scheduled', createdAt:Date.now() };
+    if (!State.automations.scheduledPosts) State.automations.scheduledPosts = [];
+    State.automations.scheduledPosts.push(post);
+    AutomationsPage._save();
+    if (now) {
+      status.textContent = '⏳ Posting now…';
+      post.status = 'sending';
+      try {
+        await AutomationsPage._executePost(post);
+        post.status = 'sent'; post.sentAt = Date.now();
+        status.innerHTML = `<span style="color:var(--green)">✅ Posted to ${platform}!</span>`;
+        toast('Posted! ✓', 'success');
+      } catch(e) {
+        post.status = 'failed'; post.error = e.message;
+        status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+      }
+      AutomationsPage._save();
+    } else {
+      toast(`Scheduled for ${new Date(scheduledAt).toLocaleString()} ✓`, 'success');
+    }
+    AutomationsPage._renderTab();
+  },
+
+  async _aiCaption() {
+    const platform = document.getElementById('sched-platform').value;
+    const videoUrl = document.getElementById('sched-video').value.trim();
+    const existing = document.getElementById('sched-caption').value.trim();
+    const company = State.settings.companyName || 'Kayro Interactive';
+    const emp = State.employees.find(e=>e.role.toLowerCase().includes('market'))||State.employees[0];
+    const prompt = `Write a ${platform} post caption for ${company}.${videoUrl?' The post includes a video.':''} ${existing?'Context: '+existing:''}
+Requirements:
+- Platform: ${platform}
+- Hook in first line (no "Check this out!" or emojis as openers unless very strategic)
+- Max 150 words
+- End with a clear CTA
+- Write hashtags separately after the caption (5-8 relevant ones)
+
+Format:
+CAPTION:
+[caption text]
+
+HASHTAGS:
+[hashtags]`;
+    toast('Writing caption…');
+    const result = await AI.once([{role:'user',content:prompt}], emp?.system || `You are a social media expert at ${company}.`);
+    const captionMatch = result.match(/CAPTION:\n([\s\S]+?)(?=\nHASHTAGS:|$)/);
+    const hashMatch = result.match(/HASHTAGS:\n([\s\S]+?)$/);
+    if (captionMatch) document.getElementById('sched-caption').value = captionMatch[1].trim();
+    if (hashMatch) document.getElementById('sched-hashtags').value = hashMatch[1].trim();
+    toast('Caption written ✓', 'success');
+  },
+
+  _cancelPost(id) { State.automations.scheduledPosts = (State.automations.scheduledPosts||[]).filter(p=>p.id!==id); AutomationsPage._save(); AutomationsPage._renderTab(); },
+  async _retryPost(id) { const p=(State.automations.scheduledPosts||[]).find(x=>x.id===id); if(!p)return; p.status='scheduled'; p.scheduledAt=Date.now(); await AutomationsPage._runDue(); AutomationsPage._renderTab(); },
+
+  // ── INTEGRATIONS ──────────────────────────────────────────────
+  _renderIntegrations(el) {
+    const ig = State.automations.integrations || {};
+    const conn = (k) => ig[k] ? '<span style="color:var(--green);font-size:10px;font-weight:700">● CONNECTED</span>' : '<span style="color:var(--text3);font-size:10px;font-weight:700">○ NOT SET</span>';
+
+    const INTEGRATIONS = [
+      { id:'zapier',   name:'Zapier',      icon:'⚡', color:'#ff4a00', desc:'Connect 5,000+ apps. Set up a Zap to receive Kayro webhooks.', fields:[{key:'zapierWebhookUrl',label:'Webhook URL',ph:'https://hooks.zapier.com/hooks/catch/…',type:'url'}], guide:'zapier.com → Webhooks by Zapier → Catch Hook → copy URL' },
+      { id:'make',     name:'Make',        icon:'🔄', color:'#6d00cc', desc:'Connect 1,500+ apps via Make (Integromat) scenarios.', fields:[{key:'makeWebhookUrl',label:'Webhook URL',ph:'https://hook.eu1.make.com/…',type:'url'}], guide:'make.com → Create scenario → Webhooks → Custom webhook → copy URL' },
+      { id:'slack',    name:'Slack',       icon:'💬', color:'#4a154b', desc:'Send messages to Slack channels directly from agents.', fields:[{key:'slackWebhookUrl',label:'Incoming Webhook URL',ph:'https://hooks.slack.com/services/…',type:'url'}], guide:'Slack → Apps → Incoming Webhooks → Add to Slack → copy URL' },
+      { id:'discord',  name:'Discord',     icon:'🟣', color:'#5865f2', desc:'Post to Discord channels via webhook.', fields:[{key:'discordWebhookUrl',label:'Webhook URL',ph:'https://discord.com/api/webhooks/…',type:'url'}], guide:'Discord → Server Settings → Integrations → Webhooks → New Webhook → copy URL' },
+      { id:'twilio',   name:'Twilio SMS',  icon:'📱', color:'#f22f46', desc:'Send SMS messages from your agents.', fields:[{key:'twilioSid',label:'Account SID',ph:'ACxxxxxxxxx',type:'text'},{key:'twilioToken',label:'Auth Token',ph:'your_auth_token',type:'password'},{key:'twilioFrom',label:'From Number',ph:'+1234567890',type:'tel'},{key:'twilioTo',label:'Default To Number',ph:'+1234567890',type:'tel'}], guide:'twilio.com → Console → Account Info → copy SID and Auth Token' },
+      { id:'notion',   name:'Notion',      icon:'📝', color:'#fff',    desc:'Create pages and update databases in Notion.', fields:[{key:'notionKey',label:'Integration Token',ph:'secret_…',type:'password'},{key:'notionDbId',label:'Database ID (optional)',ph:'xxxxxxxx-xxxx-…',type:'text'}], guide:'notion.com → Settings → Integrations → New integration → copy token' },
+      { id:'airtable', name:'Airtable',    icon:'🗃️', color:'#18bfff', desc:'Read/write Airtable bases and tables.', fields:[{key:'airtableKey',label:'API Key',ph:'pat…',type:'password'},{key:'airtableBaseId',label:'Base ID',ph:'appXXXXXXXX',type:'text'},{key:'airtableTableName',label:'Table Name',ph:'Table 1',type:'text'}], guide:'airtable.com → Account → API → Personal access token' },
+      { id:'hubspot',  name:'HubSpot',     icon:'🧡', color:'#ff7a59', desc:'Create contacts, deals and activities in HubSpot CRM.', fields:[{key:'hubspotKey',label:'Private App Token',ph:'pat-na1-…',type:'password'}], guide:'HubSpot → Settings → Integrations → Private Apps → Create app → copy token' },
+      { id:'github',   name:'GitHub',      icon:'⬡',  color:'#6e40c9', desc:'Create issues, pull requests and comments.', fields:[{key:'githubToken',label:'Personal Access Token',ph:'ghp_…',type:'password'},{key:'githubRepo',label:'Default Repo (owner/repo)',ph:'omarbaalbaki/myrepo',type:'text'}], guide:'github.com → Settings → Developer settings → Personal access tokens → Generate' },
+    ];
+
+    el.innerHTML = `
+    <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent)">
+      💡 <b>How it works:</b> Connect Zapier or Make first — this unlocks 5,000+ integrations (Instagram, TikTok, YouTube, Salesforce, etc.) via webhook. Native integrations below (Slack, Twilio, Notion, etc.) work directly without Zapier.
+    </div>
+    <div class="int-grid">
+      ${INTEGRATIONS.map(intg => `
+        <div class="int-card" id="int-card-${intg.id}">
+          <div class="int-card-hdr">
+            <div class="int-icon" style="background:${intg.color}22;border:1px solid ${intg.color}33;color:${intg.color}">${intg.icon}</div>
+            <div style="flex:1">
+              <div class="int-name">${intg.name}</div>
+              ${conn(intg.fields[0].key)}
+            </div>
+            <button class="btn btn-sm int-toggle-btn" data-id="${intg.id}">Configure</button>
+          </div>
+          <div class="int-desc">${intg.desc}</div>
+          <div class="int-form" id="int-form-${intg.id}" style="display:none;margin-top:12px;border-top:1px solid var(--border);padding-top:12px">
+            <div class="form-hint" style="margin-bottom:10px">📖 ${intg.guide}</div>
+            ${intg.fields.map(f => `
+              <div class="form-group" style="margin-bottom:8px">
+                <label class="form-label">${f.label}</label>
+                <input class="form-input" id="int-${f.key}" type="${f.type}" value="${escHtml(ig[f.key]||'')}" placeholder="${f.ph}">
+              </div>`).join('')}
+            <div style="display:flex;gap:8px;margin-top:4px">
+              <button class="btn btn-primary btn-sm int-save-btn" data-id="${intg.id}" data-keys="${intg.fields.map(f=>f.key).join(',')}">Save</button>
+              <button class="btn btn-sm int-test-btn" data-id="${intg.id}">Test</button>
+            </div>
+            <div class="int-status" id="int-status-${intg.id}" style="font-size:12px;margin-top:6px;color:var(--text2)"></div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+
+    // Toggle forms
+    el.querySelectorAll('.int-toggle-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const form = document.getElementById(`int-form-${btn.dataset.id}`);
+        const isOpen = form.style.display !== 'none';
+        el.querySelectorAll('.int-form').forEach(f => f.style.display='none');
+        form.style.display = isOpen ? 'none' : 'block';
+        btn.textContent = isOpen ? 'Configure' : 'Close';
+      });
+    });
+
+    // Save handlers
+    el.querySelectorAll('.int-save-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const keys = btn.dataset.keys.split(',');
+        if (!State.automations.integrations) State.automations.integrations = {};
+        keys.forEach(k => { State.automations.integrations[k] = document.getElementById(`int-${k}`)?.value.trim()||''; });
+        AutomationsPage._save();
+        const status = document.getElementById(`int-status-${btn.dataset.id}`);
+        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Saved</span>';
+        toast('Integration saved ✓', 'success');
+      });
+    });
+
+    // Test handlers
+    el.querySelectorAll('.int-test-btn').forEach(btn => {
+      btn.addEventListener('click', () => AutomationsPage._testIntegration(btn.dataset.id));
+    });
+  },
+
+  async _testIntegration(id) {
+    const ig = State.automations.integrations || {};
+    const status = document.getElementById(`int-status-${id}`);
+    if (status) { status.textContent = '⏳ Testing…'; status.style.color='var(--text2)'; }
+    try {
+      if (id === 'zapier' || id === 'make') {
+        const url = ig.zapierWebhookUrl || ig.makeWebhookUrl;
+        if (!url) throw new Error('No webhook URL saved');
+        await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({test:true, source:'Kayro Interactive', message:'Test webhook from Kayro'}) });
+        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Webhook fired — check your Zap/scenario history</span>';
+      } else if (id === 'slack') {
+        if (!ig.slackWebhookUrl) throw new Error('No Slack webhook URL saved');
+        await fetch(ig.slackWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({text:'👋 Test from Kayro Interactive — integration connected!'}) });
+        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Message sent to Slack!</span>';
+      } else if (id === 'discord') {
+        if (!ig.discordWebhookUrl) throw new Error('No Discord webhook URL saved');
+        await fetch(ig.discordWebhookUrl, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({content:'👋 Test from Kayro Interactive — Discord integration connected!'}) });
+        if (status) status.innerHTML = '<span style="color:var(--green)">✅ Message sent to Discord!</span>';
+      } else {
+        if (status) status.innerHTML = '<span style="color:var(--amber)">ℹ️ Click Save first, then use the integration in an agent chat</span>';
+      }
+    } catch(e) {
+      if (status) status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+    }
+  },
+
+  // ── WEBHOOKS ──────────────────────────────────────────────────
+  _renderWebhooks(el) {
+    const ig = State.automations.integrations || {};
+    el.innerHTML = `
+    <div class="auto-two-col">
+      <div class="auto-panel" style="flex:1">
+        <div class="auto-panel-title">Fire a Custom Webhook</div>
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6">Send any data to any URL — Zapier, Make, n8n, your own server. Your agents can trigger these too.</p>
+        <div class="form-group">
+          <label class="form-label">URL</label>
+          <input class="form-input" id="wh-url" placeholder="https://hooks.zapier.com/…" value="${escHtml(ig.zapierWebhookUrl||ig.makeWebhookUrl||'')}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">METHOD</label>
+          <select class="form-input" id="wh-method">
+            <option value="POST">POST</option>
+            <option value="GET">GET</option>
+            <option value="PUT">PUT</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PAYLOAD (JSON)</label>
+          <textarea class="form-textarea" id="wh-body" style="min-height:120px;font-family:var(--mono);font-size:12px" placeholder='{\n  "action": "post_video",\n  "platform": "instagram",\n  "video_url": "https://…",\n  "caption": "Check this out!"\n}'></textarea>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary" id="wh-fire-btn">🚀 Fire Webhook</button>
+          <button class="btn" id="wh-ai-payload-btn">✨ AI Build Payload</button>
+        </div>
+        <div id="wh-status" style="margin-top:10px;font-size:12px;color:var(--text2)"></div>
+      </div>
+      <div class="auto-panel" style="flex:1">
+        <div class="auto-panel-title">What You Can Trigger</div>
+        <div style="display:flex;flex-direction:column;gap:8px">
+          ${[
+            ['📸 Instagram post','Send video + caption → Zapier posts for you'],
+            ['🎵 TikTok upload','Send video URL → Make/Zapier uploads to TikTok'],
+            ['📺 YouTube Shorts','Video + title + description → auto-upload'],
+            ['🐦 Twitter/X post','Text/video → post from your account'],
+            ['💼 LinkedIn post','Text/video → publish to your profile/company page'],
+            ['📊 Google Sheets row','Append lead data, metrics, logs'],
+            ['📝 Notion page','Create a new page in any database'],
+            ['🗃️ Airtable record','Add rows to any base'],
+            ['🧡 HubSpot contact','Create CRM contacts from lead data'],
+            ['📱 SMS via Twilio','Send text messages to any number'],
+            ['💬 Slack message','Notify your team in any channel'],
+            ['⚙️ Any API','Send to any webhook-compatible service'],
+          ].map(([action, desc]) => `
+            <div style="display:flex;gap:10px;align-items:flex-start;padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px">
+              <div style="font-size:14px;flex-shrink:0">${action.split(' ')[0]}</div>
+              <div>
+                <div style="font-size:12.5px;font-weight:600;color:var(--text)">${action.split(' ').slice(1).join(' ')}</div>
+                <div style="font-size:11.5px;color:var(--text2)">${desc}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+
+    document.getElementById('wh-fire-btn').addEventListener('click', async () => {
+      const url = document.getElementById('wh-url').value.trim();
+      const method = document.getElementById('wh-method').value;
+      const bodyStr = document.getElementById('wh-body').value.trim();
+      const status = document.getElementById('wh-status');
+      if (!url) { toast('Enter a webhook URL', 'error'); return; }
+      status.textContent = '⏳ Firing…';
+      try {
+        const opts = { method, headers:{'Content-Type':'application/json'} };
+        if (bodyStr && method !== 'GET') opts.body = bodyStr;
+        const res = await fetch(url, opts);
+        status.innerHTML = `<span style="color:var(--green)">✅ Response: ${res.status} ${res.statusText}</span>`;
+        toast('Webhook fired ✓', 'success');
+      } catch(e) {
+        status.innerHTML = `<span style="color:var(--red)">❌ ${e.message}</span>`;
+      }
+    });
+
+    document.getElementById('wh-ai-payload-btn').addEventListener('click', async () => {
+      const emp = State.employees[0];
+      const company = State.settings.companyName || 'Kayro Interactive';
+      const result = await AI.once([{role:'user',content:`Build a sample JSON webhook payload for a social media video post from ${company}. Include: action, platform (instagram), video_url (example URL), caption, hashtags array, and timestamp. Return ONLY valid JSON, no explanation.`}], emp?.system||'You are a JSON assistant. Return only valid JSON.');
+      const clean = result.replace(/```json\n?|```/g,'').trim();
+      document.getElementById('wh-body').value = clean;
+      toast('Payload generated ✓', 'success');
+    });
   },
 };
 
