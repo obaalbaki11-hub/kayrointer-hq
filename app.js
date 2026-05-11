@@ -1874,6 +1874,53 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
 ════════════════════`,
   },
 
+  SKILL_BRAIN_CAT: {
+    '/prd':'product',  '/arch':'process',  '/code':'process',
+    '/copy':'market',  '/campaign':'market', '/social':'market', '/seo':'market',
+    '/pitch':'business', '/outreach':'business', '/email':'business',
+    '/proposal':'business', '/contract':'business',
+    '/onboard':'customer',
+    '/strategy':'business', '/delegate':'team', '/audit':'product',
+    '/brainstorm':'business', '/gsd':'process', '/brief':'business', '/autopilot':'process',
+  },
+
+  _getActiveSkillCmd(text) {
+    for (const cmd of Object.keys(Chat.SKILLS)) {
+      if (text === cmd || text.startsWith(cmd + ' ') || text.startsWith(cmd + '\n')) return cmd;
+    }
+    return null;
+  },
+
+  _postToBrain(emp, skillCmd, responseText) {
+    if (!responseText || responseText.length < 60) return;
+    const cat = Chat.SKILL_BRAIN_CAT[skillCmd] || 'business';
+    const skillLabel = skillCmd.slice(1).toUpperCase();
+    // Pull the first meaningful non-separator line as a subtitle
+    const firstLine = responseText.split('\n').map(l=>l.trim()).find(l=>l && !l.match(/^[═=\-—#*]+$/) && l.length > 4) || skillCmd;
+    const title = `[${skillLabel}] ${firstLine.replace(/^#+\s*/,'').slice(0,70)}`;
+    const stored = responseText.length > 4000
+      ? responseText.slice(0, 4000) + '\n\n[… full output in chat history]'
+      : responseText;
+    State.brain.facts.push({
+      id: uid(),
+      text: stored,
+      category: cat,
+      source: `${skillCmd} — ${emp.name}`,
+      sourceAgent: emp.name,
+      sourceEmpId: emp.id,
+      timestamp: Date.now(),
+    });
+    save('brain');
+    toast(`🧠 ${emp.name} posted to Brain`, 'success', 3500);
+    try {
+      if (document.getElementById('brain-facts-grid')) {
+        BrainPage._renderFacts();
+        BrainPage._renderTabs();
+        BrainPage._renderStats();
+      }
+    } catch(_) {}
+  },
+
   _getSkillInject(text) {
     const emps = State.employees;
     for (const [cmd, handler] of Object.entries(Chat.SKILLS)) {
@@ -2007,13 +2054,24 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     Chat._extractMemories(Chat.activeEmpId, full);
     Chat._extractTasks(full);
     Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
+    // Auto-post skill output to Brain
+    try {
+      const skillCmd = Chat._getActiveSkillCmd(text);
+      if (skillCmd && full.length > 60) {
+        const emp2 = getEmp(Chat.activeEmpId);
+        if (emp2) Chat._postToBrain(emp2, skillCmd, full);
+      }
+    } catch(_) {}
     try { KayroEvents.emit('agent_reply', {emp: getEmp(Chat.activeEmpId), text: full}); } catch(_) {}
     // Log real activity to HQ feed
     try {
       const feedEmp = getEmp(Chat.activeEmpId);
       if (feedEmp && full) {
-        const snippet = full.replace(/\n+/g,' ').trim().slice(0,60);
-        HQ._addFeedItem(feedEmp, snippet + (full.length > 60 ? '…' : ''));
+        const skillCmd2 = Chat._getActiveSkillCmd(text);
+        const snippet = skillCmd2
+          ? `${skillCmd2} — ${full.replace(/\n+/g,' ').trim().slice(0,45)}…`
+          : full.replace(/\n+/g,' ').trim().slice(0,60) + (full.length > 60 ? '…' : '');
+        HQ._addFeedItem(feedEmp, snippet);
       }
     } catch(_) {}
   }
