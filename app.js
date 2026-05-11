@@ -308,7 +308,7 @@ STYLE: Crisp and structured. Headers, bullets, hierarchy. Always end with "NEXT 
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
+  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', platformHunterKey:'', platformKlingKeyId:'', platformKlingKeySecret:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
   plan: 'free', // 'free' | 'growth' | 'scale' | 'enterprise'
   planActivatedAt: null,
   employees: [],
@@ -2978,6 +2978,21 @@ const Settings = {
           <input class="form-input" id="s-platform-search-key" type="password" value="${escHtml(s.platformSearchKey||'')}" placeholder="tvly-… your Tavily key — all staff use this to search the internet" autocomplete="off">
           <div class="form-hint" style="margin-top:8px">All AI staff use <b>this key</b> to search the internet. Users never need their own key — you cover it. Get a free key at <b>app.tavily.com</b>. Free tier: 1,000 searches/month. Limits: Growth 5/day · Scale 15/day · Enterprise 30/day.</div>
         </div>
+        <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:#f59e0b;letter-spacing:.5px;margin-bottom:6px">🔍 PLATFORM HUNTER.IO KEY (OWNER ONLY)</div>
+          <input class="form-input" id="s-platform-hunter-key" type="password" value="${escHtml(s.platformHunterKey||'')}" placeholder="Your Hunter.io API key — users on Growth+ use this automatically" autocomplete="off">
+          <div class="form-hint" style="margin-top:8px">Growth+ users can find leads without entering their own Hunter key. You cover the cost. Get your key at <b>hunter.io/api-keys</b>.<br>💰 Cost est: ~$0.05/search · Growth allows 5/day · Scale 15/day. Budget ~$0.25/user/day max.</div>
+        </div>
+        <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.5px;margin-bottom:6px">🎬 PLATFORM KLING KEYS (OWNER ONLY)</div>
+          <input class="form-input" id="s-platform-kling-id" type="text" value="${escHtml(s.platformKlingKeyId||'')}" placeholder="Access Key ID — Scale+ users generate videos on your account" autocomplete="off" style="margin-bottom:8px">
+          <input class="form-input" id="s-platform-kling-secret" type="password" value="${escHtml(s.platformKlingKeySecret||'')}" placeholder="Access Key Secret" autocomplete="off">
+          <div class="form-hint" style="margin-top:8px">Scale+ users can generate videos without their own Kling keys. Get keys at <b>klingai.com → Developer → API Keys</b>.<br>💰 Cost est: ~$0.14/video (10s) · ~$0.07/video (5s) · ~$0.28/image. Budget accordingly.</div>
+        </div>
+        <div style="background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.1);border-radius:10px;padding:12px 16px;margin-bottom:16px">
+          <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:4px">📊 META ADS — USER-OWNED ONLY</div>
+          <div class="form-hint">Meta Ads cannot use a platform key — each user must connect their own Meta Business account. This is a Meta API restriction: tokens are tied to individual business accounts. Users enter their own token in the Meta Ads page.</div>
+        </div>
         <div class="form-group">
           <label class="form-label">YOUR OWN ANTHROPIC KEY (OPTIONAL IF PLATFORM KEY IS SET)</label>
           <input class="form-input" id="s-apikey" type="text" value="${escHtml(s.apiKey||'')}" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
@@ -3123,11 +3138,17 @@ const Settings = {
     document.getElementById('s-save-key').addEventListener('click',()=>{
       const pk  = document.getElementById('s-platform-key').value.trim();
       const psk = document.getElementById('s-platform-search-key').value.trim();
+      const phk = document.getElementById('s-platform-hunter-key').value.trim();
+      const pki = document.getElementById('s-platform-kling-id').value.trim();
+      const pks = document.getElementById('s-platform-kling-secret').value.trim();
       const k   = document.getElementById('s-apikey').value.trim();
       const m   = document.getElementById('s-model').value;
       const px  = document.getElementById('s-proxy-url').value.trim();
       State.settings.platformApiKey = pk;
       State.settings.platformSearchKey = psk;
+      State.settings.platformHunterKey = phk;
+      State.settings.platformKlingKeyId = pki;
+      State.settings.platformKlingKeySecret = pks;
       State.settings.apiKey = k;
       State.settings.model = m;
       State.settings.proxyUrl = px;
@@ -3966,15 +3987,18 @@ const KlingPage = {
           <span class="kling-badge">Video</span>
         </div>
         <div class="card-box" style="margin-bottom:16px">
-          <div class="field-label">Access Key ID</div>
-          <input class="form-input" id="kling-key-id" type="text" value="${escHtml(s.klingKeyId||'')}" placeholder="Your Access Key ID" autocomplete="off">
-          <div class="field-label" style="margin-top:12px">Access Key Secret</div>
-          <input class="form-input" id="kling-key-secret" type="password" value="${escHtml(s.klingKeySecret||'')}" placeholder="Your Access Key Secret">
+          ${(s.platformKlingKeyId||'').trim()
+            ? `<div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green)">✅ Platform key active — generate videos instantly</div>`
+            : ''}
+          <div class="field-label">Your Access Key ID <span style="color:var(--text3);font-weight:400">(optional if platform key set)</span></div>
+          <input class="form-input" id="kling-key-id" type="text" value="${escHtml(s.klingKeyId||'')}" placeholder="${(s.platformKlingKeyId||'').trim() ? 'Using platform key — yours overrides it' : 'Your Access Key ID'}" autocomplete="off">
+          <div class="field-label" style="margin-top:12px">Your Access Key Secret</div>
+          <input class="form-input" id="kling-key-secret" type="password" value="${escHtml(s.klingKeySecret||'')}" placeholder="${(s.platformKlingKeyId||'').trim() ? 'Using platform key' : 'Your Access Key Secret'}">
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn-primary" id="kling-save-key">Save Keys</button>
             <a href="https://klingai.com/global/dev/api-key" target="_blank" class="btn" style="text-decoration:none">Get Keys →</a>
           </div>
-          <div class="field-hint" style="margin-top:8px">Find keys at klingai.com → Developer → API Keys.</div>
+          <div class="field-hint" style="margin-top:8px">${(s.platformKlingKeyId||'').trim() ? 'Platform key is active — videos generate on Kayro\'s Kling account. Enter your own keys to override.' : 'Find keys at klingai.com → Developer → API Keys.'}</div>
         </div>
         <div class="card-box">
           <div class="field-label">Model</div>
@@ -4099,8 +4123,8 @@ const KlingPage = {
   },
 
   async _genJWT() {
-    const id = (State.settings.klingKeyId || '').trim();
-    const secret = (State.settings.klingKeySecret || '').trim();
+    const id     = (State.settings.klingKeyId || State.settings.platformKlingKeyId || '').trim();
+    const secret = (State.settings.klingKeySecret || State.settings.platformKlingKeySecret || '').trim();
     if (!id || !secret) return null;
     const enc = new TextEncoder();
     const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
@@ -4129,9 +4153,9 @@ const KlingPage = {
   },
 
   async _generate(type) {
-    const id = (State.settings.klingKeyId||'').trim();
-    const secret = (State.settings.klingKeySecret||'').trim();
-    if (!id || !secret) { toast('Save your Kling API keys first', 'error'); return; }
+    const id     = (State.settings.klingKeyId || State.settings.platformKlingKeyId || '').trim();
+    const secret = (State.settings.klingKeySecret || State.settings.platformKlingKeySecret || '').trim();
+    if (!id || !secret) { toast('No Kling API keys configured — contact support or add your own in Settings', 'error'); return; }
     const model = document.getElementById('kling-model').value;
     const mode = document.getElementById('kling-mode').value;
     const duration = document.getElementById('kling-duration').value;
@@ -4257,6 +4281,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   _mode: 'domain', // 'domain' | 'finder' | 'verify'
   init(container) {
     const key = State.settings.apolloKey || '';
+    const hasPlatformKey = !!(State.settings.platformHunterKey || '').trim();
     container.innerHTML = `<div class="page-scroll"><div class="apollo-root">
       <div class="apollo-sidebar">
         <div class="apollo-logo-row">
@@ -4264,13 +4289,16 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
           <span class="apollo-logo-text">Hunter.io</span>
         </div>
         <div class="card-box" style="margin-bottom:16px">
-          <div class="field-label">Hunter API Key</div>
-          <input class="form-input" id="apo-key" type="password" value="${escHtml(key)}" placeholder="hunter_api_key_...">
+          ${hasPlatformKey
+            ? `<div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green)">✅ Platform key active — ready to search</div>`
+            : ''}
+          <div class="field-label">Your Hunter API Key <span style="color:var(--text3);font-weight:400">(optional if platform key set)</span></div>
+          <input class="form-input" id="apo-key" type="password" value="${escHtml(key)}" placeholder="${hasPlatformKey ? 'Using platform key — yours will take priority' : 'hunter_api_key_...'}">
           <div style="margin-top:8px;display:flex;gap:8px">
             <button class="btn-primary" id="apo-save-key">Save Key</button>
             <a href="https://hunter.io/api-keys" target="_blank" class="btn" style="text-decoration:none">Get Free Key →</a>
           </div>
-          <div class="field-hint" style="margin-top:8px">Free plan: 25 searches/month. No credit card required. Get your key at hunter.io/api-keys.</div>
+          <div class="field-hint" style="margin-top:8px">${hasPlatformKey ? 'Platform key is active — searches run on Kayro\'s Hunter account. Optionally enter your own key to use separately.' : 'Free plan: 25 searches/month. No credit card required. Get your key at hunter.io/api-keys.'}</div>
         </div>
         <div class="card-box">
           <div class="field-label" style="margin-bottom:8px">Search Mode</div>
@@ -4352,8 +4380,10 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   },
 
   _key() {
-    const k = (document.getElementById('apo-key')?.value || State.settings.apolloKey || '').trim();
-    if (!k) { toast('Paste your Hunter.io API key first', 'error'); return null; }
+    const userKey     = (document.getElementById('apo-key')?.value || State.settings.apolloKey || '').trim();
+    const platformKey = (State.settings.platformHunterKey || '').trim();
+    const k = userKey || platformKey;
+    if (!k) { toast('No Hunter.io key configured — add one in Settings (owner) or paste your own key above', 'error'); return null; }
     return k;
   },
 
