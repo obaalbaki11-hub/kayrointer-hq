@@ -1,18 +1,10 @@
-name            = "kayro-backend"
-main            = "worker.js"
+name               = "kayro-backend"
+main               = "worker.js"
 compatibility_date = "2024-09-23"
-account_id      = ""   # paste your Cloudflare account ID here
 
-[vars]
-AMADEUS_ENV = "test"   # switch to "production" when ready
-
-# Secrets — set via CLI (never commit these):
-# wrangler secret put ANTHROPIC_KEY
-# wrangler secret put DUFFEL_TOKEN
-# wrangler secret put AMADEUS_CLIENT_ID
-# wrangler secret put AMADEUS_CLIENT_SECRET
-# wrangler secret put STRIPE_SECRET
-
-[[routes]]
-pattern = "api.kayrointer.com/*"
-zone_name = "kayrointer.com"
+# Secrets — add these in Cloudflare Dashboard → kayro-backend → Settings → Variables:
+# ANTHROPIC_KEY
+# DUFFEL_TOKEN
+# AMADEUS_CLIENT_ID
+# AMADEUS_CLIENT_SECRET
+# STRIPE_SECRET
