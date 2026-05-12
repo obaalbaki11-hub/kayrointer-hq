@@ -2834,7 +2834,9 @@ const HQ = {
       </div>
       <div class="hq-card-btns">
         <button class="btn btn-primary btn-sm hq-chat-btn" data-eid="${e.id}">💬 Chat</button>
-        ${cmds.map(c=>`<button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="${c.cmd} " style="border-color:${e.color}25">/${c.lbl}</button>`).join('')}
+        <div class="hq-cmd-row">
+          ${cmds.map(c=>`<button class="btn btn-sm hq-cmd-btn" data-eid="${e.id}" data-cmd="${c.cmd} " style="border-color:${e.color}40;color:${e.color}">/${c.lbl}</button>`).join('')}
+        </div>
       </div>
     </div>`;
   },
