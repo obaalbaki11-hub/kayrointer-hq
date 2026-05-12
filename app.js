@@ -2792,17 +2792,17 @@ const HQ = {
   _ROLE_CMDS: {
     'Head of Product':    [{cmd:'/prd',      lbl:'PRD'},      {cmd:'/gsd',       lbl:'GSD'},      {cmd:'/brainstorm',lbl:'Ideas'}],
     'Lead Engineer':      [{cmd:'/arch',     lbl:'Arch'},     {cmd:'/code',      lbl:'Code'},     {cmd:'/gsd',       lbl:'GSD'}],
-    'Head of Marketing':  [{cmd:'/copy',     lbl:'Copy'},     {cmd:'/campaign',  lbl:'Campaign'}, {cmd:'/social',    lbl:'Social'}],
+    'Head of Marketing':  [{cmd:'/copy',     lbl:'Copy'},     {cmd:'/campaign',  lbl:'Cmpgn'},    {cmd:'/social',    lbl:'Social'}],
     'UI/UX Designer':     [{cmd:'/audit',    lbl:'Audit'},    {cmd:'/brainstorm',lbl:'Ideas'},    {cmd:'/autopilot', lbl:'Auto'}],
     'Head of Sales':      [{cmd:'/pitch',    lbl:'Pitch'},    {cmd:'/outreach',  lbl:'Outreach'}, {cmd:'/email',     lbl:'Email'}],
     'Customer Success':   [{cmd:'/onboard',  lbl:'Onboard'},  {cmd:'/email',     lbl:'Email'},    {cmd:'/brainstorm',lbl:'Ideas'}],
     'Personal Assistant': [{cmd:'/brief',    lbl:'Brief'},    {cmd:'/gsd',       lbl:'GSD'},      {cmd:'/autopilot', lbl:'Auto'}],
-    'AI Manager':         [{cmd:'/strategy', lbl:'Strategy'}, {cmd:'/delegate',  lbl:'Delegate'}, {cmd:'/gsd',       lbl:'GSD'}],
+    'AI Manager':         [{cmd:'/strategy', lbl:'Strat'},    {cmd:'/delegate',  lbl:'Deleg'},    {cmd:'/gsd',       lbl:'GSD'}],
     'SEO & Content Writer':[{cmd:'/blog',    lbl:'Blog'},     {cmd:'/seo',       lbl:'SEO'},      {cmd:'/social',    lbl:'Social'}],
-    'Legal & Compliance': [{cmd:'/legal',    lbl:'Legal'},    {cmd:'/contract',  lbl:'Contract'}, {cmd:'/proposal',  lbl:'Proposal'}],
-    'Email & Inbox Manager':[{cmd:'/email',  lbl:'Email'},    {cmd:'/outreach',  lbl:'Outreach'}, {cmd:'/campaign',  lbl:'Campaign'}],
-    'Social Media Manager':[{cmd:'/social',  lbl:'Social'},   {cmd:'/blog',      lbl:'Blog'},     {cmd:'/campaign',  lbl:'Campaign'}],
-    'Data Analyst':        [{cmd:'/audit',   lbl:'Audit'},    {cmd:'/brainstorm',lbl:'Insights'},  {cmd:'/gsd',       lbl:'Action'}],
+    'Legal & Compliance': [{cmd:'/legal',    lbl:'Legal'},    {cmd:'/contract',  lbl:'Contrct'},  {cmd:'/proposal',  lbl:'Propos'}],
+    'Email & Inbox Manager':[{cmd:'/email',  lbl:'Email'},    {cmd:'/outreach',  lbl:'Outreach'}, {cmd:'/campaign',  lbl:'Cmpgn'}],
+    'Social Media Manager':[{cmd:'/social',  lbl:'Social'},   {cmd:'/blog',      lbl:'Blog'},     {cmd:'/campaign',  lbl:'Cmpgn'}],
+    'Data Analyst':        [{cmd:'/audit',   lbl:'Audit'},    {cmd:'/brainstorm',lbl:'Insights'}, {cmd:'/gsd',       lbl:'Action'}],
   },
 
   _agentCard(e) {

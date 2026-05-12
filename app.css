@@ -772,9 +772,9 @@ td.editing .cell-editor{display:block}
 .hq-skill-chip{font-family:var(--mono);font-size:9px;font-weight:600;padding:2px 7px;border-radius:20px;border:1px solid;background:rgba(255,255,255,.03);white-space:nowrap;letter-spacing:0}
 
 /* Card buttons — single tight row */
-.hq-card-btns{display:flex;gap:5px;flex-wrap:nowrap}
+.hq-card-btns{display:flex;gap:4px;flex-wrap:nowrap}
 .hq-chat-btn{flex-shrink:0}
-.hq-cmd-btn{font-family:var(--mono);font-size:10px;letter-spacing:.2px;flex:1;min-width:0;padding:5px 4px;text-align:center}
+.hq-cmd-btn{font-family:var(--mono);font-size:10px;letter-spacing:0;flex:1;min-width:0;padding:5px 3px;text-align:center;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
 
 /* Hire card */
 .hq-hire-card{
