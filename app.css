@@ -1579,3 +1579,11 @@ input,textarea,select,button{font-family:var(--font)}
 
 /* ── AGENT ACTION PILLS ──────────────────────────────────────── */
 .agent-email-action{display:flex;align-items:center;padding:10px 14px;margin:6px 12px;background:rgba(79,140,255,.08);border:1px solid rgba(79,140,255,.2);border-radius:10px;gap:6px;flex-wrap:wrap}
+
+/* Intent router card */
+.intent-route-bubble{background:rgba(139,92,246,.08)!important;border:1px solid rgba(139,92,246,.25)!important;display:flex;flex-direction:column;gap:10px}
+.intent-detected-row{display:flex;align-items:center;gap:8px}
+.intent-badge{font-family:var(--mono);font-size:11px;font-weight:700;background:rgba(139,92,246,.2);color:#a78bfa;border:1px solid rgba(139,92,246,.35);padding:3px 10px;border-radius:20px;letter-spacing:.3px}
+.intent-detected-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
+.intent-route-text{font-size:13px;color:var(--text2);line-height:1.5}
+.intent-open-btn{align-self:flex-start;margin-top:2px}

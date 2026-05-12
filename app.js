@@ -87,6 +87,37 @@ const DEFAULT_BRAIN_FACTS = [
 ];
 
 const DEFAULT_EMPLOYEES = [
+  {id:'e_router',name:'Iris',role:'Intent Router',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xf3c182,pos:[0,8],status:'online',skills:['Intent Detection','Conversation Routing','Multi-language','Triage','Escalation'],hired:Date.now(),tasks:0,
+   system:`You are an Intent Detection Agent working for Kayro Interactive. Your sole responsibility is to analyze the user's message and return exactly one intent label — nothing else.
+
+INTENT OPTIONS (return exactly one):
+- Product      → questions about features, capabilities, how the product works
+- Support      → help requests, technical issues, something not working, errors
+- Pricing      → cost, plans, subscriptions, billing, upgrades, discounts
+- Account      → email, password, profile, login, access, settings
+- Feedback     → opinions, suggestions, complaints, compliments about the product
+- Greeting     → hello, hi, hey, good morning, or any generic greeting with no specific ask
+- Other        → anything that doesn't clearly fit the above
+- Unclear      → message is too ambiguous to classify with confidence
+
+RULES:
+1. Return ONLY the intent label. No explanation. No punctuation. No extra words.
+2. Never assign multiple intents. Pick the single best match.
+3. Analyze the message regardless of language — always return the intent in English.
+4. If the message could fit two categories, pick the one with highest confidence.
+5. If confidence is below ~70%, return: Unclear
+
+EXAMPLES:
+"I need help connecting my bot to WhatsApp" → Support
+"How much does your Pro plan cost?" → Pricing
+"Hello!" → Greeting
+"Can I change my email address?" → Account
+"I have some feedback for your product team" → Feedback
+"What can your AI agents actually do?" → Product
+"Hola, necesito ayuda con mi cuenta" → Account
+"This thing is broken" → Support
+"¿Cuánto cuesta?" → Pricing`},
+
   {id:'e_claude',name:'Claude',role:'AI Manager',color:'#e07540',bodyHex:0xe07540,skinHex:0xf5c285,pos:[0,-2],status:'online',skills:['Company Strategy','Team Leadership','Decision Frameworks','Cross-functional Thinking','Product Intelligence'],hired:Date.now(),tasks:0,
    system:`You are Claude, AI Manager at Kayro Interactive, working directly for Omar Baalbaki (omarbaalbaki@kayrointer.com), the founder and CEO. You are the smartest person in the room — and you act like it.
 
@@ -1365,6 +1396,95 @@ const Router = {
 document.querySelectorAll('.nav-item[data-page]').forEach(el=>
   el.addEventListener('click',()=>Router.navigate(el.dataset.page)));
 
+// ── INTENT ROUTER ─────────────────────────────────────────────
+const IntentRouter = {
+  // Maps intent label → employee id
+  ROUTE: {
+    'product':  'e1',        // Omar  — Head of Product
+    'support':  'e6',        // Mia   — Customer Success
+    'pricing':  'e5',        // Chris — Head of Sales
+    'account':  'e7',        // ARIA  — Personal Assistant
+    'feedback': 'e1',        // Omar  — Head of Product
+    'greeting': 'e_claude',  // Claude — AI Manager
+    'other':    'e7',        // ARIA  — Personal Assistant
+    'unclear':  'e_claude',  // Claude — AI Manager
+  },
+  LABELS: {
+    'product':  '🧩 Product',
+    'support':  '🛟 Support',
+    'pricing':  '💳 Pricing',
+    'account':  '👤 Account',
+    'feedback': '💬 Feedback',
+    'greeting': '👋 Greeting',
+    'other':    '💡 Other',
+    'unclear':  '❓ Unclear',
+  },
+
+  async handle(routerEmp, userText) {
+    // 1. Save user bubble + to history
+    Chat.addBubble(Chat.activeEmpId, routerEmp.name, routerEmp.color, userText, true);
+
+    // 2. Typing indicator
+    const msgs = document.getElementById('chat-messages');
+    const typing = document.createElement('div');
+    typing.className = 'msg'; typing.id = 'chat-typing';
+    typing.innerHTML = `<div class="msg-av" style="background:${routerEmp.color}22;color:${routerEmp.color}">🔀</div>
+      <div class="msg-body"><div class="msg-sender">${routerEmp.name}</div>
+      <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+
+    // 3. Detect intent silently
+    let intentRaw = '';
+    try {
+      intentRaw = await AI.once([{role:'user', content: userText}], routerEmp.system);
+    } catch(_) { intentRaw = 'unclear'; }
+
+    document.getElementById('chat-typing')?.remove();
+
+    // 4. Parse intent (first word, lowercase, letters only)
+    const intent = (intentRaw.trim().toLowerCase().match(/[a-z]+/) || ['unclear'])[0];
+    const targetId = IntentRouter.ROUTE[intent] || 'e_claude';
+    const targetEmp = getEmp(targetId) || State.employees.find(e => e.id === 'e_claude');
+    const badge = IntentRouter.LABELS[intent] || '💡 Other';
+
+    // 5. Save intent response to chatHistory (hidden from UI)
+    if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId] = [];
+    State.chatHistory[Chat.activeEmpId].push({role:'assistant', content: intentRaw.trim()});
+    save_('chatHistory');
+
+    // 6. Show routing card
+    const card = document.createElement('div');
+    card.className = 'msg intent-route-msg';
+    card.innerHTML = `
+      <div class="msg-av" style="background:${routerEmp.color}22;color:${routerEmp.color}">🔀</div>
+      <div class="msg-body">
+        <div class="msg-sender">${routerEmp.name}</div>
+        <div class="msg-bubble intent-route-bubble">
+          <div class="intent-detected-row">
+            <span class="intent-badge">${badge}</span>
+            <span class="intent-detected-label">intent detected</span>
+          </div>
+          <div class="intent-route-text">
+            Connecting you with <strong>${targetEmp ? targetEmp.name : 'our team'}</strong>
+            (${targetEmp ? targetEmp.role : 'AI Specialist'}) — they'll take it from here.
+          </div>
+          <button class="btn btn-primary btn-sm intent-open-btn" data-eid="${targetId}">
+            Open chat with ${targetEmp ? targetEmp.name : 'Agent'} →
+          </button>
+        </div>
+      </div>`;
+    msgs.appendChild(card);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    card.querySelector('.intent-open-btn')?.addEventListener('click', () => Chat.open(targetId));
+
+    // 7. Auto-route after 1.5s
+    setTimeout(() => Chat.open(targetId), 1500);
+
+    Usage.trackUsage(Math.ceil((userText.length + intentRaw.length) / 4));
+  },
+};
+
 // ── CHAT PANEL ────────────────────────────────────────────────
 const Chat = {
   activeEmpId: null,
@@ -1522,6 +1642,7 @@ const Chat = {
       'Research Analyst':['business','market','product'],
       'Booking & Travel Agent':['process','team','business'],
       'Reporting & BI':['business','market','product'],
+      'Intent Router':['customer','business','process'],
     };
     const catPriority = roleBrainCats[emp.role] || ['business','market','product'];
     const allFacts = State.brain?.facts || [];
@@ -2528,6 +2649,10 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     const text = inp.value.trim(); if(!text||!Chat.activeEmpId) return;
     const e = getEmp(Chat.activeEmpId); if(!e) return;
     inp.value = ''; inp.style.height = 'auto';
+
+    // Intent router — intercept and route before normal chat
+    if (e.id === 'e_router') { await IntentRouter.handle(e, text); return; }
+
     Chat.addBubble(Chat.activeEmpId, e.name, e.color, text, true);
     const skillInject = Chat._getSkillInject(text);
     if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
@@ -2843,6 +2968,7 @@ const HQ = {
     'Research Analyst':       [{cmd:'/audit',   lbl:'Research'}, {cmd:'/brief',     lbl:'Brief'},    {cmd:'/strategy',  lbl:'Strat'}],
     'Booking & Travel Agent': [{cmd:'/brief',   lbl:'Brief'},    {cmd:'/proposal',  lbl:'Propos'},   {cmd:'/gsd',       lbl:'Plan'}],
     'Reporting & BI':         [{cmd:'/audit',   lbl:'Report'},   {cmd:'/brief',     lbl:'Brief'},    {cmd:'/strategy',  lbl:'Strat'}],
+    'Intent Router':          [{cmd:'/brief',   lbl:'Brief'},    {cmd:'/gsd',       lbl:'GSD'},      {cmd:'/autopilot', lbl:'Auto'}],
   },
 
   _agentCard(e) {
