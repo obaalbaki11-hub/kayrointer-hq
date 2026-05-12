@@ -884,7 +884,7 @@ const WebSearch = {
 };
 
 // ── KAYRO BACKEND CLIENT ──────────────────────────────────────
-const BACKEND_URL = 'https://api.kayrointer.com';
+const BACKEND_URL = 'https://kayro-backend.obaalbaki11.workers.dev';
 
 const KayroBackend = {
   // ── FLIGHTS ─────────────────────────────────────────────────
