@@ -1587,3 +1587,38 @@ input,textarea,select,button{font-family:var(--font)}
 .intent-detected-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.8px}
 .intent-route-text{font-size:13px;color:var(--text2);line-height:1.5}
 .intent-open-btn{align-self:flex-start;margin-top:2px}
+
+/* ── Kayro Backend — Flight & Hotel Result Cards ────────────── */
+.kb-results-bubble{background:rgba(255,255,255,.03)!important;border:1px solid var(--border)!important;padding:0!important;overflow:hidden}
+.kb-results-hdr{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;padding:10px 14px;border-bottom:1px solid var(--border)}
+
+/* Flights */
+.kb-flight-list{display:flex;flex-direction:column;gap:0}
+.kb-flight-card{padding:12px 14px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.kb-flight-card:last-child{border-bottom:none}
+.kb-flight-card:hover{background:rgba(255,255,255,.03)}
+.kb-flight-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:4px}
+.kb-flight-route{display:flex;align-items:center;gap:6px}
+.kb-flight-iata{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--text1)}
+.kb-flight-arrow{color:var(--text3);font-size:12px}
+.kb-flight-price{text-align:right}
+.kb-price-amount{display:block;font-family:var(--mono);font-size:14px;font-weight:700;color:#4ade80}
+.kb-price-label{font-size:10px;color:var(--text3)}
+.kb-flight-meta{font-size:11px;color:var(--text3);display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.kb-stops{color:var(--text2)}
+.kb-stops.direct{color:#4ade80}
+.kb-flight-actions{display:flex;align-items:center;justify-content:space-between}
+.kb-cabin{font-size:10px;color:var(--text3);text-transform:capitalize;font-family:var(--mono)}
+
+/* Hotels */
+.kb-hotel-list{display:flex;flex-direction:column;gap:0}
+.kb-hotel-card{padding:12px 14px;border-bottom:1px solid var(--border);transition:background .15s}
+.kb-hotel-card:last-child{border-bottom:none}
+.kb-hotel-card:hover{background:rgba(255,255,255,.03)}
+.kb-hotel-row{display:flex;justify-content:space-between;gap:8px;margin-bottom:8px}
+.kb-hotel-name{font-size:13px;font-weight:600;color:var(--text1);margin-bottom:3px}
+.kb-hotel-meta{font-size:11px;color:#f59e0b;margin-bottom:4px}
+.kb-hotel-cancel{font-size:10px;color:var(--text3);line-height:1.4}
+.kb-hotel-price{text-align:right;flex-shrink:0}
+.kb-hotel-actions{display:flex;align-items:center;justify-content:space-between}
+.kb-room-type{font-size:10px;color:var(--text3);font-family:var(--mono);text-transform:capitalize}

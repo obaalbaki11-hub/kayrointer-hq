@@ -883,6 +883,194 @@ const WebSearch = {
   },
 };
 
+// ── KAYRO BACKEND CLIENT ──────────────────────────────────────
+const BACKEND_URL = 'https://api.kayrointer.com';
+
+const KayroBackend = {
+  // ── FLIGHTS ─────────────────────────────────────────────────
+  async searchFlights({ origin, destination, departureDate, returnDate, passengers = 1, cabinClass = 'economy' }) {
+    const r = await fetch(`${BACKEND_URL}/api/flights/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ origin, destination, departureDate, returnDate, passengers, cabinClass }),
+    });
+    return r.json();
+  },
+
+  async getFlightOffers(offerRequestId, sort = 'total_amount', limit = 5) {
+    const r = await fetch(
+      `${BACKEND_URL}/api/flights/offers?offer_request_id=${offerRequestId}&sort=${sort}&limit=${limit}`
+    );
+    return r.json();
+  },
+
+  async bookFlight({ offerId, passengers, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId }) {
+    const r = await fetch(`${BACKEND_URL}/api/flights/book`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offerId, passengers, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId }),
+    });
+    return r.json();
+  },
+
+  // ── HOTELS ──────────────────────────────────────────────────
+  async searchHotels({ cityCode, checkIn, checkOut, adults = 1, rooms = 1 }) {
+    const r = await fetch(`${BACKEND_URL}/api/hotels/search`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ cityCode, checkIn, checkOut, adults, rooms }),
+    });
+    return r.json();
+  },
+
+  async bookHotel({ offerId, guests, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId }) {
+    const r = await fetch(`${BACKEND_URL}/api/hotels/book`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ offerId, guests, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId }),
+    });
+    return r.json();
+  },
+
+  // ── PAYMENTS ────────────────────────────────────────────────
+  async getOrCreateCustomer({ email, name, kayroUserId }) {
+    const r = await fetch(`${BACKEND_URL}/api/payments/customer`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, name, kayroUserId }),
+    });
+    return r.json();
+  },
+
+  async createSetupIntent(customerId) {
+    const r = await fetch(`${BACKEND_URL}/api/payments/setup`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId }),
+    });
+    return r.json();
+  },
+
+  async listCards(customerId) {
+    const r = await fetch(`${BACKEND_URL}/api/payments/methods?customerId=${customerId}`);
+    return r.json();
+  },
+
+  async removeCard(paymentMethodId) {
+    const r = await fetch(`${BACKEND_URL}/api/payments/remove`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ paymentMethodId }),
+    });
+    return r.json();
+  },
+
+  async charge({ customerId, paymentMethodId, amount, currency = 'usd', description }) {
+    const r = await fetch(`${BACKEND_URL}/api/payments/charge`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customerId, paymentMethodId, amount, currency, description }),
+    });
+    return r.json();
+  },
+
+  // ── FLIGHT SEARCH UI ────────────────────────────────────────
+  renderFlightResults(offers, msgs, empColor) {
+    if (!offers?.length) {
+      KayroBackend._chatCard(msgs, empColor, `
+        <div style="color:var(--text2)">No flights found for those dates. Try adjusting your dates or nearby airports.</div>
+      `);
+      return;
+    }
+
+    const cards = offers.slice(0, 5).map((o, i) => {
+      const slice = o.slices[0];
+      const seg   = slice?.segments[0];
+      const dep   = seg ? new Date(seg.departing).toLocaleString('en-US',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      const arr   = seg ? new Date(seg.arriving).toLocaleString('en-US',{hour:'2-digit',minute:'2-digit'}) : '—';
+      const stops = slice?.segments.length > 1 ? `${slice.segments.length - 1} stop${slice.segments.length > 2 ? 's' : ''}` : 'Direct';
+      return `
+        <div class="kb-flight-card" data-offer='${JSON.stringify(o)}' data-idx="${i}">
+          <div class="kb-flight-row">
+            <div class="kb-flight-route">
+              <span class="kb-flight-iata">${slice?.origin}</span>
+              <span class="kb-flight-arrow">→</span>
+              <span class="kb-flight-iata">${slice?.destination}</span>
+            </div>
+            <div class="kb-flight-price">
+              <span class="kb-price-amount">${o.totalCurrency} ${Number(o.totalAmount).toFixed(2)}</span>
+              <span class="kb-price-label">total incl. taxes</span>
+            </div>
+          </div>
+          <div class="kb-flight-meta">
+            <span>${seg?.carrier || '—'} · ${seg?.flightNumber || ''}</span>
+            <span>${dep} → ${arr}</span>
+            <span class="kb-stops ${stops === 'Direct' ? 'direct' : ''}">${stops}</span>
+          </div>
+          <div class="kb-flight-actions">
+            <span class="kb-cabin">${seg?.cabinClass?.replace('_',' ') || ''}</span>
+            <button class="btn btn-primary btn-sm kb-select-btn" data-idx="${i}">Select →</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    KayroBackend._chatCard(msgs, empColor, `
+      <div class="kb-results-hdr">✈️ ${offers.length} flights found — showing best options</div>
+      <div class="kb-flight-list">${cards}</div>
+    `);
+  },
+
+  renderHotelResults(hotels, msgs, empColor) {
+    if (!hotels?.length) {
+      KayroBackend._chatCard(msgs, empColor, `<div style="color:var(--text2)">No hotels found. Try different dates or a broader search.</div>`);
+      return;
+    }
+
+    const cards = hotels.slice(0, 5).map((h, i) => {
+      const offer = h.offers[0];
+      return `
+        <div class="kb-hotel-card" data-hotel='${JSON.stringify(h)}' data-idx="${i}">
+          <div class="kb-hotel-row">
+            <div>
+              <div class="kb-hotel-name">${h.name}</div>
+              <div class="kb-hotel-meta">
+                ${'★'.repeat(Number(h.rating)||3)} · ${h.amenities?.slice(0,3).map(a=>a.replace(/_/g,' ').toLowerCase()).join(' · ')}
+              </div>
+              <div class="kb-hotel-cancel">${offer?.cancellationPolicy?.slice(0,60) || 'See cancellation policy'}</div>
+            </div>
+            <div class="kb-hotel-price">
+              <span class="kb-price-amount">${offer?.currency || 'USD'} ${Number(offer?.price||0).toFixed(2)}</span>
+              <span class="kb-price-label">/ night</span>
+            </div>
+          </div>
+          <div class="kb-hotel-actions">
+            <span class="kb-room-type">${offer?.roomType || offer?.bedType || 'Standard Room'}</span>
+            <button class="btn btn-primary btn-sm kb-select-hotel-btn" data-idx="${i}">Select →</button>
+          </div>
+        </div>`;
+    }).join('');
+
+    KayroBackend._chatCard(msgs, empColor, `
+      <div class="kb-results-hdr">🏨 ${hotels.length} hotels found</div>
+      <div class="kb-hotel-list">${cards}</div>
+    `);
+  },
+
+  _chatCard(msgs, color, html) {
+    const wrap = document.createElement('div');
+    wrap.className = 'msg kb-results-msg';
+    wrap.innerHTML = `
+      <div class="msg-av" style="background:${color}22;color:${color}">✈</div>
+      <div class="msg-body">
+        <div class="msg-sender">Kayro Travel</div>
+        <div class="msg-bubble kb-results-bubble">${html}</div>
+      </div>`;
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return wrap;
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -900,14 +1088,22 @@ const AI = {
     const plan        = PlanGate.current();
     const legacySub   = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
     const usePlatform = platformKey && (plan === 'growth' || (plan === 'free' && legacySub));
+
+    // Kayro backend proxy — Growth/Scale/Enterprise: AI goes through our worker (no user API key needed)
+    if (plan === 'growth' || plan === 'scale' || plan === 'enterprise') {
+      return { url: `${BACKEND_URL}/api/ai`, headers: { 'Content-Type': 'application/json' }, ok: true };
+    }
+
+    // Custom proxy URL (admin / self-hosted override)
     if (proxyUrl) return { url: proxyUrl, headers: { 'Content-Type':'application/json' }, ok: true };
-    const key = usePlatform ? platformKey : userKey;
+
+    // Free plan with platform key
+    if (usePlatform) return { url: 'https://api.anthropic.com/v1/messages', headers: AI._headers(platformKey), ok: true };
+
+    // Free plan — user's own API key
+    const key = userKey;
     if (!key) {
-      let err;
-      if (platformKey && plan === 'free' && !legacySub) err = '⚠️ Upgrade to Growth to use Kayro\'s built-in Claude — no API key needed.\n\nGo to Plans in the sidebar.';
-      else if (plan === 'scale' || plan === 'enterprise') err = '⚠️ Scale/Enterprise requires your own Anthropic API key.\n\nGo to ⚙️ Settings → paste your key → Save Keys.';
-      else err = '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr upgrade to Growth — Claude is included, no key needed.';
-      return { ok: false, err };
+      return { ok: false, err: '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr upgrade to Growth — Claude is included, no key needed.' };
     }
     if (!key.startsWith('sk-')) return { ok: false, err: '⚠️ Invalid key format — should start with sk-ant-' };
     return { url: 'https://api.anthropic.com/v1/messages', headers: AI._headers(key), ok: true };
