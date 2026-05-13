@@ -696,8 +696,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','settings','plans'],
-  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','automations','settings','plans'],
+  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','settings','plans','security'],
+  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','automations','settings','plans','security'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -1748,13 +1748,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -6160,6 +6160,36 @@ const Settings = {
         <div class="form-group"><label class="form-label">APP ID</label><input class="form-input" id="s-fb-appid" placeholder="1:123456789:web:..." value="${escHtml((s.firebaseConfig?.appId)||'')}"></div>
         <button class="btn btn-primary" id="s-save-fb">Save Firebase Config</button>
       </div>
+      <div class="s-card full">
+        <div class="s-card-title">🛡️ Security Dashboard API Keys</div>
+        <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">These keys power the Security Dashboard tab. All stored locally in your browser — never sent to Kayro servers.</p>
+        <div class="form-group">
+          <label class="form-label">VIRUSTOTAL API KEY</label>
+          <input class="form-input" id="s-vt-key" type="password" value="${escHtml(s.vtKey||'')}" placeholder="Get free key at virustotal.com/gui/my-apikey" autocomplete="off">
+          <div class="form-hint">Free tier: 500 req/day. Scan URLs, IPs & file hashes for malware.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">IPINFO API KEY</label>
+          <input class="form-input" id="s-ipinfo-key" type="password" value="${escHtml(s.ipinfoKey||'')}" placeholder="Get free key at ipinfo.io/signup" autocomplete="off">
+          <div class="form-hint">Free tier: 50,000 req/month. IP geolocation & ASN info.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">HAVEIBEENPWNED API KEY</label>
+          <input class="form-input" id="s-hibp-key" type="password" value="${escHtml(s.hibpKey||'')}" placeholder="Get key at haveibeenpwned.com/API/Key" autocomplete="off">
+          <div class="form-hint">Paid key required (~$3.50/month). Check emails against known data breaches.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">SHODAN API KEY</label>
+          <input class="form-input" id="s-shodan-key" type="password" value="${escHtml(s.shodanKey||'')}" placeholder="Get free key at account.shodan.io" autocomplete="off">
+          <div class="form-hint">Free tier: basic host lookups. Port scanning & exposed service discovery.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ABUSEIPDB API KEY</label>
+          <input class="form-input" id="s-abuseipdb-key" type="password" value="${escHtml(s.abuseipdbKey||'')}" placeholder="Get free key at abuseipdb.com/api" autocomplete="off">
+          <div class="form-hint">Free tier: 1,000 req/day. IP abuse confidence score & report history.</div>
+        </div>
+        <button class="btn btn-primary" id="s-save-security">Save Security Keys</button>
+      </div>
       <div class="s-card full danger-zone">
         <div class="danger-title">⚠️ Danger Zone</div>
         <div class="danger-desc">Reset all data including employees, tasks, sheets, and chat history. This cannot be undone.</div>
@@ -6264,6 +6294,15 @@ const Settings = {
       }
       save('settings');
       toast('Firebase config saved — reload to activate','success');
+    });
+    document.getElementById('s-save-security').addEventListener('click',()=>{
+      State.settings.vtKey        = document.getElementById('s-vt-key').value.trim();
+      State.settings.ipinfoKey    = document.getElementById('s-ipinfo-key').value.trim();
+      State.settings.hibpKey      = document.getElementById('s-hibp-key').value.trim();
+      State.settings.shodanKey    = document.getElementById('s-shodan-key').value.trim();
+      State.settings.abuseipdbKey = document.getElementById('s-abuseipdb-key').value.trim();
+      save('settings');
+      toast('Security API keys saved ✓','success');
     });
     document.getElementById('s-reset').addEventListener('click',()=>{
       if(!confirm('Reset ALL data? This cannot be undone.'))return;
@@ -8655,6 +8694,442 @@ Return a JSON object (ONLY JSON, no markdown, no commentary) with these exact ke
   },
 
   destroy() { CompetePage._selected = null; },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  SECURITY DASHBOARD
+// ══════════════════════════════════════════════════════════════
+const SecurityPage = {
+  _tab: 'url',
+
+  init(container) {
+    SecurityPage._tab = SecurityPage._tab || 'url';
+    container.innerHTML = `
+      <div class="sec-wrap">
+        <div class="sec-tabs">
+          <button class="sec-tab ${SecurityPage._tab==='url'?'active':''}" data-tab="url">🔍 URL Scanner</button>
+          <button class="sec-tab ${SecurityPage._tab==='ip'?'active':''}" data-tab="ip">🌐 IP Lookup</button>
+          <button class="sec-tab ${SecurityPage._tab==='breach'?'active':''}" data-tab="breach">💀 Breach Check</button>
+          <button class="sec-tab ${SecurityPage._tab==='ports'?'active':''}" data-tab="ports">🔌 Port Scanner</button>
+          <button class="sec-tab ${SecurityPage._tab==='reputation'?'active':''}" data-tab="reputation">⚠️ IP Reputation</button>
+        </div>
+        <div class="sec-body" id="sec-body"></div>
+      </div>`;
+
+    container.querySelectorAll('.sec-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.sec-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        SecurityPage._tab = btn.dataset.tab;
+        SecurityPage._renderTab(btn.dataset.tab);
+      });
+    });
+
+    SecurityPage._renderTab(SecurityPage._tab);
+  },
+
+  destroy() {},
+
+  _missingKey(name, link) {
+    return `<div class="sec-no-key">
+      <div class="sec-no-key-icon">🔑</div>
+      <div class="sec-no-key-title">No ${name} Key</div>
+      <div class="sec-no-key-sub">Add your API key in <a href="#" onclick="Router.navigate('settings');return false" style="color:var(--accent)">Settings → Security Dashboard API Keys</a> to use this scanner.<br><span style="color:var(--text3);font-size:11px">Get a free key at <a href="${link}" target="_blank" rel="noopener" style="color:var(--accent)">${link}</a></span></div>
+    </div>`;
+  },
+
+  _renderTab(tab) {
+    const body = document.getElementById('sec-body');
+    if (!body) return;
+    const s = State.settings;
+
+    if (tab === 'url') {
+      body.innerHTML = `
+        <div class="sec-panel">
+          <div class="sec-panel-title">VirusTotal — URL / IP / File Hash Scanner</div>
+          <div class="sec-search-row">
+            <input class="sec-input" id="sec-vt-input" placeholder="Enter URL, IP address, or SHA-256 file hash…">
+            <button class="sec-btn" id="sec-vt-scan">Scan →</button>
+          </div>
+          <div id="sec-vt-result"></div>
+        </div>`;
+      if (!s.vtKey) { document.getElementById('sec-vt-result').innerHTML = SecurityPage._missingKey('VirusTotal','virustotal.com/gui/my-apikey'); return; }
+      const scan = async () => {
+        const raw = document.getElementById('sec-vt-input').value.trim();
+        if (!raw) { toast('Enter a URL, IP, or hash','error'); return; }
+        const res = document.getElementById('sec-vt-result');
+        res.innerHTML = SecurityPage._loading('Scanning with 70+ antivirus engines…');
+        try {
+          let type = 'url', id = raw;
+          if (/^[a-fA-F0-9]{32,64}$/.test(raw)) { type = 'file'; id = raw; }
+          else if (/^(\d{1,3}\.){3}\d{1,3}$/.test(raw) || /^[0-9a-fA-F:]+$/.test(raw)) { type = 'ip_address'; id = raw; }
+          else {
+            const enc = btoa(raw).replace(/=/g,'');
+            id = enc;
+            type = 'url';
+          }
+          const endpoint = type === 'url' ? `https://www.virustotal.com/api/v3/urls/${id}`
+                         : type === 'file' ? `https://www.virustotal.com/api/v3/files/${id}`
+                         : `https://www.virustotal.com/api/v3/ip_addresses/${id}`;
+          const r = await fetch(endpoint, { headers: { 'x-apikey': s.vtKey } });
+          if (r.status === 404 && type === 'url') {
+            const sub = await fetch('https://www.virustotal.com/api/v3/urls', { method:'POST', headers:{'x-apikey':s.vtKey,'Content-Type':'application/x-www-form-urlencoded'}, body:`url=${encodeURIComponent(raw)}` });
+            const sj = await sub.json();
+            const aid = sj.data?.id;
+            if (!aid) throw new Error('Could not submit URL for scanning');
+            res.innerHTML = SecurityPage._loading('URL submitted — waiting for analysis…');
+            await new Promise(ok => setTimeout(ok, 15000));
+            const r2 = await fetch(`https://www.virustotal.com/api/v3/analyses/${aid}`, { headers:{'x-apikey':s.vtKey} });
+            const a2 = await r2.json();
+            res.innerHTML = SecurityPage._vtResult(a2.data?.attributes?.stats, a2.data?.attributes?.results, raw, type);
+            return;
+          }
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          const d = await r.json();
+          const stats = d.data?.attributes?.last_analysis_stats;
+          const results = d.data?.attributes?.last_analysis_results;
+          res.innerHTML = SecurityPage._vtResult(stats, results, raw, type);
+        } catch(e) {
+          res.innerHTML = SecurityPage._error(e.message);
+        }
+      };
+      document.getElementById('sec-vt-scan').addEventListener('click', scan);
+      document.getElementById('sec-vt-input').addEventListener('keydown', e => { if (e.key === 'Enter') scan(); });
+
+    } else if (tab === 'ip') {
+      body.innerHTML = `
+        <div class="sec-panel">
+          <div class="sec-panel-title">IPInfo — Geolocation & Network Intelligence</div>
+          <div class="sec-search-row">
+            <input class="sec-input" id="sec-ip-input" placeholder="Enter IP address (leave blank for your own IP)…">
+            <button class="sec-btn" id="sec-ip-scan">Lookup →</button>
+          </div>
+          <div id="sec-ip-result"></div>
+        </div>`;
+      if (!s.ipinfoKey) { document.getElementById('sec-ip-result').innerHTML = SecurityPage._missingKey('IPInfo','ipinfo.io/signup'); return; }
+      const lookup = async () => {
+        const ip = document.getElementById('sec-ip-input').value.trim();
+        const res = document.getElementById('sec-ip-result');
+        res.innerHTML = SecurityPage._loading('Querying IPInfo database…');
+        try {
+          const url = ip ? `https://ipinfo.io/${ip}/json?token=${s.ipinfoKey}` : `https://ipinfo.io/json?token=${s.ipinfoKey}`;
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const d = await r.json();
+          res.innerHTML = SecurityPage._ipResult(d);
+        } catch(e) {
+          res.innerHTML = SecurityPage._error(e.message);
+        }
+      };
+      document.getElementById('sec-ip-scan').addEventListener('click', lookup);
+      document.getElementById('sec-ip-input').addEventListener('keydown', e => { if (e.key === 'Enter') lookup(); });
+
+    } else if (tab === 'breach') {
+      body.innerHTML = `
+        <div class="sec-panel">
+          <div class="sec-panel-title">HaveIBeenPwned — Data Breach Check</div>
+          <div class="sec-search-row">
+            <input class="sec-input" id="sec-hibp-input" type="email" placeholder="Enter email address to check…">
+            <button class="sec-btn" id="sec-hibp-scan">Check →</button>
+          </div>
+          <div id="sec-hibp-result"></div>
+        </div>`;
+      if (!s.hibpKey) { document.getElementById('sec-hibp-result').innerHTML = SecurityPage._missingKey('HaveIBeenPwned','haveibeenpwned.com/API/Key'); return; }
+      const check = async () => {
+        const email = document.getElementById('sec-hibp-input').value.trim();
+        if (!email || !email.includes('@')) { toast('Enter a valid email','error'); return; }
+        const res = document.getElementById('sec-hibp-result');
+        res.innerHTML = SecurityPage._loading('Searching breach database…');
+        try {
+          const r = await fetch(`https://haveibeenpwned.com/api/v3/breachedaccount/${encodeURIComponent(email)}?truncateResponse=false`, {
+            headers: { 'hibp-api-key': s.hibpKey, 'User-Agent': 'Kayro-Security-Dashboard' }
+          });
+          if (r.status === 404) { res.innerHTML = SecurityPage._hibpClean(email); return; }
+          if (!r.ok) throw new Error(`HTTP ${r.status}: ${r.statusText}`);
+          const breaches = await r.json();
+          res.innerHTML = SecurityPage._hibpResult(email, breaches);
+        } catch(e) {
+          res.innerHTML = SecurityPage._error(e.message);
+        }
+      };
+      document.getElementById('sec-hibp-scan').addEventListener('click', check);
+      document.getElementById('sec-hibp-input').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+
+    } else if (tab === 'ports') {
+      body.innerHTML = `
+        <div class="sec-panel">
+          <div class="sec-panel-title">Shodan — Open Ports & Exposed Services</div>
+          <div class="sec-search-row">
+            <input class="sec-input" id="sec-shodan-input" placeholder="Enter IP address…">
+            <button class="sec-btn" id="sec-shodan-scan">Scan →</button>
+          </div>
+          <div id="sec-shodan-result"></div>
+        </div>`;
+      if (!s.shodanKey) { document.getElementById('sec-shodan-result').innerHTML = SecurityPage._missingKey('Shodan','account.shodan.io'); return; }
+      const scan = async () => {
+        const ip = document.getElementById('sec-shodan-input').value.trim();
+        if (!ip) { toast('Enter an IP address','error'); return; }
+        const res = document.getElementById('sec-shodan-result');
+        res.innerHTML = SecurityPage._loading('Querying Shodan host database…');
+        try {
+          const r = await fetch(`https://api.shodan.io/shodan/host/${encodeURIComponent(ip)}?key=${s.shodanKey}`);
+          if (r.status === 404) { res.innerHTML = SecurityPage._error('No Shodan data found for this IP.'); return; }
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const d = await r.json();
+          res.innerHTML = SecurityPage._shodanResult(d);
+        } catch(e) {
+          res.innerHTML = SecurityPage._error(e.message);
+        }
+      };
+      document.getElementById('sec-shodan-scan').addEventListener('click', scan);
+      document.getElementById('sec-shodan-input').addEventListener('keydown', e => { if (e.key === 'Enter') scan(); });
+
+    } else if (tab === 'reputation') {
+      body.innerHTML = `
+        <div class="sec-panel">
+          <div class="sec-panel-title">AbuseIPDB — IP Reputation & Abuse Score</div>
+          <div class="sec-search-row">
+            <input class="sec-input" id="sec-abuse-input" placeholder="Enter IP address…">
+            <button class="sec-btn" id="sec-abuse-scan">Check →</button>
+          </div>
+          <div id="sec-abuse-result"></div>
+        </div>`;
+      if (!s.abuseipdbKey) { document.getElementById('sec-abuse-result').innerHTML = SecurityPage._missingKey('AbuseIPDB','abuseipdb.com/api'); return; }
+      const check = async () => {
+        const ip = document.getElementById('sec-abuse-input').value.trim();
+        if (!ip) { toast('Enter an IP address','error'); return; }
+        const res = document.getElementById('sec-abuse-result');
+        res.innerHTML = SecurityPage._loading('Querying AbuseIPDB…');
+        try {
+          const r = await fetch(`https://api.abuseipdb.com/api/v2/check?ipAddress=${encodeURIComponent(ip)}&maxAgeInDays=90&verbose=true`, {
+            headers: { 'Key': s.abuseipdbKey, 'Accept': 'application/json' }
+          });
+          if (!r.ok) throw new Error(`HTTP ${r.status}`);
+          const d = await r.json();
+          res.innerHTML = SecurityPage._abuseResult(d.data);
+        } catch(e) {
+          res.innerHTML = SecurityPage._error(e.message);
+        }
+      };
+      document.getElementById('sec-abuse-scan').addEventListener('click', check);
+      document.getElementById('sec-abuse-input').addEventListener('keydown', e => { if (e.key === 'Enter') check(); });
+    }
+  },
+
+  _loading(msg) {
+    return `<div class="sec-loading"><div class="sec-spinner"></div><div class="sec-loading-txt">${escHtml(msg)}</div></div>`;
+  },
+
+  _error(msg) {
+    return `<div class="sec-error"><span>⚠️</span> ${escHtml(msg)}</div>`;
+  },
+
+  _copy(text) {
+    navigator.clipboard?.writeText(text).then(() => toast('Copied ✓','success'));
+  },
+
+  _riskBadge(score, max) {
+    const pct = Math.round((score/max)*100);
+    const cls = pct === 0 ? 'green' : pct < 15 ? 'yellow' : 'red';
+    return `<span class="sec-badge sec-badge--${cls}">${score}/${max} detections</span>`;
+  },
+
+  _vtResult(stats, results, target, type) {
+    if (!stats) return SecurityPage._error('No analysis data returned. The resource may not have been scanned yet.');
+    const mal  = stats.malicious    || 0;
+    const sus  = stats.suspicious   || 0;
+    const clean= stats.undetected   || 0;
+    const total= Object.values(stats).reduce((a,b)=>a+b,0);
+    const score= mal + sus;
+    const pct  = total > 0 ? Math.round((score/total)*100) : 0;
+    const riskCls = pct === 0 ? 'green' : pct < 15 ? 'yellow' : 'red';
+    const riskLabel = pct === 0 ? 'Clean' : pct < 15 ? 'Suspicious' : 'Malicious';
+
+    const vendorRows = results ? Object.entries(results)
+      .filter(([,v]) => v.category !== 'undetected' && v.category !== 'timeout')
+      .sort((a,b) => (b[1].category==='malicious'?1:0)-(a[1].category==='malicious'?1:0))
+      .slice(0, 30)
+      .map(([engine, v]) => {
+        const cat = v.category;
+        const cls = cat==='malicious'?'red':cat==='suspicious'?'yellow':'green';
+        return `<tr><td style="color:var(--text2)">${escHtml(engine)}</td><td><span class="sec-badge sec-badge--${cls}">${escHtml(v.result||cat)}</span></td></tr>`;
+      }).join('') : '';
+
+    return `
+      <div class="sec-result">
+        <div class="sec-result-hero">
+          <div class="sec-risk-ring sec-risk-ring--${riskCls}">
+            <div class="sec-risk-pct">${pct}%</div>
+            <div class="sec-risk-label">${riskLabel}</div>
+          </div>
+          <div class="sec-result-meta">
+            <div class="sec-result-target">${escHtml(target)}</div>
+            <div class="sec-stat-row">
+              <div class="sec-stat sec-stat--red"><div class="sec-stat-n">${mal}</div><div class="sec-stat-l">Malicious</div></div>
+              <div class="sec-stat sec-stat--yellow"><div class="sec-stat-n">${sus}</div><div class="sec-stat-l">Suspicious</div></div>
+              <div class="sec-stat sec-stat--green"><div class="sec-stat-n">${clean}</div><div class="sec-stat-l">Clean</div></div>
+              <div class="sec-stat"><div class="sec-stat-n">${total}</div><div class="sec-stat-l">Engines</div></div>
+            </div>
+            <button class="sec-copy-btn" onclick="SecurityPage._copy(${JSON.stringify(target)})">📋 Copy Target</button>
+          </div>
+        </div>
+        ${vendorRows ? `<div class="sec-section-title">Vendor Detections</div><table class="sec-table"><thead><tr><th>Engine</th><th>Result</th></tr></thead><tbody>${vendorRows}</tbody></table>` : '<div style="color:var(--green);padding:16px 0">✅ No vendor detections found.</div>'}
+      </div>`;
+  },
+
+  _ipResult(d) {
+    const [lat, lng] = (d.loc||'0,0').split(',');
+    const mapUrl = `https://www.openstreetmap.org/export/embed.html?bbox=${(+lng-0.5).toFixed(3)},${(+lat-0.5).toFixed(3)},${(+lng+0.5).toFixed(3)},${(+lat+0.5).toFixed(3)}&layer=mapnik&marker=${lat},${lng}`;
+    const rows = [
+      ['IP', d.ip], ['Hostname', d.hostname||'—'], ['City', d.city||'—'],
+      ['Region', d.region||'—'], ['Country', d.country||'—'], ['Location', d.loc||'—'],
+      ['Organization', d.org||'—'], ['Timezone', d.timezone||'—'],
+      ['Postal', d.postal||'—'], ['AS Name', d.asn?.name||'—'],
+      ['Abuse Contact', d.abuse?.email||'—'], ['ISP', d.company?.name||'—'],
+    ].filter(([,v])=>v&&v!=='—');
+    return `
+      <div class="sec-result">
+        <div class="sec-ip-layout">
+          <div>
+            <div class="sec-section-title">Network Details</div>
+            <table class="sec-table">
+              <tbody>${rows.map(([k,v])=>`<tr><td style="color:var(--text2);white-space:nowrap">${escHtml(k)}</td><td>${escHtml(String(v))} <button class="sec-inline-copy" onclick="SecurityPage._copy(${JSON.stringify(String(v))})">📋</button></td></tr>`).join('')}</tbody>
+            </table>
+            ${d.abuse ? `<div class="sec-warn-box">⚠️ Abuse contact: <b>${escHtml(d.abuse.email||'N/A')}</b> — Network: ${escHtml(d.abuse.network||'')}</div>` : ''}
+          </div>
+          <div>
+            <div class="sec-section-title">Location Map</div>
+            <iframe src="${mapUrl}" class="sec-map" loading="lazy" referrerpolicy="no-referrer"></iframe>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  _hibpClean(email) {
+    return `<div class="sec-result"><div style="text-align:center;padding:32px 0">
+      <div style="font-size:48px;margin-bottom:12px">✅</div>
+      <div style="font-size:18px;font-weight:700;color:var(--green);margin-bottom:6px">No breaches found</div>
+      <div style="color:var(--text2);font-size:13px">${escHtml(email)} has not appeared in any known data breaches.</div>
+    </div></div>`;
+  },
+
+  _hibpResult(email, breaches) {
+    const dataTypes = [...new Set(breaches.flatMap(b => b.DataClasses||[]))];
+    return `
+      <div class="sec-result">
+        <div class="sec-breach-hero">
+          <div style="font-size:40px">🚨</div>
+          <div>
+            <div style="font-size:18px;font-weight:800;color:var(--red)">${escHtml(email)}</div>
+            <div style="color:var(--text2);font-size:13px;margin-top:4px">Found in <b style="color:var(--red)">${breaches.length}</b> breach${breaches.length!==1?'es':''}</div>
+          </div>
+        </div>
+        <div class="sec-section-title">Compromised Data Types</div>
+        <div class="sec-tag-cloud">${dataTypes.map(t=>`<span class="sec-tag">${escHtml(t)}</span>`).join('')}</div>
+        <div class="sec-section-title">Breach Details</div>
+        <div class="sec-breach-list">
+          ${breaches.map(b => `
+            <div class="sec-breach-card">
+              <div class="sec-breach-logo">${b.LogoPath?`<img src="${escHtml(b.LogoPath)}" onerror="this.style.display='none'" style="width:32px;height:32px;object-fit:contain;border-radius:6px">`:'🔒'}</div>
+              <div class="sec-breach-info">
+                <div class="sec-breach-name">${escHtml(b.Name||b.Title)}</div>
+                <div class="sec-breach-meta">${escHtml(b.BreachDate||'Unknown date')} · ${(b.PwnCount||0).toLocaleString()} accounts</div>
+                <div class="sec-tag-cloud" style="margin-top:6px">${(b.DataClasses||[]).map(t=>`<span class="sec-tag sec-tag--sm">${escHtml(t)}</span>`).join('')}</div>
+              </div>
+            </div>`).join('')}
+        </div>
+      </div>`;
+  },
+
+  _shodanResult(d) {
+    const ports = (d.ports||[]).sort((a,b)=>a-b);
+    const services = (d.data||[]);
+    const tags = (d.tags||[]);
+    const vulns = d.vulns ? Object.keys(d.vulns) : [];
+    return `
+      <div class="sec-result">
+        <div class="sec-result-hero">
+          <div class="sec-risk-ring sec-risk-ring--${vulns.length>0?'red':ports.length>5?'yellow':'green'}">
+            <div class="sec-risk-pct">${ports.length}</div>
+            <div class="sec-risk-label">Open Ports</div>
+          </div>
+          <div class="sec-result-meta">
+            <div class="sec-result-target">${escHtml(d.ip_str||'Unknown IP')}</div>
+            <div style="color:var(--text2);font-size:12px;margin:6px 0">${escHtml(d.org||'Unknown Org')} · ${escHtml(d.country_name||'Unknown')} · ${escHtml(d.isp||'')}</div>
+            ${tags.length?`<div class="sec-tag-cloud" style="margin-bottom:8px">${tags.map(t=>`<span class="sec-tag">${escHtml(t)}</span>`).join('')}</div>`:''}
+            ${vulns.length?`<div class="sec-warn-box">🔴 ${vulns.length} CVE(s) found: ${vulns.slice(0,5).map(v=>`<b>${escHtml(v)}</b>`).join(', ')}${vulns.length>5?` +${vulns.length-5} more`:''}</div>`:''}
+          </div>
+        </div>
+        <div class="sec-section-title">Open Ports</div>
+        <div class="sec-port-grid">${ports.map(p=>`<div class="sec-port-chip">${p}</div>`).join('')}</div>
+        ${services.length ? `
+          <div class="sec-section-title">Services</div>
+          <table class="sec-table">
+            <thead><tr><th>Port</th><th>Transport</th><th>Product</th><th>Version</th><th>Banner</th></tr></thead>
+            <tbody>${services.slice(0,20).map(svc=>`
+              <tr>
+                <td><span class="sec-port-chip">${svc.port}</span></td>
+                <td style="color:var(--text2)">${escHtml(svc.transport||'tcp')}</td>
+                <td>${escHtml(svc.product||'—')}</td>
+                <td style="color:var(--text3)">${escHtml(svc.version||'—')}</td>
+                <td style="color:var(--text3);font-size:11px;max-width:200px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis">${escHtml((svc.data||'').trim().slice(0,80))}</td>
+              </tr>`).join('')}</tbody>
+          </table>` : ''}
+      </div>`;
+  },
+
+  _abuseResult(d) {
+    if (!d) return SecurityPage._error('No data returned');
+    const score = d.abuseConfidenceScore || 0;
+    const riskCls = score === 0 ? 'green' : score < 25 ? 'yellow' : 'red';
+    const riskLabel = score === 0 ? 'Clean' : score < 25 ? 'Low Risk' : score < 75 ? 'High Risk' : 'Malicious';
+    const reports = d.reports || [];
+    const categories = {
+      1:'DNS Compromise', 2:'DNS Poisoning', 3:'Fraud Orders', 4:'DDoS Attack', 5:'FTP Brute-Force',
+      6:'Ping of Death', 7:'Phishing', 8:'Fraud VoIP', 9:'Open Proxy', 10:'Web Spam',
+      11:'Email Spam', 12:'Blog Spam', 13:'VPN IP', 14:'Port Scan', 15:'Hacking',
+      16:'SQL Injection', 17:'Spoofing', 18:'Brute-Force', 19:'Bad Web Bot',
+      20:'Exploited Host', 21:'Web App Attack', 22:'SSH', 23:'IoT Targeted',
+    };
+    return `
+      <div class="sec-result">
+        <div class="sec-result-hero">
+          <div class="sec-gauge-wrap">
+            <svg viewBox="0 0 100 60" class="sec-gauge-svg">
+              <path d="M10,55 A40,40,0,0,1,90,55" fill="none" stroke="#1a1a2e" stroke-width="10" stroke-linecap="round"/>
+              <path d="M10,55 A40,40,0,0,1,90,55" fill="none" stroke="${score===0?'#10d98a':score<25?'#f59e0b':'#ef4444'}"
+                stroke-width="10" stroke-linecap="round"
+                stroke-dasharray="${Math.round(score*1.257)} 125.7"/>
+              <text x="50" y="50" text-anchor="middle" font-size="16" font-weight="800" fill="${score===0?'#10d98a':score<25?'#f59e0b':'#ef4444'}" font-family="monospace">${score}%</text>
+            </svg>
+            <div style="text-align:center;font-size:11px;color:var(--text2)">Abuse Score</div>
+          </div>
+          <div class="sec-result-meta">
+            <div class="sec-result-target">${escHtml(d.ipAddress||'Unknown')}</div>
+            <div class="sec-stat-row" style="margin-top:8px">
+              <div class="sec-stat sec-stat--${riskCls}"><div class="sec-stat-n">${score}%</div><div class="sec-stat-l">${riskLabel}</div></div>
+              <div class="sec-stat"><div class="sec-stat-n">${d.totalReports||0}</div><div class="sec-stat-l">Reports</div></div>
+              <div class="sec-stat"><div class="sec-stat-n">${d.numDistinctUsers||0}</div><div class="sec-stat-l">Reporters</div></div>
+              <div class="sec-stat"><div class="sec-stat-n">${d.countryCode||'—'}</div><div class="sec-stat-l">Country</div></div>
+            </div>
+            <div style="color:var(--text2);font-size:12px;margin-top:8px">${escHtml(d.isp||'Unknown ISP')} · ${escHtml(d.domain||'')}</div>
+            ${d.isWhitelisted?'<div class="sec-ok-box">✅ This IP is whitelisted</div>':''}
+            <button class="sec-copy-btn" style="margin-top:8px" onclick="SecurityPage._copy(${JSON.stringify(d.ipAddress||'')})">📋 Copy IP</button>
+          </div>
+        </div>
+        ${reports.length ? `
+          <div class="sec-section-title">Recent Reports (last 90 days)</div>
+          <table class="sec-table">
+            <thead><tr><th>Date</th><th>Categories</th><th>Comment</th></tr></thead>
+            <tbody>${reports.slice(0,15).map(r=>`
+              <tr>
+                <td style="color:var(--text2);white-space:nowrap">${(r.reportedAt||'').slice(0,10)}</td>
+                <td>${(r.categories||[]).map(c=>`<span class="sec-tag sec-tag--sm">${escHtml(categories[c]||String(c))}</span>`).join(' ')}</td>
+                <td style="color:var(--text3);font-size:11px">${escHtml((r.comment||'').slice(0,100))}</td>
+              </tr>`).join('')}</tbody>
+          </table>` : '<div style="color:var(--text2);padding:12px 0">No recent reports found.</div>'}
+      </div>`;
+  },
 };
 
 // ══════════════════════════════════════════════════════════════
