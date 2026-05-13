@@ -1916,7 +1916,7 @@ const Chat = {
   close() { document.getElementById('chat-panel').classList.remove('open'); },
   renderTabs() {
     const tabs = document.getElementById('chat-emp-tabs');
-    tabs.innerHTML = State.employees.map(e=>`
+    tabs.innerHTML = State.employees.filter(e=>e.id!=='e_router').map(e=>`
       <button class="chat-emp-pill${Chat.activeEmpId===e.id?' active':''}" data-eid="${e.id}">
         <span class="cp-dot" style="background:${e.color}"></span>${e.name}
       </button>`).join('');
@@ -3617,7 +3617,7 @@ const Employees = {
   render() {
     const page = document.getElementById('emp-page');
     if (!page) return;
-    const emps = State.employees;
+    const emps = State.employees.filter(e=>e.id!=='e_router');
     page.innerHTML = `
       <div class="section-hdr">
         <div>
