@@ -3395,7 +3395,7 @@ const HQ = {
 
         <!-- AGENT GRID -->
         <div class="hq-agent-grid" id="hq-agent-grid">
-          ${emps.map(e=>HQ._agentCard(e)).join('')}
+          ${emps.filter(e=>e.id!=='e_router').map(e=>HQ._agentCard(e)).join('')}
           <div class="hq-agent-card hq-hire-card" id="hq-hire-card">
             <div class="hq-hire-plus">＋</div>
             <div class="hq-hire-label">Hire New Agent</div>
