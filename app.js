@@ -1071,6 +1071,125 @@ const KayroBackend = {
   },
 };
 
+// ── GMAIL INTEGRATION ─────────────────────────────────────────
+const GOOGLE_CLIENT_ID = '863845610986-g89ip8k16l4g80d9uah3239b9sfe0717.apps.googleusercontent.com';
+
+const GmailAPI = {
+  _token: null,
+  _tokenClient: null,
+
+  _loadGIS() {
+    return new Promise(resolve => {
+      if (window.google?.accounts) { resolve(); return; }
+      const s = document.createElement('script');
+      s.src = 'https://accounts.google.com/gsi/client';
+      s.onload = resolve;
+      document.head.appendChild(s);
+    });
+  },
+
+  async connect() {
+    await GmailAPI._loadGIS();
+    GmailAPI._tokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: GOOGLE_CLIENT_ID,
+      scope: 'https://mail.google.com/ https://www.googleapis.com/auth/userinfo.email',
+      callback: async (resp) => {
+        if (resp.error) { toast('Gmail connection failed: ' + resp.error, 'error'); return; }
+        GmailAPI._token = resp.access_token;
+        State.settings.gmailToken = resp.access_token;
+        State.settings.gmailTokenExpiry = Date.now() + (resp.expires_in * 1000);
+        const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+          headers: { Authorization: `Bearer ${resp.access_token}` }
+        }).then(r => r.json()).catch(() => ({}));
+        State.settings.gmailEmail = info.email || '';
+        save('settings');
+        toast(`✅ Gmail connected: ${State.settings.gmailEmail}`, 'success');
+        Settings.render();
+        const el = document.getElementById('gmail-status-bar');
+        if (el) el.innerHTML = GmailAPI._statusBar();
+      }
+    });
+    GmailAPI._tokenClient.requestAccessToken({ prompt: 'consent' });
+  },
+
+  disconnect() {
+    if (GmailAPI._token) { try { google.accounts.oauth2.revoke(GmailAPI._token); } catch(_) {} }
+    GmailAPI._token = null;
+    delete State.settings.gmailToken;
+    delete State.settings.gmailEmail;
+    delete State.settings.gmailTokenExpiry;
+    save('settings');
+    toast('Gmail disconnected', 'success');
+    Settings.render();
+  },
+
+  getToken() { return GmailAPI._token || State.settings.gmailToken || null; },
+  isConnected() { return !!(GmailAPI.getToken() && State.settings.gmailEmail); },
+
+  async listMessages(maxResults = 15, query = 'in:inbox') {
+    const t = GmailAPI.getToken(); if (!t) return null;
+    const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=${encodeURIComponent(query)}`, {
+      headers: { Authorization: `Bearer ${t}` }
+    });
+    return r.ok ? r.json() : null;
+  },
+
+  async getMessage(id) {
+    const t = GmailAPI.getToken(); if (!t) return null;
+    const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
+      headers: { Authorization: `Bearer ${t}` }
+    });
+    return r.ok ? r.json() : null;
+  },
+
+  async sendEmail({ to, subject, body }) {
+    const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
+    const from = State.settings.gmailEmail || '';
+    const raw = [`From: ${from}`, `To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
+    const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ raw: encoded })
+    });
+    return r.ok ? { ok: true } : { error: (await r.json().catch(()=>({}))).error?.message || 'Send failed' };
+  },
+
+  async createDraft({ to, subject, body }) {
+    const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
+    const from = State.settings.gmailEmail || '';
+    const raw = [`From: ${from}`, `To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
+    const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: { raw: encoded } })
+    });
+    return r.ok ? { ok: true, data: await r.json() } : { error: 'Draft failed' };
+  },
+
+  getHeader(msg, name) {
+    return msg.payload?.headers?.find(h => h.name.toLowerCase() === name.toLowerCase())?.value || '';
+  },
+
+  decodeBody(msg) {
+    const tryDecode = (data) => { try { return atob(data.replace(/-/g,'+').replace(/_/g,'/')); } catch(_) { return ''; } };
+    const parts = msg.payload?.parts || [];
+    const text = parts.find(p => p.mimeType === 'text/plain');
+    if (text?.body?.data) return tryDecode(text.body.data);
+    if (msg.payload?.body?.data) return tryDecode(msg.payload.body.data);
+    return msg.snippet || '';
+  },
+
+  _statusBar() {
+    if (!GmailAPI.isConnected()) return '';
+    return `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(16,217,138,.06);border-bottom:1px solid rgba(16,217,138,.15);font-size:11.5px;color:var(--green)">
+      ✅ Gmail connected — ${escHtml(State.settings.gmailEmail)} — emails send directly from your inbox
+      <button onclick="GmailAPI.disconnect()" style="margin-left:auto;background:none;border:1px solid rgba(239,68,68,.3);color:#ef4444;border-radius:4px;padding:2px 8px;cursor:pointer;font-size:10.5px">Disconnect</button>
+    </div>`;
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -2012,6 +2131,8 @@ MCP TOOL PROTOCOL — your declared tool access (use these, don't just reference
   email:send   → 📧 EMAIL: TO: [addr] | SUBJECT: [subj] | BODY: ... END EMAIL
   agents:ping  → 💬 PING: [Agent Name] | [message]
   web:search   → live internet access — search before guessing, always
+${GmailAPI.isConnected() ? `
+GMAIL ACCESS — Gmail is connected as ${State.settings.gmailEmail}. When the user asks you to send an email, use the email:send protocol above and it will be sent directly from their Gmail inbox. Always confirm recipient, subject, and body before sending.` : ''}
 ════════════════════════════════════════`;
   },
 
@@ -4759,7 +4880,7 @@ const Email = {
             <div class="contacts-list" id="contacts-list"></div>
           </div>
           <div class="composer" id="composer">
-            ${ejActive ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(16,217,138,.06);border-bottom:1px solid rgba(16,217,138,.15);font-size:11.5px;color:var(--green)">✅ EmailJS connected — emails send directly from this app</div>` : `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(245,158,11,.05);border-bottom:1px solid rgba(245,158,11,.12);font-size:11.5px;color:#f59e0b">⚠️ No EmailJS config — will open your mail client. <a href="#" onclick="Router.navigate('settings');return false" style="color:var(--accent);margin-left:4px">Connect EmailJS →</a></div>`}
+            <div id="gmail-status-bar">${GmailAPI._statusBar() || (ejActive ? `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(16,217,138,.06);border-bottom:1px solid rgba(16,217,138,.15);font-size:11.5px;color:var(--green)">✅ EmailJS connected — emails send directly from this app</div>` : `<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:rgba(245,158,11,.05);border-bottom:1px solid rgba(245,158,11,.12);font-size:11.5px;color:#f59e0b">⚠️ No Gmail or EmailJS connected. <a href="#" onclick="Router.navigate('settings');return false" style="color:var(--accent);margin-left:4px">Connect Gmail in Settings →</a></div>`)}</div>
             <div class="comp-field">
               <div class="comp-lbl">TO</div>
               <input class="comp-inp" id="em-to" placeholder="recipient@company.com">
@@ -4778,8 +4899,8 @@ const Email = {
               <button class="btn" id="em-template-btn">📋 Templates</button>
               <button class="btn" id="em-seq-btn">📅 Sequence</button>
               <div style="margin-left:auto;display:flex;gap:8px">
-                <button class="btn${ejActive?' btn-green':''}" id="em-mailto-btn" style="${ejActive?'':''}">
-                  ${ejActive ? '📤 Send Email' : '📤 Open Mail Client'}
+                <button class="btn btn-green" id="em-mailto-btn">
+                  ${GmailAPI.isConnected() ? '📤 Send via Gmail' : ejActive ? '📤 Send Email' : '📤 Open Mail Client'}
                 </button>
               </div>
             </div>
@@ -4906,6 +5027,26 @@ const Email = {
     const body = document.getElementById('em-body').value.trim();
     const fromName = document.getElementById('em-from-name')?.value.trim() || State.settings.ownerName || State.settings.companyName || 'Kayro';
     if (!to) { toast('Add a recipient first', 'error'); return; }
+
+    // Gmail takes priority
+    if (GmailAPI.isConnected()) {
+      const btn = document.getElementById('em-mailto-btn');
+      const status = document.getElementById('em-send-status');
+      btn.disabled = true; btn.textContent = '⏳ Sending…';
+      status.textContent = 'Sending via Gmail…'; status.style.color = 'var(--text2)';
+      const result = await GmailAPI.sendEmail({ to, subject: subj, body });
+      if (result.ok) {
+        status.innerHTML = `<span style="color:var(--green)">✅ Sent from ${escHtml(State.settings.gmailEmail)} to ${escHtml(to)}</span>`;
+        toast('Email sent via Gmail ✓', 'success');
+        btn.textContent = '✅ Sent!';
+        setTimeout(() => { btn.textContent = '📤 Send Email'; btn.disabled = false; status.textContent = ''; }, 4000);
+      } else {
+        status.innerHTML = `<span style="color:var(--red)">❌ ${escHtml(result.error||'Send failed')}</span>`;
+        btn.textContent = '📤 Send Email'; btn.disabled = false;
+      }
+      return;
+    }
+
     const s = State.settings;
     const svcId = s.ejServiceId || s.platformEjServiceId;
     const tplId = s.ejTemplateId || s.platformEjTemplateId;
@@ -5556,6 +5697,25 @@ const Settings = {
         <button class="btn btn-primary" id="s-save-tavily" style="display:none">Save</button>
       </div>
       <div class="s-card full">
+        <div class="s-card-title">📬 Gmail Integration</div>
+        ${GmailAPI.isConnected()
+          ? `<div style="display:flex;align-items:center;gap:12px;padding:14px 16px;background:rgba(16,217,138,.06);border:1px solid rgba(16,217,138,.2);border-radius:10px;margin-bottom:16px">
+              <span style="font-size:22px">✅</span>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--green)">Gmail Connected</div>
+                <div style="font-size:11.5px;color:var(--text2);margin-top:2px">${escHtml(State.settings.gmailEmail||'')}</div>
+              </div>
+              <button class="btn btn-sm" onclick="GmailAPI.disconnect()" style="margin-left:auto;background:rgba(239,68,68,.1);color:#ef4444;border-color:rgba(239,68,68,.3)">Disconnect</button>
+            </div>
+            <div style="font-size:12px;color:var(--text2);line-height:1.6">AI employees can now <b>read, draft, and send</b> real emails from your Gmail inbox. The Email Manager, ARIA, and all agents with email skills are fully connected.</div>`
+          : `<p style="font-size:12px;color:var(--text2);margin-bottom:16px;line-height:1.6">Connect your Gmail so AI employees can read your inbox, draft replies, and send emails on your behalf — directly from their actual Gmail account, no third-party service needed.</p>
+            <button class="btn btn-primary" id="s-connect-gmail" style="display:flex;align-items:center;gap:8px">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+              Connect Gmail
+            </button>`
+        }
+      </div>
+      <div class="s-card full">
         <div class="s-card-title">✉️ Email Sending (EmailJS)</div>
         <p style="font-size:12px;color:var(--text2);margin-bottom:14px;line-height:1.6">Connect EmailJS so agents can send emails directly — no email client popup. Create a free account at <b>emailjs.com</b>. Your template needs variables: <code style="background:rgba(255,255,255,.06);padding:1px 6px;border-radius:4px;font-family:var(--mono)">to_email, subject, message, from_name</code>.</p>
         <div style="background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
@@ -5584,6 +5744,8 @@ const Settings = {
         <div class="danger-desc">Reset all data including employees, tasks, sheets, and chat history. This cannot be undone.</div>
         <button class="btn btn-danger" id="s-reset">Reset All Data</button>
       </div>`;
+    const gmailBtn = document.getElementById('s-connect-gmail');
+    if (gmailBtn) gmailBtn.addEventListener('click', () => GmailAPI.connect());
     document.getElementById('s-save-co').addEventListener('click',()=>{
       State.settings.companyName  = document.getElementById('s-company').value.trim()||'Kayro Interactive';
       State.settings.ownerName    = document.getElementById('s-owner-name').value.trim()||'Omar Baalbaki';
