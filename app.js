@@ -1632,14 +1632,45 @@ const Auth = {
 
   async signInGoogle() {
     const cfg = State.settings.firebaseConfig;
-    if (!cfg || !cfg.apiKey) {
-      Auth._showError('Add your Firebase config in Settings → Firebase first.');
+    // Firebase path
+    if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        await firebase.auth().signInWithPopup(provider);
+      } catch(e) { Auth._showError(e.message); }
       return;
     }
+    // GIS path — works without Firebase
+    const btn = document.getElementById('auth-google-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
     try {
-      const provider = new firebase.auth.GoogleAuthProvider();
-      await firebase.auth().signInWithPopup(provider);
-    } catch(e) { Auth._showError(e.message); }
+      await GmailAPI._loadGIS();
+      await new Promise((resolve, reject) => {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          callback: async (resp) => {
+            if (resp.error) { reject(new Error(resp.error)); return; }
+            try {
+              const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+                headers: { Authorization: `Bearer ${resp.access_token}` }
+              }).then(r => r.json());
+              Auth.user = { uid: 'google_' + info.id, name: info.name || info.email, email: info.email, photoURL: info.picture || null, isGuest: false };
+              localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+              Auth._hideOverlay();
+              Auth._renderUserArea();
+              toast(`Welcome, ${info.name || info.email}!`, 'success');
+              resolve();
+            } catch(e) { reject(e); }
+          }
+        });
+        client.requestAccessToken({ prompt: 'select_account' });
+      });
+    } catch(e) {
+      Auth._showError('Google sign-in failed. Try email/password or continue as guest.');
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google'; }
+    }
   },
 
   signInEmail() {
