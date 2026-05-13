@@ -78,20 +78,23 @@ export default {
 // AI PROXY
 // ══════════════════════════════════════════════════════════════
 async function handleAI(request, env, origin) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) {
+    return json({ error: { message: 'Anthropic API key not set. Run: npx wrangler secret put ANTHROPIC_KEY — then paste your sk-ant- key.' } }, 500, origin);
+  }
   const body = await request.text();
 
-  // Use Kayro's platform key — users never see it
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': env.ANTHROPIC_KEY,
+      'x-api-key': key,
       'anthropic-version': '2023-06-01',
     },
     body,
   });
 
-  // Stream the response back as-is
+  // Stream the response back
   return new Response(res.body, {
     status: res.status,
     headers: {

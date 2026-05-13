@@ -1202,30 +1202,13 @@ const AI = {
   },
   _getApiConfig() {
     const proxyUrl    = (State.settings.proxyUrl||'').trim();
-    const platformKey = (State.settings.platformApiKey||'').trim();
     const userKey     = (State.settings.apiKey||'').trim();
-    const plan        = PlanGate.current();
-    const legacySub   = (State.usage?.tokenBank||0) > 0 || (State.usage?.purchaseXP||0) > 0;
-    const usePlatform = platformKey && (plan === 'growth' || (plan === 'free' && legacySub));
 
-    // Kayro backend proxy — Growth/Scale/Enterprise: AI goes through our worker (no user API key needed)
-    if (plan === 'growth' || plan === 'scale' || plan === 'enterprise') {
-      return { url: `${BACKEND_URL}/api/ai`, headers: { 'Content-Type': 'application/json' }, ok: true };
-    }
-
-    // Custom proxy URL (admin / self-hosted override)
+    // Custom proxy URL override (admin / self-hosted)
     if (proxyUrl) return { url: proxyUrl, headers: { 'Content-Type':'application/json' }, ok: true };
 
-    // Free plan with platform key
-    if (usePlatform) return { url: 'https://api.anthropic.com/v1/messages', headers: AI._headers(platformKey), ok: true };
-
-    // Free plan — user's own API key
-    const key = userKey;
-    if (!key) {
-      return { ok: false, err: '⚠️ No API key set.\n\nGo to ⚙️ Settings → paste your Anthropic key → Save Keys.\n\nOr upgrade to Growth — Claude is included, no key needed.' };
-    }
-    if (!key.startsWith('sk-')) return { ok: false, err: '⚠️ Invalid key format — should start with sk-ant-' };
-    return { url: 'https://api.anthropic.com/v1/messages', headers: AI._headers(key), ok: true };
+    // All users go through Kayro's backend worker — no personal API key required
+    return { url: `${BACKEND_URL}/api/ai`, headers: { 'Content-Type': 'application/json' }, ok: true };
   },
 
   async _fetchStream(cfg, messages, system, extraBody={}) {
@@ -3568,7 +3551,7 @@ const HQ = {
     const inp=document.getElementById('hq-ask-input');
     const q=inp?.value.trim();
     if(!q)return;
-    if(!State.settings.apiKey){toast('Add your API key in ⚙️ Settings first','error');return;}
+    // AI goes through Kayro backend — no personal key check needed
     inp.value='';
     toast(`Asking your team: "${q.slice(0,40)}…"`,'info',3000);
     Modal.open('Ask the Room',`
@@ -6314,11 +6297,7 @@ const Settings = {
   updateApiStatus() {
     const el=document.getElementById('api-status');
     if(!el)return;
-    const hasPlatform = !!(State.settings.platformApiKey);
-    const hasOwn = !!(State.settings.apiKey);
-    if(hasPlatform){el.textContent='🟢 Kayro AI Ready';el.className='api-status ok';}
-    else if(hasOwn){el.textContent='🟢 AI Connected';el.className='api-status ok';}
-    else{el.textContent='⚪ No API Key';el.className='api-status';}
+    el.textContent='🟢 Kayro AI Ready';el.className='api-status ok';
   }
 };
 
