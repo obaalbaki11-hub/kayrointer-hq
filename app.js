@@ -1190,6 +1190,136 @@ const GmailAPI = {
   },
 };
 
+// ── APP TOOLS — employees can take real actions in the app ──────
+const AppTools = {
+  _defs: [
+    {
+      name: 'create_task',
+      description: 'Create a task and optionally assign it to a team member. Use when asked to create, assign, or schedule work.',
+      input_schema: { type:'object', properties: {
+        title:    { type:'string', description:'Task title' },
+        assignee: { type:'string', description:'Employee name to assign to (optional)' },
+        priority: { type:'string', enum:['high','med','low'], description:'Priority level' },
+      }, required:['title'] }
+    },
+    {
+      name: 'write_spreadsheet',
+      description: 'Write structured data (tables, reports, lists) directly into the Spreadsheet page. Use for any tabular output.',
+      input_schema: { type:'object', properties: {
+        headers: { type:'array', items:{type:'string'}, description:'Column header names' },
+        rows:    { type:'array', items:{type:'array'},  description:'Array of row arrays matching headers' },
+      }, required:['headers','rows'] }
+    },
+    {
+      name: 'draft_email',
+      description: 'Pre-fill the Cold Email page with a drafted email. Use when asked to write, compose, or draft an email.',
+      input_schema: { type:'object', properties: {
+        to:      { type:'string', description:'Recipient name or email address' },
+        subject: { type:'string', description:'Email subject line' },
+        body:    { type:'string', description:'Full email body' },
+      }, required:['subject','body'] }
+    },
+    {
+      name: 'save_to_brain',
+      description: 'Save an important fact, insight, decision, or piece of context to the team Brain memory.',
+      input_schema: { type:'object', properties: {
+        text:     { type:'string', description:'The fact or insight to save' },
+        category: { type:'string', description:'Category: business, customer, process, finance, or general' },
+      }, required:['text'] }
+    },
+    {
+      name: 'navigate_to',
+      description: 'Navigate the user to a specific page in the app.',
+      input_schema: { type:'object', properties: {
+        page: { type:'string', enum:['tasks','spreadsheet','email','memory','hq','design','reports','compete','kling','security'], description:'Page to navigate to' },
+      }, required:['page'] }
+    },
+  ],
+
+  execute(name, input) {
+    try {
+      switch(name) {
+        case 'create_task':     return AppTools._createTask(input);
+        case 'write_spreadsheet': return AppTools._writeSpreadsheet(input);
+        case 'draft_email':     return AppTools._draftEmail(input);
+        case 'save_to_brain':   return AppTools._saveToBrain(input);
+        case 'navigate_to':     return AppTools._navigate(input);
+        default: return { result:'Unknown tool', display:'❓ Unknown action' };
+      }
+    } catch(e) {
+      return { result:`Tool error: ${e.message}`, display:`⚠️ Action failed: ${e.message}` };
+    }
+  },
+
+  _createTask({ title, assignee, priority='med' }) {
+    const emp = assignee ? State.employees.find(e => e.name.toLowerCase().includes(assignee.toLowerCase())) : null;
+    const task = { id:uid(), title, empId:emp?.id||null, priority, status:'todo', created:Date.now() };
+    State.tasks.push(task); save('tasks');
+    setTimeout(() => Router.navigate('tasks'), 600);
+    return {
+      result: `Task created: "${title}"${emp?` assigned to ${emp.name}`:''}. User has been taken to the Tasks page.`,
+      display: `✅ Task created: <b>${escHtml(title)}</b>${emp?` → ${escHtml(emp.name)}`:''}`,
+    };
+  },
+
+  _writeSpreadsheet({ headers, rows }) {
+    const wb = State.workbook;
+    const sheet = wb?.sheets?.[wb.activeTab ?? 0];
+    if (!sheet) return { result:'No spreadsheet open', display:'⚠️ No spreadsheet found' };
+    if (!sheet.cells) sheet.cells = {};
+    const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    // Find first empty row
+    let startRow = 1;
+    for (let r = 1; r <= 200; r++) { if (!sheet.cells['A'+r]) { startRow = r; break; } }
+    headers.forEach((h,i) => { if(i<cols.length) sheet.cells[cols[i]+startRow] = String(h); });
+    rows.forEach((row,ri) => { row.forEach((val,ci) => { if(ci<cols.length) sheet.cells[cols[ci]+(startRow+1+ri)] = String(val??''); }); });
+    save('workbook');
+    setTimeout(() => Router.navigate('spreadsheet'), 600);
+    return {
+      result: `Wrote ${rows.length} rows × ${headers.length} columns to spreadsheet starting at row ${startRow}. User taken to Spreadsheet page.`,
+      display: `📊 Wrote <b>${rows.length} rows</b> to Spreadsheet (${escHtml(headers.slice(0,3).join(', '))}${headers.length>3?'…':''})`,
+    };
+  },
+
+  _draftEmail({ to, subject, body }) {
+    State._emailDraft = { to, subject, body };
+    setTimeout(() => {
+      Router.navigate('email');
+      setTimeout(() => {
+        const toEl = document.getElementById('email-to') || document.querySelector('[id*="email-to"],[id*="to-field"],[placeholder*="ecipient"],[placeholder*="To"]');
+        const subEl = document.getElementById('email-subject') || document.querySelector('[id*="subject"]');
+        const bodyEl = document.getElementById('email-body') || document.querySelector('[id*="email-body"],[id*="email-content"]');
+        if (toEl) toEl.value = to||'';
+        if (subEl) subEl.value = subject||'';
+        if (bodyEl) bodyEl.value = body||'';
+      }, 500);
+    }, 600);
+    return {
+      result: `Email drafted with subject "${subject}". User taken to Email page.`,
+      display: `✉️ Email drafted: <b>${escHtml(subject)}</b>`,
+    };
+  },
+
+  _saveToBrain({ text, category='general' }) {
+    if (!State.brain?.facts) { if(!State.brain) State.brain={}; State.brain.facts=[]; }
+    const emp = State.employees.find(e=>e.id===Chat?.activeEmpId);
+    State.brain.facts.unshift({ id:uid(), text, category, source:'AI Employee', sourceAgent:emp?.name||'AI', sourceEmpId:emp?.id||null, timestamp:Date.now() });
+    save('brain');
+    return {
+      result: `Saved to Brain: "${text}"`,
+      display: `🧠 Saved to Brain: <b>${escHtml(text.slice(0,60))}${text.length>60?'…':''}</b>`,
+    };
+  },
+
+  _navigate({ page }) {
+    setTimeout(() => Router.navigate(page), 400);
+    return {
+      result: `Navigated to ${page} page.`,
+      display: `🔗 Opening <b>${escHtml(page)}</b>…`,
+    };
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -1259,7 +1389,12 @@ const AI = {
     const cfg = AI._getApiConfig();
     if (!cfg.ok) { yield cfg.err; return; }
     const useSearch = WebSearch.canSearch() && opts.search !== false;
-    const extraBody = useSearch ? { tools: [WebSearch._tool] } : {};
+    const useAppTools = opts.appTools !== false;
+    const allTools = [
+      ...(useSearch ? [WebSearch._tool] : []),
+      ...(useAppTools ? AppTools._defs : []),
+    ];
+    const extraBody = allTools.length ? { tools: allTools } : {};
     try {
       let res = await AI._fetchStream(cfg, messages, system, extraBody);
       if (!res.ok) {
@@ -1271,9 +1406,9 @@ const AI = {
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
-      // Tool use loop — up to 3 searches per response
+      // Tool use loop — up to 5 iterations (search + app actions)
       let loopMsgs = [...messages];
-      for (let loop = 0; loop < 3; loop++) {
+      for (let loop = 0; loop < 5; loop++) {
         let assistantText = '';
         let toolId = null, toolName = null, toolJson = '';
         let stopReason = 'end_turn';
@@ -1285,32 +1420,41 @@ const AI = {
           else if (ev.type === 'stop') { stopReason = ev.reason; }
         }
 
-        if (stopReason !== 'tool_use' || !toolId) break; // no tool call, done
+        if (stopReason !== 'tool_use' || !toolId) break;
 
-        // Parse tool input
         let toolInput = {};
         try { toolInput = JSON.parse(toolJson); } catch(_) {}
-        const query = toolInput.query || '';
 
-        // Signal search in progress (special sentinel the caller handles)
-        yield `\x00SEARCH:${query}\x00`;
+        // ── Web search tool ───────────────────────────────────────
+        if (toolName === 'web_search') {
+          const query = toolInput.query || '';
+          yield `\x00SEARCH:${query}\x00`;
+          const searchData = await WebSearch.search(query);
+          const searchResult = WebSearch.formatForContext(searchData, query);
+          loopMsgs = [...loopMsgs,
+            { role:'assistant', content:[
+              ...(assistantText?[{type:'text',text:assistantText}]:[]),
+              {type:'tool_use',id:toolId,name:toolName,input:toolInput}
+            ]},
+            { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:searchResult}] }
+          ];
+          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield `\n⚠️ Search failed (API error)`; break; }
 
-        // Execute search
-        const searchData = await WebSearch.search(query);
-        const searchResult = WebSearch.formatForContext(searchData, query);
-
-        // Build assistant turn with tool_use content block + continue conversation
-        loopMsgs = [...loopMsgs,
-          { role: 'assistant', content: [
-            ...(assistantText ? [{ type:'text', text: assistantText }] : []),
-            { type: 'tool_use', id: toolId, name: toolName, input: toolInput }
-          ]},
-          { role: 'user', content: [{ type: 'tool_result', tool_use_id: toolId, content: searchResult }] }
-        ];
-
-        // Continue streaming with tool result
-        res = await AI._fetchStream(cfg, loopMsgs, system, { tools: [WebSearch._tool] });
-        if (!res.ok) { yield `\n⚠️ Search failed (API error)`; break; }
+        // ── App tool ─────────────────────────────────────────────
+        } else {
+          const { result, display } = AppTools.execute(toolName, toolInput);
+          yield `\x00ACTION:${display}\x00`;
+          loopMsgs = [...loopMsgs,
+            { role:'assistant', content:[
+              ...(assistantText?[{type:'text',text:assistantText}]:[]),
+              {type:'tool_use',id:toolId,name:toolName,input:toolInput}
+            ]},
+            { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
+          ];
+          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield `\n⚠️ Action failed (API error)`; break; }
+        }
       }
     } catch(e) {
       const msg = e.message || String(e);
@@ -2088,7 +2232,15 @@ You have the following real, executing capabilities. Use them in your responses:
 
 ⑤ WEB SEARCH → you have live internet access. Use it. Don't say "you should look this up." Look it up yourself.
 
-⑥ SKILLS → invoke any skill for specialized output:
+⑥ REAL APP ACTIONS (use these tools directly — they execute instantly in the app):
+   • create_task → creates a task card on the Kanban board
+   • write_spreadsheet → writes a table directly into the Spreadsheet page
+   • draft_email → opens the Email page pre-filled and ready to send
+   • save_to_brain → saves a fact permanently to the team knowledge base
+   • navigate_to → takes the user to any page (tasks, spreadsheet, email, memory, etc.)
+   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If asked to assign work, call create_task. Don't just describe what you'd do — do it.
+
+⑦ SKILLS → invoke any skill for specialized output:
    /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
 
 ████ NON-NEGOTIABLE OPERATING RULES ████
@@ -3213,12 +3365,24 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
       if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
         const query = chunk.slice(8, -1);
         if (!bubble.isConnected) msgs.appendChild(bubble);
-        // Remove old pill
         searchPill?.remove();
         searchPill = document.createElement('div');
         searchPill.className = 'search-pill';
         searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
         bubble.querySelector('.msg-bubble').appendChild(searchPill);
+        msgs.scrollTop = msgs.scrollHeight;
+        continue;
+      }
+
+      // Handle app action sentinel \x00ACTION:display\x00
+      if (chunk.startsWith('\x00ACTION:') && chunk.endsWith('\x00')) {
+        const display = chunk.slice(8, -1);
+        if (!bubble.isConnected) msgs.appendChild(bubble);
+        searchPill?.remove();
+        const pill = document.createElement('div');
+        pill.className = 'action-pill';
+        pill.innerHTML = display;
+        bubble.querySelector('.msg-bubble').appendChild(pill);
         msgs.scrollTop = msgs.scrollHeight;
         continue;
       }
