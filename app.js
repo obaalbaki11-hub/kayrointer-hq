@@ -8690,6 +8690,7 @@ const Onboarding = {
       { n:2, title:'What you do', sub:'Give your agents full context.' },
       { n:3, title:'Your goals', sub:'What do you need help with most?' },
       { n:4, title:'Quick context', sub:'Anything else your team should know?' },
+      { n:5, title:'Build your team', sub:'Pick the AI employees you want from day one.' },
     ];
     const s = steps[Onboarding._step - 1];
     const d = Onboarding._data;
@@ -8747,6 +8748,27 @@ const Onboarding = {
           <input class="ob-input" id="ob-priority" placeholder="Launch our new pricing page and get 10 paying customers" value="${escHtml(d.priority||'')}"></div>
         <div class="ob-field"><label class="ob-label">ANYTHING ELSE YOUR AGENTS SHOULD KNOW?</label>
           <textarea class="ob-input ob-textarea" id="ob-extra" placeholder="We're pre-revenue. Our differentiator is… Our tone is…" rows="3">${escHtml(d.extra||'')}</textarea></div>`;
+    } else if (Onboarding._step === 5) {
+      // Always-on: Claude (manager) + ARIA (assistant) + Iris (router) are required
+      const selectable = DEFAULT_EMPLOYEES.filter(e => !['e_claude','e7','e_router'].includes(e.id));
+      const selected = d.selectedEmpIds || selectable.map(e => e.id);
+      body = `
+        <div class="ob-field">
+          <label class="ob-label">CHOOSE YOUR STARTING TEAM <span style="font-weight:400;opacity:.6">(Claude, ARIA & Iris always included)</span></label>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px" id="ob-emp-grid">
+            ${selectable.map(e => {
+              const on = selected.includes(e.id);
+              return `<label class="ob-emp-card ${on?'ob-emp-card--on':''}" data-id="${e.id}" style="border-color:${on?e.color:'transparent'}">
+                <div style="width:32px;height:32px;border-radius:50%;background:${e.color}22;color:${e.color};display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0">${e.name[0]}</div>
+                <div style="min-width:0">
+                  <div style="font-weight:600;font-size:12.5px;color:#fff">${escHtml(e.name)}</div>
+                  <div style="font-size:11px;color:#666;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escHtml(e.role)}</div>
+                </div>
+                <div class="ob-emp-check" style="margin-left:auto;width:18px;height:18px;border-radius:50%;border:2px solid ${on?e.color:'#333'};background:${on?e.color:'transparent'};display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:10px">${on?'✓':''}</div>
+              </label>`;
+            }).join('')}
+          </div>
+        </div>`;
     }
 
     el.innerHTML = `
@@ -8761,7 +8783,7 @@ const Onboarding = {
         <div class="ob-body">${body}</div>
         <div class="ob-footer">
           ${Onboarding._step > 1 ? '<button class="ob-back-btn" id="ob-back">← Back</button>' : '<div></div>'}
-          <button class="ob-next-btn" id="ob-next">${Onboarding._step === steps.length ? '🚀 Launch My HQ' : 'Continue →'}</button>
+          <button class="ob-next-btn" id="ob-next">${Onboarding._step === 5 ? '🚀 Launch My HQ' : 'Continue →'}</button>
         </div>
         <button class="ob-skip" id="ob-skip">Skip for now</button>
       </div>`;
@@ -8771,6 +8793,22 @@ const Onboarding = {
       item.addEventListener('click', () => {
         item.classList.toggle('ob-check-item--on');
         item.querySelector('input').checked = item.classList.contains('ob-check-item--on');
+      });
+    });
+
+    // Employee card toggle logic
+    el.querySelectorAll('.ob-emp-card').forEach(card => {
+      card.addEventListener('click', () => {
+        const on = card.classList.toggle('ob-emp-card--on');
+        const empId = card.dataset.id;
+        const emp = DEFAULT_EMPLOYEES.find(e => e.id === empId);
+        const check = card.querySelector('.ob-emp-check');
+        card.style.borderColor = on ? (emp?.color||'#3b82f6') : 'transparent';
+        if (check) {
+          check.style.borderColor = on ? (emp?.color||'#3b82f6') : '#333';
+          check.style.background = on ? (emp?.color||'#3b82f6') : 'transparent';
+          check.textContent = on ? '✓' : '';
+        }
       });
     });
 
@@ -8798,6 +8836,8 @@ const Onboarding = {
       d.tools     = document.getElementById('ob-tools')?.value.trim() || '';
       d.priority  = document.getElementById('ob-priority')?.value.trim() || '';
       d.extra     = document.getElementById('ob-extra')?.value.trim() || '';
+    } else if (Onboarding._step === 5) {
+      d.selectedEmpIds = [...document.querySelectorAll('.ob-emp-card--on')].map(c => c.dataset.id);
     }
   },
 
@@ -8810,7 +8850,7 @@ const Onboarding = {
       toast('Enter your company name to continue', 'error');
       return;
     }
-    if (Onboarding._step < 4) { Onboarding._step++; Onboarding._render(); }
+    if (Onboarding._step < 5) { Onboarding._step++; Onboarding._render(); }
     else Onboarding._finish(false);
   },
 
@@ -8852,8 +8892,16 @@ const Onboarding = {
       toast('🧠 Your HQ is ready — agents are briefed!', 'success', 5000);
     }
 
+    // Filter employees based on user selection (always keep core 3)
+    if (!skipped && d.selectedEmpIds) {
+      const alwaysOn = new Set(['e_claude', 'e7', 'e_router']);
+      const selected = new Set(d.selectedEmpIds);
+      State.employees = State.employees.filter(e => alwaysOn.has(e.id) || selected.has(e.id));
+      save('employees');
+    }
+
     State.onboarded = true;
-    save('settings');
+    save('onboarded');
 
     const el = document.getElementById('ob-overlay');
     if (el) { el.classList.add('ob-fade-out'); setTimeout(() => el.remove(), 400); }
