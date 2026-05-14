@@ -1253,18 +1253,18 @@ const AppTools = {
 
   _createTask({ title, assignee, priority='med' }) {
     const emp = assignee ? State.employees.find(e => e.name.toLowerCase().includes(assignee.toLowerCase())) : null;
-    const task = { id:uid(), title, empId:emp?.id||null, priority, status:'todo', created:Date.now() };
+    const task = { id:uid(), title, assignee:emp?.id||null, priority, column:'todo', created:Date.now() };
     State.tasks.push(task); save('tasks');
     setTimeout(() => Router.navigate('tasks'), 600);
     return {
-      result: `Task created: "${title}"${emp?` assigned to ${emp.name}`:''}. User has been taken to the Tasks page.`,
+      result: `Task "${title}" added to Todo column${emp?` and assigned to ${emp.name}`:''}. User has been taken to the Tasks page.`,
       display: `✅ Task created: <b>${escHtml(title)}</b>${emp?` → ${escHtml(emp.name)}`:''}`,
     };
   },
 
   _writeSpreadsheet({ headers, rows }) {
     const wb = State.workbook;
-    const sheet = wb?.sheets?.[wb.activeTab ?? 0];
+    const sheet = wb?.tabs?.[wb.activeTab ?? 0];
     if (!sheet) return { result:'No spreadsheet open', display:'⚠️ No spreadsheet found' };
     if (!sheet.cells) sheet.cells = {};
     const cols = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
