@@ -1345,7 +1345,7 @@ const AI = {
     return fetch(cfg.url, {
       method: 'POST', headers: cfg.headers,
       body: JSON.stringify({
-        model: State.settings.model || 'claude-sonnet-4-6',
+        model: {'claude-3-5-sonnet-20241022':'claude-sonnet-4-6','claude-3-5-haiku-20241022':'claude-haiku-4-5-20251001','claude-3-haiku-20240307':'claude-haiku-4-5-20251001'}[State.settings.model] || State.settings.model || 'claude-sonnet-4-6',
         max_tokens: 4096,
         stream: true,
         system: system || 'You are a helpful AI employee at Kayro Interactive.',
@@ -6179,10 +6179,6 @@ const Settings = {
               <option value="claude-haiku-4-5-20251001" ${s.model==='claude-haiku-4-5-20251001'?'selected':''}>Claude Haiku 4.5 — fastest, cheapest</option>
               <option value="claude-opus-4-7" ${s.model==='claude-opus-4-7'?'selected':''}>Claude Opus 4.7 — most powerful</option>
             </optgroup>
-            <optgroup label="── Claude 3.5 (widely available) ──">
-              <option value="claude-3-5-sonnet-20241022" ${s.model==='claude-3-5-sonnet-20241022'?'selected':''}>Claude 3.5 Sonnet — reliable fallback</option>
-              <option value="claude-3-5-haiku-20241022" ${s.model==='claude-3-5-haiku-20241022'?'selected':''}>Claude 3.5 Haiku — fast fallback</option>
-            </optgroup>
           </select>
         </div>
         <div style="background:rgba(245,158,11,.06);border:1px solid rgba(245,158,11,.2);border-radius:10px;padding:14px 16px;margin-bottom:4px">
@@ -6398,7 +6394,7 @@ const Settings = {
       const st=document.getElementById('s-key-status');
       const pk=(document.getElementById('s-platform-key').value||'').trim();
       const k=(document.getElementById('s-apikey').value||'').trim();
-      const m=document.getElementById('s-model').value||'claude-3-5-sonnet-20241022';
+      const m=document.getElementById('s-model').value||'claude-sonnet-4-6';
       const px=(document.getElementById('s-proxy-url').value||'').trim();
       const testKey=pk||k;
       if(!px && !testKey){st.innerHTML='❌ Paste an API key above first (or set a Proxy URL)';st.style.color='var(--red,#ef4444)';return;}
