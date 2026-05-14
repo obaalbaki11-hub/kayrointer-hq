@@ -1285,15 +1285,16 @@ const AppTools = {
     State._emailDraft = { to, subject, body };
     setTimeout(() => {
       Router.navigate('email');
+      // Fill fields after the email page renders
       setTimeout(() => {
-        const toEl = document.getElementById('email-to') || document.querySelector('[id*="email-to"],[id*="to-field"],[placeholder*="ecipient"],[placeholder*="To"]');
-        const subEl = document.getElementById('email-subject') || document.querySelector('[id*="subject"]');
-        const bodyEl = document.getElementById('email-body') || document.querySelector('[id*="email-body"],[id*="email-content"]');
-        if (toEl) toEl.value = to||'';
+        const toEl  = document.getElementById('em-to');
+        const subEl = document.getElementById('em-subj');
+        const bodEl = document.getElementById('em-body');
+        if (toEl)  toEl.value  = to||'';
         if (subEl) subEl.value = subject||'';
-        if (bodyEl) bodyEl.value = body||'';
-      }, 500);
-    }, 600);
+        if (bodEl) bodEl.value = body||'';
+      }, 400);
+    }, 300);
     return {
       result: `Email drafted with subject "${subject}". User taken to Email page.`,
       display: `✉️ Email drafted: <b>${escHtml(subject)}</b>`,
@@ -5497,6 +5498,17 @@ const Email = {
     document.getElementById('em-mailto-btn').addEventListener('click',Email.send);
     document.getElementById('em-seq-btn').addEventListener('click',Email.sequence);
     Email.renderContacts();
+    // Apply any pending draft from AI tool
+    if (State._emailDraft) {
+      const d = State._emailDraft;
+      const toEl  = document.getElementById('em-to');
+      const subEl = document.getElementById('em-subj');
+      const bodEl = document.getElementById('em-body');
+      if (toEl)  toEl.value  = d.to||'';
+      if (subEl) subEl.value = d.subject||'';
+      if (bodEl) bodEl.value = d.body||'';
+      State._emailDraft = null;
+    }
   },
   destroy() { Email.activeContact=null; },
   renderContacts() {
