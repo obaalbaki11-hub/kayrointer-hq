@@ -47,6 +47,7 @@ export default {
     try {
       // AI Proxy — forward to Anthropic using Kayro's key
       if (path === '/api/ai')                  return handleAI(request, env, origin);
+      if (path === '/api/ping')                return handlePing(request, env, origin);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -90,6 +91,7 @@ async function handleAI(request, env, origin) {
       'Content-Type': 'application/json',
       'x-api-key': key,
       'anthropic-version': '2023-06-01',
+      'User-Agent': 'kayro-worker/1.0',
     },
     body,
   });
@@ -102,6 +104,23 @@ async function handleAI(request, env, origin) {
       'Content-Type': res.headers.get('Content-Type') || 'text/event-stream',
     },
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// HEALTH CHECK
+// ══════════════════════════════════════════════════════════════
+async function handlePing(request, env, origin) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) return json({ ok: false, error: 'No API key stored in Cloudflare' }, 200, origin);
+
+  const res = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'User-Agent': 'kayro-worker/1.0' },
+    body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'hi' }] }),
+  });
+  const body = await res.json();
+  if (res.ok) return json({ ok: true, status: res.status }, 200, origin);
+  return json({ ok: false, status: res.status, raw: body }, 200, origin);
 }
 
 // ══════════════════════════════════════════════════════════════

@@ -1400,9 +1400,9 @@ const AI = {
       if (!res.ok) {
         let body = {}; try { body = await res.json(); } catch(_) {}
         const msg = body?.error?.message || `HTTP ${res.status}`;
-        const hint = res.status===401 ? '\n\n→ Key invalid/expired — get a new one at console.anthropic.com'
+        const hint = res.status===401 ? '\n\n→ Anthropic credits exhausted. Go to console.anthropic.com → Billing → add credits to restore AI.'
                    : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
-                   : res.status===403 ? '\n\n→ No access to this model — switch to Claude 3.5 Sonnet in Settings' : '';
+                   : res.status===403 ? '\n\n→ No access to this model — try again in a moment' : '';
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
@@ -1845,8 +1845,18 @@ const Auth = {
     Auth._showOverlay();
   },
 
-  _showOverlay() { document.getElementById('auth-overlay').classList.add('open'); },
-  _hideOverlay() { document.getElementById('auth-overlay').classList.remove('open'); },
+  _showOverlay() {
+    // Never show overlay if we already have a stored session
+    if (Auth.user) return;
+    const stored = localStorage.getItem('kayro_auth_user');
+    if (stored) { try { Auth.user = JSON.parse(stored); Auth._renderUserArea(); return; } catch(_) {} }
+    const el = document.getElementById('auth-overlay');
+    el.style.display = 'flex';
+  },
+  _hideOverlay() {
+    const el = document.getElementById('auth-overlay');
+    el.style.display = 'none';
+  },
   _showError(msg) {
     const el = document.getElementById('auth-error');
     if (el) { el.textContent = msg; el.style.display = 'block'; }
@@ -3293,12 +3303,14 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     const inp = document.getElementById('chat-input');
     const text = inp.value.trim(); if(!text||!Chat.activeEmpId) return;
     const e = getEmp(Chat.activeEmpId); if(!e) return;
+    // Lock empId so switching employees mid-stream doesn't bleed messages
+    const empId = Chat.activeEmpId;
     inp.value = ''; inp.style.height = 'auto';
 
     // Intent router — intercept and route before normal chat
     if (e.id === 'e_router') { await IntentRouter.handle(e, text); return; }
 
-    Chat.addBubble(Chat.activeEmpId, e.name, e.color, text, true);
+    Chat.addBubble(empId, e.name, e.color, text, true);
     const skillInject = Chat._getSkillInject(text);
     if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
 
@@ -3347,7 +3359,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
       <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
     msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
 
-    const history = (State.chatHistory[Chat.activeEmpId]||[]).slice(-20);
+    const history = (State.chatHistory[empId]||[]).slice(-20);
     const sysPrompt = Chat._buildSystemPrompt(e) + skillInject;
     let full = '';
     const bubble = document.createElement('div');
@@ -3397,24 +3409,25 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
 
     searchPill?.remove();
     document.getElementById('chat-typing')?.remove();
-    if (!bubble.isConnected) msgs.appendChild(bubble);
-    if (!State.chatHistory[Chat.activeEmpId]) State.chatHistory[Chat.activeEmpId]=[];
-    State.chatHistory[Chat.activeEmpId].push({role:'assistant',content:full});
+    // Only show bubble in DOM if the user is still viewing this employee's chat
+    if (Chat.activeEmpId === empId && !bubble.isConnected) msgs.appendChild(bubble);
+    if (!State.chatHistory[empId]) State.chatHistory[empId]=[];
+    State.chatHistory[empId].push({role:'assistant',content:full});
     save_('chatHistory');
-    Chat._runAllExtractions(Chat.activeEmpId, full);
+    Chat._runAllExtractions(empId, full);
     Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
     // Auto-post skill output to Brain
     try {
       const skillCmd = Chat._getActiveSkillCmd(text);
       if (skillCmd && full.length > 60) {
-        const emp2 = getEmp(Chat.activeEmpId);
+        const emp2 = getEmp(empId);
         if (emp2) Chat._postToBrain(emp2, skillCmd, full);
       }
     } catch(_) {}
-    try { KayroEvents.emit('agent_reply', {emp: getEmp(Chat.activeEmpId), text: full}); } catch(_) {}
+    try { KayroEvents.emit('agent_reply', {emp: getEmp(empId), text: full}); } catch(_) {}
     // Log real activity to HQ feed
     try {
-      const feedEmp = getEmp(Chat.activeEmpId);
+      const feedEmp = getEmp(empId);
       if (feedEmp && full) {
         const skillCmd2 = Chat._getActiveSkillCmd(text);
         const snippet = skillCmd2
