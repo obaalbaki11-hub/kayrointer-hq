@@ -1271,8 +1271,8 @@ const AppTools = {
     // Find first empty row
     let startRow = 1;
     for (let r = 1; r <= 200; r++) { if (!sheet.cells['A'+r]) { startRow = r; break; } }
-    headers.forEach((h,i) => { if(i<cols.length) sheet.cells[cols[i]+startRow] = String(h); });
-    rows.forEach((row,ri) => { row.forEach((val,ci) => { if(ci<cols.length) sheet.cells[cols[ci]+(startRow+1+ri)] = String(val??''); }); });
+    headers.forEach((h,i) => { if(i<cols.length) sheet.cells[cols[i]+startRow] = { raw: String(h) }; });
+    rows.forEach((row,ri) => { row.forEach((val,ci) => { if(ci<cols.length) sheet.cells[cols[ci]+(startRow+1+ri)] = { raw: String(val??'') }; }); });
     save('workbook');
     setTimeout(() => Router.navigate('spreadsheet'), 600);
     return {
