@@ -5380,16 +5380,83 @@ const Sheet = {
   async exportExcel() {
     toast('Preparing Excel file…');
     try {
-      if (!window.XLSX) {
-        await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
+      if (!window.ExcelJS) {
+        await new Promise((res,rej)=>{const s=document.createElement('script');s.src='https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js';s.onload=res;s.onerror=rej;document.head.appendChild(s);});
       }
       const tab=State.workbook.tabs[State.workbook.activeTab];
-      const ROWS=30;const cols=Array.from({length:16},(_,i)=>String.fromCharCode(65+i));
-      const data=Array.from({length:ROWS},(_,r)=>cols.map(c=>{const cell=tab.cells[c+(r+1)];if(!cell)return '';const v=cell.value;return (v!==undefined&&v!==null&&v!=='')?v:cell.raw||'';}));
-      const ws=window.XLSX.utils.aoa_to_sheet(data);
-      const wb=window.XLSX.utils.book_new();
-      window.XLSX.utils.book_append_sheet(wb,ws,tab.name);
-      window.XLSX.writeFile(wb,`${tab.name}.xlsx`);
+      const ROWS=30;const COLS=16;
+      const colLetters=Array.from({length:COLS},(_,i)=>String.fromCharCode(65+i));
+
+      // Collect non-empty rows
+      const allRows=[];
+      for(let r=0;r<ROWS;r++){
+        const row=colLetters.map(c=>{
+          const cell=tab.cells[c+(r+1)];
+          if(!cell)return '';
+          if(typeof cell==='string')return cell;
+          const v=cell.formula?cell.value:cell.raw;
+          return (v!==undefined&&v!==null)?String(v):'';
+        });
+        allRows.push(row);
+      }
+      // Trim trailing empty rows
+      let lastRow=allRows.length-1;
+      while(lastRow>0&&allRows[lastRow].every(v=>!v))lastRow--;
+      const rows=allRows.slice(0,lastRow+1);
+      if(!rows.length){toast('Spreadsheet is empty','error');return;}
+
+      // Trim trailing empty columns
+      let lastCol=0;
+      rows.forEach(r=>r.forEach((v,i)=>{if(v)lastCol=Math.max(lastCol,i);}));
+      const trimRows=rows.map(r=>r.slice(0,lastCol+1));
+
+      // Build ExcelJS workbook
+      const wb=new window.ExcelJS.Workbook();
+      wb.creator='Kayro Interactive';
+      wb.created=new Date();
+      const ws=wb.addWorksheet(tab.name,{views:[{state:'frozen',ySplit:1}]});
+
+      // Header style
+      const hdrFill={type:'pattern',pattern:'solid',fgColor:{argb:'FF1E3A5F'}};
+      const hdrFont={name:'Calibri',size:11,bold:true,color:{argb:'FFFFFFFF'}};
+      const hdrAlign={vertical:'middle',horizontal:'center'};
+      const hdrBorder={top:{style:'thin',color:{argb:'FF1E3A5F'}},left:{style:'thin',color:{argb:'FF1E3A5F'}},bottom:{style:'thin',color:{argb:'FF1E3A5F'}},right:{style:'thin',color:{argb:'FF1E3A5F'}}};
+
+      // Row styles (alternating)
+      const evenFill={type:'pattern',pattern:'solid',fgColor:{argb:'FFF0F4F8'}};
+      const oddFill={type:'pattern',pattern:'solid',fgColor:{argb:'FFFFFFFF'}};
+      const bodyFont={name:'Calibri',size:10,color:{argb:'FF1A1A2E'}};
+      const bodyAlign={vertical:'middle',horizontal:'left'};
+      const bodyBorder={top:{style:'hair',color:{argb:'FFCCCCCC'}},left:{style:'hair',color:{argb:'FFCCCCCC'}},bottom:{style:'hair',color:{argb:'FFCCCCCC'}},right:{style:'hair',color:{argb:'FFCCCCCC'}}};
+
+      // Auto column widths (measure all cells)
+      const colWidths=Array(lastCol+1).fill(8);
+      trimRows.forEach(r=>r.forEach((v,i)=>{if(v.length+2>colWidths[i])colWidths[i]=Math.min(v.length+2,50);}));
+      colWidths.forEach((w,i)=>{ws.getColumn(i+1).width=w;});
+
+      // Write rows
+      trimRows.forEach((rowData,ri)=>{
+        const exRow=ws.addRow(rowData);
+        exRow.height=20;
+        exRow.eachCell({includeEmpty:true},(cell,colNum)=>{
+          if(colNum>lastCol+1)return;
+          if(ri===0){
+            cell.fill=hdrFill;cell.font=hdrFont;cell.alignment=hdrAlign;cell.border=hdrBorder;
+          } else {
+            cell.fill=ri%2===0?evenFill:oddFill;
+            cell.font=bodyFont;cell.alignment=bodyAlign;cell.border=bodyBorder;
+            // Auto-detect numbers
+            const num=parseFloat(rowData[colNum-1]);
+            if(!isNaN(num)&&rowData[colNum-1]!==''){cell.value=num;cell.numFmt='#,##0.##';}
+          }
+        });
+      });
+
+      // Download
+      const buf=await wb.xlsx.writeBuffer();
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}));
+      a.download=`${tab.name}.xlsx`;a.click();
       toast('Excel file downloaded ✓','success');
     } catch(e){ toast('Excel export failed: '+e.message,'error'); }
   },
