@@ -1345,7 +1345,7 @@ const AI = {
     return fetch(cfg.url, {
       method: 'POST', headers: cfg.headers,
       body: JSON.stringify({
-        model: State.settings.model || 'claude-3-5-sonnet-20241022',
+        model: State.settings.model || 'claude-sonnet-4-6',
         max_tokens: 4096,
         stream: true,
         system: system || 'You are a helpful AI employee at Kayro Interactive.',
