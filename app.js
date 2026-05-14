@@ -1255,7 +1255,10 @@ const AppTools = {
     const emp = assignee ? State.employees.find(e => e.name.toLowerCase().includes(assignee.toLowerCase())) : null;
     const task = { id:uid(), title, assignee:emp?.id||null, priority, column:'todo', created:Date.now() };
     State.tasks.push(task); save('tasks');
-    setTimeout(() => Router.navigate('tasks'), 600);
+    setTimeout(() => {
+      if (Router.current === 'tasks') Tasks.render();
+      else Router.navigate('tasks');
+    }, 300);
     return {
       result: `Task "${title}" added to Todo column${emp?` and assigned to ${emp.name}`:''}. User has been taken to the Tasks page.`,
       display: `✅ Task created: <b>${escHtml(title)}</b>${emp?` → ${escHtml(emp.name)}`:''}`,
@@ -1274,7 +1277,10 @@ const AppTools = {
     headers.forEach((h,i) => { if(i<cols.length) sheet.cells[cols[i]+startRow] = { raw: String(h) }; });
     rows.forEach((row,ri) => { row.forEach((val,ci) => { if(ci<cols.length) sheet.cells[cols[ci]+(startRow+1+ri)] = { raw: String(val??'') }; }); });
     save('workbook');
-    setTimeout(() => Router.navigate('spreadsheet'), 600);
+    setTimeout(() => {
+      if (Router.current === 'spreadsheet') Sheet.render();
+      else Router.navigate('spreadsheet');
+    }, 300);
     return {
       result: `Wrote ${rows.length} rows × ${headers.length} columns to spreadsheet starting at row ${startRow}. User taken to Spreadsheet page.`,
       display: `📊 Wrote <b>${rows.length} rows</b> to Spreadsheet (${escHtml(headers.slice(0,3).join(', '))}${headers.length>3?'…':''})`,
