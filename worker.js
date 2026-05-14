@@ -83,7 +83,15 @@ async function handleAI(request, env, origin) {
   if (!key) {
     return json({ error: { message: 'Anthropic API key not set. Run: npx wrangler secret put ANTHROPIC_KEY — then paste your sk-ant- key.' } }, 500, origin);
   }
-  const body = await request.text();
+
+  let bodyObj;
+  try { bodyObj = JSON.parse(await request.text()); } catch(e) {
+    return json({ error: { message: 'Invalid request body' } }, 400, origin);
+  }
+
+  // Streaming from Workers to Anthropic is blocked by WAF — use non-streaming and re-emit as SSE
+  const wasStream = bodyObj.stream === true;
+  bodyObj.stream = false;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -93,16 +101,60 @@ async function handleAI(request, env, origin) {
       'anthropic-version': '2023-06-01',
       'User-Agent': 'kayro-worker/1.0',
     },
-    body,
+    body: JSON.stringify(bodyObj),
   });
 
-  // Stream the response back
-  return new Response(res.body, {
-    status: res.status,
-    headers: {
-      ...cors(origin),
-      'Content-Type': res.headers.get('Content-Type') || 'text/event-stream',
+  if (!res.ok) {
+    const errBody = await res.text();
+    return new Response(errBody, {
+      status: res.status,
+      headers: { ...cors(origin), 'Content-Type': 'application/json' },
+    });
+  }
+
+  const data = await res.json();
+
+  // Non-streaming caller: return JSON as-is
+  if (!wasStream) {
+    return json(data, 200, origin);
+  }
+
+  // Re-emit as SSE so the client-side streaming parser works unchanged
+  const enc = new TextEncoder();
+  const sse = (event, payload) => enc.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
+
+  const stream = new ReadableStream({
+    start(ctrl) {
+      ctrl.enqueue(sse('message_start', {
+        type: 'message_start',
+        message: { id: data.id, type: 'message', role: data.role, content: [], model: data.model, stop_reason: null, usage: data.usage },
+      }));
+
+      (data.content || []).forEach((block, idx) => {
+        if (block.type === 'text') {
+          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'text', text: '' } }));
+          // Emit in chunks so the SSE parser sees proper deltas
+          const text = block.text;
+          for (let i = 0; i < text.length; i += 20) {
+            ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'text_delta', text: text.slice(i, i + 20) } }));
+          }
+          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
+        } else if (block.type === 'tool_use') {
+          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'tool_use', id: block.id, name: block.name, input: {} } }));
+          ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'input_json_delta', partial_json: JSON.stringify(block.input) } }));
+          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
+        }
+      });
+
+      ctrl.enqueue(sse('message_delta', { type: 'message_delta', delta: { stop_reason: data.stop_reason, stop_sequence: null }, usage: { output_tokens: data.usage?.output_tokens || 0 } }));
+      ctrl.enqueue(sse('message_stop', { type: 'message_stop' }));
+      ctrl.close();
     },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
   });
 }
 
