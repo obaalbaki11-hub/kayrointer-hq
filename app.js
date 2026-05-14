@@ -5241,7 +5241,7 @@ const Sheet = {
             <tr><td class="row-hdr">${r+1}</td>${colLetters.map(c=>`
               <td data-cell="${c}${r+1}" class="${Sheet.selected===c+(r+1)?'selected':''}">
                 <span class="cell-disp">${escHtml(Sheet._display(tab,c+(r+1)))}</span>
-                <input class="cell-editor" data-cell="${c}${r+1}" value="${escHtml(tab.cells[c+(r+1)]?.raw||'')}">
+                <input class="cell-editor" data-cell="${c}${r+1}" value="${escHtml(typeof tab.cells[c+(r+1)]==='string'?tab.cells[c+(r+1)]:(tab.cells[c+(r+1)]?.raw||''))}">
               </td>`).join('')}</tr>`).join('')}
           </tbody>
         </table>
@@ -5310,7 +5310,9 @@ const Sheet = {
     if(newRow>=1&&newRow<=30&&newCol>='A'&&newCol<='P')Sheet.editCell(newCol+newRow);
   },
   _display(tab,key) {
-    const c=tab.cells[key];if(!c?.raw)return '';
+    const c=tab.cells[key];if(!c)return '';
+    if(typeof c==='string')return c;
+    if(!c.raw)return '';
     return String(c.formula?(c.value??''):(c.raw));
   },
   _eval(tab,raw,evaluating) {
