@@ -1845,6 +1845,7 @@ const Auth = {
       script2.onload = () => {
         try {
           if (!firebase.apps.length) firebase.initializeApp(cfg);
+          firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(()=>{});
           firebase.auth().onAuthStateChanged(user => {
             if (user) {
               Auth.user = { uid:user.uid, name:user.displayName||user.email.split('@')[0], email:user.email, photoURL:user.photoURL, isGuest:false };
@@ -1852,6 +1853,11 @@ const Auth = {
               Auth._hideOverlay();
               Auth._renderUserArea();
             } else {
+              // Only show login screen if there's no locally stored session
+              const stored = localStorage.getItem('kayro_auth_user');
+              if (stored) {
+                try { Auth.user = JSON.parse(stored); Auth._renderUserArea(); return; } catch(_) {}
+              }
               Auth._showOverlay();
             }
           });
