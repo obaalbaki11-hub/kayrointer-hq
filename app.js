@@ -7408,18 +7408,7 @@ const KlingPage = {
           <span class="kling-badge">Video</span>
         </div>
         <div class="card-box" style="margin-bottom:16px">
-          ${(s.platformKlingKeyId||'').trim()
-            ? `<div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green)">✅ Platform key active — generate videos instantly</div>`
-            : ''}
-          <div class="field-label">Your Access Key ID <span style="color:var(--text3);font-weight:400">(optional if platform key set)</span></div>
-          <input class="form-input" id="kling-key-id" type="text" value="${escHtml(s.klingKeyId||'')}" placeholder="${(s.platformKlingKeyId||'').trim() ? 'Using platform key — yours overrides it' : 'Your Access Key ID'}" autocomplete="off">
-          <div class="field-label" style="margin-top:12px">Your Access Key Secret</div>
-          <input class="form-input" id="kling-key-secret" type="password" value="${escHtml(s.klingKeySecret||'')}" placeholder="${(s.platformKlingKeyId||'').trim() ? 'Using platform key' : 'Your Access Key Secret'}">
-          <div style="margin-top:8px;display:flex;gap:8px">
-            <button class="btn-primary" id="kling-save-key">Save Keys</button>
-            <a href="https://klingai.com/global/dev/api-key" target="_blank" class="btn" style="text-decoration:none">Get Keys →</a>
-          </div>
-          <div class="field-hint" style="margin-top:8px">${(s.platformKlingKeyId||'').trim() ? 'Platform key is active — videos generate on Kayro\'s Kling account. Enter your own keys to override.' : 'Find keys at klingai.com → Developer → API Keys.'}</div>
+          <div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green)">✅ Powered by Kayro — generate videos instantly, no key needed</div>
         </div>
         <div class="card-box">
           <div class="field-label">Model</div>
@@ -7559,24 +7548,18 @@ const KlingPage = {
   },
 
   async _klingFetch(path, method='GET', body=null) {
-    const jwt = await KlingPage._genJWT();
-    if (!jwt) throw new Error('No Kling API keys — save them in the sidebar first');
-    const proxy = (State.settings.proxyUrl || '').trim();
-    const url = proxy
-      ? `${proxy}?t=kling&p=${encodeURIComponent(path)}`
-      : `https://api.klingai.com${path}`;
-    const opts = { method, headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` } };
+    // All Kling calls go through the Kayro backend worker — no user keys needed
+    const url = `${BACKEND_URL}/api/kling${path}`;
+    const opts = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
     const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     if (data.code !== 0 && data.code !== undefined) throw new Error(data.message || `Kling API error (code ${data.code})`);
     return data;
   },
 
   async _generate(type) {
-    const id     = (State.settings.klingKeyId || State.settings.platformKlingKeyId || '').trim();
-    const secret = (State.settings.klingKeySecret || State.settings.platformKlingKeySecret || '').trim();
-    if (!id || !secret) { toast('No Kling API keys configured — contact support or add your own in Settings', 'error'); return; }
     const model = document.getElementById('kling-model').value;
     const mode = document.getElementById('kling-mode').value;
     const duration = document.getElementById('kling-duration').value;

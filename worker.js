@@ -49,6 +49,7 @@ export default {
       if (path === '/api/ai')                  return handleAI(request, env, origin);
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
+      if (path.startsWith('/api/kling'))       return handleKling(request, env, origin, path);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -210,6 +211,48 @@ async function handleSendEmail(request, env, origin) {
   const data = await res.json();
   if (!res.ok) return json({ error: data.message || data.name || 'Send failed' }, res.status, origin);
   return json({ ok: true, id: data.id }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// KLING AI — VIDEO GENERATION
+// ══════════════════════════════════════════════════════════════
+async function klingJWT(keyId, keySecret) {
+  const enc = new TextEncoder();
+  const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr)))
+    .replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const header  = toB64u(enc.encode(JSON.stringify({ alg:'HS256', typ:'JWT' })));
+  const now     = Math.floor(Date.now() / 1000);
+  const payload = toB64u(enc.encode(JSON.stringify({ iss:keyId, exp:now+1800, nbf:now-5 })));
+  const unsigned = `${header}.${payload}`;
+  const key = await crypto.subtle.importKey(
+    'raw', enc.encode(keySecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']
+  );
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsigned));
+  return `${unsigned}.${toB64u(sig)}`;
+}
+
+async function handleKling(request, env, origin, path) {
+  const keyId     = env.KLING_KEY_ID;
+  const keySecret = env.KLING_KEY_SECRET;
+  if (!keyId || !keySecret) {
+    return json({ error: 'Kling API keys not configured on server. Run: npx wrangler secret put KLING_KEY_ID (and KLING_KEY_SECRET)' }, 500, origin);
+  }
+
+  // Strip /api/kling prefix → Kling API path
+  const klingPath = path.replace(/^\/api\/kling/, '') || '/v1/videos/text2video';
+  const jwt = await klingJWT(keyId, keySecret);
+
+  const body = request.method === 'POST' ? await request.text() : undefined;
+  const res = await fetch(`https://api.klingai.com${klingPath}`, {
+    method: request.method,
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
+    body,
+  });
+  const data = await res.text();
+  return new Response(data, {
+    status: res.status,
+    headers: { ...cors(origin), 'Content-Type': res.headers.get('Content-Type') || 'application/json' },
+  });
 }
 
 // ══════════════════════════════════════════════════════════════
