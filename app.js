@@ -1092,7 +1092,7 @@ const GmailAPI = {
     await GmailAPI._loadGIS();
     GmailAPI._tokenClient = google.accounts.oauth2.initTokenClient({
       client_id: GOOGLE_CLIENT_ID,
-      scope: 'https://mail.google.com/ https://www.googleapis.com/auth/userinfo.email',
+      scope: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/userinfo.email',
       callback: async (resp) => {
         if (resp.error) { toast('Gmail connection failed: ' + resp.error, 'error'); return; }
         GmailAPI._token = resp.access_token;
@@ -1142,28 +1142,42 @@ const GmailAPI = {
     return r.ok ? r.json() : null;
   },
 
+  _buildRaw({ from, to, subject, body }) {
+    const mime = [
+      `From: ${from}`,
+      `To: ${to}`,
+      `Subject: =?utf-8?B?${btoa(unescape(encodeURIComponent(subject)))}?=`,
+      'MIME-Version: 1.0',
+      'Content-Type: text/plain; charset=utf-8',
+      'Content-Transfer-Encoding: base64',
+      '',
+      btoa(unescape(encodeURIComponent(body))),
+    ].join('\r\n');
+    return btoa(unescape(encodeURIComponent(mime))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  },
+
   async sendEmail({ to, subject, body }) {
     const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
     const from = State.settings.gmailEmail || '';
-    const raw = [`From: ${from}`, `To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
-    const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const raw = GmailAPI._buildRaw({ from, to, subject, body });
     const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ raw: encoded })
+      body: JSON.stringify({ raw })
     });
-    return r.ok ? { ok: true } : { error: (await r.json().catch(()=>({}))).error?.message || 'Send failed' };
+    if (r.ok) return { ok: true };
+    const err = await r.json().catch(()=>({}));
+    return { error: err?.error?.message || 'Send failed' };
   },
 
   async createDraft({ to, subject, body }) {
     const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
     const from = State.settings.gmailEmail || '';
-    const raw = [`From: ${from}`, `To: ${to}`, `Subject: ${subject}`, 'Content-Type: text/plain; charset=utf-8', '', body].join('\r\n');
-    const encoded = btoa(unescape(encodeURIComponent(raw))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+    const raw = GmailAPI._buildRaw({ from, to, subject, body });
     const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
       method: 'POST',
       headers: { Authorization: `Bearer ${t}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: { raw: encoded } })
+      body: JSON.stringify({ message: { raw } })
     });
     return r.ok ? { ok: true, data: await r.json() } : { error: 'Draft failed' };
   },
