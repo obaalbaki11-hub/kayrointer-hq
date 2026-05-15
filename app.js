@@ -696,8 +696,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','settings','plans','security'],
-  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','apollo','meta','automations','settings','plans','security'],
+  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','settings','plans','security'],
+  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','apollo','meta','automations','settings','plans','security'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -706,7 +706,7 @@ const PLAN_FEATURES = {
   claude_platform_key: ['growth'],
   claude_own_key:      ['scale','enterprise'],
   web_search:          ['growth','scale','enterprise'],
-  kling:               ['scale','enterprise'],
+  kling:               ['free','growth','scale','enterprise'],
   apollo:              ['growth','scale','enterprise'],
   meta:                ['growth','scale','enterprise'],
   team_seats:          ['scale','enterprise'],
@@ -1389,15 +1389,16 @@ const AI = {
   },
 
   async _fetchStream(cfg, messages, system, extraBody={}) {
+    const { max_tokens: maxTok, ...restExtra } = extraBody;
     return fetch(cfg.url, {
       method: 'POST', headers: cfg.headers,
       body: JSON.stringify({
         model: {'claude-3-5-sonnet-20241022':'claude-sonnet-4-6','claude-3-5-haiku-20241022':'claude-haiku-4-5-20251001','claude-3-haiku-20240307':'claude-haiku-4-5-20251001'}[State.settings.model] || State.settings.model || 'claude-sonnet-4-6',
-        max_tokens: 4096,
+        max_tokens: maxTok || 4096,
         stream: true,
         system: system || 'You are a helpful AI employee at Kayro Interactive.',
         messages,
-        ...extraBody,
+        ...restExtra,
       }),
     });
   },
@@ -1441,7 +1442,10 @@ const AI = {
       ...(useSearch ? [WebSearch._tool] : []),
       ...(useAppTools ? AppTools._defs : []),
     ];
-    const extraBody = allTools.length ? { tools: allTools } : {};
+    const extraBody = {
+      ...(allTools.length ? { tools: allTools } : {}),
+      ...(opts.max_tokens ? { max_tokens: opts.max_tokens } : {}),
+    };
     try {
       let res = await AI._fetchStream(cfg, messages, system, extraBody);
       if (!res.ok) {
@@ -6776,7 +6780,7 @@ const DesignStudio = {
 
     let html = '';
     try {
-      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys, { search: false })) html += chunk;
+      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys, { search: false, appTools: false, max_tokens: 8192 })) html += chunk;
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
 
       preview.innerHTML = `
