@@ -1340,6 +1340,38 @@ const AppTools = {
     try {
       const emp = State.employees.find(e=>e.id===Chat?.activeEmpId);
       const senderName = from_name || emp?.name || 'Kayro Team';
+      let result;
+
+      // Gmail takes priority — send directly through user's inbox
+      if (GmailAPI.isConnected()) {
+        result = await GmailAPI.sendEmail({ to, subject, body });
+        if (result.ok) {
+          if (!State.sentEmails) State.sentEmails = [];
+          State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:State.settings.gmailEmail||senderName, status:'sent', via:'gmail', sent:Date.now() });
+          save('sentEmails');
+          return {
+            result: `Email sent via Gmail (${State.settings.gmailEmail}) to ${to} with subject "${subject}".`,
+            display: `✅ Sent from Gmail (${escHtml(State.settings.gmailEmail)}) → <b>${escHtml(to)}</b>`,
+          };
+        }
+        return { result:`Gmail send failed: ${result.error}`, display:`⚠️ Gmail failed: ${escHtml(result.error||'Unknown error')}` };
+      }
+
+      // EmailJS fallback
+      const s = State.settings;
+      const svcId = s.ejServiceId || s.platformEjServiceId;
+      const tplId = s.ejTemplateId || s.platformEjTemplateId;
+      const pubKey = s.ejPublicKey  || s.platformEjPublicKey;
+      if (svcId && tplId && pubKey) {
+        if (!window.emailjs) await Email._loadEmailJS();
+        await window.emailjs.send(svcId, tplId, { to_email:to, subject, message:body, from_name:senderName }, pubKey);
+        if (!State.sentEmails) State.sentEmails = [];
+        State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'sent', via:'emailjs', sent:Date.now() });
+        save('sentEmails');
+        return { result:`Email sent to ${to} with subject "${subject}".`, display:`✅ Email sent to <b>${escHtml(to)}</b>: ${escHtml(subject)}` };
+      }
+
+      // Resend backend fallback
       const res = await fetch(`${BACKEND_URL}/api/send-email`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1348,19 +1380,12 @@ const AppTools = {
       const data = await res.json();
       if (!res.ok || data.error) {
         const msg = data.error || `Status ${res.status}`;
-        // Log to sent box anyway
-        if (!State.sentEmails) State.sentEmails = [];
-        State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'failed', error:msg, sent:Date.now() });
-        save('sentEmails');
-        return { result:`Email failed: ${msg}`, display:`⚠️ Email failed: ${escHtml(msg)}` };
+        return { result:`Email failed: ${msg}`, display:`⚠️ Email not sent — connect Gmail in Settings to enable sending. Error: ${escHtml(msg)}` };
       }
       if (!State.sentEmails) State.sentEmails = [];
-      State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'sent', sent:Date.now() });
+      State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'sent', via:'resend', sent:Date.now() });
       save('sentEmails');
-      return {
-        result: `Email sent successfully to ${to} with subject "${subject}".`,
-        display: `✅ Email sent to <b>${escHtml(to)}</b>: ${escHtml(subject)}`,
-      };
+      return { result:`Email sent to ${to}.`, display:`✅ Email sent to <b>${escHtml(to)}</b>: ${escHtml(subject)}` };
     } catch(e) {
       return { result:`Email error: ${e.message}`, display:`⚠️ Email error: ${escHtml(e.message)}` };
     }
