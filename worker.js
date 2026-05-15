@@ -48,6 +48,7 @@ export default {
       // AI Proxy — forward to Anthropic using Kayro's key
       if (path === '/api/ai')                  return handleAI(request, env, origin);
       if (path === '/api/ping')                return handlePing(request, env, origin);
+      if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -173,6 +174,42 @@ async function handlePing(request, env, origin) {
   const body = await res.json();
   if (res.ok) return json({ ok: true, status: res.status }, 200, origin);
   return json({ ok: false, status: res.status, raw: body }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// SEND EMAIL — RESEND
+// ══════════════════════════════════════════════════════════════
+async function handleSendEmail(request, env, origin) {
+  const key = env.RESEND_KEY;
+  if (!key) {
+    return json({ error: 'Email sending not configured. Run: npx wrangler secret put RESEND_KEY — get your free key at resend.com' }, 500, origin);
+  }
+  let body;
+  try { body = JSON.parse(await request.text()); } catch(e) {
+    return json({ error: 'Invalid request body' }, 400, origin);
+  }
+  const { to, subject, body: emailBody, from_name = 'Kayro Team' } = body;
+  if (!to || !subject || !emailBody) {
+    return json({ error: 'Missing required fields: to, subject, body' }, 400, origin);
+  }
+
+  // Use verified domain if set, otherwise Resend sandbox address
+  const fromDomain = env.EMAIL_FROM_DOMAIN || 'onboarding@resend.dev';
+  const fromAddress = fromDomain.includes('@') ? fromDomain : `${from_name} <noreply@${fromDomain}>`;
+
+  const res = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from: fromAddress,
+      to: [to],
+      subject,
+      text: emailBody,
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok) return json({ error: data.message || data.name || 'Send failed' }, res.status, origin);
+  return json({ ok: true, id: data.id }, 200, origin);
 }
 
 // ══════════════════════════════════════════════════════════════

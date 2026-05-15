@@ -1212,12 +1212,22 @@ const AppTools = {
     },
     {
       name: 'draft_email',
-      description: 'Pre-fill the Cold Email page with a drafted email. Use when asked to write, compose, or draft an email.',
+      description: 'Pre-fill the Cold Email page with a drafted email so the user can review before sending.',
       input_schema: { type:'object', properties: {
-        to:      { type:'string', description:'Recipient name or email address' },
+        to:      { type:'string', description:'Recipient email address' },
         subject: { type:'string', description:'Email subject line' },
         body:    { type:'string', description:'Full email body' },
       }, required:['subject','body'] }
+    },
+    {
+      name: 'send_email',
+      description: 'Directly send an email to a recipient without requiring user interaction. Use when the user has asked you to send (not just draft) an email autonomously.',
+      input_schema: { type:'object', properties: {
+        to:      { type:'string', description:'Recipient email address (required)' },
+        subject: { type:'string', description:'Email subject line' },
+        body:    { type:'string', description:'Full email body (plain text or HTML)' },
+        from_name: { type:'string', description:'Sender display name (e.g. "Alex from Kayro")' },
+      }, required:['to','subject','body'] }
     },
     {
       name: 'save_to_brain',
@@ -1324,6 +1334,36 @@ const AppTools = {
       result: `Navigated to ${page} page.`,
       display: `🔗 Opening <b>${escHtml(page)}</b>…`,
     };
+  },
+
+  async _sendEmail({ to, subject, body, from_name }) {
+    try {
+      const emp = State.employees.find(e=>e.id===Chat?.activeEmpId);
+      const senderName = from_name || emp?.name || 'Kayro Team';
+      const res = await fetch(`${BACKEND_URL}/api/send-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, body, from_name: senderName }),
+      });
+      const data = await res.json();
+      if (!res.ok || data.error) {
+        const msg = data.error || `Status ${res.status}`;
+        // Log to sent box anyway
+        if (!State.sentEmails) State.sentEmails = [];
+        State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'failed', error:msg, sent:Date.now() });
+        save('sentEmails');
+        return { result:`Email failed: ${msg}`, display:`⚠️ Email failed: ${escHtml(msg)}` };
+      }
+      if (!State.sentEmails) State.sentEmails = [];
+      State.sentEmails.unshift({ id:uid(), to, subject, body, from_name:senderName, status:'sent', sent:Date.now() });
+      save('sentEmails');
+      return {
+        result: `Email sent successfully to ${to} with subject "${subject}".`,
+        display: `✅ Email sent to <b>${escHtml(to)}</b>: ${escHtml(subject)}`,
+      };
+    } catch(e) {
+      return { result:`Email error: ${e.message}`, display:`⚠️ Email error: ${escHtml(e.message)}` };
+    }
   },
 };
 
@@ -1447,6 +1487,21 @@ const AI = {
           ];
           res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
           if (!res.ok) { yield `\n⚠️ Search failed (API error)`; break; }
+
+        // ── Send email (async) ───────────────────────────────────
+        } else if (toolName === 'send_email') {
+          yield `\x00ACTION:✉️ Sending email to <b>${escHtml(toolInput.to||'')}</b>…\x00`;
+          const { result, display } = await AppTools._sendEmail(toolInput);
+          yield `\x00ACTION:${display}\x00`;
+          loopMsgs = [...loopMsgs,
+            { role:'assistant', content:[
+              ...(assistantText?[{type:'text',text:assistantText}]:[]),
+              {type:'tool_use',id:toolId,name:toolName,input:toolInput}
+            ]},
+            { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
+          ];
+          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield `\n⚠️ Action failed (API error)`; break; }
 
         // ── App tool ─────────────────────────────────────────────
         } else {
@@ -2252,10 +2307,11 @@ You have the following real, executing capabilities. Use them in your responses:
 ⑥ REAL APP ACTIONS (use these tools directly — they execute instantly in the app):
    • create_task → creates a task card on the Kanban board
    • write_spreadsheet → writes a table directly into the Spreadsheet page
-   • draft_email → opens the Email page pre-filled and ready to send
+   • draft_email → opens the Email page pre-filled so the user can review before sending
+   • send_email → ACTUALLY SENDS the email immediately, no user action needed — use this when asked to "send" autonomously
    • save_to_brain → saves a fact permanently to the team knowledge base
    • navigate_to → takes the user to any page (tasks, spreadsheet, email, memory, etc.)
-   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If asked to assign work, call create_task. Don't just describe what you'd do — do it.
+   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If asked to assign work, call create_task. If asked to SEND an email, call send_email. Don't just describe what you'd do — do it.
 
 ⑦ SKILLS → invoke any skill for specialized output:
    /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
