@@ -7577,14 +7577,13 @@ const KlingPage = {
   },
 
   async _klingFetch(path, method='GET', body=null) {
-    // All Kling calls go through the Kayro backend worker — no user keys needed
     const url = `${BACKEND_URL}/api/kling${path}`;
     const opts = { method, headers: { 'Content-Type': 'application/json' } };
     if (body) opts.body = JSON.stringify(body);
     const res = await fetch(url, opts);
-    const data = await res.json();
-    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-    if (data.code !== 0 && data.code !== undefined) throw new Error(data.message || `Kling API error (code ${data.code})`);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status} — re-enter Kling keys in Cloudflare`);
+    if (data.code !== 0 && data.code !== undefined) throw new Error(data.message || `Kling error (code ${data.code})`);
     return data;
   },
 
