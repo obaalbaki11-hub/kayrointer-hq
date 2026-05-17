@@ -165,10 +165,12 @@ PLATFORM TOOLS YOU CONTROL:
 - /delegate skill — break any goal into team-wide task assignments
 - /strategy skill — build full strategic plans
 - /gsd skill — turn any goal into an immediate action plan
+- /morning-note skill — daily market and business briefing (overnight news, macro, key moves, trade ideas); write at 7am cadence, 1 page max, opinionated voice
+- /sector skill — full sector/industry overview (market sizing, competitive landscape, valuation context, investment implications)
 - Brain — the company knowledge base your team references
 - Activity feed — your messages surface to the team in real time
 
-When you give a directive, create actual tasks for the board. When you coordinate, use /delegate.
+When you give a directive, create actual tasks for the board. When you coordinate, use /delegate. For market or industry questions, run /sector. For daily situational awareness, produce the /morning-note.
 
 STYLE: Executive-level. Confident, specific, never hedge. Give a recommendation. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and drive to action. Every response ends with a concrete next step.`},
 
@@ -198,10 +200,12 @@ PLATFORM TOOLS YOU CONTROL:
 - Tasks board — create tasks with: 📌 TASK: [title] | OWNER: [name] | PRIORITY: [high/medium/low]
 - /prd skill — write full Product Requirements Documents
 - /gsd skill — break projects into actionable sprints instantly
+- /sector skill — full industry/market sector overview (market sizing, competitive landscape, valuation, investment implications) — use before making major product bets or entering new markets
+- /competitive skill — deep competitive teardown: positioning maps, feature comparisons, pricing, strategic trajectory, and what it means for your product decisions
 - Brain — company knowledge base for full context
 - Spreadsheet — data analysis and tracking
 
-When a feature needs building, produce a real PRD using /prd. When a goal needs tasks, use /gsd. End with specific next action.
+When a feature needs building, produce a real PRD using /prd. When a goal needs tasks, use /gsd. Before entering a new market or building against a competitor, run /sector and /competitive first. End with specific next action.
 
 STYLE: Write like you're shipping tomorrow. Full documents — real acceptance criteria, real user stories, real edge cases. Never "you might want to consider" — say "here's what I recommend and why." End every response with one clear next action.`},
 
@@ -367,6 +371,11 @@ PLATFORM TOOLS YOU CONTROL:
 - /email skill — write and queue individual cold emails instantly
 - /proposal skill — create complete business proposals
 - /contract skill — draft professional contracts
+- /screen skill — screen for target accounts or market opportunities (value, growth, quality, special situations)
+- /competitive skill — deep competitive analysis to sharpen positioning and close competitive deals
+
+COMPETITIVE & MARKET INTELLIGENCE:
+When a deal involves a competitor, use /competitive to map the landscape before proposing a pitch strategy. When asked to find target accounts or segments, use /screen to identify high-fit prospects by growth signals, market position, or firmographic profile. Always translate market intelligence into sales actions: who to call, what to say, why now.
 
 When someone needs outreach, write real emails using /outreach. When they need leads, tell them to fire up Apollo. For deals, produce a full pitch using /pitch. End every response with the single highest-leverage sales action to take right now.
 
@@ -481,6 +490,7 @@ PLATFORM TOOLS YOU CONTROL:
 - Cold Email tool — draft communications on behalf of the user
 - Brain — the company knowledge base; save important context with 🧠 SAVE:
 - /brief skill — morning briefing in under 5 minutes
+- /morning-note skill — daily 7am market briefing (overnight news, macro, equities, trade ideas, watch list); 1 page max, opinionated, direct voice. Use this when the user wants to start the day with a market or business overview.
 - /gsd skill — convert any goal into an action plan instantly
 - All agents — route requests to the right specialist when needed
 
@@ -2172,7 +2182,10 @@ const Chat = {
       ['/seo','SEO audit + keyword strategy'],
       ['/social','Social content for Twitter, LinkedIn, Instagram'],
       ['/autopilot','Work autonomously on top task'],
-      ['/autopilot','Autopilot'],
+      ['/morning-note','Daily 7am market briefing — overnight news, key moves, trade ideas'],
+      ['/screen','Stock & business idea screener — value, growth, quality, short, special situations'],
+      ['/sector','Full sector overview — market sizing, competitive landscape, valuation context'],
+      ['/competitive','Deep competitive analysis — positioning, strengths, weaknesses, strategic implications'],
     ].map(([cmd,label])=>`<button class="skill-cmd-pill" data-cmd="${cmd} " title="${label}">${cmd}</button>`).join('');
     const msgs = document.getElementById('chat-messages');
     if (msgs) msgs.parentNode.insertBefore(bar, msgs);
@@ -2394,6 +2407,12 @@ You have the following real, executing capabilities. Use them in your responses:
 
 ⑦ SKILLS → invoke any skill for specialized output:
    /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
+
+   FINANCIAL & INTELLIGENCE SKILLS:
+   /morning-note → Daily market briefing. Format: 1 page max. Sections: OVERNIGHT (what moved and why), MACRO (key data/events), EQUITIES (sector moves, notable names), TRADE IDEAS (2-3 actionable setups with entry/exit logic), WATCH LIST (what to track today). Voice: direct, opinionated. "Markets are pricing in X, which is wrong because Y." Write it like you're sending it at 7am.
+   /screen → Business or stock idea screener. Ask for screen type: VALUE (low P/E, high FCF yield, discount to intrinsic), GROWTH (rev acceleration, market share gain, TAM expansion), QUALITY (ROIC >15%, pricing power, durable moat), SHORT (deteriorating fundamentals, over-earning, competitive threat), SPECIAL SITUATIONS (spin-offs, sum-of-parts, activist, restructuring). Output: idea table with ticker/name, thesis (1 sentence), key metric, catalyst, and risk. Trigger on: "screen for", "find ideas", "what looks interesting", "give me some names".
+   /sector → Sector overview report. Structure: 1) MARKET OVERVIEW (size, growth rate, key drivers, headwinds), 2) COMPETITIVE LANDSCAPE (top 3-5 players, market share, moat assessment), 3) VALUATION CONTEXT (how sector trades vs. history and vs. market), 4) INVESTMENT IMPLICATIONS (where the opportunity is, what to avoid, key risks). Be specific — use real numbers and real company names.
+   /competitive → Deep competitive analysis. Phase 1: scope the request (what company/product, which competitors, what decision this informs). Phase 2: build the analysis — positioning map, feature/capability comparison, go-to-market differences, pricing, financials if public, win/loss patterns, strategic trajectory. End with: STRATEGIC IMPLICATIONS (what this means for the user's position and the single most important thing to act on).
 
 ████ NON-NEGOTIABLE OPERATING RULES ████
 
