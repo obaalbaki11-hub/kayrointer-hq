@@ -1088,6 +1088,34 @@ const GmailAPI = {
     });
   },
 
+  // Silently refresh the token if expired — no popup, no user action needed
+  async _ensureToken() {
+    const expiry = State.settings.gmailTokenExpiry || 0;
+    const token  = GmailAPI._token || State.settings.gmailToken;
+    if (token && Date.now() < expiry - 60000) return token; // still valid (>1 min left)
+    // Try silent refresh
+    await GmailAPI._loadGIS();
+    return new Promise(resolve => {
+      try {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/gmail.send https://www.googleapis.com/auth/gmail.compose https://www.googleapis.com/auth/userinfo.email',
+          prompt: '',
+          hint: State.settings.gmailEmail || '',
+          callback: (resp) => {
+            if (resp.error || !resp.access_token) { resolve(null); return; }
+            GmailAPI._token = resp.access_token;
+            State.settings.gmailToken = resp.access_token;
+            State.settings.gmailTokenExpiry = Date.now() + ((resp.expires_in || 3600) * 1000);
+            save('settings');
+            resolve(resp.access_token);
+          },
+        });
+        client.requestAccessToken({ prompt: '' });
+      } catch(_) { resolve(null); }
+    });
+  },
+
   async connect() {
     await GmailAPI._loadGIS();
     GmailAPI._tokenClient = google.accounts.oauth2.initTokenClient({
@@ -1124,10 +1152,10 @@ const GmailAPI = {
   },
 
   getToken() { return GmailAPI._token || State.settings.gmailToken || null; },
-  isConnected() { return !!(GmailAPI.getToken() && State.settings.gmailEmail); },
+  isConnected() { return !!(State.settings.gmailEmail); },
 
   async listMessages(maxResults = 15, query = 'in:inbox') {
-    const t = GmailAPI.getToken(); if (!t) return null;
+    const t = await GmailAPI._ensureToken(); if (!t) return null;
     const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages?maxResults=${maxResults}&q=${encodeURIComponent(query)}`, {
       headers: { Authorization: `Bearer ${t}` }
     });
@@ -1135,7 +1163,7 @@ const GmailAPI = {
   },
 
   async getMessage(id) {
-    const t = GmailAPI.getToken(); if (!t) return null;
+    const t = await GmailAPI._ensureToken(); if (!t) return null;
     const r = await fetch(`https://gmail.googleapis.com/gmail/v1/users/me/messages/${id}?format=full`, {
       headers: { Authorization: `Bearer ${t}` }
     });
@@ -1157,7 +1185,8 @@ const GmailAPI = {
   },
 
   async sendEmail({ to, subject, body }) {
-    const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
+    const t = await GmailAPI._ensureToken();
+    if (!t) return { error: 'Gmail session expired — go to Settings and click Connect Gmail again' };
     const from = State.settings.gmailEmail || '';
     const raw = GmailAPI._buildRaw({ from, to, subject, body });
     const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/messages/send', {
@@ -1171,7 +1200,8 @@ const GmailAPI = {
   },
 
   async createDraft({ to, subject, body }) {
-    const t = GmailAPI.getToken(); if (!t) return { error: 'Not connected' };
+    const t = await GmailAPI._ensureToken();
+    if (!t) return { error: 'Gmail session expired — reconnect in Settings' };
     const from = State.settings.gmailEmail || '';
     const raw = GmailAPI._buildRaw({ from, to, subject, body });
     const r = await fetch('https://gmail.googleapis.com/gmail/v1/users/me/drafts', {
