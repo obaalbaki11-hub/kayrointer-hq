@@ -706,8 +706,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','settings','plans','security'],
-  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','apollo','meta','automations','settings','plans','security'],
+  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','settings','plans','security','skills'],
+  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','apollo','meta','automations','settings','plans','security','skills'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -2036,13 +2036,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -9751,6 +9751,127 @@ const Onboarding = {
 
     Router.navigate('hq');
   },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  SKILLS PAGE — Tutorial & Reference
+// ══════════════════════════════════════════════════════════════
+const SkillsPage = {
+  init(container) {
+    const SKILLS = [
+      {
+        cat: 'Core Productivity', color: '#4f8cff', icon: '⚡',
+        items: [
+          { cmd: '/gsd', name: 'Get Shit Done', desc: 'Turn any goal into a full action plan — broken into tasks, owners, and deadlines.', example: '/gsd launch our cold email campaign this week', tip: 'Use this when you have a big goal and need the team to move immediately.' },
+          { cmd: '/brainstorm', name: 'Brainstorm', desc: 'Generate 5 distinct angles on any problem, product idea, or strategic question.', example: '/brainstorm new pricing tiers for Kayro', tip: 'Great for when you\'re stuck or want to stress-test your thinking.' },
+          { cmd: '/brief', name: 'Daily Brief', desc: 'Your morning standup in writing — what\'s on, what\'s at risk, what needs a decision.', example: '/brief', tip: 'Ask ARIA every morning. Takes 10 seconds to read.' },
+          { cmd: '/autopilot', name: 'Autopilot', desc: 'Hand the agent your #1 task and let them work autonomously — they plan, act, and report back.', example: '/autopilot draft and schedule the week\'s LinkedIn posts', tip: 'Give clear success criteria so the agent knows when they\'re done.' },
+        ],
+      },
+      {
+        cat: 'Writing & Content', color: '#10b981', icon: '✍️',
+        items: [
+          { cmd: '/email', name: 'Email Writer', desc: 'Write a complete, ready-to-send email — cold outreach, follow-up, or internal comms.', example: '/email follow up with the investor who went quiet 2 weeks ago', tip: 'Always specify the recipient\'s context so the email hits specifically.' },
+          { cmd: '/social', name: 'Social Content', desc: 'Full social posts for Twitter/X, LinkedIn, and Instagram — written in your voice, ready to publish.', example: '/social announcing our new Kling video integration', tip: 'Tell the agent your tone (professional, casual, hype) for best results.' },
+          { cmd: '/blog', name: 'Blog Post', desc: 'Full SEO-optimized blog post with H1, H2 structure, meta title, meta description, and internal linking suggestions.', example: '/blog how AI agents are replacing virtual assistants in 2025', tip: 'Give a target keyword for best SEO output.' },
+          { cmd: '/copy', name: 'Copywriting', desc: 'High-converting landing page copy, ad headlines, product descriptions, and CTAs.', example: '/copy hero section for kayrointer.com targeting solo founders', tip: 'Tell the agent who you\'re targeting and the one action you want them to take.' },
+        ],
+      },
+      {
+        cat: 'Business Strategy', color: '#f59e0b', icon: '🎯',
+        items: [
+          { cmd: '/pitch', name: 'Sales Pitch', desc: 'Complete 15-minute sales pitch narrative — problem, solution, proof, pricing, and close.', example: '/pitch for a marketing agency considering switching from ChatGPT', tip: 'Give the agent the buyer\'s profile for a personalized pitch.' },
+          { cmd: '/proposal', name: 'Business Proposal', desc: 'Full business proposal with executive summary, scope, timeline, pricing, and next steps.', example: '/proposal for a 3-month consulting engagement on AI automation', tip: 'Include the client name and deal size for a specific, compelling doc.' },
+          { cmd: '/strategy', name: 'Strategy', desc: 'Full strategic plan — market analysis, positioning, GTM approach, OKRs, and 90-day roadmap.', example: '/strategy grow Kayro from 0 to 100 paying subscribers', tip: 'Ask Claude (AI Manager) for the most complete strategic output.' },
+          { cmd: '/prd', name: 'Product PRD', desc: 'Full Product Requirements Document — problem statement, user stories, success metrics, edge cases, and non-goals.', example: '/prd for a referral program feature', tip: 'Omar (Head of Product) writes the sharpest PRDs.' },
+          { cmd: '/campaign', name: 'Campaign', desc: 'End-to-end marketing campaign — channels, messaging, creative brief, budget allocation, and success metrics.', example: '/campaign for the Growth plan launch targeting solo founders', tip: 'Include budget range and timeline for actionable output.' },
+        ],
+      },
+      {
+        cat: 'Legal & Ops', color: '#8b5cf6', icon: '⚖️',
+        items: [
+          { cmd: '/contract', name: 'Contract', desc: 'Professional contract draft — services agreement, NDA, freelancer contract, or SaaS subscription agreement.', example: '/contract freelance content writer — $3k/month, 3-month term', tip: 'Always have a real lawyer review before signing anything significant.' },
+          { cmd: '/legal', name: 'Legal Brief', desc: 'Plain-English legal analysis — terms of service review, policy compliance, IP basics, or regulatory questions.', example: '/legal what GDPR means for a US SaaS storing EU customer emails', tip: 'Use this to understand your exposure before taking action.' },
+          { cmd: '/audit', name: 'Audit', desc: 'Structured audit of any system, process, page, or campaign — what\'s working, what\'s broken, recommendations.', example: '/audit our cold email open rates and reply rates', tip: 'Give the agent actual numbers if you have them — the output will be far more actionable.' },
+          { cmd: '/onboard', name: 'Onboarding Playbook', desc: 'Complete employee or customer onboarding plan — day 1, week 1, month 1 milestones with owners and triggers.', example: '/onboard new Growth plan subscriber', tip: 'Mia (Customer Success) writes the best onboarding playbooks.' },
+          { cmd: '/delegate', name: 'Delegate', desc: 'Break any goal into specific task assignments across the team — with owners, priorities, and deadlines.', example: '/delegate launch our Product Hunt page by Friday', tip: 'Use this when you have a clear goal but need the team to execute it.' },
+        ],
+      },
+      {
+        cat: 'Engineering', color: '#22c55e', icon: '💻',
+        items: [
+          { cmd: '/arch', name: 'Architecture', desc: 'Full system architecture design — components, data flows, API contracts, scaling strategy, and failure modes.', example: '/arch a multi-tenant SaaS backend with role-based access', tip: 'Ask Sarah (Lead Engineer) — she will always plan before she codes.' },
+          { cmd: '/code', name: 'Code', desc: 'Production-quality code with full error handling, edge case coverage, and inline reasoning — not stubs.', example: '/code a Cloudflare Worker that proxies Anthropic API calls', tip: 'Include the language, framework, and specific constraints upfront.' },
+          { cmd: '/outreach', name: 'Outreach Sequence', desc: 'Full 5-touch multi-channel outreach sequence — email, LinkedIn, and follow-up — with rationale for each touch.', example: '/outreach to CTOs of Series A B2B SaaS companies', tip: 'Give the persona and pain point — Chris will write to that specific person, not a template.' },
+        ],
+      },
+      {
+        cat: 'Financial & Market Intel', color: '#f0c040', icon: '📈',
+        items: [
+          { cmd: '/morning-note', name: 'Morning Note', desc: 'Daily 7am market briefing — overnight news, macro events, equity moves, 2-3 trade ideas, and a watch list.', example: '/morning-note', tip: 'Ask ARIA or Claude every morning. One page, opinionated, actionable.' },
+          { cmd: '/screen', name: 'Idea Screen', desc: 'Business or market screener — value, growth, quality, short, or special situation opportunities — output as an idea table.', example: '/screen growth companies gaining market share in AI infrastructure', tip: 'Specify the screen type (value / growth / quality / short / special situations) for focused results.' },
+          { cmd: '/sector', name: 'Sector Overview', desc: 'Full industry report — market sizing, growth drivers, competitive landscape, valuation context, and investment implications.', example: '/sector AI workforce software', tip: 'Use before making product bets, pricing decisions, or entering a new market.' },
+          { cmd: '/competitive', name: 'Competitive Analysis', desc: 'Deep competitive teardown — positioning maps, feature comparisons, pricing, win/loss patterns, and strategic implications.', example: '/competitive Kayro vs Notion AI vs ChatGPT Teams', tip: 'Chris uses this before every major pitch. Omar uses it before every roadmap decision.' },
+        ],
+      },
+    ];
+
+    container.innerHTML = `
+      <div class="skills-page">
+        <div class="skills-hero">
+          <div class="skills-hero-badge">⚡ POWER SKILLS</div>
+          <h1 class="skills-hero-title">What your AI team can do</h1>
+          <p class="skills-hero-sub">Type any skill command in chat — or click a pill in the chat bar — to activate a specialized workflow. Each skill turns your agent into an expert working at full speed.</p>
+          <div class="skills-how-row">
+            <div class="skills-how-item"><div class="skills-how-icon">1</div><div class="skills-how-txt"><strong>Open Chat</strong><br>Click 💬 Chat in the top right</div></div>
+            <div class="skills-how-arrow">→</div>
+            <div class="skills-how-item"><div class="skills-how-icon">2</div><div class="skills-how-txt"><strong>Pick an Agent</strong><br>Select from the tabs at top</div></div>
+            <div class="skills-how-arrow">→</div>
+            <div class="skills-how-item"><div class="skills-how-icon">3</div><div class="skills-how-txt"><strong>Type a Skill</strong><br>Use /skill or click a pill</div></div>
+            <div class="skills-how-arrow">→</div>
+            <div class="skills-how-item"><div class="skills-how-icon">4</div><div class="skills-how-txt"><strong>Get the Output</strong><br>Full docs, not outlines</div></div>
+          </div>
+        </div>
+        ${SKILLS.map(cat => `
+          <div class="skills-cat">
+            <div class="skills-cat-hdr">
+              <span class="skills-cat-icon" style="background:${cat.color}22;color:${cat.color}">${cat.icon}</span>
+              <span class="skills-cat-name" style="color:${cat.color}">${cat.cat}</span>
+            </div>
+            <div class="skills-grid">
+              ${cat.items.map(sk => `
+                <div class="skill-card" data-cmd="${sk.cmd}">
+                  <div class="skill-card-top">
+                    <code class="skill-cmd-tag" style="background:${cat.color}18;color:${cat.color};border-color:${cat.color}30">${sk.cmd}</code>
+                    <span class="skill-card-name">${sk.name}</span>
+                  </div>
+                  <p class="skill-card-desc">${sk.desc}</p>
+                  <div class="skill-card-example">
+                    <span class="skill-ex-label">EXAMPLE</span>
+                    <span class="skill-ex-text">${escHtml(sk.example)}</span>
+                  </div>
+                  <div class="skill-card-tip">💡 ${sk.tip}</div>
+                  <button class="skill-try-btn" data-cmd="${sk.cmd} " style="border-color:${cat.color}40;color:${cat.color}">Try ${sk.cmd} →</button>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `).join('')}
+        <div class="skills-footer-note">
+          <span>Skills work with every agent — but each agent has specialty strengths.</span>
+          <span class="skills-footer-sub">Ask <strong>Claude</strong> for strategy. <strong>Chris</strong> for sales. <strong>Sarah</strong> for code. <strong>ARIA</strong> for daily briefs. <strong>Penny</strong> for content.</span>
+        </div>
+      </div>`;
+
+    container.querySelectorAll('.skill-try-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById('chat-input');
+        if (inp) { inp.value = btn.dataset.cmd; inp.focus(); }
+        Chat.open();
+      });
+    });
+  },
+  destroy() {},
 };
 
 // ══════════════════════════════════════════════════════════════
