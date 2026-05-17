@@ -7481,13 +7481,6 @@ const KlingPage = {
       </div>
     </div></div>`;
 
-    document.getElementById('kling-save-key').addEventListener('click', () => {
-      State.settings.klingKeyId = document.getElementById('kling-key-id').value.trim();
-      State.settings.klingKeySecret = document.getElementById('kling-key-secret').value.trim();
-      save('settings');
-      toast('Kling keys saved ✓', 'success');
-    });
-
     document.querySelectorAll('.kling-tab').forEach(t => t.addEventListener('click', () => {
       document.querySelectorAll('.kling-tab').forEach(x => x.classList.remove('active'));
       t.classList.add('active');
