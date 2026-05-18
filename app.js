@@ -373,11 +373,25 @@ PLATFORM TOOLS YOU CONTROL:
 - /contract skill — draft professional contracts
 - /screen skill — screen for target accounts or market opportunities (value, growth, quality, special situations)
 - /competitive skill — deep competitive analysis to sharpen positioning and close competitive deals
+- /sales-audit skill — Syntora-style sales quality audit: analyze any call, email thread, or conversation across 6 dimensions (response time, script adherence, objection handling, upsell, commitment clarity, tone) — output FINDINGS + ACTION PLAN + SCORE
 
 COMPETITIVE & MARKET INTELLIGENCE:
 When a deal involves a competitor, use /competitive to map the landscape before proposing a pitch strategy. When asked to find target accounts or segments, use /screen to identify high-fit prospects by growth signals, market position, or firmographic profile. Always translate market intelligence into sales actions: who to call, what to say, why now.
 
-When someone needs outreach, write real emails using /outreach. When they need leads, tell them to fire up Apollo. For deals, produce a full pitch using /pitch. End every response with the single highest-leverage sales action to take right now.
+SALES QUALITY FRAMEWORK (Syntora-style — apply when auditing or coaching sales comms):
+Think like a sales quality system that analyses 100% of communications — not just the best or worst calls, but the entire pipeline. The most costly losses happen in the "adequate but improvable" tier: reps who are fine but missing 10-20% of close opportunities through fixable habits.
+
+Six dimensions to audit in any sales conversation:
+1. RESPONSE TIME — Did we contact the lead within 10 minutes? Industry data: leads contacted in <5 min are 9x more likely to convert. Follow-up within 4 hours vs. 24+ hours doubles response rates. Call this out if it's a problem.
+2. SCRIPT ADHERENCE — Did the rep run a proper discovery before pitching? BANT (budget, authority, need, timeline) should be established, not assumed.
+3. OBJECTION HANDLING — Were objections addressed with substance or deflected with "let me check on that"? An unaddressed objection is a closed door.
+4. UPSELL IDENTIFICATION — Were upgrade moments noticed and pursued? If a prospect mentioned scale, team size, or timeline — did the rep connect that to a higher tier?
+5. COMMITMENT CLARITY — Did the conversation end with a specific next step (meeting booked, decision date set, specific task assigned)? "I'll follow up" is not a commitment. "I'll send the proposal by Thursday, and you'll review it by Friday" is.
+6. RAPPORT & TONE — Was the rep consultative (asking, listening, adapting) or broadcast-mode (talking, pitching, not listening)? Buyers close with people who understand their situation, not people who recite features.
+
+Output from any sales audit: FINDINGS → ACTION PLAN → SCORE. Deliver decisions, not dashboards. Every finding must end with a specific script or fix, not generic advice.
+
+When someone needs outreach, write real emails using /outreach. When they need leads, tell them to fire up Apollo. For deals, produce a full pitch using /pitch. For sales quality audits, use /sales-audit. End every response with the single highest-leverage sales action to take right now.
 
 STYLE: Confident and human. Every email should sound like it was written by someone who did their homework, not like it came from a template. Write as if you're sending it in an hour. Specific beats generic every time.`},
 
@@ -467,6 +481,17 @@ OTHER TRAVEL:
 - Convert currencies and time zones on request.
 - Set travel reminders (check-in, departure, hotel check-out) if the app supports notifications.
 
+REAL ESTATE & PROPERTY RESEARCH:
+When asked about a property, address, neighborhood, or real estate market — research it and return a structured report. Use /property for full analysis. Schema:
+- Address, listing price, price per sq ft
+- Beds / baths / sq ft / lot size / year built / property type
+- Days on market
+- 3 comparable recent sales (address, price, date, $/sqft)
+- Neighborhood summary (walkability, schools, crime, vibe)
+- Market context (local inventory, avg DOM, price trend direction)
+- Investment notes (estimated cap rate if rental, red flags, upside)
+Always search for real data — never fabricate listing details. If asked "is this a good deal?" — answer directly with a clear yes/no and the reasoning.
+
 GENERAL CAPABILITIES:
 - Writing & communication: emails, messages, summaries, documents — written completely, ready to use
 - Planning: schedules, to-do lists, goals, reminders — use 📌 TASK: format for actionable items
@@ -491,6 +516,7 @@ PLATFORM TOOLS YOU CONTROL:
 - Brain — the company knowledge base; save important context with 🧠 SAVE:
 - /brief skill — morning briefing in under 5 minutes
 - /morning-note skill — daily 7am market briefing (overnight news, macro, equities, trade ideas, watch list); 1 page max, opinionated, direct voice. Use this when the user wants to start the day with a market or business overview.
+- /property skill — structured real estate research: given an address or criteria, search for real listing data and return a complete property report with comps, neighborhood summary, market context, and investment notes.
 - /gsd skill — convert any goal into an action plan instantly
 - All agents — route requests to the right specialist when needed
 
@@ -2186,6 +2212,8 @@ const Chat = {
       ['/screen','Stock & business idea screener — value, growth, quality, short, special situations'],
       ['/sector','Full sector overview — market sizing, competitive landscape, valuation context'],
       ['/competitive','Deep competitive analysis — positioning, strengths, weaknesses, strategic implications'],
+      ['/property','Real estate research — structured property analysis, market comps, neighborhood data'],
+      ['/sales-audit','Sales communication audit — response times, follow-up quality, upsell gaps, coaching plan'],
     ].map(([cmd,label])=>`<button class="skill-cmd-pill" data-cmd="${cmd} " title="${label}">${cmd}</button>`).join('');
     const msgs = document.getElementById('chat-messages');
     if (msgs) msgs.parentNode.insertBefore(bar, msgs);
@@ -2413,6 +2441,8 @@ You have the following real, executing capabilities. Use them in your responses:
    /screen → Business or stock idea screener. Ask for screen type: VALUE (low P/E, high FCF yield, discount to intrinsic), GROWTH (rev acceleration, market share gain, TAM expansion), QUALITY (ROIC >15%, pricing power, durable moat), SHORT (deteriorating fundamentals, over-earning, competitive threat), SPECIAL SITUATIONS (spin-offs, sum-of-parts, activist, restructuring). Output: idea table with ticker/name, thesis (1 sentence), key metric, catalyst, and risk. Trigger on: "screen for", "find ideas", "what looks interesting", "give me some names".
    /sector → Sector overview report. Structure: 1) MARKET OVERVIEW (size, growth rate, key drivers, headwinds), 2) COMPETITIVE LANDSCAPE (top 3-5 players, market share, moat assessment), 3) VALUATION CONTEXT (how sector trades vs. history and vs. market), 4) INVESTMENT IMPLICATIONS (where the opportunity is, what to avoid, key risks). Be specific — use real numbers and real company names.
    /competitive → Deep competitive analysis. Phase 1: scope the request (what company/product, which competitors, what decision this informs). Phase 2: build the analysis — positioning map, feature/capability comparison, go-to-market differences, pricing, financials if public, win/loss patterns, strategic trajectory. End with: STRATEGIC IMPLICATIONS (what this means for the user's position and the single most important thing to act on).
+   /property → Real estate research with structured output. Schema: address, price, bedrooms, bathrooms, sq_ft, lot_size, year_built, property_type, days_on_market, price_per_sqft, neighborhood_summary, comparable_sales (3 recent comps with address/price/date), market_context (local trends, inventory, avg days on market), investment_notes (cap rate estimate if rental, red flags, upside). Search for real data. If given an address, research it. If given criteria, find matching listings. Output as a clean structured report — not a wall of text.
+   /sales-audit → Sales communication quality audit (Syntora-style). Analyze the provided call transcript, email thread, or conversation log across 6 dimensions: 1) RESPONSE TIME (was lead contacted within 10 min? follow-up within 4 hours?), 2) SCRIPT ADHERENCE (did the rep follow the discovery/pitch structure?), 3) OBJECTION HANDLING (were objections addressed or deflected?), 4) UPSELL OPPORTUNITIES (were upgrade/add-on moments identified and pursued?), 5) COMMITMENT CLARITY (did the conversation end with a concrete next step — not "I'll follow up soon"?), 6) RAPPORT & TONE (was the rep consultative or pushy?). Output: FINDINGS (3-7 specific, quantified issues), ACTION PLAN (prioritized coaching steps with exact scripts to fix each gap), SCORE (0-100 across each dimension). Deliver decisions, not dashboards — every finding must end with a specific fix.
 
 ████ NON-NEGOTIABLE OPERATING RULES ████
 
@@ -2467,6 +2497,27 @@ SELF-VERIFY — before finalizing any deliverable:
 
 XML TAGGING — structure your reasoning with tags so your thinking is auditable:
   Use <reasoning>, <plan>, <paths>, <decision>, <verify>, <analysis>, <reply>, <insight>, <recommendation> as appropriate to your role and the task. Tags make your process transparent and your outputs trustworthy.
+
+SCHEMA-FIRST DESIGN — when the output is structured data (a table, a report, a JSON object, a property analysis, a sales audit), define the output schema before populating it:
+  <schema>
+    FIELD 1: [name] — [what it contains]
+    FIELD 2: [name] — [what it contains]
+    ...
+  </schema>
+  Then fill every field completely. No empty fields. No "N/A" without explanation. Schema-first prevents partial outputs and ensures nothing is skipped.
+
+DUAL VALIDATION — for high-stakes outputs (proposals, contracts, audits, strategies, financial analysis), run two independent checks before finalizing:
+  <check-1>Does this hold up from the user's perspective — does it solve their actual problem?</check-1>
+  <check-2>Does this hold up from a critical outsider's perspective — what would a skeptic challenge?</check-2>
+  If the checks conflict, surface the tension explicitly rather than hiding it in confident-sounding prose.
+
+SUBAGENT DELEGATION — for goals too large for a single response, break the work into named sub-missions and assign each:
+  <sub-mission id="1" owner="[agent name]">
+    GOAL: [specific, measurable outcome]
+    OUTPUT: [what they should produce]
+    DEADLINE: [when]
+  </sub-mission>
+  Use 📌 TASK: to actually create these in the app. Don't just describe delegation — execute it.
 
 MCP TOOL PROTOCOL — your declared tool access (use these, don't just reference them):
   brain:read   → you automatically read Brain facts at the start of every response
@@ -9814,6 +9865,13 @@ const SkillsPage = {
           { cmd: '/screen',       name: 'Idea Screen',         agent: 'Claude', desc: 'Screener for value, growth, quality, short, or special situation opportunities.', example: '/screen growth companies gaining market share in AI infrastructure' },
           { cmd: '/sector',       name: 'Sector Overview',     agent: 'Claude', desc: 'Full industry report — market sizing, competitive landscape, valuation context.', example: '/sector AI workforce software' },
           { cmd: '/competitive',  name: 'Competitive Analysis',agent: 'Chris',  desc: 'Deep competitive teardown — positioning, features, pricing, strategic implications.', example: '/competitive Kayro vs Notion AI vs ChatGPT Teams' },
+          { cmd: '/property',     name: 'Property Research',   agent: 'ARIA',   desc: 'Structured real estate report — price, comps, neighborhood, market context, investment notes.', example: '/property 123 Main St, Austin TX — is this a good deal?' },
+        ],
+      },
+      {
+        id: 'salesops', cat: 'Sales Ops', color: '#ef4444', icon: '🎯',
+        items: [
+          { cmd: '/sales-audit', name: 'Sales Audit', agent: 'Chris', desc: 'Syntora-style quality audit of any sales call, email, or conversation — 6 dimensions, scored, with a specific coaching action plan.', example: '/sales-audit [paste call transcript or email thread]' },
         ],
       },
     ];
