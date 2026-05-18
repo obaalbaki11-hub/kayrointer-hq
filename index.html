@@ -197,6 +197,37 @@ nav{
 .fp-dim{color:#444}
 .fp-white{color:#e2e8f0}
 
+/* ── SKILLS SECTION ── */
+.skills-section{max-width:1140px;margin:0 auto 96px;padding:0 28px}
+.skills-section-hdr{text-align:center;margin-bottom:52px}
+.skills-eyebrow{font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:14px;text-transform:uppercase}
+.skills-section-h{font-size:clamp(30px,4.5vw,52px);font-weight:800;letter-spacing:-1.5px;color:#fff;margin-bottom:12px;line-height:1.08}
+.skills-section-sub{font-size:15px;color:#666;max-width:540px;margin:0 auto 28px;line-height:1.7}
+.skills-count-row{display:flex;align-items:center;justify-content:center;gap:6px;flex-wrap:wrap}
+.skills-count-badge{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);border-radius:20px;padding:5px 14px;font-size:11.5px;font-weight:600;color:#888;font-family:var(--mono)}
+.skills-count-badge span{color:#fff}
+
+.skills-cats{display:flex;flex-direction:column;gap:40px}
+.skills-cat-row{background:#0a0a0a;border:1px solid rgba(255,255,255,.07);border-radius:18px;padding:28px 28px 24px;transition:border-color .2s}
+.skills-cat-row:hover{border-color:rgba(255,255,255,.13)}
+.skills-cat-label{display:flex;align-items:center;gap:10px;margin-bottom:20px}
+.skills-cat-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.skills-cat-name{font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase}
+.skills-cat-count{font-size:10px;color:#333;font-family:var(--mono);margin-left:auto}
+.skills-pills{display:flex;flex-wrap:wrap;gap:10px}
+.skill-pill{
+  display:flex;align-items:center;gap:8px;
+  background:#111;border:1px solid rgba(255,255,255,.07);border-radius:10px;
+  padding:10px 14px;transition:all .18s;cursor:default;
+}
+.skill-pill:hover{border-color:rgba(255,255,255,.18);transform:translateY(-1px);background:#151515}
+.skill-pill-cmd{font-family:var(--mono);font-size:12px;font-weight:700}
+.skill-pill-name{font-size:12px;color:#666;font-weight:500}
+.skill-pill-sep{width:1px;height:12px;background:rgba(255,255,255,.08)}
+
+.skills-cta-row{text-align:center;margin-top:44px;padding-top:40px;border-top:1px solid rgba(255,255,255,.06)}
+.skills-cta-row p{font-size:13px;color:#444;margin-bottom:18px;font-family:var(--mono)}
+
 /* ── LEAD MACHINE ── */
 .leads-section{
   max-width:1100px;margin:0 auto 96px;padding:0 28px;
@@ -380,6 +411,7 @@ footer{
   </a>
   <div class="nav-right">
     <a class="nav-link" href="#features">Features</a>
+    <a class="nav-link" href="#skills" style="color:#4f8cff">Skills ⚡</a>
     <a class="nav-link" href="#leads" style="color:#22c55e">Lead Machine</a>
     <a class="nav-link" href="#pricing">Pricing</a>
     <a class="nav-link" href="#how">How it works</a>
@@ -604,6 +636,154 @@ footer{
   </div>
 </section>
 
+<!-- POWER SKILLS SECTION -->
+<section class="skills-section" id="skills">
+  <div class="skills-section-hdr">
+    <div class="skills-eyebrow">// power skills</div>
+    <h2 class="skills-section-h">30+ slash commands.<br>Your team does the work.</h2>
+    <p class="skills-section-sub">Type any <code style="font-family:var(--mono);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 7px;font-size:13px">/skill</code> in chat and your agent activates a specialized workflow — not a generic reply, a complete professional output.</p>
+    <div class="skills-count-row">
+      <div class="skills-count-badge"><span>30+</span> skills</div>
+      <div class="skills-count-badge"><span>8</span> categories</div>
+      <div class="skills-count-badge"><span>8</span> AI agents</div>
+      <div class="skills-count-badge">full docs, not outlines</div>
+    </div>
+  </div>
+
+  <div class="skills-cats">
+
+    <!-- Productivity -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#4f8cff"></div>
+        <span class="skills-cat-name" style="color:#4f8cff">Core Productivity</span>
+        <span class="skills-cat-count">6 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/gsd</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Get Shit Done — turn any goal into a full sprint plan</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/brainstorm</span><div class="skill-pill-sep"></div><span class="skill-pill-name">5-angle idea generation on any question</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/brief</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Daily standup — what's on, what's at risk</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/autopilot</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Agent works autonomously on your top task</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/delegate</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Break any goal into team task assignments</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#4f8cff">/meeting</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Transcript → structured minutes, decisions, action items</span></div>
+      </div>
+    </div>
+
+    <!-- Writing -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#10b981"></div>
+        <span class="skills-cat-name" style="color:#10b981">Writing & Content</span>
+        <span class="skills-cat-count">4 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10b981">/email</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Complete, ready-to-send email — cold or internal</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10b981">/social</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Full posts for Twitter/X, LinkedIn, Instagram</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10b981">/blog</span><div class="skill-pill-sep"></div><span class="skill-pill-name">SEO-optimized blog post — H1/H2, meta, links</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10b981">/copy</span><div class="skill-pill-sep"></div><span class="skill-pill-name">High-converting landing copy, ads, CTAs</span></div>
+      </div>
+    </div>
+
+    <!-- Strategy -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#f59e0b"></div>
+        <span class="skills-cat-name" style="color:#f59e0b">Business Strategy</span>
+        <span class="skills-cat-count">6 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/pitch</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Complete 15-min sales pitch with close</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/proposal</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Full business proposal — scope, timeline, pricing</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/strategy</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Strategic plan — GTM, OKRs, 90-day roadmap</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/prd</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Product Requirements Document — full, not outline</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/campaign</span><div class="skill-pill-sep"></div><span class="skill-pill-name">End-to-end marketing campaign</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f59e0b">/rfp</span><div class="skill-pill-sep"></div><span class="skill-pill-name">RFP analyzer — fit score + proposal outline</span></div>
+      </div>
+    </div>
+
+    <!-- Legal & Ops -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#8b5cf6"></div>
+        <span class="skills-cat-name" style="color:#8b5cf6">Legal & Ops</span>
+        <span class="skills-cat-count">4 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#8b5cf6">/contract</span><div class="skill-pill-sep"></div><span class="skill-pill-name">NDA, services agreement, SaaS subscription draft</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#8b5cf6">/legal</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Plain-English legal analysis — TOS, GDPR, IP</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#8b5cf6">/audit</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Structured audit — what's broken, what to fix</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#8b5cf6">/onboard</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Day 1–Month 1 onboarding playbook</span></div>
+      </div>
+    </div>
+
+    <!-- Engineering -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#22c55e"></div>
+        <span class="skills-cat-name" style="color:#22c55e">Engineering</span>
+        <span class="skills-cat-count">3 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#22c55e">/arch</span><div class="skill-pill-sep"></div><span class="skill-pill-name">System architecture — components, APIs, failure modes</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#22c55e">/code</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Production-quality code — not stubs</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#22c55e">/outreach</span><div class="skill-pill-sep"></div><span class="skill-pill-name">5-touch multi-channel outreach sequence</span></div>
+      </div>
+    </div>
+
+    <!-- Market Intel -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#f0c040"></div>
+        <span class="skills-cat-name" style="color:#f0c040">Market Intelligence</span>
+        <span class="skills-cat-count">6 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/morning-note</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Daily 7am market briefing — news, macro, trade ideas</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/screen</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Value / growth / quality / short idea screener</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/sector</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Full industry report — market sizing, comps, valuation</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/competitive</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Deep competitive teardown — positioning, pricing, strategy</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/property</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Real estate research — price, comps, neighborhood, ROI</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#f0c040">/sales-audit</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Sales quality audit — 6 dimensions, scored, with coaching plan</span></div>
+      </div>
+    </div>
+
+    <!-- Finance & Tax -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#10d98a"></div>
+        <span class="skills-cat-name" style="color:#10d98a">Finance & Tax</span>
+        <span class="skills-cat-count">3 skills</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10d98a">/invoice</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Extract structured data from any invoice or receipt</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10d98a">/expense</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Expense report — categories, multi-currency, flagged items</span></div>
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#10d98a">/tax</span><div class="skill-pill-sep"></div><span class="skill-pill-name">Tax planning — deductibles, compliance flags, optimization</span></div>
+      </div>
+    </div>
+
+    <!-- SEO -->
+    <div class="skills-cat-row">
+      <div class="skills-cat-label">
+        <div class="skills-cat-dot" style="background:#a855f7"></div>
+        <span class="skills-cat-name" style="color:#a855f7">SEO & Growth</span>
+        <span class="skills-cat-count">1 skill</span>
+      </div>
+      <div class="skills-pills">
+        <div class="skill-pill"><span class="skill-pill-cmd" style="color:#a855f7">/seo</span><div class="skill-pill-sep"></div><span class="skill-pill-name">SEO audit + keyword strategy — ranked by opportunity</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="skills-cta-row">
+    <p>Every skill runs inside Kayro — no copy-pasting, no switching apps.</p>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
+      <a href="app.html#skills" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;padding:13px 28px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#fff'">Browse all skills →</a>
+      <a href="app.html" style="display:inline-flex;align-items:center;gap:8px;background:none;color:#888;border:1px solid rgba(255,255,255,.15);padding:13px 28px;border-radius:9px;font-size:13px;font-weight:600;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.3)'" onmouseout="this.style.color='#888';this.style.borderColor='rgba(255,255,255,.15)'">Launch HQ free</a>
+    </div>
+  </div>
+</section>
+
 <!-- LEAD MACHINE SECTION -->
 <section class="leads-section" id="leads">
 
@@ -795,6 +975,7 @@ footer{
   </div>
   <div class="foot-links">
     <a class="foot-link" href="#features">Features</a>
+    <a class="foot-link" href="#skills">Skills</a>
     <a class="foot-link" href="#leads">Lead Machine</a>
     <a class="foot-link" href="#pricing">Pricing</a>
     <a class="foot-link" href="#how">How it works</a>
