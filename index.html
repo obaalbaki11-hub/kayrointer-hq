@@ -423,24 +423,302 @@ footer{
 </nav>
 
 <!-- HERO -->
-<section class="hero" id="pricing">
+<section class="hero" id="hero" style="min-height:100vh;padding-bottom:64px">
   <div class="hero-badge">
     <span class="badge-dot"></span>
-    AI Workforce Platform
+    AI Workforce Platform — 30+ Power Skills
   </div>
 
   <h1 class="hero-h1">
-    Your AI Workforce,<br>
-    <span class="hero-h1-dim">Ready to Work.</span>
+    Your AI team.<br>
+    <span class="hero-h1-dim">Actually doing the work.</span>
   </h1>
 
-  <p class="hero-sub">Hire specialized AI employees with defined roles, persistent memory, and real domain expertise. Not a chatbot — a full team.</p>
-  <div class="hero-trust">
-    <span>Start free</span>·<span>no credit card required</span>·<span>cancel anytime</span>
+  <p class="hero-sub">8 specialized AI employees — each with a role, memory, and domain expertise. Not a chatbot. A full workforce that writes emails, builds PRDs, audits sales calls, analyses markets, and ships.</p>
+
+  <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:36px">
+    <a href="#showcase" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#fff'">See what it does ↓</a>
+    <a href="app.html" style="display:inline-flex;align-items:center;gap:8px;background:none;color:#888;border:1px solid rgba(255,255,255,.18);padding:14px 28px;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.4)'" onmouseout="this.style.color='#888';this.style.borderColor='rgba(255,255,255,.18)'">Launch free →</a>
   </div>
 
-  <!-- Pricing cards -->
-  <div class="pricing-wrap" id="pricing-wrap">
+  <!-- Agent avatar strip -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px">
+    <div style="display:flex">
+      <div title="Claude — AI Manager" style="width:40px;height:40px;border-radius:50%;background:#e07540;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:8">C</div>
+      <div title="Omar — Head of Product" style="width:40px;height:40px;border-radius:50%;background:#3b82f6;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:7">O</div>
+      <div title="Sarah — Lead Engineer" style="width:40px;height:40px;border-radius:50%;background:#22c55e;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:6">S</div>
+      <div title="Alex — Marketing" style="width:40px;height:40px;border-radius:50%;background:#a855f7;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:5">A</div>
+      <div title="Zara — Design" style="width:40px;height:40px;border-radius:50%;background:#ec4899;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:4">Z</div>
+      <div title="Chris — Head of Sales" style="width:40px;height:40px;border-radius:50%;background:#ef4444;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:3">C</div>
+      <div title="Mia — Customer Success" style="width:40px;height:40px;border-radius:50%;background:#06b6d4;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:2">M</div>
+      <div title="ARIA — Personal Assistant" style="width:40px;height:40px;border-radius:50%;background:#f0c040;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#000;margin-left:-6px;z-index:1">A</div>
+    </div>
+    <span style="font-size:12px;color:#444;margin-left:14px;font-family:var(--mono)">8 agents online</span>
+    <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:8px;animation:pulse 2s infinite;display:inline-block"></span>
+  </div>
+
+  <!-- Stat strip -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
+    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">30+</span> power skills</div>
+    <div style="color:#222;font-size:14px">·</div>
+    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">Gmail</span> connected</div>
+    <div style="color:#222;font-size:14px">·</div>
+    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">Kling</span> video</div>
+    <div style="color:#222;font-size:14px">·</div>
+    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">Hunter.io</span> leads</div>
+    <div style="color:#222;font-size:14px">·</div>
+    <div style="font-size:11px;color:#333;font-family:var(--mono)">free to start</div>
+  </div>
+</section>
+
+<!-- SHOWCASE SECTION -->
+<section id="showcase" style="max-width:1140px;margin:0 auto;padding:0 28px 96px">
+
+  <!-- Section header -->
+  <div style="text-align:center;margin-bottom:64px">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:14px;text-transform:uppercase">// what you actually get</div>
+    <h2 style="font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1.5px;color:#fff;margin-bottom:14px;line-height:1.1">Your AI team, in action.</h2>
+    <p style="font-size:15px;color:#666;max-width:520px;margin:0 auto;line-height:1.7">Every agent has a role, a personality, and real skills. Here's what each one does — and what you can ask them.</p>
+  </div>
+
+  <!-- AGENT ROSTER -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:72px">
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #e07540">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#e0754022;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#e07540;flex-shrink:0">C</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Claude</div><div style="font-size:10px;color:#e07540;font-family:var(--mono);letter-spacing:.5px">AI MANAGER</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Your strategic right hand. Manages the team, runs OKRs, builds GTM plans, coordinates cross-functional work, and gives hard honest recommendations.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#e07540">Try: </div>
+        <div style="color:#888">/strategy grow from 0 to 100 subscribers</div>
+        <div style="color:#888">/delegate launch Product Hunt by Friday</div>
+        <div style="color:#888">/rfp [paste any tender document]</div>
+      </div>
+    </div>
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #3b82f6">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#3b82f622;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#3b82f6;flex-shrink:0">O</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Omar</div><div style="font-size:10px;color:#3b82f6;font-family:var(--mono);letter-spacing:.5px">HEAD OF PRODUCT</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Writes full PRDs, runs sprint planning, gives blunt product critique, and makes prioritization calls. Thinks like Stripe, Linear, Figma leadership.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#3b82f6">Try: </div>
+        <div style="color:#888">/prd referral program feature</div>
+        <div style="color:#888">/gsd launch the new pricing page</div>
+        <div style="color:#888">/competitive Kayro vs Notion AI</div>
+      </div>
+    </div>
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #22c55e">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#22c55e22;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#22c55e;flex-shrink:0">S</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Sarah</div><div style="font-size:10px;color:#22c55e;font-family:var(--mono);letter-spacing:.5px">LEAD ENGINEER</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Writes production-quality code, designs systems architecture, reviews PRs, and catches edge cases. Always plans before she codes.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#22c55e">Try: </div>
+        <div style="color:#888">/arch multi-tenant SaaS backend</div>
+        <div style="color:#888">/code Stripe webhook handler in Node</div>
+        <div style="color:#888">Review this function for security issues</div>
+      </div>
+    </div>
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #a855f7">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#a855f722;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#a855f7;flex-shrink:0">A</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Alex</div><div style="font-size:10px;color:#a855f7;font-family:var(--mono);letter-spacing:.5px">HEAD OF MARKETING</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Runs campaigns, writes ad copy, manages Meta Ads, builds content calendars, and turns any product update into a launch moment.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#a855f7">Try: </div>
+        <div style="color:#888">/campaign Growth plan launch</div>
+        <div style="color:#888">/social announcing Kling video integration</div>
+        <div style="color:#888">/copy hero section for kayrointer.com</div>
+      </div>
+    </div>
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #ef4444">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#ef444422;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#ef4444;flex-shrink:0">C</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Chris</div><div style="font-size:10px;color:#ef4444;font-family:var(--mono);letter-spacing:.5px">HEAD OF SALES</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Closes deals. Writes cold emails that actually get replies, builds outreach sequences, audits sales calls against 6 quality dimensions, and coaches reps.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#ef4444">Try: </div>
+        <div style="color:#888">/outreach CTOs at Series A SaaS</div>
+        <div style="color:#888">/sales-audit [paste call transcript]</div>
+        <div style="color:#888">/pitch for agency switching from ChatGPT</div>
+      </div>
+    </div>
+
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #f0c040">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#f0c04022;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#f0c040;flex-shrink:0">A</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">ARIA</div><div style="font-size:10px;color:#f0c040;font-family:var(--mono);letter-spacing:.5px">PERSONAL ASSISTANT</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Handles everything else: morning briefings, meeting summaries, property research, expense reports, travel, scheduling. 15 minutes with ARIA saves 2 hours.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#f0c040">Try: </div>
+        <div style="color:#888">/meeting [paste transcript]</div>
+        <div style="color:#888">/morning-note</div>
+        <div style="color:#888">/property 123 Main St Austin TX</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- LIVE CHAT DEMO -->
+  <div style="margin-bottom:72px">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:12px;text-transform:uppercase">// real conversation</div>
+      <h3 style="font-size:clamp(22px,3vw,34px);font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:8px">This is what it looks like.</h3>
+      <p style="font-size:14px;color:#666;max-width:480px;margin:0 auto">You type a message or /skill — your agent delivers a complete, usable output. Not a suggestion. The actual work.</p>
+    </div>
+
+    <div style="background:#0a0a0a;border:1px solid rgba(255,255,255,.09);border-radius:20px;overflow:hidden;max-width:780px;margin:0 auto">
+      <!-- Chat header -->
+      <div style="background:#111;border-bottom:1px solid rgba(255,255,255,.07);padding:14px 20px;display:flex;align-items:center;gap:12px">
+        <div style="width:34px;height:34px;border-radius:50%;background:#ef444422;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:#ef4444">C</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Chris</div><div style="font-size:10px;color:#555;font-family:var(--mono)">HEAD OF SALES · online</div></div>
+        <div style="margin-left:auto;display:flex;gap:6px">
+          <div style="width:8px;height:8px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+        </div>
+      </div>
+      <!-- Messages -->
+      <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+        <!-- User msg -->
+        <div style="display:flex;justify-content:flex-end">
+          <div style="background:#fff;color:#000;border-radius:12px 12px 3px 12px;padding:10px 14px;font-size:13px;max-width:70%;line-height:1.5">/outreach to VP of Sales at B2B SaaS companies with 10-50 reps</div>
+        </div>
+        <!-- Agent response -->
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="width:30px;height:30px;border-radius:50%;background:#ef444422;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#ef4444;flex-shrink:0">C</div>
+          <div style="background:#111;border:1px solid rgba(255,255,255,.07);border-radius:3px 12px 12px 12px;padding:14px 16px;font-size:12.5px;line-height:1.7;color:#ccc;max-width:85%">
+            <div style="color:#ef4444;font-weight:700;font-size:11px;font-family:var(--mono);margin-bottom:10px">OUTREACH SEQUENCE — 5 TOUCHES</div>
+            <div style="margin-bottom:8px"><span style="color:#fff;font-weight:600">Email 1 (Day 1) — The Hook</span></div>
+            <div style="color:#888;font-size:12px;margin-bottom:12px">Subject: <em>Your reps are leaving money in follow-ups</em><br>Hi [Name], I looked at [Company]'s Glassdoor reviews — three in the last 6 months mention "disorganized pipeline." That's usually a follow-up timing problem, not a rep quality problem…</div>
+            <div style="margin-bottom:8px"><span style="color:#fff;font-weight:600">Email 2 (Day 3) — The Proof</span></div>
+            <div style="color:#888;font-size:12px;margin-bottom:12px">Subject: <em>What 10-min lead response actually does to close rates</em><br>Quick data point: teams that contact inbound leads within 10 minutes convert 9x better than those who wait an hour…</div>
+            <div style="color:#555;font-size:11px;font-family:var(--mono)">+ 3 more touches (Day 7, Day 14, Day 21) generated →</div>
+          </div>
+        </div>
+        <!-- Second exchange -->
+        <div style="display:flex;justify-content:flex-end">
+          <div style="background:#fff;color:#000;border-radius:12px 12px 3px 12px;padding:10px 14px;font-size:13px;max-width:70%;line-height:1.5">now audit my last call transcript: [customer said price was too high, rep said "I'll check with my manager"]</div>
+        </div>
+        <div style="display:flex;gap:10px;align-items:flex-start">
+          <div style="width:30px;height:30px;border-radius:50%;background:#ef444422;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#ef4444;flex-shrink:0">C</div>
+          <div style="background:#111;border:1px solid rgba(255,255,255,.07);border-radius:3px 12px 12px 12px;padding:14px 16px;font-size:12.5px;line-height:1.7;color:#ccc;max-width:85%">
+            <div style="color:#ef4444;font-weight:700;font-size:11px;font-family:var(--mono);margin-bottom:10px">SALES AUDIT — SCORE: 52/100</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px;font-size:11px">
+              <div style="color:#888">Response time <span style="color:#22c55e">✓</span></div>
+              <div style="color:#888">Script adherence <span style="color:#f59e0b">~</span></div>
+              <div style="color:#888">Objection handling <span style="color:#ef4444">✗</span></div>
+              <div style="color:#888">Upsell attempts <span style="color:#ef4444">✗</span></div>
+              <div style="color:#888">Commitment clarity <span style="color:#f59e0b">~</span></div>
+              <div style="color:#888">Rapport &amp; tone <span style="color:#22c55e">✓</span></div>
+            </div>
+            <div style="color:#ef4444;font-size:11px;font-weight:700;margin-bottom:6px">CRITICAL FIX — Objection handling:</div>
+            <div style="color:#888;font-size:11.5px">"I'll check with my manager" is a deal-killer. The correct response: "I hear you — let me understand what value looks like for you at this stage. If we could show ROI within 60 days, does budget become a real blocker or more of a timing issue?"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOOLS PREVIEW STRIP -->
+  <div style="margin-bottom:72px">
+    <div style="text-align:center;margin-bottom:36px">
+      <div style="font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:12px;text-transform:uppercase">// the whole platform</div>
+      <h3 style="font-size:clamp(22px,3vw,34px);font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:8px">Every tool your team needs.</h3>
+      <p style="font-size:14px;color:#666;max-width:440px;margin:0 auto">All in one screen. No switching apps.</p>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px">
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">🏢</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Headquarters</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Live team activity, Ask the Room, command center for your whole AI workforce.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">✅</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Kanban Tasks</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Agents create, assign, and update tasks. /gsd turns any goal into a full sprint instantly.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">📊</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">AI Spreadsheet</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Full Excel-like grid. Ask AI to fill ranges, build projections, or analyze any data in plain English.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">✉️</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Cold Email</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Full outreach sequences. Sends from your Gmail. Hunter.io finds verified addresses at any company.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">🎨</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Design Studio</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Describe any UI. Your AI designer generates complete HTML/CSS — live preview, copy code instantly.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">🧠</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Brain</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Company knowledge base every agent reads automatically. Feed it docs, strategies, or customer data.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">🎬</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">Kling Video</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">Generate short video ads from a text prompt. Product demos, brand clips, social ads — no editing required.</div>
+      </div>
+      <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
+        <div style="font-size:22px;margin-bottom:10px">⚡</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">30+ Skills</div>
+        <div style="font-size:11.5px;color:#555;line-height:1.6">/meeting /rfp /invoice /tax /sales-audit /property /morning-note /sector and more — full docs every time.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILLS QUICK TEASER -->
+  <div style="background:#0a0a0a;border:1px solid rgba(79,140,255,.15);border-radius:20px;padding:36px;text-align:center">
+    <div style="font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#4f8cff;font-weight:600;margin-bottom:14px;text-transform:uppercase">⚡ power skills</div>
+    <h3 style="font-size:clamp(20px,3vw,30px);font-weight:800;letter-spacing:-1px;color:#fff;margin-bottom:8px">Type a command. Get the full document.</h3>
+    <p style="font-size:13px;color:#555;margin-bottom:28px;max-width:520px;margin-left:auto;margin-right:auto">Every skill triggers a specialist workflow. Not a generic reply — a complete, professional output you can send, submit, or ship.</p>
+    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-bottom:28px">
+      <span style="background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.25);color:#4f8cff;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/gsd</span>
+      <span style="background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:#10b981;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/email</span>
+      <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/strategy</span>
+      <span style="background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);color:#ef4444;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/sales-audit</span>
+      <span style="background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.25);color:#f0c040;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/morning-note</span>
+      <span style="background:rgba(16,217,138,.1);border:1px solid rgba(16,217,138,.25);color:#10d98a;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/invoice</span>
+      <span style="background:rgba(139,92,246,.1);border:1px solid rgba(139,92,246,.25);color:#8b5cf6;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/contract</span>
+      <span style="background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#22c55e;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/code</span>
+      <span style="background:rgba(240,192,64,.1);border:1px solid rgba(240,192,64,.25);color:#f0c040;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/property</span>
+      <span style="background:rgba(79,140,255,.1);border:1px solid rgba(79,140,255,.25);color:#4f8cff;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/meeting</span>
+      <span style="background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.25);color:#f59e0b;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/rfp</span>
+      <span style="background:rgba(16,217,138,.1);border:1px solid rgba(16,217,138,.25);color:#10d98a;border-radius:8px;padding:6px 12px;font-family:var(--mono);font-size:12px;font-weight:700">/tax</span>
+    </div>
+    <a href="#pricing" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;padding:13px 28px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#fff'">See plans & pricing →</a>
+  </div>
+
+</section>
+
+<!-- PRICING SECTION -->
+<section style="padding:80px 24px;text-align:center;background:linear-gradient(180deg,#080808 0%,#0a0a0a 100%)" id="pricing">
+  <div style="font-family:var(--mono);font-size:10px;letter-spacing:2.5px;color:#555;font-weight:600;margin-bottom:14px;text-transform:uppercase">// simple pricing</div>
+  <h2 style="font-size:clamp(28px,4vw,48px);font-weight:800;letter-spacing:-1.5px;color:#fff;margin-bottom:12px">Start free. Scale when ready.</h2>
+  <p style="font-size:15px;color:#666;max-width:480px;margin:0 auto 48px;line-height:1.7">No credit card required. The Growth plan is the fastest way to get your full team running — Claude is included, no API key needed.</p>
+  <div class="hero-trust" style="margin-bottom:40px">
+    <span>Start free</span>·<span>no credit card required</span>·<span>cancel anytime</span>
+  </div>
+  <div class="pricing-wrap">
     <div class="pricing-grid">
 
       <!-- Free -->
