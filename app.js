@@ -9757,113 +9757,152 @@ const Onboarding = {
 //  SKILLS PAGE — Tutorial & Reference
 // ══════════════════════════════════════════════════════════════
 const SkillsPage = {
+  _cat: 'all',
+
   init(container) {
     const SKILLS = [
       {
-        cat: 'Core Productivity', color: '#4f8cff', icon: '⚡',
+        id: 'productivity', cat: 'Productivity', color: '#4f8cff', icon: '⚡',
         items: [
-          { cmd: '/gsd', name: 'Get Shit Done', desc: 'Turn any goal into a full action plan — broken into tasks, owners, and deadlines.', example: '/gsd launch our cold email campaign this week', tip: 'Use this when you have a big goal and need the team to move immediately.' },
-          { cmd: '/brainstorm', name: 'Brainstorm', desc: 'Generate 5 distinct angles on any problem, product idea, or strategic question.', example: '/brainstorm new pricing tiers for Kayro', tip: 'Great for when you\'re stuck or want to stress-test your thinking.' },
-          { cmd: '/brief', name: 'Daily Brief', desc: 'Your morning standup in writing — what\'s on, what\'s at risk, what needs a decision.', example: '/brief', tip: 'Ask ARIA every morning. Takes 10 seconds to read.' },
-          { cmd: '/autopilot', name: 'Autopilot', desc: 'Hand the agent your #1 task and let them work autonomously — they plan, act, and report back.', example: '/autopilot draft and schedule the week\'s LinkedIn posts', tip: 'Give clear success criteria so the agent knows when they\'re done.' },
+          { cmd: '/gsd',       name: 'Get Shit Done',  agent: 'Claude',  desc: 'Turn any goal into a full action plan — tasks, owners, deadlines.', example: '/gsd launch our cold email campaign this week' },
+          { cmd: '/brainstorm',name: 'Brainstorm',      agent: 'Claude',  desc: 'Generate 5 distinct angles on any problem or strategic question.', example: '/brainstorm new pricing tiers for Kayro' },
+          { cmd: '/brief',     name: 'Daily Brief',     agent: 'ARIA',    desc: 'Morning standup in writing — what\'s on, what\'s at risk, what needs a decision.', example: '/brief' },
+          { cmd: '/autopilot', name: 'Autopilot',       agent: 'Any',     desc: 'Hand the agent your #1 task and let them work autonomously.', example: '/autopilot draft and schedule the week\'s LinkedIn posts' },
+          { cmd: '/delegate',  name: 'Delegate',        agent: 'Claude',  desc: 'Break any goal into task assignments across the whole team.', example: '/delegate launch our Product Hunt page by Friday' },
         ],
       },
       {
-        cat: 'Writing & Content', color: '#10b981', icon: '✍️',
+        id: 'writing', cat: 'Writing', color: '#10b981', icon: '✍️',
         items: [
-          { cmd: '/email', name: 'Email Writer', desc: 'Write a complete, ready-to-send email — cold outreach, follow-up, or internal comms.', example: '/email follow up with the investor who went quiet 2 weeks ago', tip: 'Always specify the recipient\'s context so the email hits specifically.' },
-          { cmd: '/social', name: 'Social Content', desc: 'Full social posts for Twitter/X, LinkedIn, and Instagram — written in your voice, ready to publish.', example: '/social announcing our new Kling video integration', tip: 'Tell the agent your tone (professional, casual, hype) for best results.' },
-          { cmd: '/blog', name: 'Blog Post', desc: 'Full SEO-optimized blog post with H1, H2 structure, meta title, meta description, and internal linking suggestions.', example: '/blog how AI agents are replacing virtual assistants in 2025', tip: 'Give a target keyword for best SEO output.' },
-          { cmd: '/copy', name: 'Copywriting', desc: 'High-converting landing page copy, ad headlines, product descriptions, and CTAs.', example: '/copy hero section for kayrointer.com targeting solo founders', tip: 'Tell the agent who you\'re targeting and the one action you want them to take.' },
+          { cmd: '/email',  name: 'Email Writer',   agent: 'Chris',  desc: 'Complete, ready-to-send email — cold outreach, follow-up, or internal comms.', example: '/email follow up with the investor who went quiet 2 weeks ago' },
+          { cmd: '/social', name: 'Social Content', agent: 'Alex',   desc: 'Full posts for Twitter/X, LinkedIn, and Instagram — in your voice, ready to publish.', example: '/social announcing our new Kling video integration' },
+          { cmd: '/blog',   name: 'Blog Post',      agent: 'Penny',  desc: 'Full SEO blog post with H1/H2 structure, meta title, and internal linking.', example: '/blog how AI agents are replacing virtual assistants in 2025' },
+          { cmd: '/copy',   name: 'Copywriting',    agent: 'Alex',   desc: 'High-converting landing copy, ad headlines, product descriptions, and CTAs.', example: '/copy hero section for kayrointer.com targeting solo founders' },
         ],
       },
       {
-        cat: 'Business Strategy', color: '#f59e0b', icon: '🎯',
+        id: 'strategy', cat: 'Strategy', color: '#f59e0b', icon: '🎯',
         items: [
-          { cmd: '/pitch', name: 'Sales Pitch', desc: 'Complete 15-minute sales pitch narrative — problem, solution, proof, pricing, and close.', example: '/pitch for a marketing agency considering switching from ChatGPT', tip: 'Give the agent the buyer\'s profile for a personalized pitch.' },
-          { cmd: '/proposal', name: 'Business Proposal', desc: 'Full business proposal with executive summary, scope, timeline, pricing, and next steps.', example: '/proposal for a 3-month consulting engagement on AI automation', tip: 'Include the client name and deal size for a specific, compelling doc.' },
-          { cmd: '/strategy', name: 'Strategy', desc: 'Full strategic plan — market analysis, positioning, GTM approach, OKRs, and 90-day roadmap.', example: '/strategy grow Kayro from 0 to 100 paying subscribers', tip: 'Ask Claude (AI Manager) for the most complete strategic output.' },
-          { cmd: '/prd', name: 'Product PRD', desc: 'Full Product Requirements Document — problem statement, user stories, success metrics, edge cases, and non-goals.', example: '/prd for a referral program feature', tip: 'Omar (Head of Product) writes the sharpest PRDs.' },
-          { cmd: '/campaign', name: 'Campaign', desc: 'End-to-end marketing campaign — channels, messaging, creative brief, budget allocation, and success metrics.', example: '/campaign for the Growth plan launch targeting solo founders', tip: 'Include budget range and timeline for actionable output.' },
+          { cmd: '/pitch',    name: 'Sales Pitch',       agent: 'Chris',  desc: 'Complete 15-min pitch — problem, solution, proof, pricing, and close.', example: '/pitch for an agency considering switching from ChatGPT' },
+          { cmd: '/proposal', name: 'Business Proposal', agent: 'Chris',  desc: 'Full proposal with exec summary, scope, timeline, pricing, and next steps.', example: '/proposal for a 3-month AI automation consulting engagement' },
+          { cmd: '/strategy', name: 'Strategy',          agent: 'Claude', desc: 'Full strategic plan — market analysis, GTM, OKRs, and 90-day roadmap.', example: '/strategy grow Kayro from 0 to 100 paying subscribers' },
+          { cmd: '/prd',      name: 'Product PRD',       agent: 'Omar',   desc: 'Full PRD — problem statement, user stories, success metrics, edge cases.', example: '/prd for a referral program feature' },
+          { cmd: '/campaign', name: 'Campaign',          agent: 'Alex',   desc: 'End-to-end marketing campaign — channels, messaging, budget, and metrics.', example: '/campaign for the Growth plan launch targeting solo founders' },
         ],
       },
       {
-        cat: 'Legal & Ops', color: '#8b5cf6', icon: '⚖️',
+        id: 'legal', cat: 'Legal & Ops', color: '#8b5cf6', icon: '⚖️',
         items: [
-          { cmd: '/contract', name: 'Contract', desc: 'Professional contract draft — services agreement, NDA, freelancer contract, or SaaS subscription agreement.', example: '/contract freelance content writer — $3k/month, 3-month term', tip: 'Always have a real lawyer review before signing anything significant.' },
-          { cmd: '/legal', name: 'Legal Brief', desc: 'Plain-English legal analysis — terms of service review, policy compliance, IP basics, or regulatory questions.', example: '/legal what GDPR means for a US SaaS storing EU customer emails', tip: 'Use this to understand your exposure before taking action.' },
-          { cmd: '/audit', name: 'Audit', desc: 'Structured audit of any system, process, page, or campaign — what\'s working, what\'s broken, recommendations.', example: '/audit our cold email open rates and reply rates', tip: 'Give the agent actual numbers if you have them — the output will be far more actionable.' },
-          { cmd: '/onboard', name: 'Onboarding Playbook', desc: 'Complete employee or customer onboarding plan — day 1, week 1, month 1 milestones with owners and triggers.', example: '/onboard new Growth plan subscriber', tip: 'Mia (Customer Success) writes the best onboarding playbooks.' },
-          { cmd: '/delegate', name: 'Delegate', desc: 'Break any goal into specific task assignments across the team — with owners, priorities, and deadlines.', example: '/delegate launch our Product Hunt page by Friday', tip: 'Use this when you have a clear goal but need the team to execute it.' },
+          { cmd: '/contract', name: 'Contract',           agent: 'Claude', desc: 'Professional contract draft — NDA, services agreement, or SaaS subscription.', example: '/contract freelance content writer — $3k/month, 3-month term' },
+          { cmd: '/legal',    name: 'Legal Brief',        agent: 'Claude', desc: 'Plain-English legal analysis — TOS review, compliance, IP basics.', example: '/legal what GDPR means for a US SaaS storing EU customer emails' },
+          { cmd: '/audit',    name: 'Audit',              agent: 'Claude', desc: 'Structured audit of any system, process, or campaign — what\'s broken, what to fix.', example: '/audit our cold email open rates and reply rates' },
+          { cmd: '/onboard',  name: 'Onboarding Playbook',agent: 'Mia',    desc: 'Complete onboarding plan — day 1, week 1, month 1 milestones and triggers.', example: '/onboard new Growth plan subscriber' },
         ],
       },
       {
-        cat: 'Engineering', color: '#22c55e', icon: '💻',
+        id: 'engineering', cat: 'Engineering', color: '#22c55e', icon: '💻',
         items: [
-          { cmd: '/arch', name: 'Architecture', desc: 'Full system architecture design — components, data flows, API contracts, scaling strategy, and failure modes.', example: '/arch a multi-tenant SaaS backend with role-based access', tip: 'Ask Sarah (Lead Engineer) — she will always plan before she codes.' },
-          { cmd: '/code', name: 'Code', desc: 'Production-quality code with full error handling, edge case coverage, and inline reasoning — not stubs.', example: '/code a Cloudflare Worker that proxies Anthropic API calls', tip: 'Include the language, framework, and specific constraints upfront.' },
-          { cmd: '/outreach', name: 'Outreach Sequence', desc: 'Full 5-touch multi-channel outreach sequence — email, LinkedIn, and follow-up — with rationale for each touch.', example: '/outreach to CTOs of Series A B2B SaaS companies', tip: 'Give the persona and pain point — Chris will write to that specific person, not a template.' },
+          { cmd: '/arch',     name: 'Architecture',      agent: 'Sarah', desc: 'Full system design — components, data flows, API contracts, failure modes.', example: '/arch a multi-tenant SaaS backend with role-based access' },
+          { cmd: '/code',     name: 'Code',              agent: 'Sarah', desc: 'Production-quality code with full error handling and edge case coverage.', example: '/code a Cloudflare Worker that proxies Anthropic API calls' },
+          { cmd: '/outreach', name: 'Outreach Sequence', agent: 'Chris', desc: 'Full 5-touch multi-channel sequence — email, LinkedIn, and follow-up.', example: '/outreach to CTOs of Series A B2B SaaS companies' },
         ],
       },
       {
-        cat: 'Financial & Market Intel', color: '#f0c040', icon: '📈',
+        id: 'finance', cat: 'Market Intel', color: '#f0c040', icon: '📈',
         items: [
-          { cmd: '/morning-note', name: 'Morning Note', desc: 'Daily 7am market briefing — overnight news, macro events, equity moves, 2-3 trade ideas, and a watch list.', example: '/morning-note', tip: 'Ask ARIA or Claude every morning. One page, opinionated, actionable.' },
-          { cmd: '/screen', name: 'Idea Screen', desc: 'Business or market screener — value, growth, quality, short, or special situation opportunities — output as an idea table.', example: '/screen growth companies gaining market share in AI infrastructure', tip: 'Specify the screen type (value / growth / quality / short / special situations) for focused results.' },
-          { cmd: '/sector', name: 'Sector Overview', desc: 'Full industry report — market sizing, growth drivers, competitive landscape, valuation context, and investment implications.', example: '/sector AI workforce software', tip: 'Use before making product bets, pricing decisions, or entering a new market.' },
-          { cmd: '/competitive', name: 'Competitive Analysis', desc: 'Deep competitive teardown — positioning maps, feature comparisons, pricing, win/loss patterns, and strategic implications.', example: '/competitive Kayro vs Notion AI vs ChatGPT Teams', tip: 'Chris uses this before every major pitch. Omar uses it before every roadmap decision.' },
+          { cmd: '/morning-note', name: 'Morning Note',        agent: 'ARIA',   desc: 'Daily 7am briefing — overnight news, macro, equity moves, trade ideas, watch list.', example: '/morning-note' },
+          { cmd: '/screen',       name: 'Idea Screen',         agent: 'Claude', desc: 'Screener for value, growth, quality, short, or special situation opportunities.', example: '/screen growth companies gaining market share in AI infrastructure' },
+          { cmd: '/sector',       name: 'Sector Overview',     agent: 'Claude', desc: 'Full industry report — market sizing, competitive landscape, valuation context.', example: '/sector AI workforce software' },
+          { cmd: '/competitive',  name: 'Competitive Analysis',agent: 'Chris',  desc: 'Deep competitive teardown — positioning, features, pricing, strategic implications.', example: '/competitive Kayro vs Notion AI vs ChatGPT Teams' },
         ],
       },
     ];
 
-    container.innerHTML = `
-      <div class="skills-page">
-        <div class="skills-hero">
-          <div class="skills-hero-badge">⚡ POWER SKILLS</div>
-          <h1 class="skills-hero-title">What your AI team can do</h1>
-          <p class="skills-hero-sub">Type any skill command in chat — or click a pill in the chat bar — to activate a specialized workflow. Each skill turns your agent into an expert working at full speed.</p>
-          <div class="skills-how-row">
-            <div class="skills-how-item"><div class="skills-how-icon">1</div><div class="skills-how-txt"><strong>Open Chat</strong><br>Click 💬 Chat in the top right</div></div>
-            <div class="skills-how-arrow">→</div>
-            <div class="skills-how-item"><div class="skills-how-icon">2</div><div class="skills-how-txt"><strong>Pick an Agent</strong><br>Select from the tabs at top</div></div>
-            <div class="skills-how-arrow">→</div>
-            <div class="skills-how-item"><div class="skills-how-icon">3</div><div class="skills-how-txt"><strong>Type a Skill</strong><br>Use /skill or click a pill</div></div>
-            <div class="skills-how-arrow">→</div>
-            <div class="skills-how-item"><div class="skills-how-icon">4</div><div class="skills-how-txt"><strong>Get the Output</strong><br>Full docs, not outlines</div></div>
-          </div>
+    const allCount = SKILLS.reduce((n, c) => n + c.items.length, 0);
+
+    container.innerHTML = `<div class="sk-wrap">
+      <div class="sk-header">
+        <div class="sk-hero-left">
+          <div class="sk-badge">⚡ POWER SKILLS</div>
+          <h1 class="sk-title">What your AI team can do</h1>
+          <p class="sk-sub">Type any <code class="sk-code">/skill</code> in chat — or click a pill in the chat bar — to activate a specialized workflow. ${allCount} skills available.</p>
         </div>
+        <div class="sk-steps">
+          <div class="sk-step"><div class="sk-step-n">1</div><div class="sk-step-lbl">Open Chat<br><span>💬 top right</span></div></div>
+          <div class="sk-step-arr">→</div>
+          <div class="sk-step"><div class="sk-step-n">2</div><div class="sk-step-lbl">Pick Agent<br><span>tab at top</span></div></div>
+          <div class="sk-step-arr">→</div>
+          <div class="sk-step"><div class="sk-step-n">3</div><div class="sk-step-lbl">Type Skill<br><span>/skill or pill</span></div></div>
+          <div class="sk-step-arr">→</div>
+          <div class="sk-step"><div class="sk-step-n">4</div><div class="sk-step-lbl">Get Output<br><span>full doc, not outline</span></div></div>
+        </div>
+      </div>
+
+      <div class="sk-filter-bar">
+        <button class="sk-filter active" data-cat="all">All <span class="sk-filter-count">${allCount}</span></button>
+        ${SKILLS.map(c => `<button class="sk-filter" data-cat="${c.id}" style="--fc:${c.color}">${c.icon} ${c.cat} <span class="sk-filter-count">${c.items.length}</span></button>`).join('')}
+      </div>
+
+      <div class="sk-body" id="sk-body">
         ${SKILLS.map(cat => `
-          <div class="skills-cat">
-            <div class="skills-cat-hdr">
-              <span class="skills-cat-icon" style="background:${cat.color}22;color:${cat.color}">${cat.icon}</span>
-              <span class="skills-cat-name" style="color:${cat.color}">${cat.cat}</span>
+          <div class="sk-section" data-section="${cat.id}">
+            <div class="sk-section-hdr">
+              <span class="sk-section-icon" style="background:${cat.color}1a;color:${cat.color}">${cat.icon}</span>
+              <span class="sk-section-name">${cat.cat}</span>
+              <span class="sk-section-count">${cat.items.length} skills</span>
             </div>
-            <div class="skills-grid">
+            <div class="sk-grid">
               ${cat.items.map(sk => `
-                <div class="skill-card" data-cmd="${sk.cmd}">
-                  <div class="skill-card-top">
-                    <code class="skill-cmd-tag" style="background:${cat.color}18;color:${cat.color};border-color:${cat.color}30">${sk.cmd}</code>
-                    <span class="skill-card-name">${sk.name}</span>
+                <div class="sk-card">
+                  <div class="sk-card-accent" style="background:${cat.color}"></div>
+                  <div class="sk-card-inner">
+                    <div class="sk-card-top">
+                      <code class="sk-cmd" style="background:${cat.color}18;color:${cat.color};border-color:${cat.color}35">${sk.cmd}</code>
+                      <span class="sk-agent-badge">→ ${sk.agent}</span>
+                    </div>
+                    <div class="sk-card-name">${sk.name}</div>
+                    <div class="sk-card-desc">${sk.desc}</div>
+                    <div class="sk-example">
+                      <div class="sk-ex-label">TRY IT</div>
+                      <div class="sk-ex-text">${escHtml(sk.example)}</div>
+                    </div>
+                    <button class="sk-try" data-cmd="${sk.cmd} " style="--bc:${cat.color}">Use ${sk.cmd}</button>
                   </div>
-                  <p class="skill-card-desc">${sk.desc}</p>
-                  <div class="skill-card-example">
-                    <span class="skill-ex-label">EXAMPLE</span>
-                    <span class="skill-ex-text">${escHtml(sk.example)}</span>
-                  </div>
-                  <div class="skill-card-tip">💡 ${sk.tip}</div>
-                  <button class="skill-try-btn" data-cmd="${sk.cmd} " style="border-color:${cat.color}40;color:${cat.color}">Try ${sk.cmd} →</button>
                 </div>
               `).join('')}
             </div>
           </div>
         `).join('')}
-        <div class="skills-footer-note">
-          <span>Skills work with every agent — but each agent has specialty strengths.</span>
-          <span class="skills-footer-sub">Ask <strong>Claude</strong> for strategy. <strong>Chris</strong> for sales. <strong>Sarah</strong> for code. <strong>ARIA</strong> for daily briefs. <strong>Penny</strong> for content.</span>
-        </div>
-      </div>`;
+      </div>
 
-    container.querySelectorAll('.skill-try-btn').forEach(btn => {
+      <div class="sk-footer">
+        <div class="sk-footer-agents">
+          <span class="sk-footer-lbl">BEST AGENT FOR EACH TYPE</span>
+          <div class="sk-agent-row">
+            ${[['Claude','Strategy & leadership','#e07540'],['Chris','Sales & outreach','#ef4444'],['Sarah','Engineering','#22c55e'],['ARIA','Briefings & research','#f0c040'],['Omar','Product & roadmap','#3b82f6'],['Penny','SEO & content','#10b981'],['Alex','Marketing & ads','#a855f7'],['Mia','Customer success','#06b6d4']].map(([n,r,c])=>`
+              <div class="sk-agent-chip">
+                <div class="sk-agent-av" style="background:${c}22;color:${c}">${n[0]}</div>
+                <div><div class="sk-agent-n">${n}</div><div class="sk-agent-r">${r}</div></div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // Category filter
+    container.querySelectorAll('.sk-filter').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.sk-filter').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.dataset.cat;
+        container.querySelectorAll('.sk-section').forEach(sec => {
+          sec.style.display = (cat === 'all' || sec.dataset.section === cat) ? '' : 'none';
+        });
+      });
+    });
+
+    // Try button → open chat pre-filled
+    container.querySelectorAll('.sk-try').forEach(btn => {
       btn.addEventListener('click', () => {
         const inp = document.getElementById('chat-input');
         if (inp) { inp.value = btn.dataset.cmd; inp.focus(); }
