@@ -167,10 +167,12 @@ PLATFORM TOOLS YOU CONTROL:
 - /gsd skill — turn any goal into an immediate action plan
 - /morning-note skill — daily market and business briefing (overnight news, macro, key moves, trade ideas); write at 7am cadence, 1 page max, opinionated voice
 - /sector skill — full sector/industry overview (market sizing, competitive landscape, valuation context, investment implications)
+- /rfp skill — analyze any RFP or tender document: extract requirements, score fit (1-10), generate proposal outline with win themes and differentiators to emphasize
+- /meeting skill — structured meeting minutes from any transcript or notes: decisions, action items (owner + deadline), open questions, next agenda
 - Brain — the company knowledge base your team references
 - Activity feed — your messages surface to the team in real time
 
-When you give a directive, create actual tasks for the board. When you coordinate, use /delegate. For market or industry questions, run /sector. For daily situational awareness, produce the /morning-note.
+When you give a directive, create actual tasks for the board. When you coordinate, use /delegate. For market or industry questions, run /sector. For daily situational awareness, produce the /morning-note. For external proposals or bids, use /rfp first to score fit before committing resources.
 
 STYLE: Executive-level. Confident, specific, never hedge. Give a recommendation. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and drive to action. Every response ends with a concrete next step.`},
 
@@ -517,6 +519,10 @@ PLATFORM TOOLS YOU CONTROL:
 - /brief skill — morning briefing in under 5 minutes
 - /morning-note skill — daily 7am market briefing (overnight news, macro, equities, trade ideas, watch list); 1 page max, opinionated, direct voice. Use this when the user wants to start the day with a market or business overview.
 - /property skill — structured real estate research: given an address or criteria, search for real listing data and return a complete property report with comps, neighborhood summary, market context, and investment notes.
+- /meeting skill — meeting summarizer: given any transcript or notes, produce structured minutes with decisions, action items (owner + deadline), open questions, and next agenda. Email-ready format.
+- /invoice skill — extract structured data from any invoice or receipt: merchant, date, amount, currency, VAT, category, line items. TaxHacker schema. Never fabricates — blank fields if not found.
+- /expense skill — expense report from any transaction list: summary table, category totals, currency breakdown, flagged items (duplicates/missing receipts), export-ready for accountant.
+- /tax skill — tax planning guidance: identify deductibles, flag compliance risks, surface optimization strategies, estimate exposure. Always note jurisdiction.
 - /gsd skill — convert any goal into an action plan instantly
 - All agents — route requests to the right specialist when needed
 
@@ -2214,6 +2220,11 @@ const Chat = {
       ['/competitive','Deep competitive analysis — positioning, strengths, weaknesses, strategic implications'],
       ['/property','Real estate research — structured property analysis, market comps, neighborhood data'],
       ['/sales-audit','Sales communication audit — response times, follow-up quality, upsell gaps, coaching plan'],
+      ['/meeting','Meeting summary — transcript → structured minutes, decisions, action items, owner table'],
+      ['/rfp','RFP analyzer — extract requirements, score fit, generate proposal outline'],
+      ['/invoice','Invoice/receipt extractor — structured data: merchant, amount, VAT, line items, category'],
+      ['/expense','Expense report — categorize transactions, multi-currency totals, export-ready table'],
+      ['/tax','Tax planning — categorize expenses, identify deductions, flag compliance issues'],
     ].map(([cmd,label])=>`<button class="skill-cmd-pill" data-cmd="${cmd} " title="${label}">${cmd}</button>`).join('');
     const msgs = document.getElementById('chat-messages');
     if (msgs) msgs.parentNode.insertBefore(bar, msgs);
@@ -2443,6 +2454,13 @@ You have the following real, executing capabilities. Use them in your responses:
    /competitive → Deep competitive analysis. Phase 1: scope the request (what company/product, which competitors, what decision this informs). Phase 2: build the analysis — positioning map, feature/capability comparison, go-to-market differences, pricing, financials if public, win/loss patterns, strategic trajectory. End with: STRATEGIC IMPLICATIONS (what this means for the user's position and the single most important thing to act on).
    /property → Real estate research with structured output. Schema: address, price, bedrooms, bathrooms, sq_ft, lot_size, year_built, property_type, days_on_market, price_per_sqft, neighborhood_summary, comparable_sales (3 recent comps with address/price/date), market_context (local trends, inventory, avg days on market), investment_notes (cap rate estimate if rental, red flags, upside). Search for real data. If given an address, research it. If given criteria, find matching listings. Output as a clean structured report — not a wall of text.
    /sales-audit → Sales communication quality audit (Syntora-style). Analyze the provided call transcript, email thread, or conversation log across 6 dimensions: 1) RESPONSE TIME (was lead contacted within 10 min? follow-up within 4 hours?), 2) SCRIPT ADHERENCE (did the rep follow the discovery/pitch structure?), 3) OBJECTION HANDLING (were objections addressed or deflected?), 4) UPSELL OPPORTUNITIES (were upgrade/add-on moments identified and pursued?), 5) COMMITMENT CLARITY (did the conversation end with a concrete next step — not "I'll follow up soon"?), 6) RAPPORT & TONE (was the rep consultative or pushy?). Output: FINDINGS (3-7 specific, quantified issues), ACTION PLAN (prioritized coaching steps with exact scripts to fix each gap), SCORE (0-100 across each dimension). Deliver decisions, not dashboards — every finding must end with a specific fix.
+
+   CONSULTING & OPERATIONS SKILLS:
+   /meeting → Meeting summarizer (consulting-tools style). Given a transcript, notes, or raw discussion, output: MEETING TITLE + DATE, ATTENDEES, CONTEXT (what was being decided/discussed), DECISIONS (numbered, with rationale), ACTION ITEMS (table: task | owner | deadline | priority), OPEN QUESTIONS (unresolved items needing follow-up), NEXT MEETING (proposed agenda). If no transcript is provided, ask for one. Never fabricate attendees or decisions. Email-ready format — can be sent directly after review.
+   /rfp → RFP/tender analyzer. Phase 1: extract from the document — CLIENT, DEADLINE, BUDGET (if stated), SCOPE (what they need), EVALUATION CRITERIA (how they'll score proposals), KEY REQUIREMENTS (must-haves), RED FLAGS (ambiguities, unrealistic asks, scope creep risks). Phase 2: score the opportunity (1-10 fit based on company capabilities), then generate a PROPOSAL OUTLINE with recommended structure, win themes, and 3 differentiators to emphasize. Output: FIT SCORE + RATIONALE, EXTRACTED REQUIREMENTS TABLE, PROPOSAL OUTLINE.
+   /invoice → Invoice/receipt data extractor (TaxHacker schema). Extract structured fields from any invoice, receipt, or transaction description: merchant_name, transaction_date, total_amount, currency, vat_amount, category (pick from: Advertisement, Equipment, Food & Drinks, Insurance, Internet & Hosting, Office Supplies, Subscriptions, Software, Travel, Transport, Utilities, Training, Tax & Accounting, Other), project (if inferable), transaction_type (expense/income), line_items (array: description | qty | unit_price | total), notes. Output as a clean table. Never make up data — leave fields blank if not found. Flag if the document looks fraudulent or duplicate.
+   /expense → Expense report generator. Given a list of transactions, receipts, or expenses in any format, output: SUMMARY TABLE (date | merchant | category | original amount | currency | converted amount | VAT | status), CATEGORY TOTALS (grouped subtotals), CURRENCY BREAKDOWN (multi-currency reconciliation to base currency), FLAGGED ITEMS (duplicates, missing receipts, uncategorized, unusually large), TOTAL SPEND. Format as export-ready — clean enough to hand to an accountant or drop into a spreadsheet.
+   /tax → Tax planning and expense guidance. Analyze the provided financial data, expense list, or business situation and output: DEDUCTIBLE EXPENSES (what qualifies and why), NON-DEDUCTIBLE ITEMS (what to remove and why), MISSING DOCUMENTATION (what needs receipts/invoices), COMPLIANCE FLAGS (anything that looks risky), TAX OPTIMIZATION SUGGESTIONS (legitimate strategies to reduce liability), ESTIMATED TAX EXPOSURE (rough range based on provided data). Always note jurisdiction — tax rules vary by country. For specific legal advice, recommend a qualified accountant.
 
 ████ NON-NEGOTIABLE OPERATING RULES ████
 
@@ -9820,6 +9838,7 @@ const SkillsPage = {
           { cmd: '/brief',     name: 'Daily Brief',     agent: 'ARIA',    desc: 'Morning standup in writing — what\'s on, what\'s at risk, what needs a decision.', example: '/brief' },
           { cmd: '/autopilot', name: 'Autopilot',       agent: 'Any',     desc: 'Hand the agent your #1 task and let them work autonomously.', example: '/autopilot draft and schedule the week\'s LinkedIn posts' },
           { cmd: '/delegate',  name: 'Delegate',        agent: 'Claude',  desc: 'Break any goal into task assignments across the whole team.', example: '/delegate launch our Product Hunt page by Friday' },
+          { cmd: '/meeting',   name: 'Meeting Summary', agent: 'ARIA',    desc: 'Transcript or notes → structured minutes: decisions, action items table (owner + deadline), open questions, next agenda.', example: '/meeting [paste transcript or notes]' },
         ],
       },
       {
@@ -9839,6 +9858,7 @@ const SkillsPage = {
           { cmd: '/strategy', name: 'Strategy',          agent: 'Claude', desc: 'Full strategic plan — market analysis, GTM, OKRs, and 90-day roadmap.', example: '/strategy grow Kayro from 0 to 100 paying subscribers' },
           { cmd: '/prd',      name: 'Product PRD',       agent: 'Omar',   desc: 'Full PRD — problem statement, user stories, success metrics, edge cases.', example: '/prd for a referral program feature' },
           { cmd: '/campaign', name: 'Campaign',          agent: 'Alex',   desc: 'End-to-end marketing campaign — channels, messaging, budget, and metrics.', example: '/campaign for the Growth plan launch targeting solo founders' },
+          { cmd: '/rfp',      name: 'RFP Analyzer',      agent: 'Claude', desc: 'Analyze any RFP or tender — extract requirements, score fit (1-10), generate proposal outline with win themes.', example: '/rfp [paste RFP document or link]' },
         ],
       },
       {
@@ -9871,7 +9891,16 @@ const SkillsPage = {
       {
         id: 'salesops', cat: 'Sales Ops', color: '#ef4444', icon: '🎯',
         items: [
-          { cmd: '/sales-audit', name: 'Sales Audit', agent: 'Chris', desc: 'Syntora-style quality audit of any sales call, email, or conversation — 6 dimensions, scored, with a specific coaching action plan.', example: '/sales-audit [paste call transcript or email thread]' },
+          { cmd: '/sales-audit', name: 'Sales Audit',    agent: 'Chris', desc: 'Syntora-style quality audit — 6 dimensions (response time, script, objections, upsell, commitment, tone), scored with coaching action plan.', example: '/sales-audit [paste call transcript or email thread]' },
+          { cmd: '/property',    name: 'Property Research',agent: 'ARIA', desc: 'Structured real estate report — price, comps, neighborhood, market context, investment notes.', example: '/property 123 Main St Austin TX — is this a good deal?' },
+        ],
+      },
+      {
+        id: 'finance', cat: 'Finance & Tax', color: '#10d98a', icon: '💰',
+        items: [
+          { cmd: '/invoice',  name: 'Invoice Extractor', agent: 'ARIA',   desc: 'Extract structured data from any invoice or receipt — merchant, amount, VAT, line items, category. Never fabricates.', example: '/invoice [paste invoice text or describe receipt]' },
+          { cmd: '/expense',  name: 'Expense Report',    agent: 'ARIA',   desc: 'Turn any transaction list into a clean expense report — category totals, currency breakdown, flagged items, export-ready.', example: '/expense [paste list of transactions or receipts]' },
+          { cmd: '/tax',      name: 'Tax Planning',      agent: 'Claude', desc: 'Identify deductibles, flag compliance risks, surface optimization strategies, estimate tax exposure. State your jurisdiction.', example: '/tax freelance income $120k, home office, US-based LLC' },
         ],
       },
     ];
