@@ -1983,32 +1983,60 @@ const Auth = {
     }
   },
 
-  signInEmail() {
+  async signInEmail() {
     const email = (document.getElementById('auth-email').value||'').trim();
     const pass  = document.getElementById('auth-password').value;
     if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
     const cfg = State.settings.firebaseConfig;
     if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
       firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
-    } else {
-      // Demo mode: accept any creds
-      Auth.user = { uid:'demo_'+email, name:email.split('@')[0], email, photoURL:null, isGuest:false };
+      return;
+    }
+    // Worker-based auth
+    const btn = document.getElementById('auth-signin-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/signin`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) { Auth._showError(data.error || 'Sign in failed'); return; }
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, token: data.token };
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
-    }
+      toast(`Welcome back, ${data.name}!`, 'success');
+    } catch(e) { Auth._showError('Could not reach server. Try again.'); }
+    finally { if (btn) { btn.disabled = false; btn.textContent = 'Sign In → Launch HQ'; } }
   },
 
-  signUpEmail() {
+  async signUpEmail() {
     const email = (document.getElementById('auth-email').value||'').trim();
     const pass  = document.getElementById('auth-password').value;
     if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
     const cfg = State.settings.firebaseConfig;
     if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
       firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
-    } else {
-      Auth.signInEmail();
+      return;
     }
+    // Worker-based signup
+    const btn = document.getElementById('auth-signup-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, password: pass }),
+      });
+      const data = await res.json();
+      if (!res.ok) { Auth._showError(data.error || 'Sign up failed'); return; }
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, token: data.token };
+      localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+      Auth._hideOverlay();
+      Auth._renderUserArea();
+      toast(`Welcome to Kayro, ${data.name}!`, 'success');
+    } catch(e) { Auth._showError('Could not reach server. Try again.'); }
+    finally { if (btn) { btn.disabled = false; btn.textContent = 'Create Account → Launch HQ'; } }
   },
 
   continueAsGuest() {
@@ -7800,8 +7828,6 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   _results: [],
   _mode: 'domain', // 'domain' | 'finder' | 'verify'
   init(container) {
-    const key = State.settings.apolloKey || '';
-    const hasPlatformKey = !!(State.settings.platformHunterKey || '').trim();
     container.innerHTML = `<div class="page-scroll"><div class="apollo-root">
       <div class="apollo-sidebar">
         <div class="apollo-logo-row">
@@ -7809,16 +7835,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
           <span class="apollo-logo-text">Hunter.io</span>
         </div>
         <div class="card-box" style="margin-bottom:16px">
-          ${hasPlatformKey
-            ? `<div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:12px;color:var(--green)">✅ Platform key active — ready to search</div>`
-            : ''}
-          <div class="field-label">Your Hunter API Key <span style="color:var(--text3);font-weight:400">(optional if platform key set)</span></div>
-          <input class="form-input" id="apo-key" type="password" value="${escHtml(key)}" placeholder="${hasPlatformKey ? 'Using platform key — yours will take priority' : 'hunter_api_key_...'}">
-          <div style="margin-top:8px;display:flex;gap:8px">
-            <button class="btn-primary" id="apo-save-key">Save Key</button>
-            <a href="https://hunter.io/api-keys" target="_blank" class="btn" style="text-decoration:none">Get Free Key →</a>
-          </div>
-          <div class="field-hint" style="margin-top:8px">${hasPlatformKey ? 'Platform key is active — searches run on Kayro\'s Hunter account. Optionally enter your own key to use separately.' : 'Free plan: 25 searches/month. No credit card required. Get your key at hunter.io/api-keys.'}</div>
+          <div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green)">✅ Powered by Kayro — find emails instantly, no key needed</div>
         </div>
         <div class="card-box">
           <div class="field-label" style="margin-bottom:8px">Search Mode</div>
@@ -7876,11 +7893,6 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
       </div>
     </div></div>`;
 
-    document.getElementById('apo-save-key').addEventListener('click', () => {
-      State.settings.apolloKey = document.getElementById('apo-key').value.trim();
-      save('settings'); toast('Hunter key saved ✓', 'success');
-    });
-
     // Mode switching
     container.querySelectorAll('.apo-mode-btn').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -7899,16 +7911,18 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
     document.getElementById('apo-verify').addEventListener('click', () => ApolloPage._verifyEmail());
   },
 
-  _key() {
-    const userKey     = (document.getElementById('apo-key')?.value || State.settings.apolloKey || '').trim();
-    const platformKey = (State.settings.platformHunterKey || '').trim();
-    const k = userKey || platformKey;
-    if (!k) { toast('No Hunter.io key configured — add one in Settings (owner) or paste your own key above', 'error'); return null; }
-    return k;
+  // All Hunter calls go through the Cloudflare Worker — key never touches the browser
+  async _hunterFetch(hunterPath, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const url = `${BACKEND_URL}/api/hunter${hunterPath}${qs ? '?' + qs : ''}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    if (data.errors) throw new Error(data.errors[0]?.details || 'Hunter API error');
+    return data;
   },
 
   async _domainSearch() {
-    const key = ApolloPage._key(); if (!key) return;
     const domain = (document.getElementById('apo-q-domain').value || '').trim();
     if (!domain) { toast('Enter a domain name', 'error'); return; }
     const limit = parseInt(document.getElementById('apo-q-limit').value) || 10;
@@ -7916,9 +7930,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
     const status = document.getElementById('apo-status');
     btn.disabled = true; btn.textContent = 'Searching…'; status.textContent = '';
     try {
-      const res = await fetch(`https://api.hunter.io/v2/domain-search?domain=${encodeURIComponent(domain)}&limit=${limit}&api_key=${encodeURIComponent(key)}`);
-      const data = await res.json();
-      if (data.errors) throw new Error(data.errors[0]?.details || 'API error');
+      const data = await ApolloPage._hunterFetch('/domain-search', { domain, limit });
       const emails = (data.data?.emails || []);
       ApolloPage._results = emails.map(e => ({
         email: e.value, first_name: e.first_name||'', last_name: e.last_name||'',
@@ -7934,7 +7946,6 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   },
 
   async _finderSearch() {
-    const key = ApolloPage._key(); if (!key) return;
     const first = (document.getElementById('apo-q-first').value || '').trim();
     const last  = (document.getElementById('apo-q-last').value || '').trim();
     const domain = (document.getElementById('apo-q-domain2').value || '').trim();
@@ -7943,9 +7954,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
     const status = document.getElementById('apo-status');
     btn.disabled = true; btn.textContent = 'Searching…';
     try {
-      const res = await fetch(`https://api.hunter.io/v2/email-finder?domain=${encodeURIComponent(domain)}&first_name=${encodeURIComponent(first)}&last_name=${encodeURIComponent(last)}&api_key=${encodeURIComponent(key)}`);
-      const data = await res.json();
-      if (data.errors) throw new Error(data.errors[0]?.details || 'Not found');
+      const data = await ApolloPage._hunterFetch('/email-finder', { domain, first_name: first, last_name: last });
       const d = data.data;
       if (!d?.email) throw new Error('No email found for this person');
       ApolloPage._results = [{ email: d.email, first_name: first, last_name: last, title: d.position||'', company: d.company||domain, confidence: d.score }];
@@ -7958,16 +7967,13 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   },
 
   async _verifyEmail() {
-    const key = ApolloPage._key(); if (!key) return;
     const email = (document.getElementById('apo-q-email').value || '').trim();
     if (!email) { toast('Enter an email to verify', 'error'); return; }
     const btn = document.getElementById('apo-verify');
     const status = document.getElementById('apo-status');
     btn.disabled = true; btn.textContent = 'Verifying…';
     try {
-      const res = await fetch(`https://api.hunter.io/v2/email-verifier?email=${encodeURIComponent(email)}&api_key=${encodeURIComponent(key)}`);
-      const data = await res.json();
-      if (data.errors) throw new Error(data.errors[0]?.details || 'Error');
+      const data = await ApolloPage._hunterFetch('/email-verifier', { email });
       const d = data.data;
       const icon = d.status === 'valid' ? '✅' : d.status === 'risky' ? '⚠️' : '❌';
       status.textContent = `${icon} ${email} — ${d.status} (score: ${d.score}/100)`;

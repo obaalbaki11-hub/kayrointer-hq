@@ -50,6 +50,8 @@ export default {
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
       if (path.startsWith('/api/kling'))       return handleKling(request, env, origin, path);
+      if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
+      if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -253,6 +255,134 @@ async function handleKling(request, env, origin, path) {
     status: res.status,
     headers: { ...cors(origin), 'Content-Type': res.headers.get('Content-Type') || 'application/json' },
   });
+}
+
+// ══════════════════════════════════════════════════════════════
+// HUNTER.IO — EMAIL FINDER (server-side key, never exposed to browser)
+// ══════════════════════════════════════════════════════════════
+async function handleHunter(request, env, origin, path) {
+  const key = env.HUNTER_KEY;
+  if (!key) return json({ error: 'Hunter.io key not configured. Run: npx wrangler secret put HUNTER_KEY' }, 500, origin);
+
+  const url = new URL(request.url);
+  // /api/hunter/domain-search → https://api.hunter.io/v2/domain-search
+  const hunterPath = path.replace('/api/hunter', '');
+  const hunterUrl = new URL(`https://api.hunter.io/v2${hunterPath}`);
+
+  // Forward all query params from the original request, add api_key
+  url.searchParams.forEach((v, k) => { if (k !== 'api_key') hunterUrl.searchParams.set(k, v); });
+  hunterUrl.searchParams.set('api_key', key);
+
+  const res = await fetch(hunterUrl.toString(), { method: 'GET' });
+  const data = await res.text();
+  return new Response(data, {
+    status: res.status,
+    headers: { ...cors(origin), 'Content-Type': 'application/json' },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// AUTH — Email/Password + JWT (backed by Cloudflare KV)
+// Setup: npx wrangler kv:namespace create USERS
+//        npx wrangler secret put JWT_SECRET
+// ══════════════════════════════════════════════════════════════
+const AUTH_TOKEN_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
+
+async function jwtSign(payload, secret) {
+  const enc = new TextEncoder();
+  const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const header = toB64u(enc.encode(JSON.stringify({ alg:'HS256', typ:'JWT' })));
+  const body = toB64u(enc.encode(JSON.stringify(payload)));
+  const unsigned = `${header}.${body}`;
+  const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsigned));
+  return `${unsigned}.${toB64u(sig)}`;
+}
+
+async function jwtVerify(token, secret) {
+  try {
+    const enc = new TextEncoder();
+    const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+    const [header, payload, sig] = token.split('.');
+    const unsigned = `${header}.${payload}`;
+    const key = await crypto.subtle.importKey('raw', enc.encode(secret), { name:'HMAC', hash:'SHA-256' }, false, ['verify']);
+    const sigBytes = Uint8Array.from(atob(sig.replace(/-/g,'+').replace(/_/g,'/')), c => c.charCodeAt(0));
+    const ok = await crypto.subtle.verify('HMAC', key, sigBytes, enc.encode(unsigned));
+    if (!ok) return null;
+    const data = JSON.parse(atob(payload.replace(/-/g,'+').replace(/_/g,'/')));
+    if (data.exp && data.exp < Math.floor(Date.now()/1000)) return null;
+    return data;
+  } catch { return null; }
+}
+
+async function hashPassword(password, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits(
+    { name:'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash:'SHA-256' },
+    keyMaterial, 256
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(bits)));
+}
+
+async function handleAuth(request, env, origin, path) {
+  const secret = env.JWT_SECRET;
+  if (!secret) return json({ error: 'JWT_SECRET not set. Run: npx wrangler secret put JWT_SECRET' }, 500, origin);
+  const hasKV = !!(env.USERS);
+
+  const sub = path.replace('/api/auth', '') || '/';
+
+  // ── GET /api/auth/me — verify token ─────────────────────────
+  if (sub === '/me') {
+    const token = (request.headers.get('Authorization') || '').replace('Bearer ','');
+    if (!token) return json({ error: 'No token' }, 401, origin);
+    const payload = await jwtVerify(token, secret);
+    if (!payload) return json({ error: 'Invalid or expired token' }, 401, origin);
+    return json({ uid: payload.uid, email: payload.email, name: payload.name, plan: payload.plan || 'free' }, 200, origin);
+  }
+
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+
+  // ── POST /api/auth/signup ────────────────────────────────────
+  if (sub === '/signup') {
+    const { email, password, name } = body;
+    if (!email || !password) return json({ error: 'Email and password required' }, 400, origin);
+    if (password.length < 6) return json({ error: 'Password must be at least 6 characters' }, 400, origin);
+
+    if (!hasKV) return json({ error: 'User database not set up. Contact Kayro admin.' }, 503, origin);
+
+    const existing = await env.USERS.get(`u:${email.toLowerCase()}`);
+    if (existing) return json({ error: 'Account already exists. Sign in instead.' }, 409, origin);
+
+    const salt = crypto.randomUUID();
+    const hash = await hashPassword(password, salt);
+    const uid = 'u_' + crypto.randomUUID().replace(/-/g,'').slice(0,16);
+    const user = { uid, email: email.toLowerCase(), name: name || email.split('@')[0], hash, salt, plan:'free', created: Date.now() };
+    await env.USERS.put(`u:${email.toLowerCase()}`, JSON.stringify(user));
+
+    const token = await jwtSign({ uid, email: user.email, name: user.name, plan:'free', exp: Math.floor(Date.now()/1000) + AUTH_TOKEN_TTL }, secret);
+    return json({ token, uid, email: user.email, name: user.name, plan:'free' }, 201, origin);
+  }
+
+  // ── POST /api/auth/signin ────────────────────────────────────
+  if (sub === '/signin') {
+    const { email, password } = body;
+    if (!email || !password) return json({ error: 'Email and password required' }, 400, origin);
+
+    if (!hasKV) return json({ error: 'User database not set up. Contact Kayro admin.' }, 503, origin);
+
+    const raw = await env.USERS.get(`u:${email.toLowerCase()}`);
+    if (!raw) return json({ error: 'No account found. Sign up first.' }, 404, origin);
+    const user = JSON.parse(raw);
+    const hash = await hashPassword(password, user.salt);
+    if (hash !== user.hash) return json({ error: 'Wrong password.' }, 401, origin);
+
+    const token = await jwtSign({ uid: user.uid, email: user.email, name: user.name, plan: user.plan || 'free', exp: Math.floor(Date.now()/1000) + AUTH_TOKEN_TTL }, secret);
+    return json({ token, uid: user.uid, email: user.email, name: user.name, plan: user.plan || 'free' }, 200, origin);
+  }
+
+  return json({ error: 'Unknown auth endpoint' }, 404, origin);
 }
 
 // ══════════════════════════════════════════════════════════════
