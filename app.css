@@ -62,20 +62,23 @@ body::after{
   pointer-events:none;
 }
 .sidebar-brand{
-  display:flex;flex-direction:column;gap:1px;
-  padding:18px 14px 16px;border-bottom:1px solid var(--border);flex-shrink:0;
+  display:flex;flex-direction:row;align-items:center;gap:9px;
+  padding:16px 14px 14px;border-bottom:1px solid var(--border);flex-shrink:0;
 }
+.brand-icon{
+  width:28px;height:28px;border-radius:8px;background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;font-size:15px;font-weight:700;color:#fff;flex-shrink:0;
+}
+.brand-text-wrap{display:flex;flex-direction:column;gap:1px}
 .brand-wordmark{
-  font-family:var(--font);font-size:17px;font-weight:400;
-  color:var(--text);letter-spacing:0;line-height:1;
+  font-family:'Inter',sans-serif;font-size:14px;font-weight:600;
+  color:var(--text);letter-spacing:-.2px;line-height:1;
 }
-.brand-k{
-  color:var(--accent);font-style:normal;font-weight:400;
-  text-shadow:0 0 20px rgba(79,140,255,.5);
-}
+.brand-k{color:inherit;font-style:normal;font-weight:inherit;text-shadow:none}
 .brand-sub{
-  font-family:var(--font);font-size:7px;color:var(--text3);
-  letter-spacing:.5px;font-weight:400;margin-top:3px;text-transform:uppercase;
+  font-family:'Inter',sans-serif;font-size:9px;color:var(--text3);
+  letter-spacing:.4px;font-weight:400;text-transform:uppercase;
 }
 .sidebar-nav{flex:1;padding:8px 6px;display:flex;flex-direction:column;gap:1px;overflow-y:auto}
 .sidebar-footer{padding:6px;border-top:1px solid var(--border)}
@@ -1479,7 +1482,7 @@ td.editing .cell-editor{display:block}
 
 /* ── FONT WEIGHT ADJUSTMENTS FOR MONO ───────────────────────── */
 h1,h2,h3,.font-heavy{font-weight:700}
-.brand-wordmark{letter-spacing:-.2px;font-weight:400}
+.brand-wordmark{letter-spacing:-.2px}
 .topbar-title{letter-spacing:0}
 input,textarea,select,button{font-family:var(--font)}
 
