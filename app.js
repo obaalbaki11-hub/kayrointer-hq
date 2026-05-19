@@ -6974,6 +6974,11 @@ const DesignStudio = {
       for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys, { search: false, appTools: false, max_tokens: 8192 })) html += chunk;
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
 
+      // If the AI returned an error string instead of HTML, surface it properly
+      if (!html || html.startsWith('⚠️') || html.startsWith('Error') || !html.includes('<')) {
+        throw new Error(html || 'No design generated. Check that your Cloudflare Worker is deployed with ANTHROPIC_KEY set.');
+      }
+
       preview.innerHTML = `
         <div class="ds-preview-bar">
           <div class="ds-preview-bar-left">
@@ -6991,7 +6996,6 @@ const DesignStudio = {
         <iframe class="ds-iframe" id="ds-iframe" sandbox="allow-scripts allow-same-origin"></iframe>`;
 
       const frame = document.getElementById('ds-iframe');
-      // srcdoc is the safe cross-browser way; fallback to contentDocument if srcdoc unavailable
       try {
         frame.srcdoc = html;
       } catch(_) {
@@ -7013,7 +7017,14 @@ const DesignStudio = {
       status.textContent = '✓ Design ready — press ⌘↵ to regenerate';
       Usage.trackUsage(Math.ceil(html.length / 4));
     } catch(e) {
-      preview.innerHTML = `<div class="ds-empty-state"><div class="ds-empty-icon" style="color:var(--danger)">✕</div><div class="ds-empty-sub">${escHtml(e.message)}</div></div>`;
+      const msg = e.message || String(e);
+      const isApiError = msg.includes('API key') || msg.includes('ANTHROPIC') || msg.includes('HTTP 500') || msg.includes('credits');
+      preview.innerHTML = `<div class="ds-empty-state">
+        <div class="ds-empty-icon" style="color:var(--danger)">✕</div>
+        <div class="ds-empty-title" style="color:var(--danger);margin-bottom:8px">Generation failed</div>
+        <div class="ds-empty-sub" style="max-width:400px">${escHtml(msg)}</div>
+        ${isApiError ? `<div class="ds-empty-sub" style="margin-top:12px;color:var(--text3)">Fix: run <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">npx wrangler secret put ANTHROPIC_KEY</code> then <code style="background:var(--surface2);padding:2px 6px;border-radius:4px">npx wrangler deploy</code></div>` : ''}
+      </div>`;
       status.textContent = '';
     }
     btn.disabled = false;
