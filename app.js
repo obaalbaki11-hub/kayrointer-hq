@@ -1946,41 +1946,39 @@ const Auth = {
   },
 
   async signInGoogle() {
-    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
-    // Firebase path
-    if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
-      try {
-        const provider = new firebase.auth.GoogleAuthProvider();
-        await firebase.auth().signInWithPopup(provider);
-      } catch(e) { Auth._showError(e.message); }
-      return;
-    }
-    // GIS path — works without Firebase
     const btn = document.getElementById('auth-google-btn');
     if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
     try {
+      // Use GIS (our own OAuth client) to get access token — avoids Firebase's
+      // org-restricted popup which blocks non-kayrointer.com accounts
       await GmailAPI._loadGIS();
-      await new Promise((resolve, reject) => {
+      const accessToken = await new Promise((resolve, reject) => {
         const client = google.accounts.oauth2.initTokenClient({
           client_id: GOOGLE_CLIENT_ID,
           scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-          callback: async (resp) => {
-            if (resp.error) { reject(new Error(resp.error)); return; }
-            try {
-              const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-                headers: { Authorization: `Bearer ${resp.access_token}` }
-              }).then(r => r.json());
-              Auth.user = { uid: 'google_' + info.id, name: info.name || info.email, email: info.email, photoURL: info.picture || null, isGuest: false };
-              localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
-              Auth._hideOverlay();
-              Auth._renderUserArea();
-              toast(`Welcome, ${info.name || info.email}!`, 'success');
-              resolve();
-            } catch(e) { reject(e); }
-          }
+          callback: (resp) => resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token),
         });
         client.requestAccessToken({ prompt: 'select_account' });
       });
+
+      // Fetch Google profile
+      const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      }).then(r => r.json());
+
+      // Sign into Firebase using the access token as a Google credential
+      if (typeof firebase !== 'undefined') {
+        const credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
+        await firebase.auth().signInWithCredential(credential);
+        // Firebase onAuthStateChanged will handle the rest
+      } else {
+        // Fallback: store profile locally
+        Auth.user = { uid: 'google_' + info.id, name: info.name || info.email, email: info.email, photoURL: info.picture || null, isGuest: false };
+        localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
+        Auth._hideOverlay();
+        Auth._renderUserArea();
+        toast(`Welcome, ${info.name || info.email}!`, 'success');
+      }
     } catch(e) {
       Auth._showError('Google sign-in failed. Try email/password or continue as guest.');
     } finally {
