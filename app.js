@@ -1123,7 +1123,7 @@ const KayroBackend = {
 };
 
 // ── GMAIL INTEGRATION ─────────────────────────────────────────
-const GOOGLE_CLIENT_ID = '303628080555-1nrk4mgpokcqo79an2fu353vefbj9sb6.apps.googleusercontent.com';
+const GOOGLE_CLIENT_ID = '369848297855-l74brged4kv7n05saf1vohoinmn90j3e.apps.googleusercontent.com';
 
 const GmailAPI = {
   _token: null,
