@@ -928,6 +928,15 @@ const WebSearch = {
 // ── KAYRO BACKEND CLIENT ──────────────────────────────────────
 const BACKEND_URL = 'https://kayro-backend.obaalbaki11.workers.dev';
 
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDbNHzaw0A_itQxpqwOQfsUb3of52RR6pY",
+  authDomain: "kayro-interactive.firebaseapp.com",
+  projectId: "kayro-interactive",
+  storageBucket: "kayro-interactive.firebasestorage.app",
+  messagingSenderId: "303628080555",
+  appId: "1:303628080555:web:2f8f03926a086cd65c6eee",
+};
+
 const KayroBackend = {
   // ── FLIGHTS ─────────────────────────────────────────────────
   async searchFlights({ origin, destination, departureDate, returnDate, passengers = 1, cabinClass = 'economy' }) {
@@ -1865,13 +1874,9 @@ const Auth = {
     }
     if (Auth.user) { Auth._hideOverlay(); Auth._renderUserArea(); return; }
 
-    // Try Firebase if config present
-    const cfg = State.settings.firebaseConfig;
-    if (cfg && cfg.apiKey) {
-      Auth._initFirebase(cfg);
-    } else {
-      Auth._showOverlay();
-    }
+    // Always use hardcoded Firebase config (falls back to Settings override if set)
+    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
+    Auth._initFirebase(cfg);
 
     document.getElementById('auth-google-btn').addEventListener('click', Auth.signInGoogle);
     document.getElementById('auth-signin-btn').addEventListener('click', Auth.signInEmail);
@@ -1941,7 +1946,7 @@ const Auth = {
   },
 
   async signInGoogle() {
-    const cfg = State.settings.firebaseConfig;
+    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
     // Firebase path
     if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
       try {
@@ -1987,7 +1992,7 @@ const Auth = {
     const email = (document.getElementById('auth-email').value||'').trim();
     const pass  = document.getElementById('auth-password').value;
     if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
-    const cfg = State.settings.firebaseConfig;
+    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
     if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
       firebase.auth().signInWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
       return;
@@ -2015,7 +2020,7 @@ const Auth = {
     const email = (document.getElementById('auth-email').value||'').trim();
     const pass  = document.getElementById('auth-password').value;
     if (!email || !pass) { Auth._showError('Enter your email and password.'); return; }
-    const cfg = State.settings.firebaseConfig;
+    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
     if (cfg && cfg.apiKey && typeof firebase !== 'undefined') {
       firebase.auth().createUserWithEmailAndPassword(email, pass).catch(e => Auth._showError(e.message));
       return;
