@@ -2327,6 +2327,7 @@ const Chat = {
   },
   setEmp(id, render=true) {
     const e = getEmp(id); if(!e) return;
+    // Changing agent — update activeEmpId FIRST so any in-flight stream sees isActive() = false
     Chat.activeEmpId = id;
     document.getElementById('cp-av').textContent = e.name[0];
     document.getElementById('cp-av').style.background = e.color+'22';
@@ -3857,41 +3858,50 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     // Current search pill (shown while searching)
     let searchPill = null;
 
+    // isActive: true only when the user is still looking at this agent's chat
+    const isActive = () => Chat.activeEmpId === empId;
+
     for await (const chunk of AI.stream(history, sysPrompt)) {
-      document.getElementById('chat-typing')?.remove();
+      if (isActive()) document.getElementById('chat-typing')?.remove();
 
       // Handle search sentinel \x00SEARCH:query\x00
       if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
         const query = chunk.slice(8, -1);
-        if (!bubble.isConnected) msgs.appendChild(bubble);
-        searchPill?.remove();
-        searchPill = document.createElement('div');
-        searchPill.className = 'search-pill';
-        searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
-        bubble.querySelector('.msg-bubble').appendChild(searchPill);
-        msgs.scrollTop = msgs.scrollHeight;
+        if (isActive()) {
+          if (!bubble.isConnected) msgs.appendChild(bubble);
+          searchPill?.remove();
+          searchPill = document.createElement('div');
+          searchPill.className = 'search-pill';
+          searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
+          bubble.querySelector('.msg-bubble').appendChild(searchPill);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
         continue;
       }
 
       // Handle app action sentinel \x00ACTION:display\x00
       if (chunk.startsWith('\x00ACTION:') && chunk.endsWith('\x00')) {
         const display = chunk.slice(8, -1);
-        if (!bubble.isConnected) msgs.appendChild(bubble);
-        searchPill?.remove();
-        const pill = document.createElement('div');
-        pill.className = 'action-pill';
-        pill.innerHTML = display;
-        bubble.querySelector('.msg-bubble').appendChild(pill);
-        msgs.scrollTop = msgs.scrollHeight;
+        if (isActive()) {
+          if (!bubble.isConnected) msgs.appendChild(bubble);
+          searchPill?.remove();
+          const pill = document.createElement('div');
+          pill.className = 'action-pill';
+          pill.innerHTML = display;
+          bubble.querySelector('.msg-bubble').appendChild(pill);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
         continue;
       }
 
       // Normal text chunk
-      searchPill?.remove(); searchPill = null;
-      if (!bubble.isConnected) msgs.appendChild(bubble);
       full += chunk;
-      bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
-      msgs.scrollTop = msgs.scrollHeight;
+      if (isActive()) {
+        searchPill?.remove(); searchPill = null;
+        if (!bubble.isConnected) msgs.appendChild(bubble);
+        bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
     }
 
     searchPill?.remove();
