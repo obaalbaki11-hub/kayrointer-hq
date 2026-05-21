@@ -8780,55 +8780,65 @@ HASHTAGS:
     ];
 
     el.innerHTML = `
-    <div style="margin-bottom:24px">
-      <div style="font-size:13px;font-weight:700;color:var(--text1);letter-spacing:.4px;margin-bottom:12px;text-transform:uppercase;opacity:.6">Connected Services</div>
-      <div class="svc-grid">
+    <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent);margin-bottom:20px">
+      💡 <b>Start here:</b> Connect <b>Zapier</b> or <b>Make</b> (one webhook = 5,000+ apps). Connect <b>Slack</b> or <b>Discord</b> for instant direct notifications. Then go to <b>Workflows</b> and enable rules.
+    </div>
+    <div class="int-grid">
 
-        <div class="svc-card${gmailOn?' svc-card--on':''}">
-          <div class="svc-card-icon" style="background:#ea433522;border-color:#ea433344;color:#ea4335">✉️</div>
-          <div class="svc-card-body">
-            <div class="svc-card-name">Gmail</div>
-            <div class="svc-card-status">${gmailOn?`✅ ${escHtml(s.gmailEmail)}`:'⚪ Not connected'}</div>
+      <!-- Gmail -->
+      <div class="int-card${gmailOn?' int-card--connected':''}">
+        <div class="int-card-hdr">
+          <div class="int-icon" style="background:#ea433522;border:1px solid #ea433344;color:#ea4335">✉️</div>
+          <div style="flex:1;min-width:0">
+            <div class="int-name">Gmail</div>
+            <div class="int-conn-row">${gmailOn?`<span class="int-dot int-dot--on"></span>${escHtml(s.gmailEmail)}`:'<span class="int-dot"></span>Not connected'}</div>
           </div>
           ${gmailOn
             ?`<button class="btn btn-sm btn-danger" id="svc-gmail-disconnect">Disconnect</button>`
             :`<button class="btn btn-sm btn-primary" id="svc-gmail-connect">Connect →</button>`}
         </div>
+        <div class="int-desc">Send emails directly from your inbox. Powers Cold Email &amp; agent outreach.</div>
+      </div>
 
-        <div class="svc-card svc-card--on">
-          <div class="svc-card-icon" style="background:#4f8cff22;border-color:#4f8cff44;color:#4f8cff">🔍</div>
-          <div class="svc-card-body">
-            <div class="svc-card-name">Hunter.io</div>
-            <div class="svc-card-status">✅ Powered by Kayro</div>
+      <!-- Hunter.io -->
+      <div class="int-card int-card--connected">
+        <div class="int-card-hdr">
+          <div class="int-icon" style="background:#f59e0b22;border:1px solid #f59e0b44;color:#f59e0b">🔍</div>
+          <div style="flex:1;min-width:0">
+            <div class="int-name">Hunter.io</div>
+            <div class="int-conn-row"><span class="int-dot int-dot--on"></span>Powered by Kayro</div>
           </div>
           <span class="svc-badge">Built-in</span>
         </div>
-
-        <div class="svc-card${klingOn?' svc-card--on':''}">
-          <div class="svc-card-icon" style="background:#a855f722;border-color:#a855f744;color:#a855f7">🎬</div>
-          <div class="svc-card-body">
-            <div class="svc-card-name">Kling AI</div>
-            <div class="svc-card-status">${klingOn?'✅ API keys set':'⚪ Not configured'}</div>
-          </div>
-          <button class="btn btn-sm" onclick="Router.navigate('kling')">${klingOn?'Manage':'Set up →'}</button>
-        </div>
-
-        <div class="svc-card${metaOn?' svc-card--on':''}">
-          <div class="svc-card-icon" style="background:#1877f222;border-color:#1877f244;color:#1877f2">📊</div>
-          <div class="svc-card-body">
-            <div class="svc-card-name">Meta Ads</div>
-            <div class="svc-card-status">${metaOn?'✅ Token set':'⚪ Not configured'}</div>
-          </div>
-          <button class="btn btn-sm" onclick="Router.navigate('meta')">${metaOn?'Manage':'Set up →'}</button>
-        </div>
-
+        <div class="int-desc">Find verified business emails &amp; leads. No API key needed — included with Kayro.</div>
       </div>
-    </div>
 
-    <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent);margin-bottom:20px">
-      💡 <b>Automation webhooks:</b> Connect <b>Zapier</b> or <b>Make</b> (one webhook = 5,000+ apps). Connect <b>Slack</b> or <b>Discord</b> for instant notifications. Then go to <b>Workflows</b> and enable rules.
-    </div>
-    <div class="int-grid">
+      <!-- Kling AI -->
+      <div class="int-card${klingOn?' int-card--connected':''}">
+        <div class="int-card-hdr">
+          <div class="int-icon" style="background:#a855f722;border:1px solid #a855f744;color:#a855f7">🎬</div>
+          <div style="flex:1;min-width:0">
+            <div class="int-name">Kling AI</div>
+            <div class="int-conn-row">${klingOn?'<span class="int-dot int-dot--on"></span>API keys set':'<span class="int-dot"></span>Not configured'}</div>
+          </div>
+          <button class="btn btn-sm" onclick="Router.navigate('kling')">${klingOn?'Open Studio':'Set up →'}</button>
+        </div>
+        <div class="int-desc">Generate AI video content. Add your Kling API keys to get started.</div>
+      </div>
+
+      <!-- Meta Ads -->
+      <div class="int-card${metaOn?' int-card--connected':''}">
+        <div class="int-card-hdr">
+          <div class="int-icon" style="background:#1877f222;border:1px solid #1877f244;color:#1877f2">📊</div>
+          <div style="flex:1;min-width:0">
+            <div class="int-name">Meta Ads</div>
+            <div class="int-conn-row">${metaOn?'<span class="int-dot int-dot--on"></span>Token set':'<span class="int-dot"></span>Not configured'}</div>
+          </div>
+          <button class="btn btn-sm" onclick="Router.navigate('meta')">${metaOn?'Open Ads':'Set up →'}</button>
+        </div>
+        <div class="int-desc">Manage Facebook &amp; Instagram ad campaigns directly from HQ.</div>
+      </div>
+
       ${INTS.map(intg=>{
         const connected=!!ig[intg.fields[0].key];
         return `<div class="int-card${connected?' int-card--connected':''}">
