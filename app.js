@@ -8760,7 +8760,13 @@ HASHTAGS:
   // ── INTEGRATIONS TAB ──────────────────────────────────────────
   _renderIntegrations(el) {
     const ig = State.automations.integrations || {};
+    const s  = State.settings;
     const _dot = k => ig[k]?`<span class="int-dot int-dot--on"></span>Connected`:`<span class="int-dot"></span>Not set`;
+
+    const gmailOn  = GmailAPI.isConnected();
+    const klingOn  = !!(s.klingKeyId || s.platformKlingKeyId);
+    const metaOn   = !!(s.metaToken);
+
     const INTS = [
       {id:'zapier',  name:'Zapier',     icon:'⚡',color:'#ff4a00',desc:'5,000+ apps. One webhook = every app.',fields:[{key:'zapierWebhookUrl',label:'Webhook URL',ph:'https://hooks.zapier.com/hooks/catch/…',type:'url'}],guide:'zapier.com → Webhooks by Zapier → Catch Hook → Copy URL'},
       {id:'make',    name:'Make',       icon:'🔄',color:'#6d00cc',desc:'1,500+ apps. Visual automation builder.',fields:[{key:'makeWebhookUrl',label:'Webhook URL',ph:'https://hook.eu1.make.com/…',type:'url'}],guide:'make.com → New scenario → Webhooks → Custom webhook → Copy URL'},
@@ -8774,8 +8780,53 @@ HASHTAGS:
     ];
 
     el.innerHTML = `
+    <div style="margin-bottom:24px">
+      <div style="font-size:13px;font-weight:700;color:var(--text1);letter-spacing:.4px;margin-bottom:12px;text-transform:uppercase;opacity:.6">Connected Services</div>
+      <div class="svc-grid">
+
+        <div class="svc-card${gmailOn?' svc-card--on':''}">
+          <div class="svc-card-icon" style="background:#ea433522;border-color:#ea433344;color:#ea4335">✉️</div>
+          <div class="svc-card-body">
+            <div class="svc-card-name">Gmail</div>
+            <div class="svc-card-status">${gmailOn?`✅ ${escHtml(s.gmailEmail)}`:'⚪ Not connected'}</div>
+          </div>
+          ${gmailOn
+            ?`<button class="btn btn-sm btn-danger" id="svc-gmail-disconnect">Disconnect</button>`
+            :`<button class="btn btn-sm btn-primary" id="svc-gmail-connect">Connect →</button>`}
+        </div>
+
+        <div class="svc-card svc-card--on">
+          <div class="svc-card-icon" style="background:#4f8cff22;border-color:#4f8cff44;color:#4f8cff">🔍</div>
+          <div class="svc-card-body">
+            <div class="svc-card-name">Hunter.io</div>
+            <div class="svc-card-status">✅ Powered by Kayro</div>
+          </div>
+          <span class="svc-badge">Built-in</span>
+        </div>
+
+        <div class="svc-card${klingOn?' svc-card--on':''}">
+          <div class="svc-card-icon" style="background:#a855f722;border-color:#a855f744;color:#a855f7">🎬</div>
+          <div class="svc-card-body">
+            <div class="svc-card-name">Kling AI</div>
+            <div class="svc-card-status">${klingOn?'✅ API keys set':'⚪ Not configured'}</div>
+          </div>
+          <button class="btn btn-sm" onclick="Router.navigate('kling')">${klingOn?'Manage':'Set up →'}</button>
+        </div>
+
+        <div class="svc-card${metaOn?' svc-card--on':''}">
+          <div class="svc-card-icon" style="background:#1877f222;border-color:#1877f244;color:#1877f2">📊</div>
+          <div class="svc-card-body">
+            <div class="svc-card-name">Meta Ads</div>
+            <div class="svc-card-status">${metaOn?'✅ Token set':'⚪ Not configured'}</div>
+          </div>
+          <button class="btn btn-sm" onclick="Router.navigate('meta')">${metaOn?'Manage':'Set up →'}</button>
+        </div>
+
+      </div>
+    </div>
+
     <div class="auto-notice" style="background:rgba(79,140,255,.06);border-color:rgba(79,140,255,.2);color:var(--accent);margin-bottom:20px">
-      💡 <b>Start here:</b> Connect <b>Zapier</b> or <b>Make</b> (one webhook = 5,000+ apps). Connect <b>Slack</b> or <b>Discord</b> for instant direct notifications. Then go to <b>Workflows</b> and enable rules.
+      💡 <b>Automation webhooks:</b> Connect <b>Zapier</b> or <b>Make</b> (one webhook = 5,000+ apps). Connect <b>Slack</b> or <b>Discord</b> for instant notifications. Then go to <b>Workflows</b> and enable rules.
     </div>
     <div class="int-grid">
       ${INTS.map(intg=>{
@@ -8805,6 +8856,15 @@ HASHTAGS:
         </div>`;
       }).join('')}
     </div>`;
+
+    el.querySelector('#svc-gmail-connect')?.addEventListener('click', async () => {
+      await GmailAPI.connect();
+      AutomationsPage._renderTab();
+    });
+    el.querySelector('#svc-gmail-disconnect')?.addEventListener('click', () => {
+      GmailAPI.disconnect();
+      AutomationsPage._renderTab();
+    });
 
     el.querySelectorAll('.int-toggle-btn').forEach(btn=>{
       btn.addEventListener('click',()=>{
