@@ -1577,9 +1577,9 @@ const AI = {
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
-      // Tool use loop — up to 5 iterations (search + app actions)
+      // Tool use loop — up to 20 iterations (search + app actions)
       let loopMsgs = [...messages];
-      for (let loop = 0; loop < 5; loop++) {
+      for (let loop = 0; loop < 20; loop++) {
         let assistantText = '';
         let toolId = null, toolName = null, toolJson = '';
         let stopReason = 'end_turn';
@@ -1625,7 +1625,7 @@ const AI = {
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
           res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
-          if (!res.ok) { yield `\n⚠️ Action failed (API error)`; break; }
+          if (!res.ok) { let b={}; try{b=await res.json();}catch(_){} yield `\n⚠️ Action failed (${res.status}): ${b?.error?.message||'API error'}`; break; }
 
         // ── App tool ─────────────────────────────────────────────
         } else {
@@ -1639,7 +1639,7 @@ const AI = {
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
           res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
-          if (!res.ok) { yield `\n⚠️ Action failed (API error)`; break; }
+          if (!res.ok) { let b={}; try{b=await res.json();}catch(_){} yield `\n⚠️ Action failed (${res.status}): ${b?.error?.message||'API error'}`; break; }
         }
       }
     } catch(e) {
