@@ -1339,16 +1339,28 @@ const AppTools = {
         page: { type:'string', enum:['tasks','spreadsheet','email','memory','hq','design','reports','compete','kling','security'], description:'Page to navigate to' },
       }, required:['page'] }
     },
+    {
+      name: 'create_tasks_bulk',
+      description: 'Create multiple tasks at once in a single call. ALWAYS use this instead of calling create_task multiple times. If you need to create 2 or more tasks, use this.',
+      input_schema: { type:'object', properties: {
+        tasks: { type:'array', description:'List of tasks to create', items: { type:'object', properties: {
+          title:    { type:'string', description:'Task title' },
+          assignee: { type:'string', description:'Employee name to assign to (optional)' },
+          priority: { type:'string', enum:['high','med','low'], description:'Priority level' },
+        }, required:['title'] } },
+      }, required:['tasks'] }
+    },
   ],
 
   execute(name, input) {
     try {
       switch(name) {
-        case 'create_task':     return AppTools._createTask(input);
+        case 'create_task':       return AppTools._createTask(input);
+        case 'create_tasks_bulk': return AppTools._createTasksBulk(input);
         case 'write_spreadsheet': return AppTools._writeSpreadsheet(input);
-        case 'draft_email':     return AppTools._draftEmail(input);
-        case 'save_to_brain':   return AppTools._saveToBrain(input);
-        case 'navigate_to':     return AppTools._navigate(input);
+        case 'draft_email':       return AppTools._draftEmail(input);
+        case 'save_to_brain':     return AppTools._saveToBrain(input);
+        case 'navigate_to':       return AppTools._navigate(input);
         default: return { result:'Unknown tool', display:'❓ Unknown action' };
       }
     } catch(e) {
@@ -1367,6 +1379,23 @@ const AppTools = {
     return {
       result: `Task "${title}" added to Todo column${emp?` and assigned to ${emp.name}`:''}. User has been taken to the Tasks page.`,
       display: `✅ Task created: <b>${escHtml(title)}</b>${emp?` → ${escHtml(emp.name)}`:''}`,
+    };
+  },
+
+  _createTasksBulk({ tasks = [] }) {
+    if (!tasks.length) return { result:'No tasks provided', display:'⚠️ No tasks to create' };
+    const created = [];
+    tasks.forEach(t => {
+      const emp = t.assignee ? State.employees.find(e => e.name.toLowerCase().includes(t.assignee.toLowerCase())) : null;
+      const task = { id:uid(), title:t.title, assignee:emp?.id||null, priority:t.priority||'med', column:'todo', created:Date.now() };
+      State.tasks.push(task);
+      created.push(`${t.title}${emp?' → '+emp.name:''}`);
+    });
+    save('tasks');
+    setTimeout(() => { if (Router.current === 'tasks') Tasks.render(); else Router.navigate('tasks'); }, 300);
+    return {
+      result: `Created ${tasks.length} tasks: ${created.join('; ')}.`,
+      display: `✅ Created ${tasks.length} tasks on the board`,
     };
   },
 
@@ -1577,6 +1606,18 @@ const AI = {
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
+      // Helper: retry a fetch once after 1.2s on failure
+      const fetchWithRetry = async (cfg, msgs, sys, extra) => {
+        let r = await AI._fetchStream(cfg, msgs, sys, extra);
+        if (!r.ok) { await new Promise(res => setTimeout(res, 1200)); r = await AI._fetchStream(cfg, msgs, sys, extra); }
+        return r;
+      };
+      const toolErrMsg = async (r) => {
+        let b={}; try{b=await r.json();}catch(_){}
+        const hint = r.status===401?'Credits exhausted — add billing at console.anthropic.com':r.status===429?'Rate limit — wait a moment':r.status===400?'Context too long — start a new chat':null;
+        return `\n⚠️ Action failed (${r.status}): ${b?.error?.message||'API error'}${hint?'\n→ '+hint:''}`;
+      };
+
       // Tool use loop — up to 20 iterations (search + app actions)
       let loopMsgs = [...messages];
       for (let loop = 0; loop < 20; loop++) {
@@ -1609,8 +1650,8 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:searchResult}] }
           ];
-          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
-          if (!res.ok) { yield `\n⚠️ Search failed (API error)`; break; }
+          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield await toolErrMsg(res); break; }
 
         // ── Send email (async) ───────────────────────────────────
         } else if (toolName === 'send_email') {
@@ -1624,8 +1665,8 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
-          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
-          if (!res.ok) { let b={}; try{b=await res.json();}catch(_){} yield `\n⚠️ Action failed (${res.status}): ${b?.error?.message||'API error'}`; break; }
+          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield await toolErrMsg(res); break; }
 
         // ── App tool ─────────────────────────────────────────────
         } else {
@@ -1638,8 +1679,8 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
-          res = await AI._fetchStream(cfg, loopMsgs, system, { tools: allTools });
-          if (!res.ok) { let b={}; try{b=await res.json();}catch(_){} yield `\n⚠️ Action failed (${res.status}): ${b?.error?.message||'API error'}`; break; }
+          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          if (!res.ok) { yield await toolErrMsg(res); break; }
         }
       }
     } catch(e) {
@@ -2650,13 +2691,14 @@ You have the following real, executing capabilities. Use them in your responses:
 ⑤ WEB SEARCH → you have live internet access. Use it. Don't say "you should look this up." Look it up yourself.
 
 ⑥ REAL APP ACTIONS (use these tools directly — they execute instantly in the app):
-   • create_task → creates a task card on the Kanban board
+   • create_tasks_bulk → creates MULTIPLE tasks at once (ALWAYS use this when creating 2+ tasks — never call create_task in a loop)
+   • create_task → creates ONE task card on the Kanban board (only if creating a single task)
    • write_spreadsheet → writes a table directly into the Spreadsheet page
    • draft_email → opens the Email page pre-filled so the user can review before sending
    • send_email → ACTUALLY SENDS the email immediately, no user action needed — use this when asked to "send" autonomously
    • save_to_brain → saves a fact permanently to the team knowledge base
    • navigate_to → takes the user to any page (tasks, spreadsheet, email, memory, etc.)
-   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If asked to assign work, call create_task. If asked to SEND an email, call send_email. Don't just describe what you'd do — do it.
+   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If creating 2+ tasks, ALWAYS use create_tasks_bulk (never loop create_task). If asked to SEND an email, call send_email. Don't just describe what you'd do — do it.
 
 ⑦ SKILLS → invoke any skill for specialized output:
    /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
