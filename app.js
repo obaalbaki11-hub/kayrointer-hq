@@ -2334,15 +2334,24 @@ const Chat = {
       save_('chatHistory');
     }
   },
+  _md(text) {
+    try {
+      if (typeof marked !== 'undefined') {
+        return marked.parse(text, { breaks: true, gfm: true });
+      }
+    } catch(_) {}
+    return escHtml(text).replace(/\n/g,'<br>');
+  },
   _appendBubble(container, av, color, name, text, isUser) {
     const div = document.createElement('div');
     div.className = 'msg'+(isUser?' user':'');
-    div.innerHTML = `
-      <div class="msg-av" style="background:${color}22;color:${color}">${av}</div>
-      <div class="msg-body">
-        <div class="msg-sender">${escHtml(name)}</div>
-        <div class="msg-bubble">${escHtml(text)}</div>
-      </div>`;
+    div.innerHTML = isUser
+      ? `<div class="msg-bubble msg-bubble--user">${escHtml(text)}</div>`
+      : `<div class="msg-av" style="background:${color}22;color:${color}">${av}</div>
+         <div class="msg-body">
+           <div class="msg-sender">${escHtml(name)}</div>
+           <div class="msg-bubble msg-bubble--ai">${Chat._md(text)}</div>
+         </div>`;
     container.appendChild(div);
   },
   // Builds a rich system prompt injecting live company context
@@ -3616,8 +3625,10 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     const typing = document.createElement('div');
     typing.className='msg'; typing.id='chat-typing';
     typing.innerHTML=`<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
-      <div class="msg-body"><div class="msg-sender">${e.name}</div>
-      <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+      <div class="msg-body">
+        <div class="msg-sender">${e.name}</div>
+        <div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div>
+      </div>`;
     msgs.appendChild(typing); msgs.scrollTop=msgs.scrollHeight;
 
     const history = (State.chatHistory[empId]||[]).slice(-20);
@@ -3626,8 +3637,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     const bubble = document.createElement('div');
     bubble.className = 'msg';
     bubble.innerHTML = `<div class="msg-av" style="background:${e.color}22;color:${e.color}">${e.name[0]}</div>
-      <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble" id="stream-bubble" style="white-space:pre-wrap"></div></div>`;
-    const tn = document.createTextNode('');
+      <div class="msg-body"><div class="msg-sender">${e.name}</div><div class="msg-bubble msg-bubble--ai" id="stream-bubble"></div></div>`;
     // Current search pill (shown while searching)
     let searchPill = null;
 
@@ -3663,8 +3673,8 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
       // Normal text chunk
       searchPill?.remove(); searchPill = null;
       if (!bubble.isConnected) msgs.appendChild(bubble);
-      tn.textContent += chunk; full += chunk;
-      if (!bubble.querySelector('#stream-bubble').firstChild) bubble.querySelector('#stream-bubble').appendChild(tn);
+      full += chunk;
+      bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
       msgs.scrollTop = msgs.scrollHeight;
     }
 
@@ -8764,8 +8774,6 @@ HASHTAGS:
     const _dot = k => ig[k]?`<span class="int-dot int-dot--on"></span>Connected`:`<span class="int-dot"></span>Not set`;
 
     const gmailOn  = GmailAPI.isConnected();
-    const klingOn  = !!(s.klingKeyId || s.platformKlingKeyId);
-    const metaOn   = !!(s.metaToken);
 
     const INTS = [
       {id:'zapier',  name:'Zapier',     icon:'⚡',color:'#ff4a00',desc:'5,000+ apps. One webhook = every app.',fields:[{key:'zapierWebhookUrl',label:'Webhook URL',ph:'https://hooks.zapier.com/hooks/catch/…',type:'url'}],guide:'zapier.com → Webhooks by Zapier → Catch Hook → Copy URL'},
@@ -8798,45 +8806,6 @@ HASHTAGS:
             :`<button class="btn btn-sm btn-primary" id="svc-gmail-connect">Connect →</button>`}
         </div>
         <div class="int-desc">Send emails directly from your inbox. Powers Cold Email &amp; agent outreach.</div>
-      </div>
-
-      <!-- Hunter.io -->
-      <div class="int-card int-card--connected">
-        <div class="int-card-hdr">
-          <div class="int-icon" style="background:#f59e0b22;border:1px solid #f59e0b44;color:#f59e0b">🔍</div>
-          <div style="flex:1;min-width:0">
-            <div class="int-name">Hunter.io</div>
-            <div class="int-conn-row"><span class="int-dot int-dot--on"></span>Powered by Kayro</div>
-          </div>
-          <span class="svc-badge">Built-in</span>
-        </div>
-        <div class="int-desc">Find verified business emails &amp; leads. No API key needed — included with Kayro.</div>
-      </div>
-
-      <!-- Kling AI -->
-      <div class="int-card${klingOn?' int-card--connected':''}">
-        <div class="int-card-hdr">
-          <div class="int-icon" style="background:#a855f722;border:1px solid #a855f744;color:#a855f7">🎬</div>
-          <div style="flex:1;min-width:0">
-            <div class="int-name">Kling AI</div>
-            <div class="int-conn-row">${klingOn?'<span class="int-dot int-dot--on"></span>API keys set':'<span class="int-dot"></span>Not configured'}</div>
-          </div>
-          <button class="btn btn-sm" onclick="Router.navigate('kling')">${klingOn?'Open Studio':'Set up →'}</button>
-        </div>
-        <div class="int-desc">Generate AI video content. Add your Kling API keys to get started.</div>
-      </div>
-
-      <!-- Meta Ads -->
-      <div class="int-card${metaOn?' int-card--connected':''}">
-        <div class="int-card-hdr">
-          <div class="int-icon" style="background:#1877f222;border:1px solid #1877f244;color:#1877f2">📊</div>
-          <div style="flex:1;min-width:0">
-            <div class="int-name">Meta Ads</div>
-            <div class="int-conn-row">${metaOn?'<span class="int-dot int-dot--on"></span>Token set':'<span class="int-dot"></span>Not configured'}</div>
-          </div>
-          <button class="btn btn-sm" onclick="Router.navigate('meta')">${metaOn?'Open Ads':'Set up →'}</button>
-        </div>
-        <div class="int-desc">Manage Facebook &amp; Instagram ad campaigns directly from HQ.</div>
       </div>
 
       ${INTS.map(intg=>{
