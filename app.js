@@ -2345,14 +2345,179 @@ const Chat = {
   _appendBubble(container, av, color, name, text, isUser) {
     const div = document.createElement('div');
     div.className = 'msg'+(isUser?' user':'');
-    div.innerHTML = isUser
-      ? `<div class="msg-bubble msg-bubble--user">${escHtml(text)}</div>`
-      : `<div class="msg-av" style="background:${color}22;color:${color}">${av}</div>
+    if (isUser) {
+      div.innerHTML = `<div class="msg-bubble msg-bubble--user">${escHtml(text)}</div>`;
+    } else {
+      div.innerHTML = `<div class="msg-av" style="background:${color}22;color:${color}">${av}</div>
          <div class="msg-body">
            <div class="msg-sender">${escHtml(name)}</div>
            <div class="msg-bubble msg-bubble--ai">${Chat._md(text)}</div>
+           <div class="msg-actions">
+             <button class="msg-act" data-act="present">🖥 Present</button>
+             <button class="msg-act" data-act="copy">📋 Copy</button>
+           </div>
          </div>`;
+      div.querySelector('[data-act="present"]').addEventListener('click', () => Chat._openPresentation(name, color, text));
+      div.querySelector('[data-act="copy"]').addEventListener('click', () => {
+        navigator.clipboard.writeText(text);
+        toast('Copied ✓', 'success');
+      });
+    }
     container.appendChild(div);
+  },
+
+  _openPresentation(agentName, agentColor, markdown) {
+    const win = window.open('', '_blank');
+    if (!win) { toast('Allow popups to open Presentation view', 'warn', 4000); return; }
+
+    let encoded;
+    try { encoded = btoa(encodeURIComponent(markdown)); }
+    catch(_) { encoded = btoa(unescape(encodeURIComponent(markdown))); }
+
+    const company  = State.settings?.companyName || 'Kayro Interactive';
+    const avatar   = escHtml(agentName[0] || '?');
+    const safeName = escHtml(agentName);
+    const safeCo   = escHtml(company);
+    const c        = agentColor;
+
+    win.document.write(`<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<title>${safeName} — Kayro Presentation</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"><\/script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;background:#080c18;color:#e2e8f0;font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+.pbar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:rgba(6,9,20,.97);border-bottom:1px solid rgba(255,255,255,.08);position:fixed;top:0;left:0;right:0;z-index:100;backdrop-filter:blur(20px);height:52px}
+.pbar-l{display:flex;align-items:center;gap:10px}
+.pav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;background:${c}22;color:${c};flex-shrink:0}
+.pname{font-size:13px;font-weight:700;color:#fff}.psub{font-size:10px;color:#475569}
+.pbar-r{display:flex;gap:6px;align-items:center}
+.pbtn{padding:5px 12px;border-radius:7px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#94a3b8;font-size:11.5px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.pbtn:hover{background:rgba(255,255,255,.12);color:#e2e8f0}
+.prog{position:fixed;top:52px;left:0;right:0;height:2px;background:rgba(255,255,255,.05);z-index:99}
+.prog-bar{height:100%;background:${c};transition:width .3s ease}
+.host{position:fixed;top:52px;left:0;right:0;bottom:52px;overflow:hidden}
+.slide{position:absolute;inset:0;padding:52px 88px 32px;overflow-y:auto;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .28s,transform .28s;transform:translateX(28px)}
+.slide.active{opacity:1;pointer-events:all;transform:none}.slide.out{transform:translateX(-28px)}
+@media(max-width:700px){.slide{padding:32px 20px 16px}}
+.shdr{display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
+.spill{font-size:9.5px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;padding:3px 9px;border-radius:5px;background:${c}18;color:${c};border:1px solid ${c}33}
+.stitle{font-size:12px;color:#475569;font-weight:500}
+.sc h1{font-size:clamp(24px,3.5vw,46px);font-weight:900;color:#fff;margin-bottom:14px;line-height:1.15;letter-spacing:-1.5px}
+.sc h2{font-size:clamp(18px,2.8vw,32px);font-weight:800;color:#fff;margin:22px 0 10px;line-height:1.2;letter-spacing:-.5px}
+.sc h3{font-size:clamp(15px,2vw,21px);font-weight:700;color:#fff;margin:16px 0 7px}
+.sc p{font-size:clamp(13px,1.4vw,16.5px);color:#c8d3e0;margin-bottom:13px;line-height:1.75}
+.sc ul,.sc ol{margin:4px 0 14px;padding-left:22px}.sc li{font-size:clamp(13px,1.3vw,16px);color:#c8d3e0;margin:6px 0;line-height:1.65}
+.sc li::marker{color:${c};font-size:.85em}
+.sc strong{color:#fff;font-weight:700}.sc em{color:#94a3b8}
+.sc code{background:rgba(255,255,255,.1);border-radius:5px;padding:1px 6px;font-size:.83em;color:#93c5fd;font-family:'Fira Code','JetBrains Mono',monospace}
+.sc pre{background:rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);border-radius:10px;padding:16px 20px;overflow-x:auto;margin:13px 0}
+.sc pre code{background:none;padding:0;font-size:13px;color:#e2e8f0}
+.sc blockquote{border-left:3px solid ${c};padding:10px 16px;margin:12px 0;background:rgba(255,255,255,.03);border-radius:0 8px 8px 0;color:#94a3b8;font-style:italic}
+.sc table{width:100%;border-collapse:collapse;margin:12px 0;font-size:13.5px}
+.sc th{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);padding:8px 12px;text-align:left;font-weight:700;color:#fff}
+.sc td{border:1px solid rgba(255,255,255,.07);padding:7px 12px;color:#c8d3e0}
+.sc tr:nth-child(even) td{background:rgba(255,255,255,.02)}
+.sc a{color:${c};text-decoration:underline}.sc hr{border:none;border-top:1px solid rgba(255,255,255,.08);margin:18px 0}
+.nav{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(6,9,20,.97);border-top:1px solid rgba(255,255,255,.08);display:flex;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(20px);z-index:100}
+.narr{width:32px;height:32px;border-radius:50%;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#e2e8f0;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s}
+.narr:hover:not(:disabled){background:rgba(255,255,255,.12)}.narr:disabled{opacity:.2;cursor:default}
+.ndots{display:flex;gap:5px;align-items:center}
+.ndot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;transition:all .2s}
+.ndot.on{background:${c};width:18px;border-radius:3px}
+.ncnt{font-size:11px;color:#475569;min-width:40px;text-align:center;font-weight:600}
+@media print{.pbar,.nav,.prog{display:none}html,body{overflow:visible;height:auto}.host{position:static;overflow:visible;height:auto}.slide{position:static!important;opacity:1!important;transform:none!important;pointer-events:all!important;page-break-after:always}}
+</style></head><body>
+<header class="pbar">
+  <div class="pbar-l"><div class="pav">${avatar}</div><div><div class="pname">${safeName}</div><div class="psub">AI Employee · ${safeCo}</div></div></div>
+  <div class="pbar-r">
+    <button class="pbtn" id="btn-mode">≡ Document</button>
+    <button class="pbtn" id="btn-copy">📋 Copy</button>
+    <button class="pbtn" id="btn-pdf">🖨 PDF</button>
+    <button class="pbtn" onclick="window.close()">✕ Close</button>
+  </div>
+</header>
+<div class="prog" id="prog"><div class="prog-bar" id="pbar2"></div></div>
+<div class="host" id="host"></div>
+<nav class="nav" id="nav">
+  <button class="narr" id="prv" disabled>◀</button>
+  <div class="ndots" id="ndots"></div>
+  <span class="ncnt" id="ncnt">1 / 1</span>
+  <button class="narr" id="nxt">▶</button>
+</nav>
+<script>
+var RAW = decodeURIComponent(atob('${encoded}'));
+marked.setOptions({gfm:true,breaks:true});
+var parts = RAW.split(/(?=^## )/m).filter(function(s){return s.trim();});
+var multi = parts.length > 1;
+var cur = 0;
+var host=document.getElementById('host'),ndots=document.getElementById('ndots'),ncnt=document.getElementById('ncnt');
+var pbar2=document.getElementById('pbar2'),prv=document.getElementById('prv'),nxt=document.getElementById('nxt');
+var prog=document.getElementById('prog'),nav=document.getElementById('nav');
+var slideEls=[],dotEls=[];
+
+parts.forEach(function(part,i){
+  var el=document.createElement('div');
+  el.className='slide'+(i===0?' active':'');
+  var tm=part.match(/^#{1,2} (.+)/m);
+  var secT=tm?tm[1]:(i===0?'${safeName}':'Section '+(i+1));
+  var hdr=multi?'<div class="shdr"><span class="spill">'+(i+1)+' / '+parts.length+'</span><span class="stitle">'+secT+'</span></div>':'';
+  el.innerHTML=hdr+'<div class="sc">'+marked.parse(part)+'</div>';
+  host.appendChild(el);slideEls.push(el);
+  var dot=document.createElement('button');
+  dot.className='ndot'+(i===0?' on':'');
+  dot.addEventListener('click',function(){goTo(i);});
+  ndots.appendChild(dot);dotEls.push(dot);
+});
+
+function goTo(n){
+  if(n<0||n>=slideEls.length)return;
+  slideEls[cur].classList.remove('active');
+  if(n>cur)slideEls[cur].classList.add('out');
+  var prev=cur;cur=n;
+  requestAnimationFrame(function(){slideEls[prev].classList.remove('out');slideEls[cur].classList.add('active');slideEls[cur].scrollTop=0;});
+  dotEls.forEach(function(d,i){d.classList.toggle('on',i===cur);});
+  ncnt.textContent=(cur+1)+' / '+slideEls.length;
+  prv.disabled=cur===0;nxt.disabled=cur===slideEls.length-1;
+  pbar2.style.width=((cur+1)/slideEls.length*100)+'%';
+}
+prv.addEventListener('click',function(){goTo(cur-1);});
+nxt.addEventListener('click',function(){goTo(cur+1);});
+document.addEventListener('keydown',function(e){
+  if(e.key==='ArrowRight'||e.key===' '){e.preventDefault();goTo(cur+1);}
+  if(e.key==='ArrowLeft'){e.preventDefault();goTo(cur-1);}
+});
+if(!multi){nav.style.display='none';prog.style.display='none';host.style.bottom='0';}
+goTo(0);
+
+var docMode=false;
+document.getElementById('btn-mode').addEventListener('click',function(){
+  docMode=!docMode;
+  document.getElementById('btn-mode').textContent=docMode?'◼ Slides':'≡ Document';
+  if(docMode){
+    host.style.overflow='auto';nav.style.display='none';prog.style.display='none';
+    slideEls.forEach(function(el){el.style.cssText='position:relative;opacity:1;transform:none;pointer-events:all;';});
+  } else {
+    host.style.overflow='hidden';
+    if(multi){nav.style.display='';prog.style.display='';}
+    slideEls.forEach(function(el){el.style.cssText='';});goTo(cur);
+  }
+});
+document.getElementById('btn-copy').addEventListener('click',function(){
+  navigator.clipboard.writeText(RAW).then(function(){
+    var b=document.getElementById('btn-copy');b.textContent='✅ Copied!';
+    setTimeout(function(){b.textContent='📋 Copy';},2000);
+  });
+});
+document.getElementById('btn-pdf').addEventListener('click',function(){
+  host.style.overflow='auto';
+  slideEls.forEach(function(el){el.style.cssText='position:relative;opacity:1;transform:none;pointer-events:all;';});
+  setTimeout(function(){window.print();},120);
+  setTimeout(function(){if(!docMode){host.style.overflow='hidden';slideEls.forEach(function(el){el.style.cssText='';});goTo(cur);}},2500);
+});
+<\/script></body></html>`);
+    win.document.close();
   },
   // Builds a rich system prompt injecting live company context
   _buildSystemPrompt(emp) {
@@ -3682,6 +3847,16 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     document.getElementById('chat-typing')?.remove();
     // Only show bubble in DOM if the user is still viewing this employee's chat
     if (Chat.activeEmpId === empId && !bubble.isConnected) msgs.appendChild(bubble);
+    // Add Present / Copy actions to the streamed bubble
+    if (full) {
+      bubble.querySelector('#stream-bubble')?.removeAttribute('id');
+      const acts = document.createElement('div');
+      acts.className = 'msg-actions';
+      acts.innerHTML = '<button class="msg-act" data-act="present">🖥 Present</button><button class="msg-act" data-act="copy">📋 Copy</button>';
+      acts.querySelector('[data-act="present"]').addEventListener('click', () => Chat._openPresentation(e.name, e.color, full));
+      acts.querySelector('[data-act="copy"]').addEventListener('click', () => { navigator.clipboard.writeText(full); toast('Copied ✓','success'); });
+      bubble.querySelector('.msg-body')?.appendChild(acts);
+    }
     if (!State.chatHistory[empId]) State.chatHistory[empId]=[];
     State.chatHistory[empId].push({role:'assistant',content:full});
     save_('chatHistory');
