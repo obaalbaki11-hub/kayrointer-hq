@@ -2370,9 +2370,17 @@ const Chat = {
     const win = window.open('', '_blank');
     if (!win) { toast('Allow popups to open Presentation view', 'warn', 4000); return; }
 
+    // Strip system noise (action errors, tool status lines) before presenting
+    const cleaned = markdown
+      .replace(/\n?⚠️ Action failed[^\n]*/g, '')
+      .replace(/\n?Now creating \d+[^\n]*/g, '')
+      .replace(/\n?✅ [^\n]* created[^\n]*/g, '')
+      .replace(/\x00[^\x00]*\x00/g, '')
+      .trim();
+
     let encoded;
-    try { encoded = btoa(encodeURIComponent(markdown)); }
-    catch(_) { encoded = btoa(unescape(encodeURIComponent(markdown))); }
+    try { encoded = btoa(encodeURIComponent(cleaned)); }
+    catch(_) { encoded = btoa(unescape(encodeURIComponent(cleaned))); }
 
     const company  = State.settings?.companyName || 'Kayro Interactive';
     const avatar   = escHtml(agentName[0] || '?');
@@ -2398,7 +2406,7 @@ html,body{height:100%;background:#080c18;color:#e2e8f0;font-family:'Inter',syste
 .prog{position:fixed;top:52px;left:0;right:0;height:2px;background:rgba(255,255,255,.05);z-index:99}
 .prog-bar{height:100%;background:${c};transition:width .3s ease}
 .host{position:fixed;top:52px;left:0;right:0;bottom:52px;overflow:hidden}
-.slide{position:absolute;inset:0;padding:52px 88px 32px;overflow-y:auto;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .28s,transform .28s;transform:translateX(28px)}
+.slide{position:absolute;inset:0;padding:48px 10% 32px;overflow-y:auto;display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:opacity .28s,transform .28s;transform:translateX(28px);max-width:1100px;margin:0 auto;left:0;right:0}
 .slide.active{opacity:1;pointer-events:all;transform:none}.slide.out{transform:translateX(-28px)}
 @media(max-width:700px){.slide{padding:32px 20px 16px}}
 .shdr{display:flex;align-items:center;gap:10px;margin-bottom:24px;padding-bottom:12px;border-bottom:1px solid rgba(255,255,255,.07);flex-shrink:0}
@@ -2463,7 +2471,8 @@ parts.forEach(function(part,i){
   var tm=part.match(/^#{1,2} (.+)/m);
   var secT=tm?tm[1]:(i===0?'${safeName}':'Section '+(i+1));
   var hdr=multi?'<div class="shdr"><span class="spill">'+(i+1)+' / '+parts.length+'</span><span class="stitle">'+secT+'</span></div>':'';
-  el.innerHTML=hdr+'<div class="sc">'+marked.parse(part)+'</div>';
+  var content=multi?part.replace(/^##[^\n]*\n?/,''):part;
+  el.innerHTML=hdr+'<div class="sc">'+marked.parse(content)+'</div>';
   host.appendChild(el);slideEls.push(el);
   var dot=document.createElement('button');
   dot.className='ndot'+(i===0?' on':'');
