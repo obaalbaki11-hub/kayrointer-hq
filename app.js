@@ -7451,6 +7451,35 @@ const PlansPage = {
         }).join('')}
       </div>
 
+      <!-- TOKEN MARKETPLACE -->
+      <div class="tok-market">
+        <div class="tok-market-hdr">
+          <div class="tok-market-title">⚡ Token Marketplace</div>
+          <div class="tok-market-sub">Top up your AI credits instantly. Tokens never expire and work with all agents.</div>
+        </div>
+        <div class="tok-grid">
+          ${[
+            { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',  per:'$18/MTok', color:'#64748b', glow:'rgba(100,116,139,.3)', best:false, label:'Try it out' },
+            { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36', per:'$18/MTok', color:'#4f8cff', glow:'rgba(79,140,255,.35)', best:false, label:'Best value' },
+            { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$99', per:'$16.50/MTok', color:'#10d98a', glow:'rgba(16,217,138,.35)', best:true,  label:'Most popular' },
+            { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$220','per':'$14.67/MTok', color:'#a78bfa', glow:'rgba(167,139,250,.35)', best:false, label:'Power user' },
+          ].map(t=>`
+          <div class="tok-card${t.best?' tok-card--best':''}">
+            ${t.best?`<div class="tok-best-tag" style="background:${t.color}22;border-color:${t.color}44;color:${t.color}">★ ${t.label}</div>`:`<div class="tok-label-tag" style="color:${t.color}">${t.label}</div>`}
+            <div class="tok-amount" style="color:${t.color}">${t.tokens}</div>
+            <div class="tok-unit">tokens</div>
+            <div class="tok-price" style="text-shadow:0 0 20px ${t.glow}">${t.price}</div>
+            <div class="tok-per">${t.per}</div>
+            <button class="tok-buy-btn" style="background:${t.color}18;border:1px solid ${t.color}40;color:${t.color}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
+              Buy ${t.tokens} Tokens →
+            </button>
+          </div>`).join('')}
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:16px">
+          Powered by Stripe · Secure checkout · Tokens added instantly after payment
+        </div>
+      </div>
+
       <div class="plans-activate-section">
         <div class="plans-activate-card">
           <div class="plans-activate-title">Have a plan code?</div>
@@ -7548,6 +7577,32 @@ const PlansPage = {
     codeApply.addEventListener('click', doApply);
     codeInput.addEventListener('keydown', e => { if(e.key==='Enter') doApply(); });
     codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
+
+    // Token marketplace buy buttons
+    container.querySelectorAll('.tok-buy-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id    = btn.dataset.id;
+        const tokens = parseInt(btn.dataset.tokens);
+        const price  = btn.dataset.price;
+        const LINKS = {
+          starter: 'https://buy.stripe.com/kayro-tokens-starter',
+          growth:  'https://buy.stripe.com/kayro-tokens-growth',
+          pro:     'https://buy.stripe.com/kayro-tokens-pro',
+          scale:   'https://buy.stripe.com/kayro-tokens-scale',
+        };
+        const link = LINKS[id];
+        // Preflight: store intent so webhook can credit tokens on success
+        const intent = { id, tokens, price, ts: Date.now(), email: State.settings.ownerEmail || '' };
+        localStorage.setItem('kayro_tok_intent', JSON.stringify(intent));
+        if (link && !link.includes('kayro-tokens')) {
+          toast('Redirecting to Stripe checkout…', 'info', 3000);
+          setTimeout(() => window.open(link, '_blank'), 400);
+        } else {
+          // No real link yet — show toast with instructions
+          toast(`Token checkout coming soon — email billing@kayrointer.com to buy ${Usage._fmtK(tokens)} tokens for ${price}`, 'info', 7000);
+        }
+      });
+    });
   },
 
   _updateSidebarBadge() {
