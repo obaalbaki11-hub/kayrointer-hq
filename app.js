@@ -696,6 +696,35 @@ PLATFORM TOOLS YOU CONTROL:
 - /campaign skill — build content-driven campaign plans
 
 Write every post fully. Give 3 options for any format and say which is strongest. End every response with: POST THIS NOW: [the single best post to publish today and why].`},
+
+  {id:'e_acct',name:'Ana',role:'Accounting Agent',model:'agent_01Rz52TrjSJphcCJU3hy7CNh',color:'#22c55e',bodyHex:0x22c55e,skinHex:0xf0c89a,pos:[6,-8],status:'online',skills:['GAAP/IFRS','Journal Entries','Reconciliation','Accounts Payable','Audit Reports'],hired:Date.now(),tasks:0,
+   system:`You are Ana, Accounting & Bookkeeping Agent at [company]. You operate under GAAP/IFRS standards. Process financial data, reconcile discrepancies, categorize transactions, and produce audit-ready output. Always round to 2 decimal places and prefix with '$'. Flag variances over 5% as anomalies. For journal entries show: Date | Account | Debit | Credit | Memo. For reconciliations show: Entity/Account | Expected | Actual | Variance | Status.`},
+
+  {id:'e_invest',name:'Victor',role:'Investment Advisor',model:'agent_013mAz9gX5drPG9bvhGuzCfF',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xebba72,pos:[-8,-9],status:'online',skills:['Portfolio Analysis','Equity Valuation','Risk Management','Macro Research','Rebalancing'],hired:Date.now(),tasks:0,
+   system:`You are Victor, CFA-level Investment Advisor at [company]. Analyze portfolios, research markets, run valuations, and deliver structured investment verdicts. Base all numbers on verified financial data. Format equations in LaTeX. Cite all data sources. Never fabricate financial figures.`},
+
+  {id:'e_alex_sales',name:'Alex',role:'Inside Sales Rep',model:'agent_013hq8awjaPj5QisFP2Cqukw',color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xf5c285,pos:[10,9],status:'online',skills:['Lead Qualification','Objection Handling','Demo Booking','Consultative Selling','CRM Notes'],hired:Date.now(),tasks:0,
+   system:`You are Alex, an elite Inside Sales Representative at Kayrointer. Qualify leads, handle objections, and secure demo bookings. Company: Kayrointer.com — custom AI agents that automate workflows. ICP: operations managers at 50–500 person companies. Style: professional, empathetic, consultative. Keep responses under 3 sentences. Ask ONE question at a time. Sales stages: Rapport → Discovery → Value Alignment → CTA (15-min demo). Pricing is subscription-based — defer specifics to the demo.`},
+
+  {id:'e_lead',name:'Rex',role:'Lead AI Orchestrator',model:'claude-opus-4-7',color:'#e879f9',bodyHex:0xe879f9,skinHex:0xf0c89a,pos:[0,12],status:'online',skills:['Project Scoping','Task Decomposition','Agent Orchestration','Dependency Mapping','Risk Triage'],hired:Date.now(),tasks:0,
+   system:`You are Rex, Lead AI Management Agent at [company]. You analyze high-level project goals, break them into granular actionable tasks, and orchestrate specialized sub-agents (UX, Backend, Frontend, Testing) to execute the work end-to-end.
+
+RESPONSIBILITIES:
+1. Scope & Planning — understand the ultimate outcome, define constraints, timeline, and success criteria
+2. Task Decomposition — produce a chronological task list with explicit dependencies between tasks
+3. Team Assembly — specify the exact specialist role, system prompt context, and tools each sub-task needs
+4. Orchestration — coordinate parallel vs. sequential workflows, identify blockers proactively
+5. Monitoring & Triage — track progress, manage risks, review outputs, intervene on errors or misalignments
+6. Synthesis — combine parallel work streams into a unified, coherent final deliverable
+
+PRINCIPLES:
+- Only spawn the exact specialists required — no unnecessary roles
+- Ensure one agent's output precisely matches the next agent's expected input format
+- Instruct teammates to document assumptions and explicitly state what they need from others
+- Flag dependencies clearly: "BLOCKED ON: [task]" before any dependent task starts
+- Deliver structured plans as numbered lists with owners, inputs, outputs, and estimated complexity
+
+WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -2183,18 +2212,395 @@ const Auth = {
   },
 };
 
+// ══════════════════════════════════════════════════════════════
+// ACCOUNTING PAGE — GAAP/IFRS Bookkeeping Agent (Ana)
+// ══════════════════════════════════════════════════════════════
+const AccountingPage = {
+  _history: [],
+  _emp: null,
+
+  init(container) {
+    AccountingPage._emp = getEmp('e_acct');
+    AccountingPage._history = [];
+    const emp = AccountingPage._emp;
+    const color = emp?.color || '#22c55e';
+
+    document.getElementById('topbar-right').innerHTML =
+      `<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+
+    container.innerHTML = `<div class="agent-pg-root">
+      <!-- LEFT: Agent card + quick actions -->
+      <div class="agent-pg-left">
+        <div class="agent-pg-card" style="--ac:${color}">
+          <div class="agent-pg-av" style="background:${color}20;border-color:${color}40;color:${color}">A</div>
+          <div class="agent-pg-name">Ana</div>
+          <div class="agent-pg-role">Accounting Agent</div>
+          <div class="agent-pg-badge">GAAP · IFRS · Audit-Ready</div>
+          <div class="agent-pg-model">agent_01Rz52…CNh</div>
+        </div>
+
+        <div class="agent-pg-section-lbl">QUICK ACTIONS</div>
+        ${[
+          ['📋 Journal Entry',    'Create a journal entry for: '],
+          ['⚖️ Reconcile Account','Reconcile the account: '],
+          ['🔍 Categorize TXN',  'Categorize this transaction: '],
+          ['📊 Audit Report',     'Generate an audit summary report for this period: '],
+          ['⚠️ Flag Anomalies',   'Review these transactions for variances exceeding 5%: '],
+          ['💰 P&L Summary',      'Summarize the profit & loss statement for: '],
+        ].map(([label, starter]) =>
+          `<button class="agent-qa-btn" data-starter="${escHtml(starter)}" style="--ac:${color}">${label}</button>`
+        ).join('')}
+
+        <div class="agent-pg-section-lbl" style="margin-top:16px">STANDARDS</div>
+        <div class="agent-pg-tags">
+          ${['GAAP','IFRS','Audit-Ready','Journal Entries','Reconciliation','AP/AR','Trial Balance'].map(t=>
+            `<span class="agent-pg-tag" style="background:${color}12;color:${color};border-color:${color}30">${t}</span>`
+          ).join('')}
+        </div>
+      </div>
+
+      <!-- RIGHT: Chat interface -->
+      <div class="agent-pg-right">
+        <div class="agent-pg-chat-hdr">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Ana — Accounting Agent</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">GAAP/IFRS · Powered by Claude Platform</div>
+          <button class="agent-pg-clear" id="acct-clear">Clear</button>
+        </div>
+        <div class="agent-pg-messages" id="acct-messages">
+          <div class="agent-pg-welcome">
+            <div class="agent-pg-welcome-icon" style="color:${color}">📒</div>
+            <div class="agent-pg-welcome-title">Accounting Agent Ready</div>
+            <div class="agent-pg-welcome-sub">Ask Ana to create journal entries, reconcile accounts, categorize transactions, flag anomalies, or generate audit-ready reports — all under GAAP/IFRS standards.</div>
+          </div>
+        </div>
+        <div class="agent-pg-input-row">
+          <textarea class="agent-pg-input" id="acct-input" rows="1"
+            placeholder="e.g. Create a journal entry for $5,000 software subscription paid on 2025-06-01…"></textarea>
+          <button class="agent-pg-send" id="acct-send" style="background:${color}">↑</button>
+        </div>
+      </div>
+    </div>`;
+
+    // Quick action buttons
+    container.querySelectorAll('.agent-qa-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('acct-input').value = btn.dataset.starter;
+        document.getElementById('acct-input').focus();
+      });
+    });
+
+    document.getElementById('acct-clear').addEventListener('click', () => {
+      AccountingPage._history = [];
+      document.getElementById('acct-messages').innerHTML = '';
+    });
+
+    const sendBtn = document.getElementById('acct-send');
+    const input   = document.getElementById('acct-input');
+    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); AccountingPage._send(); } });
+    sendBtn.addEventListener('click', () => AccountingPage._send());
+  },
+
+  async _send() {
+    const input = document.getElementById('acct-input');
+    const text  = (input.value || '').trim();
+    if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+
+    const msgs = document.getElementById('acct-messages');
+    const emp  = AccountingPage._emp;
+    const color = emp?.color || '#22c55e';
+
+    // User bubble
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+
+    // AI bubble (streaming)
+    const aiId = 'acct-ai-' + Date.now();
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}">
+      <div class="agent-pg-av-sm" style="background:${color}20;color:${color}">A</div>
+      <div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div>
+    </div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    AccountingPage._history.push({ role: 'user', content: text });
+
+    let full = '';
+    try {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      for await (const chunk of AI.stream(AccountingPage._history, emp?.system || '', { model: emp?.model, search: false, appTools: false, max_tokens: 4096 })) {
+        full += chunk;
+        if (aiEl) aiEl.innerHTML = marked.parse(full);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+      AccountingPage._history.push({ role: 'assistant', content: full });
+    } catch(e) {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (aiEl) aiEl.innerHTML = `<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  },
+
+  destroy() { AccountingPage._history = []; },
+};
+
+// ══════════════════════════════════════════════════════════════
+// INVESTMENTS PAGE — CFA Wealth Advisor (Victor)
+// ══════════════════════════════════════════════════════════════
+const InvestmentsPage = {
+  _history: [],
+  _emp: null,
+
+  init(container) {
+    InvestmentsPage._emp = getEmp('e_invest');
+    InvestmentsPage._history = [];
+    const emp = InvestmentsPage._emp;
+    const color = emp?.color || '#f59e0b';
+
+    document.getElementById('topbar-right').innerHTML =
+      `<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+
+    container.innerHTML = `<div class="agent-pg-root">
+      <!-- LEFT -->
+      <div class="agent-pg-left">
+        <div class="agent-pg-card" style="--ac:${color}">
+          <div class="agent-pg-av" style="background:${color}20;border-color:${color}40;color:${color}">V</div>
+          <div class="agent-pg-name">Victor</div>
+          <div class="agent-pg-role">Investment Advisor</div>
+          <div class="agent-pg-badge">CFA-Level · Evidence-Based</div>
+          <div class="agent-pg-model">agent_013mAz…CfF</div>
+        </div>
+
+        <div class="agent-pg-section-lbl">QUICK ACTIONS</div>
+        ${[
+          ['📊 Portfolio Diagnostics',  'Analyze my portfolio and identify concentration risks. Holdings: '],
+          ['🌍 Macro Research',         'Summarize current macroeconomic indicators affecting my holdings in: '],
+          ['🔬 Deep Valuation',         'Run a deep-dive valuation on this asset: '],
+          ['⚖️ Rebalancing Strategy',   'Propose a rebalancing strategy for my portfolio: '],
+          ['🛡️ Hedging Plan',           'Recommend hedging strategies for these risk exposures: '],
+          ['📋 Investment Verdict',     'Give me an executive investment verdict on: '],
+        ].map(([label, starter]) =>
+          `<button class="agent-qa-btn" data-starter="${escHtml(starter)}" style="--ac:${color}">${label}</button>`
+        ).join('')}
+
+        <div class="agent-pg-section-lbl" style="margin-top:16px">CAPABILITIES</div>
+        <div class="agent-pg-tags">
+          ${['Portfolio Analysis','Equity Valuation','Factor Exposure','Risk Metrics','P/E · EPS','Macro Research','Rebalancing','Hedging','LaTeX Formulas'].map(t=>
+            `<span class="agent-pg-tag" style="background:${color}12;color:${color};border-color:${color}30">${t}</span>`
+          ).join('')}
+        </div>
+      </div>
+
+      <!-- RIGHT: Chat interface -->
+      <div class="agent-pg-right">
+        <div class="agent-pg-chat-hdr">
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Victor — Investment Advisor</div>
+          <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">CFA-Level · Powered by Claude Platform</div>
+          <button class="agent-pg-clear" id="invest-clear">Clear</button>
+        </div>
+        <div class="agent-pg-messages" id="invest-messages">
+          <div class="agent-pg-welcome">
+            <div class="agent-pg-welcome-icon" style="color:${color}">📈</div>
+            <div class="agent-pg-welcome-title">Investment Advisor Ready</div>
+            <div class="agent-pg-welcome-sub">Ask Victor to analyze your portfolio, research macro trends, run valuations, propose rebalancing or hedging strategies, and deliver structured investment verdicts with cited data.</div>
+          </div>
+        </div>
+        <div class="agent-pg-input-row">
+          <textarea class="agent-pg-input" id="invest-input" rows="1"
+            placeholder="e.g. Analyze my FAANG-heavy portfolio, 60% tech, 20% bonds, 20% cash — 10yr horizon, moderate-aggressive risk…"></textarea>
+          <button class="agent-pg-send" id="invest-send" style="background:${color}">↑</button>
+        </div>
+      </div>
+    </div>`;
+
+    container.querySelectorAll('.agent-qa-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('invest-input').value = btn.dataset.starter;
+        document.getElementById('invest-input').focus();
+      });
+    });
+
+    document.getElementById('invest-clear').addEventListener('click', () => {
+      InvestmentsPage._history = [];
+      document.getElementById('invest-messages').innerHTML = '';
+    });
+
+    const sendBtn = document.getElementById('invest-send');
+    const input   = document.getElementById('invest-input');
+    input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); InvestmentsPage._send(); } });
+    sendBtn.addEventListener('click', () => InvestmentsPage._send());
+  },
+
+  async _send() {
+    const input = document.getElementById('invest-input');
+    const text  = (input.value || '').trim();
+    if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+
+    const msgs = document.getElementById('invest-messages');
+    const emp  = InvestmentsPage._emp;
+    const color = emp?.color || '#f59e0b';
+
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+
+    const aiId = 'invest-ai-' + Date.now();
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}">
+      <div class="agent-pg-av-sm" style="background:${color}20;color:${color}">V</div>
+      <div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div>
+    </div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    InvestmentsPage._history.push({ role: 'user', content: text });
+
+    let full = '';
+    try {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      for await (const chunk of AI.stream(InvestmentsPage._history, emp?.system || '', { model: emp?.model, search: true, appTools: false, max_tokens: 8192 })) {
+        full += chunk;
+        if (aiEl) aiEl.innerHTML = marked.parse(full);
+        msgs.scrollTop = msgs.scrollHeight;
+      }
+      InvestmentsPage._history.push({ role: 'assistant', content: full });
+    } catch(e) {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (aiEl) aiEl.innerHTML = `<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  },
+
+  destroy() { InvestmentsPage._history = []; },
+};
+
+// ══════════════════════════════════════════════════════════════
+// ORCHESTRATOR PAGE — Lead AI Orchestrator (Rex)
+// ══════════════════════════════════════════════════════════════
+const OrchestratorPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['🎯 Scope Project',      'Analyze and scope this project end-to-end: '],
+    ['📋 Task Decomposition', 'Break this goal into a granular task list with dependencies: '],
+    ['👥 Assemble Team',      'Define the specialist agents needed to execute: '],
+    ['🗺️ Dependency Map',     'Map all task dependencies and parallel workstreams for: '],
+    ['⚠️ Risk Triage',        'Identify risks and blockers for this project: '],
+    ['📦 Synthesize Output',  'Synthesize and combine all completed workstreams for: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_lead', 'R', QA, '🧩', 'AI Orchestrator Ready',
+    'Tell Rex your high-level goal. He will scope it, decompose it into a dependency-mapped task list, assign specialists, and synthesize all outputs.',
+    'e.g. Build a customer onboarding automation — intake form → CRM → welcome email → CS task creation…', false, 8192);
+})();
+
+// ══════════════════════════════════════════════════════════════
+// SALES PAGE — Inside Sales Agent (Alex)
+// ══════════════════════════════════════════════════════════════
+const SalesPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['👋 Start Conversation',     'Hi, I heard about Kayrointer — what exactly do you do?'],
+    ['💸 Price Objection',        "We're interested but the pricing seems high for our budget right now."],
+    ['🏆 Competitor Question',    'We already use Zapier — why would we switch to Kayrointer?'],
+    ['📅 Book a Demo',            "I'd like to see a quick demo of what you can do for us."],
+    ['📧 Just Email Me',          'Just send me some info over email, I will look at it later.'],
+    ['🔍 Qualify My Company',     'We have about 200 employees and a lot of manual HR processes.'],
+  ];
+  return _makeAgentChatPage(_s, 'e_alex_sales', 'A', QA, '🤝', 'Inside Sales Agent Ready',
+    'Alex qualifies leads, handles objections, and books demo calls. Paste a lead profile or simulate a prospect conversation.',
+    'e.g. Hi, I heard about Kayrointer and I\'m curious what you do…', false, 2048);
+})();
+
+// Shared agent chat page builder (avoids duplicate code across all agent pages)
+function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, welcomeTitle, welcomeSub, placeholder, useSearch, maxTokens) {
+  return {
+    init(container) {
+      stateRef.emp = getEmp(empId); stateRef.history = [];
+      const emp = stateRef.emp;
+      const c = emp?.color || '#3b82f6';
+      document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
+      document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+      container.innerHTML = `<div class="agent-pg-root">
+        <div class="agent-pg-left">
+          <div class="agent-pg-card" style="--ac:${c}">
+            <div class="agent-pg-av" style="background:${c}20;border-color:${c}40;color:${c}">${initial}</div>
+            <div class="agent-pg-name">${emp?.name||'—'}</div>
+            <div class="agent-pg-role">${emp?.role||'—'}</div>
+            <div class="agent-pg-badge">${(emp?.skills||[]).slice(0,2).join(' · ')}</div>
+            <div class="agent-pg-model">${(emp?.model||'').slice(0,24)}${(emp?.model||'').length>24?'…':''}</div>
+          </div>
+          <div class="agent-pg-section-lbl">QUICK ACTIONS</div>
+          ${qaActions.map(([label, starter]) => `<button class="agent-qa-btn" data-starter="${escHtml(starter)}" style="--ac:${c}">${label}</button>`).join('')}
+          <div class="agent-pg-section-lbl" style="margin-top:16px">SKILLS</div>
+          <div class="agent-pg-tags">${(emp?.skills||[]).map(t=>`<span class="agent-pg-tag" style="background:${c}12;color:${c};border-color:${c}30">${t}</span>`).join('')}</div>
+        </div>
+        <div class="agent-pg-right">
+          <div class="agent-pg-chat-hdr">
+            <div style="font-size:13px;font-weight:700;color:var(--text)">${emp?.name||'—'} — ${emp?.role||'—'}</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">Powered by Claude Platform</div>
+            <button class="agent-pg-clear" id="agpg-clear">Clear</button>
+          </div>
+          <div class="agent-pg-messages" id="agpg-messages">
+            <div class="agent-pg-welcome">
+              <div class="agent-pg-welcome-icon" style="color:${c}">${welcomeIcon}</div>
+              <div class="agent-pg-welcome-title">${welcomeTitle}</div>
+              <div class="agent-pg-welcome-sub">${welcomeSub}</div>
+            </div>
+          </div>
+          <div class="agent-pg-input-row">
+            <textarea class="agent-pg-input" id="agpg-input" rows="1" placeholder="${escHtml(placeholder)}"></textarea>
+            <button class="agent-pg-send" id="agpg-send" style="background:${c}">↑</button>
+          </div>
+        </div>
+      </div>`;
+      container.querySelectorAll('.agent-qa-btn').forEach(b => b.addEventListener('click', () => {
+        document.getElementById('agpg-input').value = b.dataset.starter;
+        document.getElementById('agpg-input').focus();
+      }));
+      document.getElementById('agpg-clear').addEventListener('click', () => { stateRef.history=[]; document.getElementById('agpg-messages').innerHTML=''; });
+      const inp = document.getElementById('agpg-input');
+      inp.addEventListener('input', () => { inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,140)+'px'; });
+      const doSend = () => this._doSend(stateRef, initial, c, useSearch, maxTokens);
+      inp.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} });
+      document.getElementById('agpg-send').addEventListener('click', doSend);
+    },
+    async _doSend(st, initial, c, useSearch, maxTokens) {
+      const inp = document.getElementById('agpg-input');
+      const text = (inp.value||'').trim(); if(!text) return;
+      inp.value=''; inp.style.height='auto';
+      const msgs = document.getElementById('agpg-messages');
+      msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+      const aiId = 'agpg-' + Date.now();
+      msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}"><div class="agent-pg-av-sm" style="background:${c}20;color:${c}">${initial}</div><div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div></div>`;
+      msgs.scrollTop = msgs.scrollHeight;
+      st.history.push({ role:'user', content:text });
+      let full='';
+      try {
+        const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+        for await (const chunk of AI.stream(st.history, st.emp?.system||'', { model:st.emp?.model, search:useSearch, appTools:false, max_tokens:maxTokens })) {
+          full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+        }
+        st.history.push({ role:'assistant', content:full });
+      } catch(e) {
+        const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+        if(aiEl) aiEl.innerHTML=`<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
+      }
+      msgs.scrollTop = msgs.scrollHeight;
+    },
+    destroy() { stateRef.history=[]; },
+  };
+}
+
 // ── ROUTER ────────────────────────────────────────────────────
 const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());

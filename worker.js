@@ -46,7 +46,19 @@ export default {
 
     try {
       // AI Proxy — Bedrock if AWS creds set, else Anthropic
-      if (path === '/api/ai')                  return (env.AWS_ACCESS_KEY_ID ? handleAIBedrock : handleAI)(request, env, origin);
+      // agent_* models (Claude Platform Agents) must always go to Anthropic directly
+      if (path === '/api/ai') {
+        let useAI = handleAI;
+        if (env.AWS_ACCESS_KEY_ID) {
+          // Peek at model field without consuming the body
+          const cloned = request.clone();
+          try {
+            const b = await cloned.json();
+            if (!String(b.model || '').startsWith('agent_')) useAI = handleAIBedrock;
+          } catch (_) { useAI = handleAIBedrock; }
+        }
+        return useAI(request, env, origin);
+      }
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
       if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
