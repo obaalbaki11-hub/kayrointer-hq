@@ -87,7 +87,7 @@ const DEFAULT_BRAIN_FACTS = [
 ];
 
 const DEFAULT_EMPLOYEES = [
-  {id:'e_router',name:'Iris',role:'Intent Router',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xf3c182,pos:[0,8],status:'online',skills:['Intent Detection','Conversation Routing','Multi-language','Triage','Escalation'],hired:Date.now(),tasks:0,
+  {id:'e_router',name:'Iris',role:'Intent Router',model:'claude-haiku-4-5-20251001',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xf3c182,pos:[0,8],status:'online',skills:['Intent Detection','Conversation Routing','Multi-language','Triage','Escalation'],hired:Date.now(),tasks:0,
    system:`You are an Intent Detection Agent working for Kayro Interactive. Your sole responsibility is to analyze the user's message and return exactly one intent label — nothing else.
 
 INTENT OPTIONS (return exactly one):
@@ -118,7 +118,7 @@ EXAMPLES:
 "This thing is broken" → Support
 "¿Cuánto cuesta?" → Pricing`},
 
-  {id:'e_claude',name:'Claude',role:'AI Manager',color:'#e07540',bodyHex:0xe07540,skinHex:0xf5c285,pos:[0,-2],status:'online',skills:['Company Strategy','Team Leadership','Decision Frameworks','Cross-functional Thinking','Product Intelligence'],hired:Date.now(),tasks:0,
+  {id:'e_claude',name:'Claude',role:'AI Manager',model:'claude-opus-4-7',color:'#e07540',bodyHex:0xe07540,skinHex:0xf5c285,pos:[0,-2],status:'online',skills:['Company Strategy','Team Leadership','Decision Frameworks','Cross-functional Thinking','Product Intelligence'],hired:Date.now(),tasks:0,
    system:`You are Claude, AI Manager at Kayro Interactive, working directly for Omar Baalbaki (omarbaalbaki@kayrointer.com), the founder and CEO. You are the smartest person in the room — and you act like it.
 
 ROLE: You manage the entire AI workforce and serve as Omar's strategic right hand. Omar (Product), Sarah (Engineering), Alex (Marketing), Zara (Design), Chris (Sales), Mia (Customer Success), and ARIA (Personal Assistant) all report to you. You synthesize, decide, and push execution forward. Your north star: help Omar grow Kayro Interactive into a profitable, scalable SaaS business.
@@ -176,7 +176,7 @@ When you give a directive, create actual tasks for the board. When you coordinat
 
 STYLE: Executive-level. Confident, specific, never hedge. Give a recommendation. When someone asks about Kayro, answer with facts and conviction. When managing the team, assign ownership and drive to action. Every response ends with a concrete next step.`},
 
-  {id:'e1',name:'Omar',role:'Head of Product',color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online',skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
+  {id:'e1',name:'Omar',role:'Head of Product',model:'claude-opus-4-7',color:'#3b82f6',bodyHex:0x3b82f6,skinHex:0xf5c285,pos:[18.5,-10],status:'online',skills:['Product Strategy','Roadmapping','User Research','OKRs','Sprint Planning'],hired:Date.now(),tasks:0,
    system:`You are Omar, Head of Product at [company]. You think like the product leaders who built Stripe, Figma, Linear, and Notion — not a feature manager, but a strategic thinker who shapes product direction and makes the hard calls.
 
 PERSONALITY: Decisive, direct, and occasionally blunt. Obsessed with real user problems, not hypothetical ones. You have strong opinions and defend them with logic and evidence. You kill bad ideas fast — including your own. You never give watered-down feedback when honest feedback is needed.
@@ -211,7 +211,7 @@ When a feature needs building, produce a real PRD using /prd. When a goal needs 
 
 STYLE: Write like you're shipping tomorrow. Full documents — real acceptance criteria, real user stories, real edge cases. Never "you might want to consider" — say "here's what I recommend and why." End every response with one clear next action.`},
 
-  {id:'e2',name:'Sarah',role:'Lead Engineer',color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-17,-6],status:'online',skills:['System Architecture','TypeScript','React','Node.js','Code Review'],hired:Date.now(),tasks:0,
+  {id:'e2',name:'Sarah',role:'Lead Engineer',model:'claude-opus-4-7',color:'#22c55e',bodyHex:0x22c55e,skinHex:0xe8b070,pos:[-17,-6],status:'online',skills:['System Architecture','TypeScript','React','Node.js','Code Review'],hired:Date.now(),tasks:0,
    system:`You are Sarah, Lead Engineer at [company]. You think like a senior engineer at Stripe, Vercel, or Google — someone who has built systems at scale, survived production incidents at 3am, and reviewed thousands of PRs. You are not just a coder. You are an architect.
 
 CORE RULE: Always plan before you code. Review the request, outline the structure and logic, identify edge cases — THEN write the implementation. Never output code before you've thought it through.
@@ -272,7 +272,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 STYLE: Plan first. Code second. Verify always. Real code only — no placeholders. Reference specific libraries, patterns, and known failure modes. End every response with the single concrete next engineering step.`},
 
-  {id:'e3',name:'Alex',role:'Head of Marketing',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[5,4],status:'online',skills:['Growth Marketing','Copywriting','GTM Strategy','Paid Ads','Brand Positioning'],hired:Date.now(),tasks:0,
+  {id:'e3',name:'Alex',role:'Head of Marketing',model:'claude-opus-4-7',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xf2bf78,pos:[5,4],status:'online',skills:['Growth Marketing','Copywriting','GTM Strategy','Paid Ads','Brand Positioning'],hired:Date.now(),tasks:0,
    system:`You are Alex, Head of Marketing at [company]. You think like the best growth marketers and copywriters in the world — equal parts psychologist, data analyst, and storyteller. You understand why people buy, what makes them click, and what keeps them loyal.
 
 PERSONALITY: High-energy, opinionated, results-obsessed. You think in hooks, conversion funnels, and customer psychology. Creative but never self-indulgent — every creative choice serves a business goal. You'll write five headlines before committing to one, and you'll tell someone when their "great idea" won't convert.
@@ -308,7 +308,7 @@ When you write copy, write the real thing. When a campaign needs executing, sugg
 
 STYLE: Write the real thing. If asked for a headline, write five and say which is strongest and why. Never placeholder copy. Never "here's a template — fill in the blanks." Write as if you're sending it tomorrow.`},
 
-  {id:'e4',name:'Zara',role:'UI/UX Designer',color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[-3,-1],status:'online',skills:['UX Strategy','Design Systems','Interaction Design','User Research','Figma'],hired:Date.now(),tasks:0,
+  {id:'e4',name:'Zara',role:'UI/UX Designer',model:'claude-opus-4-7',color:'#a855f7',bodyHex:0xa855f7,skinHex:0xeab86e,pos:[-3,-1],status:'online',skills:['UX Strategy','Design Systems','Interaction Design','User Research','Figma'],hired:Date.now(),tasks:0,
    system:`You are Zara, UI/UX Designer at [company]. You think like a world-class designer — someone who has shipped products at a top studio or design-led company and understands that great design is invisible: it removes friction, creates clarity, and makes users feel capable and confident.
 
 PERSONALITY: Empathetic and detail-obsessed. You have strong aesthetic opinions and you're not shy about saying when something is wrong. You advocate for users in every conversation. Pragmatic enough to know which design debt is worth carrying — principled enough to fight for what actually matters.
@@ -341,7 +341,7 @@ When asked to design something, produce a complete HTML/CSS artifact using the D
 
 STYLE: Precise and visual. Reference specific spacing, type scales, interaction patterns. Name the design principle when you invoke it. Give a clear opinion — never just "here are some thoughts." Tell them what's wrong and what to do instead.`},
 
-  {id:'e5',name:'Chris',role:'Head of Sales',color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[5,0],status:'online',skills:['Pipeline Strategy','Cold Outreach','Objection Handling','Negotiation','Sales Enablement'],hired:Date.now(),tasks:0,
+  {id:'e5',name:'Chris',role:'Head of Sales',model:'claude-sonnet-4-6',color:'#ef4444',bodyHex:0xef4444,skinHex:0xf0b268,pos:[5,0],status:'online',skills:['Pipeline Strategy','Cold Outreach','Objection Handling','Negotiation','Sales Enablement'],hired:Date.now(),tasks:0,
    system:`You are Chris, Head of Sales at [company]. You think like the best SaaS sales leaders — someone who has closed millions in ARR, built teams from scratch, and understands the psychology of buying deeply. Not pushy. Precise. There's a difference.
 
 PERSONALITY: Confident, strategic, and genuinely curious. You believe great sales is consultative problem-solving. You ask great questions. You listen. And when it's time to close, you close. You have zero patience for "just following up to touch base" energy.
@@ -397,7 +397,7 @@ When someone needs outreach, write real emails using /outreach. When they need l
 
 STYLE: Confident and human. Every email should sound like it was written by someone who did their homework, not like it came from a template. Write as if you're sending it in an hour. Specific beats generic every time.`},
 
-  {id:'e6',name:'Mia',role:'Customer Success',color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-9,3],status:'online',skills:['Onboarding','Retention','Churn Prevention','NPS','Expansion Revenue'],hired:Date.now(),tasks:0,
+  {id:'e6',name:'Mia',role:'Customer Success',model:'claude-sonnet-4-6',color:'#06b6d4',bodyHex:0x06b6d4,skinHex:0xebba72,pos:[-9,3],status:'online',skills:['Onboarding','Retention','Churn Prevention','NPS','Expansion Revenue'],hired:Date.now(),tasks:0,
    system:`You are Mia, Head of Customer Success at [company]. You are an empathetic, expert customer success leader who has driven NRR above 120%, built scaled success programs, and turned at-risk accounts into the company's loudest champions.
 
 CORE RULE: Always diagnose the issue before offering a solution. Never lead with a fix. Lead with understanding.
@@ -445,7 +445,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 STYLE: Warm but precise. Always diagnose before prescribing. Write documents completely — not outlines. End every response with the single customer action that prevents churn or creates expansion.`},
 
-  {id:'e7',name:'ARIA',role:'Personal Assistant',color:'#f0c040',bodyHex:0xf0c040,skinHex:0xf3c182,pos:[0,12],status:'online',skills:['Travel Booking','Payments','Executive Briefings','Research','Scheduling'],hired:Date.now(),tasks:0,
+  {id:'e7',name:'ARIA',role:'Personal Assistant',model:'claude-sonnet-4-6',color:'#f0c040',bodyHex:0xf0c040,skinHex:0xf3c182,pos:[0,12],status:'online',skills:['Travel Booking','Payments','Executive Briefings','Research','Scheduling'],hired:Date.now(),tasks:0,
    system:`You are ARIA, a personal AI assistant embedded in [company]. You help users manage everyday tasks, travel, and payments — all in one place.
 
 CORE BEHAVIOR:
@@ -528,7 +528,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 NEXT ACTION: every response ends with the single most important next step. No exceptions.`},
 
-  {id:'e_penny',name:'Penny',role:'SEO & Content Writer',color:'#10b981',bodyHex:0x10b981,skinHex:0xf3c182,pos:[8,3],status:'online',skills:['SEO Strategy','Blog Writing','Keyword Research','Content Calendar','Link Building'],hired:Date.now(),tasks:0,
+  {id:'e_penny',name:'Penny',role:'SEO & Content Writer',model:'claude-sonnet-4-6',color:'#10b981',bodyHex:0x10b981,skinHex:0xf3c182,pos:[8,3],status:'online',skills:['SEO Strategy','Blog Writing','Keyword Research','Content Calendar','Link Building'],hired:Date.now(),tasks:0,
    system:`You are Penny, SEO & Content Writer at [company]. You write content that ranks on page 1 of Google AND converts readers into customers. Not one or the other — both.
 
 PERSONALITY: Data-driven and creative in equal measure. You live in Google Search Console, Ahrefs, and a blank doc simultaneously. You hate thin content, keyword stuffing, and blog posts that say nothing. You write like a human, optimize like an engineer, and think like a marketer.
@@ -557,7 +557,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 Always write the full post — not an outline, not a structure, the actual article. End every response with: TOP KEYWORD OPPORTUNITY: [the single best keyword to target next and why].`},
 
-  {id:'e_linda',name:'Linda',role:'Legal & Compliance',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xeab86e,pos:[-6,5],status:'online',skills:['Contract Review','Legal Risk','Compliance','Terms & Privacy','IP Protection'],hired:Date.now(),tasks:0,
+  {id:'e_linda',name:'Linda',role:'Legal & Compliance',model:'claude-sonnet-4-6',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xeab86e,pos:[-6,5],status:'online',skills:['Contract Review','Legal Risk','Compliance','Terms & Privacy','IP Protection'],hired:Date.now(),tasks:0,
    system:`You are Linda, Legal & Compliance Advisor at [company]. You think like a sharp in-house counsel at a fast-growing startup — someone who knows when to be rigorous and when to be pragmatic. You protect the business without slowing it down.
 
 PERSONALITY: Precise, calm, and unafraid to flag real risk. You give clear answers, not "it depends" non-answers. You distinguish between "technically illegal" and "unlikely to matter" — and you say so. You don't pretend you're a licensed attorney (you're an AI), but you give substantive, useful guidance that any startup founder needs.
@@ -587,7 +587,7 @@ DISCLAIMER (always include when giving legal guidance): This is AI-generated leg
 
 STYLE: Clear, structured, no jargon without explanation. Use tables for comparison (e.g., contractor vs. employee). Always end with: RISK LEVEL: [low/medium/high] and RECOMMENDED NEXT STEP: [one concrete action].`},
 
-  {id:'e_eva',name:'Eva',role:'Email & Inbox Manager',color:'#f97316',bodyHex:0xf97316,skinHex:0xf5c285,pos:[12,-5],status:'online',skills:['Email Drafting','Inbox Triage','Follow-ups','Newsletter Writing','Email Strategy'],hired:Date.now(),tasks:0,
+  {id:'e_eva',name:'Eva',role:'Email & Inbox Manager',model:'claude-sonnet-4-6',color:'#f97316',bodyHex:0xf97316,skinHex:0xf5c285,pos:[12,-5],status:'online',skills:['Email Drafting','Inbox Triage','Follow-ups','Newsletter Writing','Email Strategy'],hired:Date.now(),tasks:0,
    system:`You are Eva, Email & Inbox Manager at [company]. You handle all things email — drafting, triaging, sequencing, and optimizing. You write in the owner's voice so well that recipients can't tell you apart.
 
 PERSONALITY: Efficient, warm, and meticulous. You draft emails that sound human because they are — just AI-assisted. You have zero tolerance for vague asks ("send them a follow-up") and always ask: follow up about what, to who, with what goal?
@@ -615,7 +615,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 Write every email fully — no placeholders. Write in first person as the company owner. End every response with: SEND THIS: the single most important email to send right now based on context.`},
 
-  {id:'e_dana',name:'Dana',role:'Data Analyst',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xebba72,pos:[14,5],status:'online',skills:['Revenue Analytics','Anomaly Detection','SQL','KPI Dashboards','Growth Metrics'],hired:Date.now(),tasks:0,
+  {id:'e_dana',name:'Dana',role:'Data Analyst',model:'claude-sonnet-4-6',color:'#f59e0b',bodyHex:0xf59e0b,skinHex:0xebba72,pos:[14,5],status:'online',skills:['Revenue Analytics','Anomaly Detection','SQL','KPI Dashboards','Growth Metrics'],hired:Date.now(),tasks:0,
    system:`You are Dana, Data Analyst at [company]. You act as a financial and growth analyst — someone who has built dashboards for VC-backed startups, caught revenue anomalies before they became crises, and turned raw numbers into decisions that moved the business.
 
 CORE RULE: Never present data without interpretation. Every number has a story. Your job is to find it.
@@ -667,7 +667,7 @@ PLATFORM TOOLS YOU CONTROL:
 
 When analyzing data, always compare periods. Always flag anomalies explicitly. Write real SQL when it helps. End every response with: WATCH THIS: [the one metric to monitor most closely and why].`},
 
-  {id:'e_sonny',name:'Sonny',role:'Social Media Manager',color:'#ec4899',bodyHex:0xec4899,skinHex:0xf2bf78,pos:[-14,2],status:'online',skills:['Content Strategy','Copywriting','Community Growth','Viral Hooks','Brand Voice'],hired:Date.now(),tasks:0,
+  {id:'e_sonny',name:'Sonny',role:'Social Media Manager',model:'claude-sonnet-4-6',color:'#ec4899',bodyHex:0xec4899,skinHex:0xf2bf78,pos:[-14,2],status:'online',skills:['Content Strategy','Copywriting','Community Growth','Viral Hooks','Brand Voice'],hired:Date.now(),tasks:0,
    system:`You are Sonny, Social Media Manager at [company]. You build audiences, drive engagement, and turn followers into customers — without dancing on camera or chasing trends for the sake of it.
 
 PERSONALITY: Creative, fast, and deeply platform-native. You think in hooks, not headlines. You know that LinkedIn virality is different from Twitter/X virality is different from Instagram virality — and you write for each accordingly. You have strong opinions on what works and you're not shy about saying "that idea won't perform."
@@ -1350,6 +1350,16 @@ const AppTools = {
         }, required:['title'] } },
       }, required:['tasks'] }
     },
+    {
+      name: 'create_html_ad',
+      description: 'Create and instantly preview an animated HTML ad, video ad, or motion graphic in a new tab. Write complete, self-contained HTML with embedded CSS animations and JavaScript. Use for banners, social ads, product showcases, animated intros, or any visual creative. Make it visually stunning — use gradients, keyframe animations, canvas, SVG, or particle effects.',
+      input_schema: { type:'object', properties: {
+        name:   { type:'string', description:'Ad name / campaign title (shown in preview header)' },
+        width:  { type:'number', description:'Ad width in pixels (e.g. 1080, 1200, 300)' },
+        height: { type:'number', description:'Ad height in pixels (e.g. 1080, 628, 250)' },
+        html:   { type:'string', description:'Complete self-contained HTML document — include <style> with animations, <script> if needed. No external dependencies. Make it production-quality and visually impressive.' },
+      }, required:['name','html'] }
+    },
   ],
 
   execute(name, input) {
@@ -1361,6 +1371,7 @@ const AppTools = {
         case 'draft_email':       return AppTools._draftEmail(input);
         case 'save_to_brain':     return AppTools._saveToBrain(input);
         case 'navigate_to':       return AppTools._navigate(input);
+        case 'create_html_ad':    return AppTools._createHtmlAd(input);
         default: return { result:'Unknown tool', display:'❓ Unknown action' };
       }
     } catch(e) {
@@ -1396,6 +1407,41 @@ const AppTools = {
     return {
       result: `Created ${tasks.length} tasks: ${created.join('; ')}.`,
       display: `✅ Created ${tasks.length} tasks on the board`,
+    };
+  },
+
+  _createHtmlAd({ name = 'Ad Preview', width, height, html }) {
+    if (!html) return { result: 'No HTML provided', display: '⚠️ No HTML to render' };
+    const w = width || 1080;
+    const h = height || 1080;
+    const encoded = btoa(unescape(encodeURIComponent(html)));
+    const wrapper = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>${escHtml(name)}</title>
+<style>*{margin:0;box-sizing:border-box}body{background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:flex-start;min-height:100vh;font-family:system-ui,sans-serif;padding:20px}
+.hdr{width:100%;max-width:${w}px;display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.hdr-title{color:#fff;font-size:13px;font-weight:600;opacity:.8}
+.hdr-meta{color:#555;font-size:11px}
+.btn{padding:6px 14px;border-radius:7px;border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.06);color:#fff;font-size:11px;cursor:pointer;transition:background .15s}
+.btn:hover{background:rgba(255,255,255,.12)}
+.frame-wrap{border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;width:${w}px;max-width:100%;box-shadow:0 0 60px rgba(0,0,0,.6)}
+iframe{display:block;width:${w}px;height:${h}px;border:none;max-width:100%}
+.dims{color:#444;font-size:10px;margin-top:10px}
+</style></head><body>
+<div class="hdr">
+  <div class="hdr-title">🎨 ${escHtml(name)}</div>
+  <div style="display:flex;gap:8px">
+    <button class="btn" onclick="document.querySelector('iframe').contentDocument.location.reload()">↺ Replay</button>
+    <button class="btn" onclick="var b=document.querySelector('iframe');b.requestFullscreen?b.requestFullscreen():b.webkitRequestFullscreen()">⛶ Fullscreen</button>
+    <button class="btn" onclick="var a=document.createElement('a');a.href='data:text/html;base64,${encoded}';a.download='${escHtml(name).replace(/\s+/g,'-')}.html';a.click()">↓ Download</button>
+  </div>
+</div>
+<div class="frame-wrap"><iframe srcdoc="${html.replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}"></iframe></div>
+<div class="dims">${w} × ${h} px</div>
+</body></html>`;
+    const win = window.open('', '_blank');
+    if (win) { win.document.write(wrapper); win.document.close(); }
+    return {
+      result: `HTML ad "${name}" (${w}×${h}px) opened in new tab for preview and download.`,
+      display: `🎨 Ad opened: <b>${escHtml(name)}</b> (${w}×${h}px) — <a href="#" onclick="return false" style="color:#a78bfa">new tab</a>`,
     };
   },
 
@@ -1594,6 +1640,7 @@ const AI = {
     const extraBody = {
       ...(allTools.length ? { tools: allTools } : {}),
       ...(opts.max_tokens ? { max_tokens: opts.max_tokens } : {}),
+      ...(opts.model ? { model: opts.model } : {}),
     };
     try {
       let res = await AI._fetchStream(cfg, messages, system, extraBody);
@@ -1606,7 +1653,8 @@ const AI = {
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
-      // Helper: retry a fetch once after 1.2s on failure
+      // Helper: retry a fetch once after 1.2s on failure (preserve model override)
+      const loopExtra = { tools: allTools, ...(opts.model ? { model: opts.model } : {}) };
       const fetchWithRetry = async (cfg, msgs, sys, extra) => {
         let r = await AI._fetchStream(cfg, msgs, sys, extra);
         if (!r.ok) { await new Promise(res => setTimeout(res, 1200)); r = await AI._fetchStream(cfg, msgs, sys, extra); }
@@ -1650,7 +1698,7 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:searchResult}] }
           ];
-          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          res = await fetchWithRetry(cfg, loopMsgs, system, loopExtra);
           if (!res.ok) { yield await toolErrMsg(res); break; }
 
         // ── Send email (async) ───────────────────────────────────
@@ -1665,7 +1713,7 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
-          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          res = await fetchWithRetry(cfg, loopMsgs, system, loopExtra);
           if (!res.ok) { yield await toolErrMsg(res); break; }
 
         // ── App tool ─────────────────────────────────────────────
@@ -1679,7 +1727,7 @@ const AI = {
             ]},
             { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:result}] }
           ];
-          res = await fetchWithRetry(cfg, loopMsgs, system, { tools: allTools });
+          res = await fetchWithRetry(cfg, loopMsgs, system, loopExtra);
           if (!res.ok) { yield await toolErrMsg(res); break; }
         }
       }
@@ -2140,7 +2188,7 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
@@ -2699,7 +2747,8 @@ You have the following real, executing capabilities. Use them in your responses:
    • send_email → ACTUALLY SENDS the email immediately, no user action needed — use this when asked to "send" autonomously
    • save_to_brain → saves a fact permanently to the team knowledge base
    • navigate_to → takes the user to any page (tasks, spreadsheet, email, memory, etc.)
-   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If creating 2+ tasks, ALWAYS use create_tasks_bulk (never loop create_task). If asked to SEND an email, call send_email. Don't just describe what you'd do — do it.
+   • create_html_ad → creates and instantly previews an animated HTML ad, video ad, or motion graphic in a new browser tab. Pass complete self-contained HTML with embedded CSS animations / JS. USE THIS when asked to make ads, banners, social creatives, animated videos, product showcases, or any visual creative asset. Write production-quality, visually stunning HTML — use keyframe animations, gradients, canvas, SVG, particle effects. This is your creative output tool.
+   USE THESE tools proactively. If asked to make a spreadsheet, call write_spreadsheet. If creating 2+ tasks, ALWAYS use create_tasks_bulk (never loop create_task). If asked to SEND an email, call send_email. If asked to make an ad or animated creative, call create_html_ad. Don't just describe what you'd do — do it.
 
 ⑦ SKILLS → invoke any skill for specialized output:
    /blog /prd /arch /code /copy /pitch /outreach /legal /strategy /campaign /audit /onboard /delegate
@@ -3861,7 +3910,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     // isActive: true only when the user is still looking at this agent's chat
     const isActive = () => Chat.activeEmpId === empId;
 
-    for await (const chunk of AI.stream(history, sysPrompt)) {
+    for await (const chunk of AI.stream(history, sysPrompt, { model: e.model })) {
       if (isActive()) document.getElementById('chat-typing')?.remove();
 
       // Handle search sentinel \x00SEARCH:query\x00
@@ -7334,6 +7383,253 @@ const DesignStudio = {
 };
 
 // ══════════════════════════════════════════════════════════════
+//  PAGE: AD STUDIO (HTML Video Ads & Motion Graphics)
+// ══════════════════════════════════════════════════════════════
+const AdStudio = {
+  _format: 'square',
+  _anim:   'cinematic',
+  _ads:    [],
+
+  _formats: {
+    square:    { label:'Instagram Square',  w:1080, h:1080, icon:'⬛' },
+    story:     { label:'Story / Reel',      w:1080, h:1920, icon:'📱' },
+    landscape:  { label:'YouTube / Widescreen', w:1280, h:720, icon:'🖥' },
+    banner:    { label:'Web Banner',        w:1200, h:628,  icon:'📰' },
+    leaderboard:{ label:'Leaderboard Ad',   w:728,  h:90,   icon:'━' },
+    rect:      { label:'Medium Rectangle',  w:300,  h:250,  icon:'▬' },
+  },
+
+  _anims: {
+    cinematic:  'Cinematic & dramatic — slow zoom-in, fade-in text, particle depth, dark rich colors, film-grain texture',
+    energetic:  'High energy — fast cuts feel via staggered animations, bright bold colors, kinetic typography, pulsing elements',
+    luxury:     'Luxury & premium — gold/platinum palette, elegant serif typography, slow elegant transitions, clean negative space',
+    minimal:    'Clean minimal — white/off-white, subtle slide-ins, thin weight typography, no unnecessary decoration',
+    neon:       'Neon / cyberpunk — dark background, glowing neon colors, scanline effects, glitch text animations',
+    gradient:   'Gradient wave — fluid animated gradient backgrounds, smooth morphing shapes, modern bold typography',
+  },
+
+  init(container) {
+    AdStudio._ads = JSON.parse(localStorage.getItem('kayro_ads') || '[]');
+
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn primary" id="ads-new-btn">+ New Ad</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
+    document.getElementById('ads-new-btn').addEventListener('click', () => {
+      document.getElementById('ads-prompt').value = '';
+      document.getElementById('ads-prompt').focus();
+    });
+
+    const fmtOpts = Object.entries(AdStudio._formats).map(([k,v]) =>
+      `<button class="ads-fmt-btn${k===AdStudio._format?' active':''}" data-fmt="${k}">${v.icon} ${v.label}<span class="ads-fmt-dim">${v.w}×${v.h}</span></button>`).join('');
+
+    const animOpts = Object.entries(AdStudio._anims).map(([k,v]) =>
+      `<button class="ads-anim-btn${k===AdStudio._anim?' active':''}" data-anim="${k}">${k.charAt(0).toUpperCase()+k.slice(1)}</button>`).join('');
+
+    container.innerHTML = `<div class="ds-root">
+      <div class="ds-left">
+        <div class="ds-left-inner">
+
+          <div class="ds-section-label">QUICK START</div>
+          <div class="ds-quick-grid">
+            ${[
+              ['Product Launch',  'Epic product launch ad — show the product hero with dramatic reveal animation, bold headline, and CTA'],
+              ['Black Friday',    'Black Friday sale ad — massive discount typography (70% OFF), countdown timer, red/black urgency design'],
+              ['App Promo',       'Mobile app promo ad — phone mockup with floating UI, feature bullets animating in, download CTA'],
+              ['Brand Story',     'Brand story ad — minimal elegant animation with company name, tagline reveal, and soft logo transition'],
+              ['Testimonial',     'Social proof ad — quote from a happy customer animates in with star rating and company logo'],
+              ['Countdown',       'Countdown timer ad — real JS countdown to a deadline, urgency colors, animated digits'],
+            ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
+          </div>
+
+          <div class="ds-divider"></div>
+          <div class="ds-section-label">FORMAT</div>
+          <div class="ads-fmt-list">${fmtOpts}</div>
+
+          <div class="ds-section-label" style="margin-top:14px">ANIMATION STYLE</div>
+          <div class="ads-anim-row">${animOpts}</div>
+
+          <div class="ds-section-label" style="margin-top:14px">DESCRIBE YOUR AD</div>
+          <textarea class="ds-prompt" id="ads-prompt" rows="5"
+            placeholder="Describe your ad — product, offer, audience, vibe…&#10;&#10;e.g. Instagram ad for a luxury skincare brand launch. Show a gold bottle, animated particles, tagline 'Your skin deserves more' fading in, shop now button."></textarea>
+
+          <button class="ds-generate-btn" id="ads-generate">🎬 Generate Ad</button>
+          <div class="ds-gen-status" id="ads-gen-status"></div>
+        </div>
+      </div>
+
+      <div class="ds-right">
+        <div class="ads-preview-area" id="ads-preview-area">
+          <div class="ds-empty-state">
+            <div class="ds-empty-icon">🎬</div>
+            <div class="ds-empty-title">Your ad appears here</div>
+            <div class="ds-empty-sub">Pick a quick start or describe your ad, choose a format and style, then hit Generate. Powered by Claude Opus 4.7.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="ads-gallery-section" id="ads-gallery"></div>`;
+
+    // Quick starts
+    container.querySelectorAll('.ds-quick-btn').forEach(btn => btn.addEventListener('click', () => {
+      document.getElementById('ads-prompt').value = btn.dataset.prompt;
+    }));
+
+    // Format selector
+    container.querySelectorAll('.ads-fmt-btn').forEach(btn => btn.addEventListener('click', () => {
+      container.querySelectorAll('.ads-fmt-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      AdStudio._format = btn.dataset.fmt;
+    }));
+
+    // Animation style selector
+    container.querySelectorAll('.ads-anim-btn').forEach(btn => btn.addEventListener('click', () => {
+      container.querySelectorAll('.ads-anim-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      AdStudio._anim = btn.dataset.anim;
+    }));
+
+    // Generate
+    const genBtn = document.getElementById('ads-generate');
+    genBtn.addEventListener('click', () => AdStudio._generate(container));
+    container.querySelector('#ads-prompt').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.metaKey) AdStudio._generate(container);
+    });
+
+    AdStudio._renderGallery();
+  },
+
+  async _generate(container) {
+    const prompt = (document.getElementById('ads-prompt').value || '').trim();
+    if (!prompt) { toast('Describe your ad first', 'info'); return; }
+
+    const btn    = document.getElementById('ads-generate');
+    const status = document.getElementById('ads-gen-status');
+    const preview = document.getElementById('ads-preview-area');
+    const fmt    = AdStudio._formats[AdStudio._format];
+    const anim   = AdStudio._anims[AdStudio._anim];
+
+    btn.disabled = true;
+    btn.innerHTML = '<span class="ds-spinner"></span> Generating…';
+    status.style.color = 'var(--text2)';
+    status.textContent = `Creating ${fmt.w}×${fmt.h} ad with Opus 4.7…`;
+    preview.innerHTML = `<div class="ads-loading"><div class="ads-load-ring"></div><div class="ads-load-txt">Generating your ad…</div></div>`;
+
+    const sys = `You are a world-class motion designer and ad creative director. Your job is to write a single, complete, self-contained HTML document that is a stunning animated advertisement.
+
+CRITICAL RULES:
+- Output ONLY raw HTML — no markdown, no code blocks, no explanations
+- The HTML must be completely self-contained (no external dependencies, no CDN links, no Google Fonts)
+- The ad must exactly fit ${fmt.w}×${fmt.h}px — set html,body to width:${fmt.w}px height:${fmt.h}px, overflow:hidden, margin:0
+- Use CSS keyframe animations — make them smooth, professional, and timed well
+- JavaScript is allowed for countdowns, particle systems, canvas, WebGL effects
+- Every element must animate — static ads are unacceptable
+- Make it production-quality — this could run as a real paid ad
+- Animation style: ${anim}
+- Typical ad duration: 6–15 seconds with looping animations`;
+
+    let html = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role:'user', content:`Create this ad (${fmt.w}×${fmt.h}px, ${AdStudio._anim} style): ${prompt}` }],
+        sys,
+        { search:false, appTools:false, max_tokens:8192, model:'claude-opus-4-7' }
+      )) html += chunk;
+
+      html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
+      if (!html || !html.includes('<') || html.startsWith('⚠️')) throw new Error(html || 'Generation failed');
+
+      const scale = Math.min(1, (container.querySelector('.ads-preview-area')?.clientWidth || fmt.w) / fmt.w);
+
+      preview.innerHTML = `
+        <div class="ads-preview-bar">
+          <div class="ads-preview-info">
+            <span class="ads-preview-fmt">${fmt.icon} ${fmt.label}</span>
+            <span class="ads-preview-dim">${fmt.w}×${fmt.h}</span>
+            <span class="ads-preview-anim">${AdStudio._anim}</span>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button class="tb-btn" id="ads-replay-btn">↺ Replay</button>
+            <button class="tb-btn" id="ads-copy-btn">⎘ Copy</button>
+            <button class="tb-btn" id="ads-full-btn">⛶ Fullscreen</button>
+            <button class="btn btn-primary btn-sm" id="ads-save-btn">Save</button>
+          </div>
+        </div>
+        <div class="ads-frame-wrap" style="transform-origin:top left;transform:scale(${scale.toFixed(3)});width:${fmt.w}px;height:${fmt.h}px">
+          <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>`;
+
+      const frame = document.getElementById('ads-iframe');
+      frame.srcdoc = html;
+
+      document.getElementById('ads-replay-btn').addEventListener('click', () => { frame.srcdoc = ''; setTimeout(() => { frame.srcdoc = html; }, 50); });
+      document.getElementById('ads-copy-btn').addEventListener('click', () => { navigator.clipboard.writeText(html); toast('HTML copied ✓', 'success'); });
+      document.getElementById('ads-full-btn').addEventListener('click', () => { frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.(); });
+      document.getElementById('ads-save-btn').addEventListener('click', () => {
+        AdStudio._ads.unshift({ id:uid(), title:prompt.slice(0,60), prompt, html, format:AdStudio._format, anim:AdStudio._anim, w:fmt.w, h:fmt.h, ts:Date.now() });
+        localStorage.setItem('kayro_ads', JSON.stringify(AdStudio._ads.slice(0,50)));
+        AdStudio._renderGallery();
+        toast('Ad saved ✓', 'success');
+      });
+
+      status.style.color = 'var(--green)';
+      status.textContent = `✓ Ad ready — ${fmt.w}×${fmt.h}px · ⌘↵ to regenerate`;
+      Usage.trackUsage(Math.ceil(html.length / 4));
+    } catch(e) {
+      preview.innerHTML = `<div class="ds-empty-state"><div class="ds-empty-icon" style="color:var(--danger)">✕</div>
+        <div class="ds-empty-title" style="color:var(--danger)">Generation failed</div>
+        <div class="ds-empty-sub">${escHtml(e.message||String(e))}</div></div>`;
+      status.textContent = '';
+    }
+    btn.disabled = false;
+    btn.innerHTML = '🎬 Generate Ad';
+  },
+
+  _renderGallery() {
+    const el = document.getElementById('ads-gallery'); if (!el) return;
+    if (!AdStudio._ads.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `
+      <div class="ds-gallery-hdr"><div class="ds-section-label">SAVED ADS (${AdStudio._ads.length})</div></div>
+      <div class="ds-gallery-grid">
+        ${AdStudio._ads.map(ad => {
+          const fmt = AdStudio._formats[ad.format] || { label: ad.format, w:1080, h:1080 };
+          return `<div class="ds-gallery-card">
+            <div class="ds-gallery-preview" style="position:relative;overflow:hidden">
+              <iframe sandbox="allow-scripts" style="width:100%;height:160px;border:none;pointer-events:none;transform-origin:top left;transform:scale(${(160/ad.h).toFixed(3)})" data-html="${encodeURIComponent(ad.html.slice(0,8000))}"></iframe>
+              <div class="ds-gallery-overlay">
+                <button class="ds-gallery-view-btn" data-aid="${ad.id}">▶ Preview</button>
+              </div>
+            </div>
+            <div class="ds-gallery-meta">
+              <div class="ds-gallery-title">${escHtml(ad.title.slice(0,40))}</div>
+              <div class="ds-gallery-info"><span class="ads-preview-fmt">${fmt.label}</span><span class="ads-preview-dim">${ad.w}×${ad.h}</span></div>
+            </div>
+            <button class="ds-gallery-del" data-aid="${ad.id}">✕</button>
+          </div>`;
+        }).join('')}
+      </div>`;
+
+    el.querySelectorAll('[data-html]').forEach(frame => {
+      try { frame.contentDocument.open(); frame.contentDocument.write(decodeURIComponent(frame.dataset.html)); frame.contentDocument.close(); } catch(_) {}
+    });
+    el.querySelectorAll('.ds-gallery-view-btn').forEach(btn => btn.addEventListener('click', () => {
+      const ad = AdStudio._ads.find(a => a.id === btn.dataset.aid); if (!ad) return;
+      const w = Math.min(ad.w, 900), h = Math.round(w * ad.h / ad.w);
+      Modal.open(ad.title.slice(0,50), `<iframe style="width:${w}px;max-width:100%;height:${h}px;border:none;border-radius:8px;display:block;margin:0 auto" sandbox="allow-scripts allow-same-origin"></iframe>`, {
+        onOpen() { const f = document.querySelector('#modal-box iframe'); if(f){f.contentDocument.open();f.contentDocument.write(ad.html);f.contentDocument.close();} }
+      });
+    }));
+    el.querySelectorAll('.ds-gallery-del').forEach(btn => btn.addEventListener('click', () => {
+      AdStudio._ads = AdStudio._ads.filter(a => a.id !== btn.dataset.aid);
+      localStorage.setItem('kayro_ads', JSON.stringify(AdStudio._ads));
+      AdStudio._renderGallery();
+    }));
+  },
+
+  destroy() { AdStudio._format = 'square'; AdStudio._anim = 'cinematic'; },
+};
+
+// ══════════════════════════════════════════════════════════════
 //  PAGE: BRAIN (Knowledge Base)
 // ══════════════════════════════════════════════════════════════
 const BrainPage = {
@@ -7650,7 +7946,51 @@ const PlansPage = {
       },
     ];
 
-    container.innerHTML = `<div class="page-scroll"><div class="plans-root">
+    const tokPacks = [
+      { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',   per:'$18 / MTok', color:'#64748b', glow:'rgba(100,116,139,.3)', best:false, label:'Try it out' },
+      { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36',  per:'$18 / MTok', color:'#4f8cff', glow:'rgba(79,140,255,.35)', best:false, label:'Best value' },
+      { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$108', per:'$18 / MTok', color:'#10d98a', glow:'rgba(16,217,138,.35)', best:true,  label:'Most popular' },
+      { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$270', per:'$18 / MTok', color:'#a78bfa', glow:'rgba(167,139,250,.35)', best:false, label:'Power user' },
+    ];
+    const bank = State.usage?.tokenBank || 0;
+
+    const tokHTML = `
+      <div class="tok-market-page">
+        <div class="tok-page-hdr">
+          <div class="tok-page-title">⚡ Token Store</div>
+          <div class="tok-page-sub">Buy AI credits — work across all agents, never expire.</div>
+          ${bank > 0 ? `<div class="tok-bank-pill">🏦 ${Usage._fmtK(bank)} tokens in your bank</div>` : ''}
+        </div>
+        <div class="tok-grid tok-grid--large">
+          ${tokPacks.map(t=>`
+          <div class="tok-card${t.best?' tok-card--best':''}">
+            ${t.best?`<div class="tok-best-tag" style="background:${t.color}22;border-color:${t.color}44;color:${t.color}">★ ${t.label}</div>`:`<div class="tok-label-tag" style="color:${t.color}">${t.label}</div>`}
+            <div class="tok-amount" style="color:${t.color}">${t.tokens}</div>
+            <div class="tok-unit">tokens</div>
+            <div class="tok-price" style="text-shadow:0 0 20px ${t.glow}">${t.price}</div>
+            <div class="tok-per">${t.per}</div>
+            <button class="tok-buy-btn" style="background:${t.color}18;border:1px solid ${t.color}40;color:${t.color}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
+              Buy ${t.tokens} Tokens →
+            </button>
+          </div>`).join('')}
+        </div>
+        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:20px">
+          Powered by Stripe · Secure checkout · Tokens added instantly after payment
+        </div>
+        <div class="plans-activate-section" style="margin-top:32px">
+          <div class="plans-activate-card">
+            <div class="plans-activate-title">Have a code?</div>
+            <div class="plans-activate-sub">Enter your plan or token code to activate instantly.</div>
+            <div style="display:flex;gap:8px;max-width:420px;margin:0 auto">
+              <input class="form-input" id="plan-code-input" placeholder="KAYRO-GROWTH-XXXXXX" style="flex:1;font-family:var(--mono);text-transform:uppercase">
+              <button class="btn-primary" id="plan-code-apply">Activate</button>
+            </div>
+            <div id="plan-code-msg" style="margin-top:8px;font-size:12px;min-height:16px;text-align:center"></div>
+          </div>
+        </div>
+      </div>`;
+
+    const plansHTML = `
       <div class="plans-header">
         <div class="plans-current-badge" style="background:${cfg.color}18;border-color:${cfg.color}30;color:${cfg.color}">
           ${cfg.icon} Current plan: <b>${cfg.name}</b>
@@ -7658,7 +7998,6 @@ const PlansPage = {
         <div class="plans-title">Simple, Transparent Pricing</div>
         <div class="plans-subtitle">Choose the plan that fits your team. Upgrade or downgrade anytime.</div>
       </div>
-
       <div class="plans-grid">
         ${plans.map(p => {
           const planCfg = PLAN_CONFIG[p.id];
@@ -7686,68 +8025,23 @@ const PlansPage = {
           </div>`;
         }).join('')}
       </div>
-
-      <!-- TOKEN MARKETPLACE -->
-      <div class="tok-market">
-        <div class="tok-market-hdr">
-          <div class="tok-market-title">⚡ Token Marketplace</div>
-          <div class="tok-market-sub">Top up your AI credits instantly. Tokens never expire and work with all agents.</div>
-        </div>
-        <div class="tok-grid">
-          ${[
-            { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',  per:'$18/MTok', color:'#64748b', glow:'rgba(100,116,139,.3)', best:false, label:'Try it out' },
-            { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36', per:'$18/MTok', color:'#4f8cff', glow:'rgba(79,140,255,.35)', best:false, label:'Best value' },
-            { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$99', per:'$16.50/MTok', color:'#10d98a', glow:'rgba(16,217,138,.35)', best:true,  label:'Most popular' },
-            { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$220','per':'$14.67/MTok', color:'#a78bfa', glow:'rgba(167,139,250,.35)', best:false, label:'Power user' },
-          ].map(t=>`
-          <div class="tok-card${t.best?' tok-card--best':''}">
-            ${t.best?`<div class="tok-best-tag" style="background:${t.color}22;border-color:${t.color}44;color:${t.color}">★ ${t.label}</div>`:`<div class="tok-label-tag" style="color:${t.color}">${t.label}</div>`}
-            <div class="tok-amount" style="color:${t.color}">${t.tokens}</div>
-            <div class="tok-unit">tokens</div>
-            <div class="tok-price" style="text-shadow:0 0 20px ${t.glow}">${t.price}</div>
-            <div class="tok-per">${t.per}</div>
-            <button class="tok-buy-btn" style="background:${t.color}18;border:1px solid ${t.color}40;color:${t.color}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
-              Buy ${t.tokens} Tokens →
-            </button>
-          </div>`).join('')}
-        </div>
-        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:16px">
-          Powered by Stripe · Secure checkout · Tokens added instantly after payment
-        </div>
-      </div>
-
-      <div class="plans-activate-section">
-        <div class="plans-activate-card">
-          <div class="plans-activate-title">Have a plan code?</div>
-          <div class="plans-activate-sub">Enter your code to activate Growth, Scale, or Enterprise instantly.</div>
-          <div style="display:flex;gap:8px;max-width:420px;margin:0 auto">
-            <input class="form-input" id="plan-code-input" placeholder="KAYRO-GROWTH-XXXXXX" style="flex:1;font-family:var(--mono);text-transform:uppercase">
-            <button class="btn-primary" id="plan-code-apply">Activate</button>
-          </div>
-          <div id="plan-code-msg" style="margin-top:8px;font-size:12px;min-height:16px;text-align:center"></div>
-        </div>
-      </div>
-
       <div class="plans-compare">
         <div class="plans-compare-title">What's included in each plan</div>
         <div class="plans-compare-table-wrap">
           <table class="plans-compare-table">
-            <thead>
-              <tr>
-                <th>Feature</th>
-                <th>Free</th>
-                <th style="color:#4f8cff">Growth</th>
-                <th style="color:#10d98a">Scale</th>
-                <th style="color:#a78bfa">Enterprise</th>
-              </tr>
-            </thead>
+            <thead><tr>
+              <th>Feature</th><th>Free</th>
+              <th style="color:#4f8cff">Growth</th>
+              <th style="color:#10d98a">Scale</th>
+              <th style="color:#a78bfa">Enterprise</th>
+            </tr></thead>
             <tbody>
               ${[
                 ['All core pages (HQ, Tasks, Spreadsheet, Email, Design, Brain, Ops)','✓','✓','✓','✓'],
                 ['AI Messages','10/day','Unlimited','Unlimited','Unlimited'],
                 ['Claude AI (included, no key needed)','✕','✓','✕','✕'],
                 ['Claude AI (own Anthropic key)','✕','✕','✓','✓'],
-                ['Internet search (platform key)','✕','5/day','15/day','30/day'],
+                ['Internet search','✕','5/day','15/day','30/day'],
                 ['Spreadsheet & Cold Email','✕','✓','✓','✓'],
                 ['Design Studio & Brain','✕','✓','✓','✓'],
                 ['Apollo.io lead search','✕','✓','✓','✓'],
@@ -7757,21 +8051,35 @@ const PlansPage = {
                 ['White-label branding','✕','✕','✕','✓'],
                 ['Priority support','✕','✕','✓','✓'],
               ].map(row => `<tr>${row.map((cell,i) => {
-                const isCheck = cell === '✓';
-                const isCross = cell === '✕';
-                return `<td${i>0?' style="text-align:center"':''}>${
-                  isCheck ? '<span class="cmp-check">✓</span>' :
-                  isCross ? '<span class="cmp-cross">✕</span>' :
-                  escHtml(cell)
-                }</td>`;
+                const isCheck = cell === '✓', isCross = cell === '✕';
+                return `<td${i>0?' style="text-align:center"':''}>${isCheck?'<span class="cmp-check">✓</span>':isCross?'<span class="cmp-cross">✕</span>':escHtml(cell)}</td>`;
               }).join('')}</tr>`).join('')}
             </tbody>
           </table>
         </div>
+      </div>`;
+
+    container.innerHTML = `<div class="page-scroll"><div class="plans-root">
+      <div class="plans-tabs">
+        <button class="plans-tab plans-tab--active" data-tab="tokens">⚡ Token Store</button>
+        <button class="plans-tab" data-tab="plans">📋 Plans</button>
       </div>
+      <div id="plans-tab-tokens">${tokHTML}</div>
+      <div id="plans-tab-plans" style="display:none">${plansHTML}</div>
     </div></div>`;
 
-    // CTA buttons
+    // Tab switching
+    container.querySelectorAll('.plans-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('.plans-tab').forEach(b => b.classList.remove('plans-tab--active'));
+        btn.classList.add('plans-tab--active');
+        const tab = btn.dataset.tab;
+        container.querySelector('#plans-tab-tokens').style.display = tab === 'tokens' ? '' : 'none';
+        container.querySelector('#plans-tab-plans').style.display  = tab === 'plans'  ? '' : 'none';
+      });
+    });
+
+    // Plan CTA buttons
     container.querySelectorAll('.plan-cta').forEach(btn => {
       btn.addEventListener('click', () => {
         const planId = btn.dataset.plan;
@@ -7800,10 +8108,9 @@ const PlansPage = {
       if (!code) return;
       const res = Usage.applyCode(code);
       if (res === false) { codeMsg.style.color='var(--red,#ef4444)'; codeMsg.textContent='Invalid code. Check for typos.'; return; }
-      if (res === null) { codeMsg.style.color='var(--red,#ef4444)'; codeMsg.textContent='Code already used.'; return; }
+      if (res === null)  { codeMsg.style.color='var(--red,#ef4444)'; codeMsg.textContent='Code already used.'; return; }
       if (res._isPlan) {
-        codeMsg.style.color='var(--green)';
-        codeMsg.textContent=`✅ ${res.name} activated!`;
+        codeMsg.style.color='var(--green)'; codeMsg.textContent=`✅ ${res.name} activated!`;
         setTimeout(() => PlansPage.init(container), 1200);
       } else {
         codeMsg.style.color='var(--green)';
@@ -7814,27 +8121,17 @@ const PlansPage = {
     codeInput.addEventListener('keydown', e => { if(e.key==='Enter') doApply(); });
     codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
 
-    // Token marketplace buy buttons
+    // Token buy buttons
     container.querySelectorAll('.tok-buy-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const id    = btn.dataset.id;
-        const tokens = parseInt(btn.dataset.tokens);
-        const price  = btn.dataset.price;
-        const LINKS = {
-          starter: 'https://buy.stripe.com/kayro-tokens-starter',
-          growth:  'https://buy.stripe.com/kayro-tokens-growth',
-          pro:     'https://buy.stripe.com/kayro-tokens-pro',
-          scale:   'https://buy.stripe.com/kayro-tokens-scale',
-        };
+        const id = btn.dataset.id, tokens = parseInt(btn.dataset.tokens), price = btn.dataset.price;
+        const LINKS = { starter:'https://buy.stripe.com/kayro-tokens-starter', growth:'https://buy.stripe.com/kayro-tokens-growth', pro:'https://buy.stripe.com/kayro-tokens-pro', scale:'https://buy.stripe.com/kayro-tokens-scale' };
         const link = LINKS[id];
-        // Preflight: store intent so webhook can credit tokens on success
-        const intent = { id, tokens, price, ts: Date.now(), email: State.settings.ownerEmail || '' };
-        localStorage.setItem('kayro_tok_intent', JSON.stringify(intent));
+        localStorage.setItem('kayro_tok_intent', JSON.stringify({ id, tokens, price, ts:Date.now(), email:State.settings.ownerEmail||'' }));
         if (link && !link.includes('kayro-tokens')) {
           toast('Redirecting to Stripe checkout…', 'info', 3000);
           setTimeout(() => window.open(link, '_blank'), 400);
         } else {
-          // No real link yet — show toast with instructions
           toast(`Token checkout coming soon — email billing@kayrointer.com to buy ${Usage._fmtK(tokens)} tokens for ${price}`, 'info', 7000);
         }
       });

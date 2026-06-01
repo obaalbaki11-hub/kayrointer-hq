@@ -1209,6 +1209,28 @@ td.editing .cell-editor{display:block}
 .ds-iframe{flex:1;border:none;width:100%;display:block;background:#fff}
 
 /* Gallery section */
+/* Ad Studio */
+.ads-fmt-list{display:flex;flex-direction:column;gap:5px}
+.ads-fmt-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;text-align:left;transition:all .15s}
+.ads-fmt-btn:hover{background:rgba(255,255,255,.05);color:var(--text1)}
+.ads-fmt-btn.active{background:rgba(79,140,255,.12);border-color:rgba(79,140,255,.4);color:#4f8cff}
+.ads-fmt-dim{margin-left:auto;font-size:10px;opacity:.6;font-family:var(--mono)}
+.ads-anim-row{display:flex;flex-wrap:wrap;gap:5px}
+.ads-anim-btn{padding:5px 11px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s}
+.ads-anim-btn:hover{background:rgba(255,255,255,.05);color:var(--text1)}
+.ads-anim-btn.active{background:rgba(167,139,250,.15);border-color:rgba(167,139,250,.4);color:#a78bfa}
+.ads-preview-area{height:100%;display:flex;flex-direction:column;overflow:auto;background:rgba(0,0,0,.3);border-left:1px solid var(--border)}
+.ads-preview-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;border-bottom:1px solid var(--border);background:var(--surface);flex-shrink:0;flex-wrap:wrap;gap:8px}
+.ads-preview-info{display:flex;align-items:center;gap:10px}
+.ads-preview-fmt{font-size:12px;font-weight:600;color:var(--text1)}
+.ads-preview-dim{font-size:10px;font-family:var(--mono);color:var(--text3);background:var(--surface2);padding:2px 6px;border-radius:4px}
+.ads-preview-anim{font-size:10px;color:var(--text3);text-transform:capitalize}
+.ads-frame-wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:24px;overflow:auto}
+.ads-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px}
+.ads-load-ring{width:40px;height:40px;border:3px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite}
+.ads-load-txt{font-size:13px;color:var(--text2)}
+.ads-gallery-section{padding:24px;border-top:1px solid var(--border);background:var(--bg)}
+/* shared */
 .ds-gallery-section{padding:24px;border-top:1px solid var(--border);background:var(--bg)}
 .ds-gallery-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
 .ds-gallery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
@@ -1358,6 +1380,22 @@ td.editing .cell-editor{display:block}
 .plan-locked-btn{padding:12px 32px;font-size:14px;font-weight:700}
 
 /* ── PLANS PAGE ─────────────────────────────────────────────── */
+/* Plans page tabs */
+.plans-tabs{display:flex;gap:6px;margin-bottom:32px;border-bottom:1px solid var(--border);padding-bottom:0}
+.plans-tab{padding:10px 22px;border-radius:10px 10px 0 0;border:1px solid transparent;background:transparent;color:var(--text2);font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;margin-bottom:-1px;border-bottom:none}
+.plans-tab:hover{color:var(--text1);background:rgba(255,255,255,.04)}
+.plans-tab--active{background:rgba(255,255,255,.06);color:var(--text1);border-color:var(--border);border-bottom-color:var(--bg2)}
+/* Token Store page */
+.tok-market-page{padding:8px 0}
+.tok-page-hdr{text-align:center;margin-bottom:36px}
+.tok-page-title{font-size:30px;font-weight:900;color:var(--text1);letter-spacing:-.4px;margin-bottom:8px}
+.tok-page-sub{font-size:14px;color:var(--text2);margin-bottom:16px}
+.tok-bank-pill{display:inline-flex;align-items:center;gap:6px;padding:6px 16px;border-radius:20px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#f59e0b;font-size:12px;font-weight:700;margin-top:4px}
+.tok-grid--large{gap:20px}
+.tok-grid--large .tok-card{padding:28px 22px}
+.tok-grid--large .tok-amount{font-size:42px}
+.tok-grid--large .tok-price{font-size:34px}
+/* plans root */
 .plans-root{padding:32px 24px;max-width:1200px;margin:0 auto}
 .plans-header{text-align:center;margin-bottom:40px}
 .plans-current-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 18px;border-radius:20px;border:1px solid;font-size:12px;font-weight:700;margin-bottom:20px;letter-spacing:.3px}

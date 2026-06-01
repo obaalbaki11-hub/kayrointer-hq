@@ -45,8 +45,8 @@ export default {
     const path = url.pathname;
 
     try {
-      // AI Proxy — forward to Anthropic using Kayro's key
-      if (path === '/api/ai')                  return handleAI(request, env, origin);
+      // AI Proxy — Bedrock if AWS creds set, else Anthropic
+      if (path === '/api/ai')                  return (env.AWS_ACCESS_KEY_ID ? handleAIBedrock : handleAI)(request, env, origin);
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
       if (path.startsWith('/api/kling'))       return handleKling(request, env, origin, path);
@@ -80,7 +80,151 @@ export default {
 };
 
 // ══════════════════════════════════════════════════════════════
-// AI PROXY
+// AWS SIGNATURE V4 HELPERS
+// ══════════════════════════════════════════════════════════════
+async function sha256Hex(data) {
+  const buf = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const hash = await crypto.subtle.digest('SHA-256', buf);
+  return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function hmacBytes(key, data) {
+  const k = key instanceof Uint8Array ? key : new TextEncoder().encode(key);
+  const d = typeof data === 'string' ? new TextEncoder().encode(data) : data;
+  const ck = await crypto.subtle.importKey('raw', k, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', ck, d));
+}
+
+async function awsSig4(method, urlStr, extraHeaders, body, accessKey, secretKey, region, service) {
+  const parsed    = new URL(urlStr);
+  const now       = new Date();
+  const amzDate   = now.toISOString().replace(/[:\-]/g, '').slice(0, 15) + 'Z';
+  const dateStamp = amzDate.slice(0, 8);
+
+  const allHeaders = { 'content-type': 'application/json', ...extraHeaders, 'host': parsed.host, 'x-amz-date': amzDate };
+  const sortedKeys = Object.keys(allHeaders).map(k => k.toLowerCase()).filter((v, i, a) => a.indexOf(v) === i).sort();
+
+  const normalised = {};
+  for (const [k, v] of Object.entries(allHeaders)) normalised[k.toLowerCase()] = v.trim();
+
+  const canonicalHeaders = sortedKeys.map(k => `${k}:${normalised[k]}`).join('\n') + '\n';
+  const signedHeaders    = sortedKeys.join(';');
+  const payloadHash      = await sha256Hex(body || '');
+
+  const canonicalRequest = [method, parsed.pathname, parsed.search.slice(1), canonicalHeaders, signedHeaders, payloadHash].join('\n');
+  const credScope        = `${dateStamp}/${region}/${service}/aws4_request`;
+  const stringToSign     = ['AWS4-HMAC-SHA256', amzDate, credScope, await sha256Hex(canonicalRequest)].join('\n');
+
+  let sigKey = await hmacBytes('AWS4' + secretKey, dateStamp);
+  sigKey = await hmacBytes(sigKey, region);
+  sigKey = await hmacBytes(sigKey, service);
+  sigKey = await hmacBytes(sigKey, 'aws4_request');
+
+  const sigBytes  = await hmacBytes(sigKey, stringToSign);
+  const signature = Array.from(sigBytes).map(b => b.toString(16).padStart(2, '0')).join('');
+
+  return {
+    'Authorization': `AWS4-HMAC-SHA256 Credential=${accessKey}/${credScope}, SignedHeaders=${signedHeaders}, Signature=${signature}`,
+    'x-amz-date': amzDate,
+  };
+}
+
+// ══════════════════════════════════════════════════════════════
+// AI PROXY — BEDROCK (used when AWS creds are set)
+// ══════════════════════════════════════════════════════════════
+const BEDROCK_MODEL_MAP = {
+  'claude-opus-4-7':            'us.anthropic.claude-opus-4-7-20250514-v1:0',
+  'claude-sonnet-4-6':          'us.anthropic.claude-sonnet-4-6-20250514-v1:0',
+  'claude-haiku-4-5-20251001':  'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+  'claude-haiku-4-5':           'us.anthropic.claude-haiku-4-5-20251001-v1:0',
+  'claude-3-5-sonnet-20241022': 'us.anthropic.claude-3-5-sonnet-20241022-v2:0',
+  'claude-3-haiku-20240307':    'us.anthropic.claude-3-haiku-20240307-v1:0',
+};
+
+async function handleAIBedrock(request, env, origin) {
+  const accessKey = env.AWS_ACCESS_KEY_ID;
+  const secretKey = env.AWS_SECRET_ACCESS_KEY;
+  const region    = env.AWS_REGION || 'us-east-1';
+
+  let bodyObj;
+  try { bodyObj = JSON.parse(await request.text()); } catch(e) {
+    return json({ error: { message: 'Invalid request body' } }, 400, origin);
+  }
+
+  const anthropicModel = bodyObj.model || 'claude-sonnet-4-6';
+  const bedrockModel   = BEDROCK_MODEL_MAP[anthropicModel] || `us.anthropic.${anthropicModel}-v1:0`;
+  const wasStream      = bodyObj.stream === true;
+
+  // Bedrock uses same Messages API shape but: model is in URL, stream removed, anthropic_version added
+  const { model: _m, stream: _s, ...bedrockBody } = bodyObj;
+  bedrockBody['anthropic_version'] = 'bedrock-2023-05-31';
+
+  const bodyStr  = JSON.stringify(bedrockBody);
+  const endpoint = `https://bedrock-runtime.${region}.amazonaws.com/model/${encodeURIComponent(bedrockModel)}/invoke`;
+
+  const authHeaders = await awsSig4('POST', endpoint, {}, bodyStr, accessKey, secretKey, region, 'bedrock');
+
+  const res = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', ...authHeaders },
+    body: bodyStr,
+  });
+
+  if (!res.ok) {
+    const errBody = await res.text();
+    return new Response(errBody, {
+      status: res.status,
+      headers: { ...cors(origin), 'Content-Type': 'application/json' },
+    });
+  }
+
+  const data = await res.json();
+  if (!data.id)    data.id    = 'bedrock-' + Date.now();
+  if (!data.model) data.model = anthropicModel;
+  if (!data.role)  data.role  = 'assistant';
+
+  if (!wasStream) return json(data, 200, origin);
+
+  // Re-emit as SSE identical to handleAI so client code is unchanged
+  const enc = new TextEncoder();
+  const sse = (event, payload) => enc.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
+
+  const stream = new ReadableStream({
+    start(ctrl) {
+      ctrl.enqueue(sse('message_start', {
+        type: 'message_start',
+        message: { id: data.id, type: 'message', role: data.role, content: [], model: anthropicModel, stop_reason: null, usage: data.usage },
+      }));
+
+      (data.content || []).forEach((block, idx) => {
+        if (block.type === 'text') {
+          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'text', text: '' } }));
+          const text = block.text;
+          for (let i = 0; i < text.length; i += 20) {
+            ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'text_delta', text: text.slice(i, i + 20) } }));
+          }
+          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
+        } else if (block.type === 'tool_use') {
+          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'tool_use', id: block.id, name: block.name, input: {} } }));
+          ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'input_json_delta', partial_json: JSON.stringify(block.input) } }));
+          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
+        }
+      });
+
+      ctrl.enqueue(sse('message_delta', { type: 'message_delta', delta: { stop_reason: data.stop_reason, stop_sequence: null }, usage: { output_tokens: data.usage?.output_tokens || 0 } }));
+      ctrl.enqueue(sse('message_stop', { type: 'message_stop' }));
+      ctrl.close();
+    },
+  });
+
+  return new Response(stream, {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// AI PROXY — ANTHROPIC (fallback when no AWS creds)
 // ══════════════════════════════════════════════════════════════
 async function handleAI(request, env, origin) {
   const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;

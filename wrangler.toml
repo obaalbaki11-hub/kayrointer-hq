@@ -3,7 +3,7 @@ main               = "worker.js"
 compatibility_date = "2024-09-23"
 
 # Secrets — add via: npx wrangler secret put SECRET_NAME
-# ANTHROPIC_KEY
+# ANTHROPIC_KEY          ← Anthropic API key (fallback if no AWS creds)
 # DUFFEL_TOKEN
 # AMADEUS_CLIENT_ID
 # AMADEUS_CLIENT_SECRET
@@ -13,11 +13,16 @@ compatibility_date = "2024-09-23"
 # HUNTER_KEY             ← Hunter.io API key (hunter.io/api-keys)
 # JWT_SECRET             ← any long random string for signing auth tokens
 # RESEND_KEY             ← Resend email key (resend.com)
+#
+# AWS Bedrock (optional — when set, all AI calls go through Bedrock instead of Anthropic)
+# AWS_ACCESS_KEY_ID      ← IAM user access key (needs AmazonBedrockFullAccess)
+# AWS_SECRET_ACCESS_KEY  ← IAM user secret key
+# AWS_REGION             ← AWS region, e.g. us-east-1 (default: us-east-1)
 
-# KV Namespaces — run once, then paste the IDs below:
+# KV Namespaces — uncomment and fill IDs after running:
 #   npx wrangler kv:namespace create USERS
 #   npx wrangler kv:namespace create USERS --preview
-[[kv_namespaces]]
-binding = "USERS"
-id = "PASTE_KV_NAMESPACE_ID_HERE"
-preview_id = "PASTE_KV_PREVIEW_ID_HERE"
+# [[kv_namespaces]]
+# binding = "USERS"
+# id = "PASTE_KV_NAMESPACE_ID_HERE"
+# preview_id = "PASTE_KV_PREVIEW_ID_HERE"
