@@ -2215,9 +2215,37 @@ const Auth = {
 // ══════════════════════════════════════════════════════════════
 // ACCOUNTING PAGE — GAAP/IFRS Bookkeeping Agent (Ana)
 // ══════════════════════════════════════════════════════════════
+// Shared Sessions API stream — used by all agent_* pages
+async function* agentSessionStream(agentId, state, text) {
+  if (!state._sessionId) {
+    const r = await fetch(`${BACKEND_URL}/api/agent/session`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ agent_id: agentId }),
+    });
+    const d = await r.json();
+    if (!r.ok || !d.id) throw new Error(d.error || 'Failed to create agent session');
+    state._sessionId = d.id;
+  }
+  const res = await fetch(`${BACKEND_URL}/api/agent/turn`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content: text }], stream: true }),
+  });
+  if (!res.ok) {
+    let msg;
+    try { msg = (await res.json())?.error?.message; } catch { msg = await res.text(); }
+    throw new Error(msg || `Agent error ${res.status}`);
+  }
+  for await (const ev of AI._parseSSE(res)) {
+    if (ev.type === 'text') yield ev.text;
+  }
+}
+
 const AccountingPage = {
   _history: [],
   _emp: null,
+  _sessionId: null,
 
   init(container) {
     AccountingPage._emp = getEmp('e_acct');
@@ -2292,6 +2320,7 @@ const AccountingPage = {
 
     document.getElementById('acct-clear').addEventListener('click', () => {
       AccountingPage._history = [];
+      AccountingPage._sessionId = null;
       document.getElementById('acct-messages').innerHTML = '';
     });
 
@@ -2323,17 +2352,24 @@ const AccountingPage = {
     </div>`;
     msgs.scrollTop = msgs.scrollHeight;
 
-    AccountingPage._history.push({ role: 'user', content: text });
-
     let full = '';
     try {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
-      for await (const chunk of AI.stream(AccountingPage._history, emp?.system || '', { model: emp?.model, search: false, appTools: false, max_tokens: 4096 })) {
-        full += chunk;
-        if (aiEl) aiEl.innerHTML = marked.parse(full);
-        msgs.scrollTop = msgs.scrollHeight;
+      if (emp?.model?.startsWith('agent_')) {
+        for await (const chunk of agentSessionStream(emp.model, AccountingPage, text)) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      } else {
+        AccountingPage._history.push({ role: 'user', content: text });
+        for await (const chunk of AI.stream(AccountingPage._history, emp?.system || '', { model: emp?.model, search: false, appTools: false, max_tokens: 4096 })) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+        AccountingPage._history.push({ role: 'assistant', content: full });
       }
-      AccountingPage._history.push({ role: 'assistant', content: full });
     } catch(e) {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
       if (aiEl) aiEl.innerHTML = `<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
@@ -2341,7 +2377,7 @@ const AccountingPage = {
     msgs.scrollTop = msgs.scrollHeight;
   },
 
-  destroy() { AccountingPage._history = []; },
+  destroy() { AccountingPage._history = []; AccountingPage._sessionId = null; },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -2350,6 +2386,7 @@ const AccountingPage = {
 const InvestmentsPage = {
   _history: [],
   _emp: null,
+  _sessionId: null,
 
   init(container) {
     InvestmentsPage._emp = getEmp('e_invest');
@@ -2423,6 +2460,7 @@ const InvestmentsPage = {
 
     document.getElementById('invest-clear').addEventListener('click', () => {
       InvestmentsPage._history = [];
+      InvestmentsPage._sessionId = null;
       document.getElementById('invest-messages').innerHTML = '';
     });
 
@@ -2452,17 +2490,24 @@ const InvestmentsPage = {
     </div>`;
     msgs.scrollTop = msgs.scrollHeight;
 
-    InvestmentsPage._history.push({ role: 'user', content: text });
-
     let full = '';
     try {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
-      for await (const chunk of AI.stream(InvestmentsPage._history, emp?.system || '', { model: emp?.model, search: true, appTools: false, max_tokens: 8192 })) {
-        full += chunk;
-        if (aiEl) aiEl.innerHTML = marked.parse(full);
-        msgs.scrollTop = msgs.scrollHeight;
+      if (emp?.model?.startsWith('agent_')) {
+        for await (const chunk of agentSessionStream(emp.model, InvestmentsPage, text)) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      } else {
+        InvestmentsPage._history.push({ role: 'user', content: text });
+        for await (const chunk of AI.stream(InvestmentsPage._history, emp?.system || '', { model: emp?.model, search: true, appTools: false, max_tokens: 8192 })) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+        InvestmentsPage._history.push({ role: 'assistant', content: full });
       }
-      InvestmentsPage._history.push({ role: 'assistant', content: full });
     } catch(e) {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
       if (aiEl) aiEl.innerHTML = `<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
@@ -2470,7 +2515,7 @@ const InvestmentsPage = {
     msgs.scrollTop = msgs.scrollHeight;
   },
 
-  destroy() { InvestmentsPage._history = []; },
+  destroy() { InvestmentsPage._history = []; InvestmentsPage._sessionId = null; },
 };
 
 // ══════════════════════════════════════════════════════════════
@@ -2513,7 +2558,7 @@ const SalesPage = (() => {
 function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, welcomeTitle, welcomeSub, placeholder, useSearch, maxTokens) {
   return {
     init(container) {
-      stateRef.emp = getEmp(empId); stateRef.history = [];
+      stateRef.emp = getEmp(empId); stateRef.history = []; stateRef._sessionId = null;
       const emp = stateRef.emp;
       const c = emp?.color || '#3b82f6';
       document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
@@ -2555,7 +2600,7 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
         document.getElementById('agpg-input').value = b.dataset.starter;
         document.getElementById('agpg-input').focus();
       }));
-      document.getElementById('agpg-clear').addEventListener('click', () => { stateRef.history=[]; document.getElementById('agpg-messages').innerHTML=''; });
+      document.getElementById('agpg-clear').addEventListener('click', () => { stateRef.history=[]; stateRef._sessionId=null; document.getElementById('agpg-messages').innerHTML=''; });
       const inp = document.getElementById('agpg-input');
       inp.addEventListener('input', () => { inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,140)+'px'; });
       const doSend = () => this._doSend(stateRef, initial, c, useSearch, maxTokens);
@@ -2571,21 +2616,27 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
       const aiId = 'agpg-' + Date.now();
       msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}"><div class="agent-pg-av-sm" style="background:${c}20;color:${c}">${initial}</div><div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div></div>`;
       msgs.scrollTop = msgs.scrollHeight;
-      st.history.push({ role:'user', content:text });
       let full='';
       try {
         const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
-        for await (const chunk of AI.stream(st.history, st.emp?.system||'', { model:st.emp?.model, search:useSearch, appTools:false, max_tokens:maxTokens })) {
-          full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+        if (st.emp?.model?.startsWith('agent_')) {
+          for await (const chunk of agentSessionStream(st.emp.model, st, text)) {
+            full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+          }
+        } else {
+          st.history.push({ role:'user', content:text });
+          for await (const chunk of AI.stream(st.history, st.emp?.system||'', { model:st.emp?.model, search:useSearch, appTools:false, max_tokens:maxTokens })) {
+            full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+          }
+          st.history.push({ role:'assistant', content:full });
         }
-        st.history.push({ role:'assistant', content:full });
       } catch(e) {
         const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
         if(aiEl) aiEl.innerHTML=`<span style="color:var(--danger)">Error: ${escHtml(e.message)}</span>`;
       }
       msgs.scrollTop = msgs.scrollHeight;
     },
-    destroy() { stateRef.history=[]; },
+    destroy() { stateRef.history=[]; stateRef._sessionId=null; },
   };
 }
 

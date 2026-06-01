@@ -59,6 +59,8 @@ export default {
         }
         return useAI(request, env, origin);
       }
+      if (path === '/api/agent/session')        return handleAgentSession(request, env, origin);
+      if (path === '/api/agent/turn')           return handleAgentTurn(request, env, origin);
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
       if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
@@ -281,6 +283,70 @@ async function handleAI(request, env, origin) {
   }
 
   // Non-streaming: return JSON as-is
+  return json(await res.json(), 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// MANAGED AGENTS — SESSIONS API
+// ══════════════════════════════════════════════════════════════
+const AGENT_BETA = 'managed-agents-2025-05-14';
+
+async function handleAgentSession(request, env, origin) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) return json({ error: 'No Anthropic API key configured' }, 500, origin);
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { agent_id } = body;
+  if (!agent_id) return json({ error: 'agent_id required' }, 400, origin);
+
+  const res = await fetch(`https://api.anthropic.com/v1/agents/${agent_id}/sessions`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': AGENT_BETA,
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!res.ok) {
+    const t = await res.text();
+    return new Response(t, { status: res.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
+  }
+  return json(await res.json(), 200, origin);
+}
+
+async function handleAgentTurn(request, env, origin) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) return json({ error: 'No Anthropic API key configured' }, 500, origin);
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { session_id, messages, stream = true } = body;
+  if (!session_id || !messages) return json({ error: 'session_id and messages required' }, 400, origin);
+
+  const res = await fetch(`https://api.anthropic.com/v1/sessions/${session_id}/turns`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'x-api-key': key,
+      'anthropic-version': '2023-06-01',
+      'anthropic-beta': AGENT_BETA,
+    },
+    body: JSON.stringify({ messages, stream }),
+  });
+
+  if (!res.ok) {
+    const t = await res.text();
+    return new Response(t, { status: res.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
+  }
+
+  if (stream) {
+    return new Response(res.body, {
+      status: 200,
+      headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
+    });
+  }
   return json(await res.json(), 200, origin);
 }
 
