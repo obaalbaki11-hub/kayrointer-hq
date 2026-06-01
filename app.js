@@ -2194,7 +2194,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -7453,6 +7453,8 @@ const AdStudio = {
           <textarea class="ds-prompt" id="ads-prompt" rows="5"
             placeholder="Describe your ad — product, offer, audience, vibe…&#10;&#10;e.g. Instagram ad for a luxury skincare brand launch. Show a gold bottle, animated particles, tagline 'Your skin deserves more' fading in, shop now button."></textarea>
 
+        </div>
+        <div class="ads-left-footer">
           <button class="ds-generate-btn" id="ads-generate">🎬 Generate Ad</button>
           <div class="ds-gen-status" id="ads-gen-status"></div>
         </div>
