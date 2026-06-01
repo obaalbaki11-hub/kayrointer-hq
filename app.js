@@ -8312,83 +8312,121 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   _results: [],
   _mode: 'domain', // 'domain' | 'finder' | 'verify'
   init(container) {
-    container.innerHTML = `<div class="page-scroll"><div class="apollo-root">
-      <div class="apollo-sidebar">
-        <div class="apollo-logo-row">
-          <svg width="26" height="26" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#f97316"/><circle cx="20" cy="20" r="8" fill="none" stroke="white" stroke-width="3"/><line x1="26" y1="26" x2="34" y2="34" stroke="white" stroke-width="3" stroke-linecap="round"/></svg>
-          <span class="apollo-logo-text">Hunter.io</span>
+    container.innerHTML = `<div class="page-scroll"><div class="hun-root">
+
+      <!-- LEFT PANEL -->
+      <div class="hun-left">
+
+        <!-- Logo -->
+        <div class="hun-brand">
+          <div class="hun-brand-icon">
+            <svg width="18" height="18" viewBox="0 0 40 40" fill="none"><circle cx="20" cy="20" r="20" fill="#f97316"/><circle cx="20" cy="20" r="8" fill="none" stroke="white" stroke-width="3.5"/><line x1="25.5" y1="25.5" x2="33" y2="33" stroke="white" stroke-width="3.5" stroke-linecap="round"/></svg>
+          </div>
+          <div>
+            <div class="hun-brand-name">Hunter.io</div>
+            <div class="hun-brand-sub">Lead Intelligence</div>
+          </div>
         </div>
-        <div class="card-box" style="margin-bottom:16px">
-          <div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green)">✅ Powered by Kayro — find emails instantly, no key needed</div>
+
+        <!-- Powered badge -->
+        <div class="hun-powered">
+          <span class="hun-powered-dot"></span>
+          Powered by Kayro — no API key needed
         </div>
-        <div class="card-box">
-          <div class="field-label" style="margin-bottom:8px">Search Mode</div>
-          <div style="display:flex;gap:6px;margin-bottom:14px">
-            <button class="btn apo-mode-btn" data-mode="domain" id="mode-domain" style="flex:1;font-size:11px">🏢 Domain</button>
-            <button class="btn apo-mode-btn" data-mode="finder" id="mode-finder" style="flex:1;font-size:11px">👤 Person</button>
-            <button class="btn apo-mode-btn" data-mode="verify" id="mode-verify" style="flex:1;font-size:11px">✅ Verify</button>
-          </div>
-          <div id="hunter-domain-form">
-            <div class="field-label">Company Domain</div>
-            <input class="form-input" id="apo-q-domain" placeholder="acmecorp.com" style="margin-bottom:8px">
-            <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-              <label class="field-label" style="margin:0;white-space:nowrap">Max results:</label>
-              <select class="form-input" id="apo-q-limit" style="width:80px;padding:6px 8px">
-                <option value="10" selected>10</option><option value="25">25</option><option value="50">50</option>
-              </select>
-            </div>
-            <button class="btn-primary" id="apo-search" style="width:100%">🔍 Find Emails</button>
-          </div>
-          <div id="hunter-finder-form" style="display:none">
-            <div class="field-label">First Name</div>
-            <input class="form-input" id="apo-q-first" placeholder="John" style="margin-bottom:8px">
-            <div class="field-label">Last Name</div>
-            <input class="form-input" id="apo-q-last" placeholder="Smith" style="margin-bottom:8px">
-            <div class="field-label">Company Domain</div>
-            <input class="form-input" id="apo-q-domain2" placeholder="acmecorp.com" style="margin-bottom:8px">
-            <button class="btn-primary" id="apo-find-person" style="width:100%">🔍 Find Email</button>
-          </div>
-          <div id="hunter-verify-form" style="display:none">
-            <div class="field-label">Email to Verify</div>
-            <input class="form-input" id="apo-q-email" placeholder="john@acmecorp.com" style="margin-bottom:8px">
-            <button class="btn-primary" id="apo-verify" style="width:100%">✅ Verify Email</button>
-          </div>
-          <div class="field-label" id="apo-status" style="margin-top:8px;color:var(--text2)"></div>
+
+        <!-- Mode selector -->
+        <div class="hun-section-label">SEARCH MODE</div>
+        <div class="hun-mode-tabs">
+          <button class="hun-mode-tab active" data-mode="domain" id="mode-domain">
+            <span class="hun-mode-icon">🏢</span>
+            <div class="hun-mode-info"><div class="hun-mode-name">Domain</div><div class="hun-mode-desc">All emails at a company</div></div>
+          </button>
+          <button class="hun-mode-tab" data-mode="finder" id="mode-finder">
+            <span class="hun-mode-icon">👤</span>
+            <div class="hun-mode-info"><div class="hun-mode-name">Person</div><div class="hun-mode-desc">Find by name + domain</div></div>
+          </button>
+          <button class="hun-mode-tab" data-mode="verify" id="mode-verify">
+            <span class="hun-mode-icon">✅</span>
+            <div class="hun-mode-info"><div class="hun-mode-name">Verify</div><div class="hun-mode-desc">Check email validity</div></div>
+          </button>
+        </div>
+
+        <!-- Domain form -->
+        <div id="hunter-domain-form" class="hun-form">
+          <div class="hun-section-label" style="margin-top:20px">COMPANY DOMAIN</div>
+          <input class="hun-input" id="apo-q-domain" placeholder="acmecorp.com" type="text">
+          <div class="hun-section-label" style="margin-top:12px">MAX RESULTS</div>
+          <select class="hun-input" id="apo-q-limit">
+            <option value="10" selected>10 results</option><option value="25">25 results</option><option value="50">50 results</option>
+          </select>
+          <button class="hun-search-btn" id="apo-search">🔍 Find Emails</button>
+        </div>
+
+        <!-- Person finder form -->
+        <div id="hunter-finder-form" class="hun-form" style="display:none">
+          <div class="hun-section-label" style="margin-top:20px">FIRST NAME</div>
+          <input class="hun-input" id="apo-q-first" placeholder="John">
+          <div class="hun-section-label" style="margin-top:12px">LAST NAME</div>
+          <input class="hun-input" id="apo-q-last" placeholder="Smith">
+          <div class="hun-section-label" style="margin-top:12px">COMPANY DOMAIN</div>
+          <input class="hun-input" id="apo-q-domain2" placeholder="acmecorp.com">
+          <button class="hun-search-btn" id="apo-find-person">🔍 Find Email</button>
+        </div>
+
+        <!-- Verify form -->
+        <div id="hunter-verify-form" class="hun-form" style="display:none">
+          <div class="hun-section-label" style="margin-top:20px">EMAIL ADDRESS</div>
+          <input class="hun-input" id="apo-q-email" placeholder="john@acmecorp.com" type="email">
+          <button class="hun-search-btn" id="apo-verify">✅ Verify Email</button>
+        </div>
+
+        <div id="apo-status" class="hun-status"></div>
+
+        <!-- Free tier info -->
+        <div class="hun-free-info">
+          <div class="hun-free-row"><span>🔍</span> 25 free searches / month</div>
+          <div class="hun-free-row"><span>✅</span> Verified email data</div>
+          <div class="hun-free-row"><span>🚀</span> No credit card needed</div>
         </div>
       </div>
-      <div class="apollo-main">
-        <div class="apollo-toolbar" id="apo-toolbar" style="display:none">
-          <span id="apo-count" style="color:var(--text2);font-size:13px"></span>
-          <button class="btn-primary" id="apo-export-email" style="margin-left:auto">✉️ Add to Cold Email</button>
-          <button class="btn" id="apo-copy-csv">📋 Copy CSV</button>
+
+      <!-- RIGHT PANEL -->
+      <div class="hun-right">
+        <div class="hun-toolbar" id="apo-toolbar" style="display:none">
+          <span class="hun-result-count" id="apo-count"></span>
+          <button class="hun-toolbar-btn hun-toolbar-btn--primary" id="apo-export-email">✉️ Add to Cold Email</button>
+          <button class="hun-toolbar-btn" id="apo-copy-csv">📋 Copy CSV</button>
         </div>
-        <div id="apo-results-wrap">
-          <div class="apollo-empty">
-            <div style="font-size:48px;margin-bottom:16px">🔍</div>
-            <div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">Find Verified Emails</div>
-            <div style="color:var(--text2);font-size:14px;max-width:340px;text-align:center;line-height:1.6">
-              <b>Domain Search</b> — find all emails at a company<br>
-              <b>Person Finder</b> — find email for a specific name<br>
-              <b>Email Verifier</b> — check if an email is valid<br><br>
-              Free tier: 25 searches/month. No credit card needed.
+        <div id="apo-results-wrap" class="hun-results-wrap">
+          <div class="hun-empty">
+            <div class="hun-empty-visual">
+              <div class="hun-empty-orb"></div>
+              <div class="hun-empty-icon">🔍</div>
+            </div>
+            <div class="hun-empty-title">Find Verified Emails</div>
+            <div class="hun-empty-sub">Use the search panel to find verified email addresses from any company or person.</div>
+            <div class="hun-caps-row">
+              <div class="hun-cap"><div class="hun-cap-icon">🏢</div><div class="hun-cap-label">Domain Search</div><div class="hun-cap-desc">All emails at a company</div></div>
+              <div class="hun-cap"><div class="hun-cap-icon">👤</div><div class="hun-cap-label">Person Finder</div><div class="hun-cap-desc">Find by name + domain</div></div>
+              <div class="hun-cap"><div class="hun-cap-icon">✅</div><div class="hun-cap-label">Email Verifier</div><div class="hun-cap-desc">Check deliverability</div></div>
             </div>
           </div>
         </div>
       </div>
+
     </div></div>`;
 
     // Mode switching
-    container.querySelectorAll('.apo-mode-btn').forEach(btn => {
+    container.querySelectorAll('.hun-mode-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         ApolloPage._mode = btn.dataset.mode;
-        container.querySelectorAll('.apo-mode-btn').forEach(b => b.classList.remove('btn-primary'));
-        btn.classList.add('btn-primary');
+        container.querySelectorAll('.hun-mode-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
         document.getElementById('hunter-domain-form').style.display = btn.dataset.mode === 'domain' ? '' : 'none';
         document.getElementById('hunter-finder-form').style.display = btn.dataset.mode === 'finder' ? '' : 'none';
         document.getElementById('hunter-verify-form').style.display = btn.dataset.mode === 'verify' ? '' : 'none';
       });
     });
-    document.getElementById('mode-domain').classList.add('btn-primary');
 
     document.getElementById('apo-search').addEventListener('click', () => ApolloPage._domainSearch());
     document.getElementById('apo-find-person').addEventListener('click', () => ApolloPage._finderSearch());
@@ -8474,24 +8512,34 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
     const toolbar = document.getElementById('apo-toolbar');
     const count = document.getElementById('apo-count');
     const people = ApolloPage._results;
-    if (!people.length) { wrap.innerHTML = '<div class="apollo-empty" style="padding:40px">No results found.</div>'; toolbar.style.display = 'none'; return; }
+    if (!people.length) { wrap.innerHTML = '<div class="hun-empty" style="padding:60px 40px"><div class="hun-empty-icon" style="font-size:40px;margin-bottom:12px">📭</div><div class="hun-empty-title">No results found</div><div class="hun-empty-sub">Try a different domain or name.</div></div>'; toolbar.style.display = 'none'; return; }
     try { KayroEvents.emit('leads_found', people); } catch(_) {}
     toolbar.style.display = 'flex';
     count.textContent = `${people.length} result${people.length!==1?'s':''}`;
     const COLS = ['#4f8cff','#10d98a','#f59e0b','#ef4444','#a855f7'];
-    wrap.innerHTML = `<div class="apo-table-wrap"><table class="apo-table"><thead><tr>
-      <th></th><th>Email</th><th>Name</th><th>Title</th><th>Company</th><th>Confidence</th><th></th>
-    </tr></thead><tbody>${people.map((p, i) => `<tr>
-      <td><input type="checkbox" class="apo-chk" data-i="${i}" checked></td>
-      <td><span class="apo-email">${escHtml(p.email)}</span></td>
-      <td><div class="apo-name-cell"><div class="apo-av" style="background:${COLS[i%5]}22;color:${COLS[i%5]}">${(p.first_name||p.email[0]||'?')[0].toUpperCase()}</div><span>${escHtml((p.first_name+' '+p.last_name).trim()||'—')}</span></div></td>
-      <td>${escHtml(p.title||'—')}</td>
-      <td>${escHtml(p.company||'—')}</td>
-      <td><span style="color:${p.confidence>70?'var(--green)':p.confidence>40?'#f59e0b':'var(--text3)'}">${p.confidence||'?'}%</span></td>
-      <td><button class="btn apo-row-btn" data-i="${i}">+ Email</button></td>
-    </tr>`).join('')}</tbody></table></div>`;
+    wrap.innerHTML = `<div class="hun-table-wrap"><table class="hun-table"><thead><tr>
+      <th style="width:36px"><input type="checkbox" id="apo-chk-all" checked></th>
+      <th>Email</th><th>Name</th><th>Title</th><th>Company</th><th>Confidence</th><th style="width:90px"></th>
+    </tr></thead><tbody>${people.map((p, i) => {
+      const conf = p.confidence || 0;
+      const confColor = conf > 70 ? '#10d98a' : conf > 40 ? '#f59e0b' : 'var(--text3)';
+      const initial = (p.first_name || p.email[0] || '?')[0].toUpperCase();
+      const name = (p.first_name + ' ' + p.last_name).trim() || '—';
+      return `<tr class="hun-tr">
+        <td><input type="checkbox" class="apo-chk" data-i="${i}" checked></td>
+        <td><span class="hun-email-chip">${escHtml(p.email)}</span></td>
+        <td><div class="hun-name-cell"><div class="hun-av" style="background:${COLS[i%5]}20;color:${COLS[i%5]}">${initial}</div><span>${escHtml(name)}</span></div></td>
+        <td class="hun-td-muted">${escHtml(p.title||'—')}</td>
+        <td class="hun-td-muted">${escHtml(p.company||'—')}</td>
+        <td><div class="hun-conf-bar"><div class="hun-conf-fill" style="width:${conf}%;background:${confColor}"></div></div><span style="font-size:11px;color:${confColor};font-weight:600">${conf}%</span></td>
+        <td><button class="hun-row-btn" data-i="${i}">+ Add</button></td>
+      </tr>`;
+    }).join('')}</tbody></table></div>`;
 
-    wrap.querySelectorAll('.apo-row-btn').forEach(btn => btn.addEventListener('click', () => {
+    wrap.querySelector('#apo-chk-all')?.addEventListener('change', e => {
+      wrap.querySelectorAll('.apo-chk').forEach(c => { c.checked = e.target.checked; });
+    });
+    wrap.querySelectorAll('.hun-row-btn').forEach(btn => btn.addEventListener('click', () => {
       ApolloPage._addToEmail([people[parseInt(btn.dataset.i)]]);
     }));
     document.getElementById('apo-export-email').addEventListener('click', () => {
