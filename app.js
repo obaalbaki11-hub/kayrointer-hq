@@ -738,8 +738,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','settings','plans','security','skills'],
-  growth:     ['hq','tasks','spreadsheet','email','design','memory','ops','kling','compete','apollo','meta','automations','settings','plans','security','skills'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','memory','ops','compete','settings','plans','security','skills'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -1336,7 +1336,7 @@ const AppTools = {
       name: 'navigate_to',
       description: 'Navigate the user to a specific page in the app.',
       input_schema: { type:'object', properties: {
-        page: { type:'string', enum:['tasks','spreadsheet','email','memory','hq','design','reports','compete','kling','security'], description:'Page to navigate to' },
+        page: { type:'string', enum:['tasks','spreadsheet','email','memory','hq','design','adstudio','compete','security'], description:'Page to navigate to' },
       }, required:['page'] }
     },
     {
@@ -2188,13 +2188,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, kling:KlingPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',kling:'Kling AI — Video Studio',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -6792,12 +6792,6 @@ const Settings = {
           <input class="form-input" id="s-platform-hunter-key" type="password" value="${escHtml(s.platformHunterKey||'')}" placeholder="Your Hunter.io API key — users on Growth+ use this automatically" autocomplete="off">
           <div class="form-hint" style="margin-top:8px">Growth+ users can find leads without entering their own Hunter key. You cover the cost. Get your key at <b>hunter.io/api-keys</b>.<br>💰 Cost est: ~$0.05/search · Growth allows 5/day · Scale 15/day. Budget ~$0.25/user/day max.</div>
         </div>
-        <div style="background:rgba(167,139,250,.06);border:1px solid rgba(167,139,250,.2);border-radius:10px;padding:14px 16px;margin-bottom:16px">
-          <div style="font-size:11px;font-weight:700;color:var(--purple);letter-spacing:.5px;margin-bottom:6px">🎬 PLATFORM KLING KEYS (OWNER ONLY)</div>
-          <input class="form-input" id="s-platform-kling-id" type="text" value="${escHtml(s.platformKlingKeyId||'')}" placeholder="Access Key ID — Scale+ users generate videos on your account" autocomplete="off" style="margin-bottom:8px">
-          <input class="form-input" id="s-platform-kling-secret" type="password" value="${escHtml(s.platformKlingKeySecret||'')}" placeholder="Access Key Secret" autocomplete="off">
-          <div class="form-hint" style="margin-top:8px">Scale+ users can generate videos without their own Kling keys. Get keys at <b>klingai.com → Developer → API Keys</b>.<br>💰 Cost est: ~$0.14/video (10s) · ~$0.07/video (5s) · ~$0.28/image. Budget accordingly.</div>
-        </div>
         <div style="background:rgba(59,130,246,.04);border:1px solid rgba(59,130,246,.1);border-radius:10px;padding:12px 16px;margin-bottom:16px">
           <div style="font-size:11px;font-weight:700;color:var(--accent);letter-spacing:.5px;margin-bottom:4px">📊 META ADS — USER-OWNED ONLY</div>
           <div class="form-hint">Meta Ads cannot use a platform key — each user must connect their own Meta Business account. This is a Meta API restriction: tokens are tied to individual business accounts. Users enter their own token in the Meta Ads page.</div>
@@ -6835,20 +6829,6 @@ const Settings = {
     if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: cors });
     const url = new URL(req.url);
     const target = url.searchParams.get('t');
-    if (target === 'kling') {
-      const path = url.searchParams.get('p') || '/v1/videos/text2video';
-      const auth = req.headers.get('Authorization') || '';
-      const body = req.method === 'POST' ? await req.text() : undefined;
-      const resp = await fetch('https://api.klingai.com' + path, {
-        method: req.method,
-        headers: { 'Content-Type': 'application/json', 'Authorization': auth },
-        body,
-      });
-      return new Response(resp.body, {
-        status: resp.status,
-        headers: { ...cors, 'Content-Type': resp.headers.get('Content-Type') || 'application/json' },
-      });
-    }
     if (target === 'tavily') {
       const body = await req.text();
       const parsed = JSON.parse(body);
@@ -7002,16 +6982,12 @@ const Settings = {
       const pk  = document.getElementById('s-platform-key').value.trim();
       const psk = document.getElementById('s-platform-search-key').value.trim();
       const phk = document.getElementById('s-platform-hunter-key').value.trim();
-      const pki = document.getElementById('s-platform-kling-id').value.trim();
-      const pks = document.getElementById('s-platform-kling-secret').value.trim();
       const k   = document.getElementById('s-apikey').value.trim();
       const m   = document.getElementById('s-model').value;
       const px  = document.getElementById('s-proxy-url').value.trim();
       State.settings.platformApiKey = pk;
       State.settings.platformSearchKey = psk;
       State.settings.platformHunterKey = phk;
-      State.settings.platformKlingKeyId = pki;
-      State.settings.platformKlingKeySecret = pks;
       State.settings.apiKey = k;
       State.settings.model = m;
       State.settings.proxyUrl = px;
@@ -7517,23 +7493,45 @@ const AdStudio = {
     status.textContent = `Creating ${fmt.w}×${fmt.h} ad with Opus 4.7…`;
     preview.innerHTML = `<div class="ads-loading"><div class="ads-load-ring"></div><div class="ads-load-txt">Generating your ad…</div></div>`;
 
-    const sys = `You are a world-class motion designer and ad creative director. Your job is to write a single, complete, self-contained HTML document that is a stunning animated advertisement.
+    const sys = `You are the world's best digital ad creative director and motion designer. Output ONE complete self-contained HTML document — a stunning, production-ready animated advertisement.
 
-CRITICAL RULES:
-- Output ONLY raw HTML — no markdown, no code blocks, no explanations
-- The HTML must be completely self-contained (no external dependencies, no CDN links, no Google Fonts)
-- The ad must exactly fit ${fmt.w}×${fmt.h}px — set html,body to width:${fmt.w}px height:${fmt.h}px, overflow:hidden, margin:0
-- Use CSS keyframe animations — make them smooth, professional, and timed well
-- JavaScript is allowed for countdowns, particle systems, canvas, WebGL effects
-- Every element must animate — static ads are unacceptable
-- Make it production-quality — this could run as a real paid ad
-- Animation style: ${anim}
-- Typical ad duration: 6–15 seconds with looping animations`;
+ABSOLUTE RULES — zero exceptions:
+- Output RAW HTML ONLY. No markdown, no \`\`\` fences, no preamble, no explanation. First character must be <
+- Fully self-contained: no CDN, no external fonts, no external images, no fetch calls
+- Canvas size: html,body { width:${fmt.w}px; height:${fmt.h}px; margin:0; padding:0; overflow:hidden; }
+- Every single element MUST animate — a static element = failure
+- CTA button required — must pulse or glow with a looping animation
+- Animations loop infinitely and seamlessly
+- Total story arc: 0–2s entrance → 2–8s hero moment → 8s+ ambient loop + CTA pulse
+
+VISUAL QUALITY STANDARDS (think: Apple, Nike, Gucci production):
+- Typography: huge bold headlines (80–150px), tight letter-spacing, all-caps where impactful. Use SVG <text> with linearGradient for gradient type. Stack fonts: system-ui, -apple-system, 'Helvetica Neue', sans-serif.
+- Color: deep rich backgrounds (#050505, #0a0010, #001a0a etc). Vivid accent glows. NO flat pastel default colors.
+- Depth: multi-layer box-shadow (5+ layers), blur overlays, CSS perspective transforms for 3D panels.
+- Glassmorphism: background:rgba(255,255,255,0.06); backdrop-filter:blur(20px); border:1px solid rgba(255,255,255,0.12); border-radius:16px;
+- Particles/effects: use <canvas> + requestAnimationFrame for floating particles, sparkles, aurora, or trails when it elevates the ad.
+- Noise/grain overlay: add an SVG feTurbulence filter div at 3% opacity for cinematic texture.
+- Glow effects: text-shadow: 0 0 40px color, 0 0 80px color, 0 0 120px color for neon/luminous text.
+
+STYLE-SPECIFIC DIRECTION — ${AdStudio._anim}:
+${({
+  cinematic: `Slow dramatic reveals at cubic-bezier(0.16,1,0.3,1). Film noir palette — deep blacks, desaturated mid-tones, single golden/teal accent. Letter-by-letter text stagger using JS split+delay. Add SVG film grain overlay. Cinematic wide letterbox bars (top/bottom 8% black).`,
+  energetic: `Fast snappy animations (0.15–0.3s). Electric palette — neon blue #00d4ff, hot yellow #ffee00, black. Bold ALL-CAPS. Glitch effect on key text (alternating clip-path slices). Speed lines using CSS gradients. Elements slam in from off-screen.`,
+  luxury: `Ultra-slow reveals (1.5–3s each, cubic-bezier(0.16,1,0.3,1)). Gold #d4af37 + warm cream #f5f0e8 on deep black #070603. Thin elegant serif stack. Fine underline reveals. Champagne particle shimmer. NO rushed movements.`,
+  minimal: `Clean whitespace — lots of it. Single dominant accent color on white or near-black. Geometric precision. Smooth opacity fades (0→1 over 1.5s). One hero typographic element at massive scale. Restrained, confident.`,
+  neon: `True dark background #050505. Neon sign palette — magenta, cyan, lime. Text-shadow cascade: 0 0 7px #fff, 0 0 10px #fff, 0 0 21px color, 0 0 42px color, 0 0 82px color. SVG scanlines overlay at 4% opacity. Animated neon flicker using opacity keyframes. Retro grid floor in CSS perspective.`,
+  gradient: `Animated mesh gradient background — use conic-gradient + multiple radial overlays animated with @keyframes. Aurora borealis effect using blurred colored blobs (absolute positioned, filter:blur(80px), animated position). Rainbow gradient text via background-clip:text. Color-shift everything.`,
+}[AdStudio._anim] || 'Make it visually spectacular with rich depth, bold type, and fluid motion.')}
+
+USER REQUEST: ${prompt}
+FORMAT: ${fmt.w}×${fmt.h}px (${fmt.label})
+
+Now write the complete HTML document. Start immediately with <!DOCTYPE html>.`;
 
     let html = '';
     try {
       for await (const chunk of AI.stream(
-        [{ role:'user', content:`Create this ad (${fmt.w}×${fmt.h}px, ${AdStudio._anim} style): ${prompt}` }],
+        [{ role:'user', content:`Create the ad. Output only raw HTML starting with <!DOCTYPE html>.` }],
         sys,
         { search:false, appTools:false, max_tokens:8192, model:'claude-opus-4-7' }
       )) html += chunk;
@@ -7716,35 +7714,113 @@ const BrainPage = {
   init(container) {
     document.getElementById('topbar-right').innerHTML = `
       <button class="tb-btn primary" id="brain-feed-btn">📥 Feed the Brain</button>
-      <button class="tb-btn" id="brain-add-btn">+ Add Fact</button>
+      <button class="tb-btn" id="brain-add-btn">+ Remember</button>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
     document.getElementById('brain-add-btn').addEventListener('click',()=>BrainPage._openAddFact());
     document.getElementById('brain-feed-btn').addEventListener('click',()=>BrainPage._openFeed());
+
+    const pillars = [
+      { n:'1', title:'Externalise Memory', sub:'recall → retrieval', icon:'🗂️', color:'#22c55e' },
+      { n:'2', title:'Create Knowledge Network', sub:'folders → graphs', icon:'🕸️', color:'#3b82f6' },
+      { n:'3', title:'Turn Info into Thinking', sub:'consumption → synthesis', icon:'✏️', color:'#a855f7' },
+      { n:'4', title:'Build Long-term Assets', sub:'short-term → evergreen', icon:'🌱', color:'#f59e0b' },
+      { n:'5', title:'Support Output', sub:'knowing → creating', icon:'📄', color:'#06b6d4' },
+      { n:'6', title:'Capture Context Over Time', sub:'moments → evolution', icon:'⏱️', color:'#10b981' },
+    ];
+
     container.innerHTML = `<div class="page-scroll" id="brain-page">
-      <div class="brain-header">
-        <div>
-          <div class="section-title">Company Brain</div>
-          <div class="section-sub">Your team's collective intelligence. Feed it content, and every AI employee will know it.</div>
+
+      <!-- HERO -->
+      <div class="brain-hero">
+        <div class="brain-hero-left">
+          <div class="brain-hero-eyebrow">SECOND BRAIN</div>
+          <div class="brain-hero-title">Your Company's<br><span class="brain-hero-grad">Collective Mind</span></div>
+          <div class="brain-hero-sub">Feed it content — every AI employee instantly knows it. Store, search, and recall anything with semantic understanding.</div>
+          <div class="brain-action-row">
+            <button class="brain-action-btn" id="brain-act-remember" style="--ac:#6366f1">
+              <span class="brain-act-icon">🧠</span>
+              <div><div class="brain-act-label">remember</div><div class="brain-act-desc">Save anything important</div></div>
+            </button>
+            <button class="brain-action-btn" id="brain-act-recall" style="--ac:#3b82f6">
+              <span class="brain-act-icon">🔍</span>
+              <div><div class="brain-act-label">recall</div><div class="brain-act-desc">Find what matters</div></div>
+            </button>
+            <button class="brain-action-btn" id="brain-act-feed" style="--ac:#10b981">
+              <span class="brain-act-icon">📥</span>
+              <div><div class="brain-act-label">list_recent</div><div class="brain-act-desc">See your latest memories</div></div>
+            </button>
+            <button class="brain-action-btn" id="brain-act-forget" style="--ac:#ef4444">
+              <span class="brain-act-icon">🗑️</span>
+              <div><div class="brain-act-label">forget</div><div class="brain-act-desc">Remove what you don't need</div></div>
+            </button>
+          </div>
+          <div class="brain-hero-tagline">4 actions. One second brain. Unlimited context.</div>
         </div>
-        <div class="brain-stats" id="brain-stats"></div>
+        <div class="brain-hero-right">
+          <div class="brain-visual">
+            <div class="brain-orb"></div>
+            <div class="brain-ring brain-ring-1"></div>
+            <div class="brain-ring brain-ring-2"></div>
+            <div class="brain-ring brain-ring-3"></div>
+            <div class="brain-node" style="--x:-90px;--y:-60px;--d:0s"><span>🏢</span></div>
+            <div class="brain-node" style="--x:90px;--y:-50px;--d:.4s"><span>🤖</span></div>
+            <div class="brain-node" style="--x:-100px;--y:40px;--d:.8s"><span>💡</span></div>
+            <div class="brain-node" style="--x:95px;--y:55px;--d:1.2s"><span>📊</span></div>
+            <div class="brain-node" style="--x:0px;--y:-110px;--d:.6s"><span>🔍</span></div>
+            <div class="brain-node" style="--x:0px;--y:115px;--d:1s"><span>⚡</span></div>
+            <div class="brain-stat-badge" id="brain-stats"></div>
+          </div>
+        </div>
       </div>
-      <div class="brain-controls">
-        <input class="brain-search" id="brain-search" type="text" placeholder="🔍  Search knowledge base…">
-        <div class="brain-cat-tabs" id="brain-cat-tabs"></div>
+
+      <!-- 6 PILLARS -->
+      <div class="brain-pillars">
+        ${pillars.map(p=>`<div class="brain-pillar-card" style="--pc:${p.color}">
+          <div class="brain-pillar-num" style="background:${p.color}18;color:${p.color}">${p.n}</div>
+          <div class="brain-pillar-icon">${p.icon}</div>
+          <div class="brain-pillar-title">${p.title}</div>
+          <div class="brain-pillar-sub">${p.sub}</div>
+        </div>`).join('')}
       </div>
-      <div id="brain-facts-grid"></div>
+
+      <!-- KNOWLEDGE BASE -->
+      <div class="brain-kb-section">
+        <div class="brain-kb-hdr">
+          <div class="brain-kb-title">Knowledge Base</div>
+          <div class="brain-controls-row">
+            <input class="brain-search" id="brain-search" type="text" placeholder="🔍  Recall anything…">
+            <div class="brain-cat-tabs" id="brain-cat-tabs"></div>
+          </div>
+        </div>
+        <div id="brain-facts-grid"></div>
+      </div>
+
     </div>`;
+
     document.getElementById('brain-search').addEventListener('input', e => {
       BrainPage._searchQ = e.target.value.trim().toLowerCase();
       BrainPage._renderFacts();
+    });
+    document.getElementById('brain-act-remember').addEventListener('click',()=>BrainPage._openAddFact());
+    document.getElementById('brain-act-recall').addEventListener('click',()=>document.getElementById('brain-search').focus());
+    document.getElementById('brain-act-feed').addEventListener('click',()=>BrainPage._openFeed());
+    document.getElementById('brain-act-forget').addEventListener('click',()=>{
+      if (!State.brain.facts.length) { toast('Brain is already empty','info'); return; }
+      const cat = BrainPage._filterCat;
+      const target = cat==='all' ? 'ALL knowledge' : `all "${cat}" facts`;
+      if (!confirm(`Delete ${target}? This cannot be undone.`)) return;
+      if (cat==='all') State.brain.facts = [];
+      else State.brain.facts = State.brain.facts.filter(f=>f.category!==cat);
+      save('brain');
+      BrainPage._renderTabs(); BrainPage._renderFacts(); BrainPage._renderStats();
+      toast('Removed from Brain','success');
     });
     BrainPage._filterCat = 'all';
     BrainPage._searchQ = '';
     BrainPage._renderTabs();
     BrainPage._renderFacts();
     BrainPage._renderStats();
-    // Migrate old memory entries into brain on first visit
     BrainPage._migrateMemory();
   },
 
@@ -7770,11 +7846,7 @@ const BrainPage = {
   _renderStats() {
     const el = document.getElementById('brain-stats'); if(!el) return;
     const total = State.brain.facts.length;
-    const cats = Object.keys(BRAIN_CATEGORIES).map(k => {
-      const count = State.brain.facts.filter(f=>f.category===k).length;
-      return count ? `<span class="brain-stat-pill" style="background:${BRAIN_CATEGORIES[k].color}22;color:${BRAIN_CATEGORIES[k].color}">${BRAIN_CATEGORIES[k].emoji} ${count}</span>` : '';
-    }).filter(Boolean).join('');
-    el.innerHTML = `<span style="font-size:13px;color:var(--text2)">${total} fact${total!==1?'s':''} stored</span>${cats}`;
+    el.innerHTML = `<div style="font-size:28px;font-weight:900;color:#fff;line-height:1">${total}</div><div style="font-size:11px;color:rgba(255,255,255,.6);margin-top:2px">memories stored</div>`;
   },
 
   _renderTabs() {
@@ -7965,7 +8037,7 @@ const PlansPage = {
           { ok:false, text:'Claude AI included (no key needed)' },
           { ok:false, text:'Internet search for agents' },
           { ok:false, text:'Apollo.io lead search' },
-          { ok:false, text:'Meta Ads & Kling Video' },
+          { ok:false, text:'Apollo.io & Meta Ads' },
         ],
         cta: current==='free' ? 'Current Plan' : 'Downgrade',
         ctaStyle: 'secondary',
@@ -7983,7 +8055,7 @@ const PlansPage = {
           { ok:true,  text:'Spreadsheet & Cold Email' },
           { ok:true,  text:'Design Studio & Brain' },
           { ok:true,  text:'Apollo.io & Meta Ads' },
-          { ok:false, text:'Kling AI video generation' },
+          { ok:false, text:'Ad Studio — HTML animated ads' },
         ],
         cta: current==='growth' ? 'Current Plan' : 'Upgrade to Growth',
         ctaStyle: current==='growth' ? 'secondary' : 'primary',
@@ -7994,7 +8066,7 @@ const PlansPage = {
         tagline: 'Full power — your own API keys',
         features: [
           { ok:true,  text:'Everything in Growth' },
-          { ok:true,  text:'Kling AI video generation', accent: true },
+          { ok:true,  text:'Ad Studio — HTML animated ads', accent: true },
           { ok:true,  text:'15 internet searches/day for staff' },
           { ok:true,  text:'Own Anthropic key (you control costs)' },
           { ok:true,  text:'5 team seats' },
@@ -8230,285 +8302,6 @@ const PlansPage = {
     if (upgradeBtn && PlanGate.current() !== 'free') upgradeBtn.textContent = '⭐ Manage Plan';
   },
 };
-
-// ══════════════════════════════════════════════════════════════
-//  KLING AI VIDEO PAGE
-// ══════════════════════════════════════════════════════════════
-const KlingPage = {
-  _pollTimer: null,
-  _imgBase64: null,
-  _tab: 'text2video',
-  _gallery: [],
-
-  init(container) {
-    KlingPage._gallery = JSON.parse(localStorage.getItem('kayro_kling_gallery') || '[]');
-    const s = State.settings;
-    container.innerHTML = `<div class="page-scroll"><div class="kling-root">
-      <div class="kling-sidebar">
-        <div class="kling-logo-row">
-          <div class="kling-logo-icon">K</div>
-          <span class="kling-logo-text">Kling AI</span>
-          <span class="kling-badge">Video</span>
-        </div>
-        <div class="card-box" style="margin-bottom:16px">
-          <div style="background:rgba(16,217,138,.08);border:1px solid rgba(16,217,138,.2);border-radius:8px;padding:10px 12px;font-size:12px;color:var(--green)">✅ Powered by Kayro — generate videos instantly, no key needed</div>
-        </div>
-        <div class="card-box">
-          <div class="field-label">Model</div>
-          <select class="form-input" id="kling-model" style="margin-bottom:10px">
-            <option value="kling-v1-6">Kling v1.6 — Latest</option>
-            <option value="kling-v1-5">Kling v1.5</option>
-            <option value="kling-v1">Kling v1</option>
-          </select>
-          <div class="field-label">Mode</div>
-          <select class="form-input" id="kling-mode" style="margin-bottom:10px">
-            <option value="std">Standard — faster</option>
-            <option value="pro">Pro — higher quality</option>
-          </select>
-          <div class="field-label">Duration</div>
-          <select class="form-input" id="kling-duration" style="margin-bottom:10px">
-            <option value="5">5 seconds</option>
-            <option value="10">10 seconds</option>
-          </select>
-          <div class="field-label">Aspect Ratio</div>
-          <select class="form-input" id="kling-ratio">
-            <option value="16:9">16:9 — Landscape</option>
-            <option value="9:16">9:16 — Portrait / Reels</option>
-            <option value="1:1">1:1 — Square</option>
-          </select>
-        </div>
-      </div>
-      <div class="kling-main">
-        <div class="kling-tabs">
-          <button class="kling-tab active" data-tab="text2video">✍️ Text to Video</button>
-          <button class="kling-tab" data-tab="image2video">🖼️ Image to Video</button>
-          <button class="kling-tab" data-tab="gallery">🎬 Gallery (${KlingPage._gallery.length})</button>
-        </div>
-        <div id="kling-tab-body" class="kling-tab-body"></div>
-      </div>
-    </div></div>`;
-
-    document.querySelectorAll('.kling-tab').forEach(t => t.addEventListener('click', () => {
-      document.querySelectorAll('.kling-tab').forEach(x => x.classList.remove('active'));
-      t.classList.add('active');
-      KlingPage._tab = t.dataset.tab;
-      KlingPage._renderTab();
-    }));
-
-    KlingPage._renderTab();
-  },
-
-  _renderTab() {
-    const body = document.getElementById('kling-tab-body');
-    if (!body) return;
-    const tab = KlingPage._tab;
-    if (tab === 'text2video') {
-      body.innerHTML = `<div class="kling-gen-area">
-        <div class="field-label">Prompt</div>
-        <textarea class="form-input kling-prompt" id="kling-prompt" rows="5" placeholder="Describe your video in detail — subjects, actions, camera movement, lighting, style… e.g. &quot;A golden retriever runs through a sunlit meadow, slow motion, cinematic 4K, shallow depth of field&quot;"></textarea>
-        <div style="display:flex;justify-content:space-between;margin-top:4px;margin-bottom:14px">
-          <div class="field-hint">Tips: add camera movement (slow zoom, pan left), lighting (golden hour, neon), and style (cinematic, anime, hyperrealistic)</div>
-          <span id="kling-prompt-count" style="font-size:11px;color:var(--text3);white-space:nowrap">0 / 2500</span>
-        </div>
-        <div class="field-label">Negative Prompt <span style="font-weight:400;color:var(--text3)">(optional)</span></div>
-        <textarea class="form-input" id="kling-neg-prompt" rows="2" style="margin-bottom:16px" placeholder="blur, distortion, low quality, watermark…"></textarea>
-        <button class="btn-primary kling-gen-btn" id="kling-generate">🎬 Generate Video</button>
-        <div id="kling-status-area" style="margin-top:16px"></div>
-      </div>`;
-      const prompt = document.getElementById('kling-prompt');
-      prompt.addEventListener('input', () => { document.getElementById('kling-prompt-count').textContent = `${prompt.value.length} / 2500`; });
-      document.getElementById('kling-generate').addEventListener('click', () => KlingPage._generate('text'));
-    } else if (tab === 'image2video') {
-      body.innerHTML = `<div class="kling-gen-area">
-        <div class="field-label">Source Image</div>
-        <div class="kling-img-drop" id="kling-img-drop">
-          <div class="kling-img-drop-inner" id="kling-drop-inner">
-            <div style="font-size:36px;margin-bottom:8px">🖼️</div>
-            <div style="font-weight:600;color:var(--text1);margin-bottom:4px">Drop image here or click to upload</div>
-            <div class="field-hint">JPG, PNG, WebP — max 10MB</div>
-          </div>
-          <input type="file" id="kling-img-input" accept="image/*" style="position:absolute;inset:0;opacity:0;cursor:pointer">
-          <img id="kling-img-preview" style="display:none;max-height:220px;max-width:100%;border-radius:8px;margin-top:12px;object-fit:contain">
-        </div>
-        <div class="field-label" style="margin-top:16px">Motion Prompt <span style="font-weight:400;color:var(--text3)">(optional)</span></div>
-        <textarea class="form-input" id="kling-img-prompt" rows="3" style="margin-bottom:16px" placeholder="Describe the motion: camera slowly zooms in, leaves fall, character turns to look at camera…"></textarea>
-        <button class="btn-primary kling-gen-btn" id="kling-img-generate">🎬 Animate Image</button>
-        <div id="kling-img-status-area" style="margin-top:16px"></div>
-      </div>`;
-      const input = document.getElementById('kling-img-input');
-      const preview = document.getElementById('kling-img-preview');
-      const dropInner = document.getElementById('kling-drop-inner');
-      input.addEventListener('change', () => {
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = e => {
-          KlingPage._imgBase64 = e.target.result.split(',')[1];
-          preview.src = e.target.result;
-          preview.style.display = 'block';
-          dropInner.style.display = 'none';
-        };
-        reader.readAsDataURL(file);
-      });
-      const drop = document.getElementById('kling-img-drop');
-      ['dragover','dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
-        e.preventDefault();
-        if (ev === 'dragover') drop.classList.add('drag-over');
-        else {
-          drop.classList.remove('drag-over');
-          if (ev === 'drop' && e.dataTransfer.files[0]) {
-            const dt = new DataTransfer(); dt.items.add(e.dataTransfer.files[0]);
-            input.files = dt.files; input.dispatchEvent(new Event('change'));
-          }
-        }
-      }));
-      document.getElementById('kling-img-generate').addEventListener('click', () => KlingPage._generate('image'));
-    } else if (tab === 'gallery') {
-      KlingPage._renderGallery();
-    }
-  },
-
-  async _genJWT() {
-    const id     = (State.settings.klingKeyId || State.settings.platformKlingKeyId || '').trim();
-    const secret = (State.settings.klingKeySecret || State.settings.platformKlingKeySecret || '').trim();
-    if (!id || !secret) return null;
-    const enc = new TextEncoder();
-    const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr))).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-    const header = toB64u(enc.encode(JSON.stringify({alg:'HS256',typ:'JWT'})));
-    const now = Math.floor(Date.now()/1000);
-    const payload = toB64u(enc.encode(JSON.stringify({iss:id, exp:now+1800, nbf:now-5})));
-    const unsigned = `${header}.${payload}`;
-    const key = await crypto.subtle.importKey('raw', enc.encode(secret), {name:'HMAC',hash:'SHA-256'}, false, ['sign']);
-    const sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsigned));
-    return `${unsigned}.${toB64u(sig)}`;
-  },
-
-  async _klingFetch(path, method='GET', body=null) {
-    const url = `${BACKEND_URL}/api/kling${path}`;
-    const opts = { method, headers: { 'Content-Type': 'application/json' } };
-    if (body) opts.body = JSON.stringify(body);
-    const res = await fetch(url, opts);
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(data.message || data.error || `HTTP ${res.status} — re-enter Kling keys in Cloudflare`);
-    if (data.code !== 0 && data.code !== undefined) throw new Error(data.message || `Kling error (code ${data.code})`);
-    return data;
-  },
-
-  async _generate(type) {
-    const model = document.getElementById('kling-model').value;
-    const mode = document.getElementById('kling-mode').value;
-    const duration = document.getElementById('kling-duration').value;
-    const ratio = document.getElementById('kling-ratio').value;
-    const statusId = type === 'text' ? 'kling-status-area' : 'kling-img-status-area';
-    const btnId = type === 'text' ? 'kling-generate' : 'kling-img-generate';
-    const btn = document.getElementById(btnId);
-    const statusEl = document.getElementById(statusId);
-    btn.disabled = true; btn.textContent = 'Submitting…';
-    statusEl.innerHTML = '<div class="kling-progress"><div class="kling-spinner"></div><span>Submitting to Kling AI…</span></div>';
-    try {
-      let reqBody, prompt;
-      if (type === 'text') {
-        prompt = (document.getElementById('kling-prompt').value||'').trim();
-        const neg = (document.getElementById('kling-neg-prompt').value||'').trim();
-        if (!prompt) { toast('Enter a prompt first', 'error'); btn.disabled=false; btn.textContent='🎬 Generate Video'; statusEl.innerHTML=''; return; }
-        reqBody = { model, prompt, mode, duration, aspect_ratio: ratio, cfg_scale: 0.5 };
-        if (neg) reqBody.negative_prompt = neg;
-      } else {
-        if (!KlingPage._imgBase64) { toast('Upload an image first', 'error'); btn.disabled=false; btn.textContent='🎬 Animate Image'; statusEl.innerHTML=''; return; }
-        prompt = (document.getElementById('kling-img-prompt').value||'').trim() || 'Animate the image with natural motion';
-        reqBody = { model, image: KlingPage._imgBase64, prompt, mode, duration, cfg_scale: 0.5 };
-      }
-      const endpoint = type === 'text' ? '/v1/videos/text2video' : '/v1/videos/image2video';
-      const res = await KlingPage._klingFetch(endpoint, 'POST', reqBody);
-      const taskId = res.data?.task_id;
-      if (!taskId) throw new Error('No task ID returned from Kling');
-      statusEl.querySelector('span').textContent = `Task submitted (ID: ${taskId}) — generating video, this takes 2–5 minutes…`;
-      KlingPage._poll(taskId, type, prompt, model, duration, ratio, statusEl, btn);
-    } catch(e) {
-      statusEl.innerHTML = `<div class="kling-error">❌ ${escHtml(e.message)}</div>`;
-      btn.disabled = false;
-      btn.textContent = type === 'text' ? '🎬 Generate Video' : '🎬 Animate Image';
-    }
-  },
-
-  _poll(taskId, type, prompt, model, duration, ratio, statusEl, btn) {
-    let attempts = 0;
-    const endpoint = `/v1/videos/${type === 'text' ? 'text2video' : 'image2video'}/${taskId}`;
-    const timer = setInterval(async () => {
-      attempts++;
-      if (attempts > 72) {
-        clearInterval(timer);
-        statusEl.innerHTML = '<div class="kling-error">⏱️ Timed out after 12 minutes. Check your Kling dashboard for the video.</div>';
-        btn.disabled = false; btn.textContent = '🎬 Generate Video'; return;
-      }
-      try {
-        const res = await KlingPage._klingFetch(endpoint, 'GET');
-        const task = res.data;
-        const s = task?.task_status;
-        const sp = statusEl.querySelector('span');
-        if (sp) sp.textContent = `Status: ${s} — checking every 10s (${attempts} checks)`;
-        if (s === 'succeed') {
-          clearInterval(timer);
-          const video = task.task_result?.videos?.[0];
-          if (!video?.url) throw new Error('No video URL in Kling result');
-          KlingPage._showResult(video.url, prompt, statusEl, btn, type);
-          KlingPage._saveToGallery({ prompt, url: video.url, model, duration, ratio });
-        } else if (s === 'failed') {
-          clearInterval(timer);
-          statusEl.innerHTML = `<div class="kling-error">❌ Generation failed: ${escHtml(task.task_status_msg||'Unknown error')}</div>`;
-          btn.disabled = false; btn.textContent = type === 'text' ? '🎬 Generate Video' : '🎬 Animate Image';
-        }
-      } catch(_) {}
-    }, 10000);
-    KlingPage._pollTimer = timer;
-  },
-
-  _showResult(url, prompt, statusEl, btn, type) {
-    statusEl.innerHTML = `<div class="kling-result">
-      <div class="kling-result-hdr">✅ Video ready!</div>
-      <video class="kling-video" src="${escHtml(url)}" controls autoplay loop playsinline></video>
-      <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
-        <a href="${escHtml(url)}" download="kling-video.mp4" class="btn-primary" style="text-decoration:none">⬇️ Download MP4</a>
-        <button class="btn" onclick="navigator.clipboard.writeText('${url.replace(/'/g,"\\'")}');toast('URL copied ✓','success')">📋 Copy URL</button>
-      </div>
-    </div>`;
-    btn.disabled = false;
-    btn.textContent = type === 'text' ? '🎬 Generate Another' : '🎬 Animate Another';
-  },
-
-  _saveToGallery(item) {
-    KlingPage._gallery.unshift({ id: uid(), ...item, created: Date.now() });
-    if (KlingPage._gallery.length > 50) KlingPage._gallery.pop();
-    localStorage.setItem('kayro_kling_gallery', JSON.stringify(KlingPage._gallery));
-    const tab = document.querySelector('.kling-tab[data-tab="gallery"]');
-    if (tab) tab.textContent = `🎬 Gallery (${KlingPage._gallery.length})`;
-  },
-
-  _renderGallery() {
-    const body = document.getElementById('kling-tab-body');
-    if (!KlingPage._gallery.length) {
-      body.innerHTML = `<div class="meta-empty"><div style="font-size:48px;margin-bottom:16px">🎬</div><div style="font-size:18px;font-weight:700;color:var(--text1);margin-bottom:8px">No Videos Yet</div><div style="color:var(--text2);font-size:14px">Generated videos appear here automatically</div></div>`;
-      return;
-    }
-    body.innerHTML = `<div class="kling-gallery">${KlingPage._gallery.map(v => `
-      <div class="kling-gallery-card">
-        <video class="kling-gallery-video" src="${escHtml(v.url)}" loop muted playsinline></video>
-        <div class="kling-gallery-overlay">
-          <button class="btn" onclick="this.closest('.kling-gallery-card').querySelector('video').play()">▶ Play</button>
-          <a href="${escHtml(v.url)}" download class="btn-primary" style="text-decoration:none">⬇️</a>
-        </div>
-        <div class="kling-gallery-meta">
-          <div class="kling-gallery-prompt">${escHtml(v.prompt||'Video')}</div>
-          <div class="kling-gallery-info">
-            <span class="ds-gallery-type">${escHtml(v.model||'')}</span>
-            <span class="ds-gallery-type">${escHtml(v.duration||'')}s</span>
-            <span class="ds-gallery-type">${escHtml(v.ratio||'')}</span>
-          </div>
-        </div>
-      </div>`).join('')}</div>`;
-  },
-};
-
 // ══════════════════════════════════════════════════════════════
 //  APOLLO.IO PAGE
 // ══════════════════════════════════════════════════════════════

@@ -49,7 +49,6 @@ export default {
       if (path === '/api/ai')                  return (env.AWS_ACCESS_KEY_ID ? handleAIBedrock : handleAI)(request, env, origin);
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
-      if (path.startsWith('/api/kling'))       return handleKling(request, env, origin, path);
       if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
       if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
 
@@ -237,9 +236,7 @@ async function handleAI(request, env, origin) {
     return json({ error: { message: 'Invalid request body' } }, 400, origin);
   }
 
-  // Streaming from Workers to Anthropic is blocked by WAF — use non-streaming and re-emit as SSE
   const wasStream = bodyObj.stream === true;
-  bodyObj.stream = false;
 
   const res = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
@@ -247,63 +244,32 @@ async function handleAI(request, env, origin) {
       'Content-Type': 'application/json',
       'x-api-key': key,
       'anthropic-version': '2023-06-01',
-      'User-Agent': 'kayro-worker/1.0',
     },
     body: JSON.stringify(bodyObj),
   });
 
   if (!res.ok) {
-    const errBody = await res.text();
-    return new Response(errBody, {
+    const errText = await res.text();
+    let errBody;
+    try { errBody = JSON.parse(errText); } catch { errBody = { error: { message: errText } }; }
+    // Surface rate-limit info clearly
+    if (res.status === 429) errBody.error = { message: 'Rate limit hit — add AWS Bedrock creds to bypass, or wait a moment.' };
+    return new Response(JSON.stringify(errBody), {
       status: res.status,
       headers: { ...cors(origin), 'Content-Type': 'application/json' },
     });
   }
 
-  const data = await res.json();
-
-  // Non-streaming caller: return JSON as-is
-  if (!wasStream) {
-    return json(data, 200, origin);
+  // Streaming: proxy Anthropic SSE directly to client
+  if (wasStream) {
+    return new Response(res.body, {
+      status: 200,
+      headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
+    });
   }
 
-  // Re-emit as SSE so the client-side streaming parser works unchanged
-  const enc = new TextEncoder();
-  const sse = (event, payload) => enc.encode(`event: ${event}\ndata: ${JSON.stringify(payload)}\n\n`);
-
-  const stream = new ReadableStream({
-    start(ctrl) {
-      ctrl.enqueue(sse('message_start', {
-        type: 'message_start',
-        message: { id: data.id, type: 'message', role: data.role, content: [], model: data.model, stop_reason: null, usage: data.usage },
-      }));
-
-      (data.content || []).forEach((block, idx) => {
-        if (block.type === 'text') {
-          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'text', text: '' } }));
-          // Emit in chunks so the SSE parser sees proper deltas
-          const text = block.text;
-          for (let i = 0; i < text.length; i += 20) {
-            ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'text_delta', text: text.slice(i, i + 20) } }));
-          }
-          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
-        } else if (block.type === 'tool_use') {
-          ctrl.enqueue(sse('content_block_start', { type: 'content_block_start', index: idx, content_block: { type: 'tool_use', id: block.id, name: block.name, input: {} } }));
-          ctrl.enqueue(sse('content_block_delta', { type: 'content_block_delta', index: idx, delta: { type: 'input_json_delta', partial_json: JSON.stringify(block.input) } }));
-          ctrl.enqueue(sse('content_block_stop', { type: 'content_block_stop', index: idx }));
-        }
-      });
-
-      ctrl.enqueue(sse('message_delta', { type: 'message_delta', delta: { stop_reason: data.stop_reason, stop_sequence: null }, usage: { output_tokens: data.usage?.output_tokens || 0 } }));
-      ctrl.enqueue(sse('message_stop', { type: 'message_stop' }));
-      ctrl.close();
-    },
-  });
-
-  return new Response(stream, {
-    status: 200,
-    headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache' },
-  });
+  // Non-streaming: return JSON as-is
+  return json(await res.json(), 200, origin);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -357,48 +323,6 @@ async function handleSendEmail(request, env, origin) {
   const data = await res.json();
   if (!res.ok) return json({ error: data.message || data.name || 'Send failed' }, res.status, origin);
   return json({ ok: true, id: data.id }, 200, origin);
-}
-
-// ══════════════════════════════════════════════════════════════
-// KLING AI — VIDEO GENERATION
-// ══════════════════════════════════════════════════════════════
-async function klingJWT(keyId, keySecret) {
-  const enc = new TextEncoder();
-  const toB64u = arr => btoa(String.fromCharCode(...new Uint8Array(arr)))
-    .replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
-  const header  = toB64u(enc.encode(JSON.stringify({ alg:'HS256', typ:'JWT' })));
-  const now     = Math.floor(Date.now() / 1000);
-  const payload = toB64u(enc.encode(JSON.stringify({ iss:keyId, exp:now+1800, nbf:now-5 })));
-  const unsigned = `${header}.${payload}`;
-  const key = await crypto.subtle.importKey(
-    'raw', enc.encode(keySecret), { name:'HMAC', hash:'SHA-256' }, false, ['sign']
-  );
-  const sig = await crypto.subtle.sign('HMAC', key, enc.encode(unsigned));
-  return `${unsigned}.${toB64u(sig)}`;
-}
-
-async function handleKling(request, env, origin, path) {
-  const keyId     = env.KLING_KEY_ID;
-  const keySecret = env.KLING_KEY_SECRET;
-  if (!keyId || !keySecret) {
-    return json({ error: 'Kling API keys not configured on server. Run: npx wrangler secret put KLING_KEY_ID (and KLING_KEY_SECRET)' }, 500, origin);
-  }
-
-  // Strip /api/kling prefix → Kling API path
-  const klingPath = path.replace(/^\/api\/kling/, '') || '/v1/videos/text2video';
-  const jwt = await klingJWT(keyId, keySecret);
-
-  const body = request.method === 'POST' ? await request.text() : undefined;
-  const res = await fetch(`https://api.klingai.com${klingPath}`, {
-    method: request.method,
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${jwt}` },
-    body,
-  });
-  const data = await res.text();
-  return new Response(data, {
-    status: res.status,
-    headers: { ...cors(origin), 'Content-Type': res.headers.get('Content-Type') || 'application/json' },
-  });
 }
 
 // ══════════════════════════════════════════════════════════════
