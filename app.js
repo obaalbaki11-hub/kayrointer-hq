@@ -7539,7 +7539,14 @@ CRITICAL RULES:
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
       if (!html || !html.includes('<') || html.startsWith('⚠️')) throw new Error(html || 'Generation failed');
 
-      const scale = Math.min(1, (container.querySelector('.ads-preview-area')?.clientWidth || fmt.w) / fmt.w);
+      const previewEl = document.getElementById('ads-preview-area');
+      const availW = (previewEl?.clientWidth || 800) - 48;
+      const availH = (previewEl?.clientHeight || 600) - 100;
+      const scaleW = availW / fmt.w;
+      const scaleH = availH / fmt.h;
+      const scale  = Math.min(1, scaleW, scaleH);
+      const dispW  = Math.round(fmt.w * scale);
+      const dispH  = Math.round(fmt.h * scale);
 
       preview.innerHTML = `
         <div class="ads-preview-bar">
@@ -7550,13 +7557,15 @@ CRITICAL RULES:
           </div>
           <div style="display:flex;gap:6px">
             <button class="tb-btn" id="ads-replay-btn">↺ Replay</button>
-            <button class="tb-btn" id="ads-copy-btn">⎘ Copy</button>
+            <button class="tb-btn" id="ads-copy-btn">⎘ Copy HTML</button>
             <button class="tb-btn" id="ads-full-btn">⛶ Fullscreen</button>
-            <button class="btn btn-primary btn-sm" id="ads-save-btn">Save</button>
+            <button class="btn btn-primary btn-sm" id="ads-save-btn">💾 Save</button>
           </div>
         </div>
-        <div class="ads-frame-wrap" style="transform-origin:top left;transform:scale(${scale.toFixed(3)});width:${fmt.w}px;height:${fmt.h}px">
-          <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden">
+          <div style="width:${dispW}px;height:${dispH}px;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.7);flex-shrink:0">
+            <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(4)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
+          </div>
         </div>`;
 
       const frame = document.getElementById('ads-iframe');
@@ -7947,10 +7956,10 @@ const PlansPage = {
     ];
 
     const tokPacks = [
-      { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',   per:'$18 / MTok', color:'#64748b', glow:'rgba(100,116,139,.3)', best:false, label:'Try it out' },
-      { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36',  per:'$18 / MTok', color:'#4f8cff', glow:'rgba(79,140,255,.35)', best:false, label:'Best value' },
-      { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$108', per:'$18 / MTok', color:'#10d98a', glow:'rgba(16,217,138,.35)', best:true,  label:'Most popular' },
-      { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$270', per:'$18 / MTok', color:'#a78bfa', glow:'rgba(167,139,250,.35)', best:false, label:'Power user' },
+      { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',   per:'$18 / MTok', color:'#94a3b8', g1:'#1e293b', g2:'#0f172a', glow:'rgba(148,163,184,.25)', best:false, label:'Try it out',   emoji:'🌱' },
+      { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36',  per:'$18 / MTok', color:'#4f8cff', g1:'#1a2744', g2:'#0d1733', glow:'rgba(79,140,255,.4)',   best:false, label:'Best value',   emoji:'🚀' },
+      { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$108', per:'$18 / MTok', color:'#10d98a', g1:'#0d2b20', g2:'#061812', glow:'rgba(16,217,138,.45)',  best:true,  label:'Most popular', emoji:'⚡' },
+      { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$270', per:'$18 / MTok', color:'#a78bfa', g1:'#1e1040', g2:'#110a2a', glow:'rgba(167,139,250,.45)', best:false, label:'Power user',   emoji:'👑' },
     ];
     const bank = State.usage?.tokenBank || 0;
 
@@ -7958,24 +7967,26 @@ const PlansPage = {
       <div class="tok-market-page">
         <div class="tok-page-hdr">
           <div class="tok-page-title">⚡ Token Store</div>
-          <div class="tok-page-sub">Buy AI credits — work across all agents, never expire.</div>
+          <div class="tok-page-sub">Buy AI credits. Work across all agents. Never expire.</div>
           ${bank > 0 ? `<div class="tok-bank-pill">🏦 ${Usage._fmtK(bank)} tokens in your bank</div>` : ''}
         </div>
         <div class="tok-grid tok-grid--large">
           ${tokPacks.map(t=>`
-          <div class="tok-card${t.best?' tok-card--best':''}">
-            ${t.best?`<div class="tok-best-tag" style="background:${t.color}22;border-color:${t.color}44;color:${t.color}">★ ${t.label}</div>`:`<div class="tok-label-tag" style="color:${t.color}">${t.label}</div>`}
-            <div class="tok-amount" style="color:${t.color}">${t.tokens}</div>
-            <div class="tok-unit">tokens</div>
-            <div class="tok-price" style="text-shadow:0 0 20px ${t.glow}">${t.price}</div>
-            <div class="tok-per">${t.per}</div>
-            <button class="tok-buy-btn" style="background:${t.color}18;border:1px solid ${t.color}40;color:${t.color}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
+          <div class="tok-card-v2${t.best?' tok-card-v2--best':''}" style="background:linear-gradient(160deg,${t.g1} 0%,${t.g2} 100%);border-color:${t.color}30;--tc:${t.color};--tg:${t.glow}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
+            ${t.best ? `<div class="tok-v2-crown">★ ${t.label}</div>` : `<div class="tok-v2-label">${t.emoji} ${t.label}</div>`}
+            <div class="tok-v2-name">${t.name}</div>
+            <div class="tok-v2-tokens" style="color:${t.color}">${t.tokens}</div>
+            <div class="tok-v2-unit">TOKENS</div>
+            <div class="tok-v2-divider" style="background:${t.color}20"></div>
+            <div class="tok-v2-price">${t.price}</div>
+            <div class="tok-v2-per">${t.per}</div>
+            <button class="tok-v2-btn" style="background:${t.color};box-shadow:0 4px 24px ${t.glow}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
               Buy ${t.tokens} Tokens →
             </button>
           </div>`).join('')}
         </div>
-        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:20px">
-          Powered by Stripe · Secure checkout · Tokens added instantly after payment
+        <div style="text-align:center;font-size:11px;color:var(--text3);margin-top:24px;display:flex;align-items:center;justify-content:center;gap:16px">
+          <span>🔒 Stripe secure checkout</span><span>·</span><span>⚡ Tokens added instantly</span><span>·</span><span>♾️ Never expire</span>
         </div>
         <div class="plans-activate-section" style="margin-top:32px">
           <div class="plans-activate-card">
@@ -8122,7 +8133,7 @@ const PlansPage = {
     codeInput.addEventListener('input', () => { codeInput.value = codeInput.value.toUpperCase(); });
 
     // Token buy buttons
-    container.querySelectorAll('.tok-buy-btn').forEach(btn => {
+    container.querySelectorAll('.tok-v2-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const id = btn.dataset.id, tokens = parseInt(btn.dataset.tokens), price = btn.dataset.price;
         const LINKS = { starter:'https://buy.stripe.com/kayro-tokens-starter', growth:'https://buy.stripe.com/kayro-tokens-growth', pro:'https://buy.stripe.com/kayro-tokens-pro', scale:'https://buy.stripe.com/kayro-tokens-scale' };
