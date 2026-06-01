@@ -7540,13 +7540,79 @@ CRITICAL RULES:
       if (!html || !html.includes('<') || html.startsWith('⚠️')) throw new Error(html || 'Generation failed');
 
       const previewEl = document.getElementById('ads-preview-area');
-      const availW = (previewEl?.clientWidth || 800) - 48;
-      const availH = (previewEl?.clientHeight || 600) - 100;
-      const scaleW = availW / fmt.w;
-      const scaleH = availH / fmt.h;
-      const scale  = Math.min(1, scaleW, scaleH);
-      const dispW  = Math.round(fmt.w * scale);
-      const dispH  = Math.round(fmt.h * scale);
+      // Portrait formats get iPhone frame by default
+      const isPortrait = fmt.h > fmt.w;
+      let viewMode = isPortrait ? 'iphone' : 'raw';
+
+      const renderView = (mode) => {
+        const wrap = document.getElementById('ads-view-wrap');
+        if (!mode) mode = viewMode;
+        viewMode = mode;
+        document.querySelectorAll('.ads-view-btn').forEach(b => b.classList.toggle('active', b.dataset.view === mode));
+
+        const pw = (previewEl?.clientWidth  || 800);
+        const ph = (previewEl?.clientHeight || 700);
+
+        if (mode === 'iphone') {
+          // iPhone 15 Pro dimensions: 393×852 pts → ratio 0.4613
+          const IPHONE_RATIO = 393 / 852;
+          const SCREEN_PAD_X = 0.034; // fraction of frame width = bezel
+          const SCREEN_PAD_TOP = 0.037;
+          const SCREEN_PAD_BOT = 0.035;
+
+          const maxH = ph - 80;
+          const maxW = pw - 80;
+          const fh = Math.min(maxH, maxW / IPHONE_RATIO, 780);
+          const fw = fh * IPHONE_RATIO;
+
+          const scrW = fw * (1 - SCREEN_PAD_X * 2);
+          const scrH = fh * (1 - SCREEN_PAD_TOP - SCREEN_PAD_BOT);
+          const adScale = Math.min(scrW / fmt.w, scrH / fmt.h);
+          const adDispW = fmt.w * adScale;
+          const adDispH = fmt.h * adScale;
+          const adOffX  = (scrW - adDispW) / 2;
+          const adOffY  = (scrH - adDispH) / 2;
+
+          wrap.innerHTML = `
+            <div class="ads-scene" style="perspective:1200px">
+              <div class="ads-iphone" style="width:${fw}px;height:${fh}px;border-radius:${fw*0.114}px">
+                <!-- Side buttons -->
+                <div class="iph-mute"  style="top:${fh*0.14}px;height:${fh*0.036}px"></div>
+                <div class="iph-vol1"  style="top:${fh*0.2}px; height:${fh*0.07}px"></div>
+                <div class="iph-vol2"  style="top:${fh*0.29}px;height:${fh*0.07}px"></div>
+                <div class="iph-power" style="top:${fh*0.2}px; height:${fh*0.1}px"></div>
+                <!-- Screen -->
+                <div class="iph-screen" style="border-radius:${fw*0.105}px;top:${fh*SCREEN_PAD_TOP}px;left:${fw*SCREEN_PAD_X}px;width:${scrW}px;height:${scrH}px">
+                  <!-- Dynamic Island -->
+                  <div class="iph-island" style="width:${fw*0.28}px;height:${fw*0.045}px;border-radius:${fw*0.025}px;top:${scrH*0.018}px"></div>
+                  <!-- Ad content -->
+                  <div style="position:absolute;inset:0;overflow:hidden;border-radius:${fw*0.1}px">
+                    <div style="position:absolute;width:${adDispW}px;height:${adDispH}px;top:${adOffY}px;left:${adOffX}px;overflow:hidden">
+                      <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;position:absolute;top:0;left:0;transform:scale(${adScale.toFixed(5)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
+                    </div>
+                  </div>
+                  <!-- Status bar overlay -->
+                  <div class="iph-statusbar" style="height:${scrH*0.06}px"></div>
+                  <!-- Home indicator -->
+                  <div class="iph-home" style="bottom:${scrH*0.012}px;width:${scrW*0.33}px"></div>
+                </div>
+              </div>
+            </div>`;
+        } else {
+          const scaleW = (pw - 48) / fmt.w;
+          const scaleH = (ph - 80) / fmt.h;
+          const scale  = Math.min(1, scaleW, scaleH);
+          const dispW  = Math.round(fmt.w * scale);
+          const dispH  = Math.round(fmt.h * scale);
+          wrap.innerHTML = `
+            <div style="width:${dispW}px;height:${dispH}px;position:relative;overflow:hidden;border-radius:10px;box-shadow:0 0 80px rgba(0,0,0,.8);flex-shrink:0">
+              <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(5)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>`;
+        }
+
+        document.getElementById('ads-iframe').srcdoc = html;
+        document.getElementById('ads-iframe').addEventListener('load', () => {});
+      };
 
       preview.innerHTML = `
         <div class="ads-preview-bar">
@@ -7555,25 +7621,25 @@ CRITICAL RULES:
             <span class="ads-preview-dim">${fmt.w}×${fmt.h}</span>
             <span class="ads-preview-anim">${AdStudio._anim}</span>
           </div>
-          <div style="display:flex;gap:6px">
-            <button class="tb-btn" id="ads-replay-btn">↺ Replay</button>
-            <button class="tb-btn" id="ads-copy-btn">⎘ Copy HTML</button>
-            <button class="tb-btn" id="ads-full-btn">⛶ Fullscreen</button>
+          <div style="display:flex;gap:6px;align-items:center">
+            <div class="ads-view-toggle">
+              <button class="ads-view-btn${isPortrait?' active':''}" data-view="iphone">📱 iPhone</button>
+              <button class="ads-view-btn${!isPortrait?' active':''}" data-view="raw">🖥 Raw</button>
+            </div>
+            <button class="tb-btn" id="ads-replay-btn">↺</button>
+            <button class="tb-btn" id="ads-copy-btn">⎘ Copy</button>
+            <button class="tb-btn" id="ads-full-btn">⛶</button>
             <button class="btn btn-primary btn-sm" id="ads-save-btn">💾 Save</button>
           </div>
         </div>
-        <div style="flex:1;display:flex;align-items:center;justify-content:center;padding:24px;overflow:hidden">
-          <div style="width:${dispW}px;height:${dispH}px;position:relative;overflow:hidden;border-radius:8px;box-shadow:0 0 60px rgba(0,0,0,.7);flex-shrink:0">
-            <iframe id="ads-iframe" style="width:${fmt.w}px;height:${fmt.h}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(4)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
-          </div>
-        </div>`;
+        <div id="ads-view-wrap" style="flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:radial-gradient(ellipse at center,#111118 0%,#06060a 100%)"></div>`;
 
-      const frame = document.getElementById('ads-iframe');
-      frame.srcdoc = html;
+      renderView(viewMode);
 
-      document.getElementById('ads-replay-btn').addEventListener('click', () => { frame.srcdoc = ''; setTimeout(() => { frame.srcdoc = html; }, 50); });
+      preview.querySelectorAll('.ads-view-btn').forEach(b => b.addEventListener('click', () => renderView(b.dataset.view)));
+      document.getElementById('ads-replay-btn').addEventListener('click', () => { const f=document.getElementById('ads-iframe'); if(f){f.srcdoc='';setTimeout(()=>{f.srcdoc=html;},50);} });
       document.getElementById('ads-copy-btn').addEventListener('click', () => { navigator.clipboard.writeText(html); toast('HTML copied ✓', 'success'); });
-      document.getElementById('ads-full-btn').addEventListener('click', () => { frame.requestFullscreen?.() || frame.webkitRequestFullscreen?.(); });
+      document.getElementById('ads-full-btn').addEventListener('click', () => { const f=document.getElementById('ads-iframe'); f?.requestFullscreen?.() || f?.webkitRequestFullscreen?.(); });
       document.getElementById('ads-save-btn').addEventListener('click', () => {
         AdStudio._ads.unshift({ id:uid(), title:prompt.slice(0,60), prompt, html, format:AdStudio._format, anim:AdStudio._anim, w:fmt.w, h:fmt.h, ts:Date.now() });
         localStorage.setItem('kayro_ads', JSON.stringify(AdStudio._ads.slice(0,50)));

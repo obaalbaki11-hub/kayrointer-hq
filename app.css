@@ -1228,6 +1228,60 @@ td.editing .cell-editor{display:block}
 .ads-loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:16px}
 .ads-load-ring{width:40px;height:40px;border:3px solid rgba(167,139,250,.2);border-top-color:#a78bfa;border-radius:50%;animation:spin .8s linear infinite}
 .ads-load-txt{font-size:13px;color:var(--text2)}
+/* View toggle */
+.ads-view-toggle{display:flex;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;overflow:hidden}
+.ads-view-btn{padding:5px 12px;border:none;background:transparent;color:var(--text2);font-size:11px;font-weight:600;cursor:pointer;transition:all .15s}
+.ads-view-btn.active{background:rgba(255,255,255,.12);color:var(--text1)}
+/* iPhone frame */
+.ads-scene{display:flex;align-items:center;justify-content:center}
+.ads-iphone{
+  position:relative;flex-shrink:0;
+  background:linear-gradient(160deg,#2e2c2c 0%,#1a1a1c 40%,#232325 100%);
+  box-shadow:
+    /* outer rim */
+    0 0 0 1px rgba(255,255,255,.18),
+    /* deep shadow */
+    0 40px 100px rgba(0,0,0,.9),
+    0 8px 30px rgba(0,0,0,.7),
+    /* inner rim light */
+    inset 0 1px 0 rgba(255,255,255,.12),
+    inset 0 -1px 0 rgba(0,0,0,.5);
+  /* Titanium sheen */
+  border:2px solid transparent;
+  background-clip:padding-box;
+}
+.ads-iphone::before{
+  content:'';position:absolute;inset:-2px;border-radius:inherit;
+  background:linear-gradient(160deg,rgba(255,255,255,.22) 0%,rgba(180,180,185,.08) 30%,rgba(80,80,90,.15) 60%,rgba(255,255,255,.18) 100%);
+  z-index:0;border-radius:inherit;
+}
+/* Side buttons */
+.iph-mute,.iph-vol1,.iph-vol2{position:absolute;left:-3px;width:3px;background:linear-gradient(90deg,#1a1a1c,#3a3a3c);border-radius:2px 0 0 2px;box-shadow:-1px 0 3px rgba(0,0,0,.5)}
+.iph-power{position:absolute;right:-3px;width:3px;background:linear-gradient(270deg,#1a1a1c,#3a3a3c);border-radius:0 2px 2px 0;box-shadow:1px 0 3px rgba(0,0,0,.5)}
+/* Screen */
+.iph-screen{
+  position:absolute;overflow:hidden;
+  background:#000;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.06);
+}
+/* Dynamic Island */
+.iph-island{
+  position:absolute;left:50%;transform:translateX(-50%);
+  background:#000;z-index:10;
+  box-shadow:0 0 0 1.5px rgba(255,255,255,.07);
+}
+/* Status bar shimmer */
+.iph-statusbar{
+  position:absolute;top:0;left:0;right:0;
+  background:linear-gradient(to bottom,rgba(0,0,0,.35) 0%,transparent 100%);
+  z-index:9;pointer-events:none;
+}
+/* Home indicator */
+.iph-home{
+  position:absolute;left:50%;transform:translateX(-50%);
+  height:5px;border-radius:3px;
+  background:rgba(255,255,255,.3);z-index:10;
+}
 .ads-gallery-section{padding:24px;border-top:1px solid var(--border);background:var(--bg)}
 /* shared */
 .ds-gallery-section{padding:24px;border-top:1px solid var(--border);background:var(--bg)}
