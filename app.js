@@ -725,6 +725,30 @@ PRINCIPLES:
 - Deliver structured plans as numbered lists with owners, inputs, outputs, and estimated complexity
 
 WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
+
+  {id:'e_legal',name:'Maya',role:'Legal Advisor',model:'claude-opus-4-7',color:'#8b5cf6',bodyHex:0x8b5cf6,skinHex:0xf0c89a,pos:[-5,10],status:'online',skills:['Contract Review','NDA Drafting','Business Law','Compliance','Risk Assessment'],hired:Date.now(),tasks:0,
+   system:`You are Maya, a highly experienced Legal Advisor at [company]. Review contracts, draft NDAs, identify legal risks, and provide plain-English legal guidance. Always caveat that output is not a substitute for qualified legal counsel. Flag red-flag clauses with ⚠️. Structure all contract reviews as: Summary → Key Risks → Recommended Changes → Verdict.`},
+
+  {id:'e_marketing',name:'Leo',role:'Marketing Strategist',model:'claude-opus-4-7',color:'#ec4899',bodyHex:0xec4899,skinHex:0xfbbf24,pos:[8,-5],status:'online',skills:['Campaign Strategy','Brand Messaging','Content Calendar','Funnel Design','Growth Hacking'],hired:Date.now(),tasks:0,
+   system:`You are Leo, a data-driven Marketing Strategist at [company]. Build go-to-market strategies, craft brand messaging, design content calendars, and engineer demand-gen funnels. Think in channels, audiences, and conversion rates. Always tie recommendations to measurable KPIs. Output campaigns as: Objective → Audience → Message → Channel Mix → Timeline → Success Metrics.`},
+
+  {id:'e_hr',name:'Emma',role:'HR Manager',model:'claude-opus-4-7',color:'#14b8a6',bodyHex:0x14b8a6,skinHex:0xf5c285,pos:[-10,3],status:'online',skills:['Hiring','Onboarding','Performance Reviews','HR Policy','Team Culture'],hired:Date.now(),tasks:0,
+   system:`You are Emma, a compassionate and strategic HR Manager at [company]. Handle hiring workflows, onboarding plans, performance review frameworks, HR policies, and team culture initiatives. Write in clear, inclusive language. For job descriptions include: Role Summary, Responsibilities, Requirements, Compensation Range, and Culture Fit signals.`},
+
+  {id:'e_seo',name:'Nick',role:'SEO Specialist',model:'claude-opus-4-7',color:'#f97316',bodyHex:0xf97316,skinHex:0xf0c89a,pos:[5,6],status:'online',skills:['Keyword Research','On-Page SEO','Technical SEO','Link Building','Content Strategy'],hired:Date.now(),tasks:0,
+   system:`You are Nick, an expert SEO Specialist at [company]. Conduct keyword research, perform on-page and technical SEO audits, build content strategies, and design link-building plans. Use data-driven language. Always output keyword tables with: Keyword | Volume | Difficulty | Intent | Priority. For audits use: Issue | Severity | Fix | Impact.`},
+
+  {id:'e_social',name:'Zara',role:'Social Media Manager',model:'claude-opus-4-7',color:'#6366f1',bodyHex:0x6366f1,skinHex:0xfbbf24,pos:[11,-2],status:'online',skills:['Content Creation','Community Management','Platform Strategy','Viral Campaigns','Analytics'],hired:Date.now(),tasks:0,
+   system:`You are Zara, a creative Social Media Manager at [company]. Write platform-native content for Twitter/X, LinkedIn, Instagram, and TikTok. Understand tone differences per platform. Always write 3 variations when drafting posts. Include hooks, hashtag recommendations, and optimal posting times. For campaigns: Theme → Platform → Content Pillars → Posting Cadence → Engagement Tactics.`},
+
+  {id:'e_support',name:'Kai',role:'Customer Support Lead',model:'claude-opus-4-7',color:'#10b981',bodyHex:0x10b981,skinHex:0xf5c285,pos:[-3,-11],status:'online',skills:['Ticket Resolution','Knowledge Base','Escalation Handling','CSAT','Support Ops'],hired:Date.now(),tasks:0,
+   system:`You are Kai, a customer-obsessed Support Lead at [company]. Write support responses, build FAQ/knowledge base articles, design escalation workflows, and coach agents on CSAT improvement. Tone: warm, clear, solution-focused. Always resolve first, explain second. Format support articles as: Problem → Cause → Step-by-Step Fix → Prevention Tip.`},
+
+  {id:'e_data',name:'Iris',role:'Data Analyst',model:'claude-opus-4-7',color:'#22d3ee',bodyHex:0x22d3ee,skinHex:0xf0c89a,pos:[3,11],status:'online',skills:['Data Analysis','SQL','Dashboards','A/B Testing','Business Intelligence'],hired:Date.now(),tasks:0,
+   system:`You are Iris, a rigorous Data Analyst at [company]. Analyze datasets, write SQL queries, design dashboards, interpret A/B tests, and deliver business intelligence. Always show your work. For analyses: Context → Methodology → Findings → Implications → Recommended Action. Flag statistical significance with confidence intervals. Present tables cleanly with aligned columns.`},
+
+  {id:'e_pr',name:'Blake',role:'PR & Communications',model:'claude-opus-4-7',color:'#f43f5e',bodyHex:0xf43f5e,skinHex:0xfbbf24,pos:[-8,8],status:'online',skills:['Press Releases','Media Pitches','Crisis Comms','Brand Voice','Thought Leadership'],hired:Date.now(),tasks:0,
+   system:`You are Blake, a sharp PR & Communications specialist at [company]. Write press releases, craft media pitches, manage crisis communications, and build thought leadership content. Write for journalists — punchy, factual, newsworthy. Press release format: Headline → Dateline → Lede → Body (inverted pyramid) → Boilerplate → Contact. For pitches: Hook → Why now → Why this journalist → Ask.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -2646,6 +2670,126 @@ const SalesPage = (() => {
     'e.g. Hi, I heard about Kayrointer and I\'m curious what you do…', false, 2048);
 })();
 
+const LegalPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['📄 Review Contract',    'Review this contract and flag any red-flag clauses: '],
+    ['✍️ Draft NDA',          'Draft a mutual NDA between [company] and: '],
+    ['⚖️ Legal Risk Check',   'Identify legal risks in this situation: '],
+    ['📋 Terms of Service',   'Draft Terms of Service for a SaaS product that: '],
+    ['🔒 Privacy Policy',     'Draft a GDPR-compliant Privacy Policy for: '],
+    ['🤝 Partnership Agree.', 'Draft a partnership agreement between [company] and: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_legal', 'M', QA, '⚖️', 'Legal Advisor Ready',
+    'Ask Maya to review contracts, draft NDAs, check compliance, or assess legal risk — plain English, no jargon.',
+    'e.g. Review this SaaS subscription agreement and flag any clauses that favor the vendor too heavily…', false, 8192);
+})();
+
+const MarketingPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['🚀 Go-to-Market Plan',   'Build a full go-to-market plan for: '],
+    ['🎯 Campaign Brief',      'Write a campaign brief targeting: '],
+    ['📣 Brand Messaging',     'Develop core brand messaging and positioning for: '],
+    ['📆 Content Calendar',    'Build a 30-day content calendar for: '],
+    ['🔁 Funnel Strategy',     'Design a full acquisition funnel for: '],
+    ['📈 Growth Playbook',     'Create a growth playbook for scaling: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_marketing', 'L', QA, '📣', 'Marketing Strategist Ready',
+    'Ask Leo to build campaigns, craft brand messaging, design content calendars, or engineer your full go-to-market.',
+    'e.g. Build a go-to-market strategy for our AI workflow product targeting ops managers at mid-market companies…', true, 8192);
+})();
+
+const HRPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['📝 Job Description',    'Write a job description for: '],
+    ['🎯 Interview Questions', 'Create structured interview questions for: '],
+    ['📋 Onboarding Plan',    'Design a 30-60-90 day onboarding plan for: '],
+    ['⭐ Performance Review', 'Write a performance review framework for: '],
+    ['📜 HR Policy',          'Draft an HR policy for: '],
+    ['🏆 Culture Playbook',   'Build a team culture playbook for a company that values: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_hr', 'E', QA, '👥', 'HR Manager Ready',
+    'Ask Emma to write job descriptions, design onboarding plans, build performance review frameworks, or draft HR policies.',
+    'e.g. Write a job description for a Senior Full-Stack Engineer at a 20-person SaaS startup…', false, 8192);
+})();
+
+const SEOPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['🔍 Keyword Research',   'Find the best target keywords for: '],
+    ['📄 On-Page Audit',      'Run an on-page SEO audit for this page: '],
+    ['🔧 Technical SEO',      'Identify technical SEO issues for a site that: '],
+    ['✍️ SEO Content Brief',  'Write an SEO content brief for an article about: '],
+    ['🔗 Link Building',      'Build a link acquisition strategy for: '],
+    ['📊 Competitor Analysis','Analyze the SEO strategy of: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_seo', 'N', QA, '🔍', 'SEO Specialist Ready',
+    'Ask Nick to research keywords, audit pages, fix technical SEO, write content briefs, or reverse-engineer competitors.',
+    'e.g. Find the top 20 keywords I should target for a B2B SaaS tool that automates invoicing…', true, 8192);
+})();
+
+const SocialPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['𝕏 Twitter/X Post',     'Write 3 Twitter/X posts about: '],
+    ['💼 LinkedIn Post',      'Write a LinkedIn post announcing: '],
+    ['📸 Instagram Caption',  'Write an Instagram caption for a post about: '],
+    ['🎵 TikTok Script',      'Write a TikTok script for a video about: '],
+    ['📆 30-Day Calendar',    'Build a 30-day social media content calendar for: '],
+    ['🔥 Viral Campaign',     'Design a viral social media campaign around: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_social', 'Z', QA, '📱', 'Social Media Manager Ready',
+    'Ask Zara to write platform-native posts, design content calendars, or build viral campaigns across Twitter, LinkedIn, Instagram, and TikTok.',
+    'e.g. Write 3 Twitter posts announcing our new AI product launch — punchy, no fluff, techy audience…', false, 4096);
+})();
+
+const SupportPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['🎫 Write Response',     'Write a support response for this customer complaint: '],
+    ['📚 Knowledge Article',  'Write a help center article explaining how to: '],
+    ['📋 FAQ Section',        'Build an FAQ section for: '],
+    ['🚨 Escalation Script',  'Write an escalation script for: '],
+    ['⭐ CSAT Recovery',      'Write a recovery message for a customer who gave us 1 star because: '],
+    ['🔄 Refund Policy',      'Draft a fair refund/cancellation policy for: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_support', 'K', QA, '🎧', 'Customer Support Lead Ready',
+    'Ask Kai to write support responses, build knowledge base articles, design escalation workflows, or recover unhappy customers.',
+    'e.g. Write a support response to a customer who says the product is too complicated and wants a refund…', false, 4096);
+})();
+
+const DataPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['📊 Analyze Dataset',    'Analyze this dataset and give me key insights: '],
+    ['🔍 Write SQL Query',    'Write a SQL query to: '],
+    ['📈 Dashboard Design',   'Design a business intelligence dashboard for: '],
+    ['🧪 A/B Test Design',    'Design an A/B test to measure: '],
+    ['📉 Metric Deep-Dive',   'Do a deep-dive analysis on why this metric dropped: '],
+    ['📋 Analytics Report',   'Write an analytics summary report for: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_data', 'I', QA, '📊', 'Data Analyst Ready',
+    'Ask Iris to analyze data, write SQL, design dashboards, run A/B test frameworks, or explain what your metrics are telling you.',
+    'e.g. Our conversion rate dropped from 4.2% to 2.8% last week — help me diagnose the cause…', true, 8192);
+})();
+
+const PRPage = (() => {
+  const _s = { history: [], emp: null };
+  const QA = [
+    ['📰 Press Release',      'Write a press release announcing: '],
+    ['📧 Media Pitch',        'Write a media pitch for: '],
+    ['🚨 Crisis Statement',   'Draft a crisis communications statement for: '],
+    ['💡 Thought Leadership', 'Write a thought leadership piece on: '],
+    ['🗞️ Media List',         'Build a target media list for a story about: '],
+    ['🎤 Speaker Bio',        'Write a professional speaker bio for: '],
+  ];
+  return _makeAgentChatPage(_s, 'e_pr', 'B', QA, '📰', 'PR & Comms Ready',
+    'Ask Blake to write press releases, pitch journalists, handle crisis comms, or build thought leadership content.',
+    'e.g. Write a press release announcing our $2M seed round — led by [VC], focus on the AI workforce angle…', false, 8192);
+})();
+
 // Shared agent chat page builder (avoids duplicate code across all agent pages)
 function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, welcomeTitle, welcomeSub, placeholder, useSearch, maxTokens) {
   return {
@@ -2772,13 +2916,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
