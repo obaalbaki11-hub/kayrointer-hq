@@ -2762,6 +2762,36 @@ const IntentRouter = {
 // ── CHAT PANEL ────────────────────────────────────────────────
 const Chat = {
   activeEmpId: null,
+  _pendingImg: null,
+
+  _clearImg() {
+    Chat._pendingImg = null;
+    const p = document.getElementById('chat-img-preview');
+    if (p) p.classList.remove('visible');
+    const t = document.getElementById('chat-img-thumb');
+    if (t) t.src = '';
+    const fi = document.getElementById('chat-img-input');
+    if (fi) fi.value = '';
+  },
+  _showImgPreview(src) {
+    const p = document.getElementById('chat-img-preview');
+    const t = document.getElementById('chat-img-thumb');
+    if (p) p.classList.add('visible');
+    if (t) t.src = src;
+  },
+  _loadImg(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const m = ev.target.result.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+        if (!m) return reject(new Error('Not an image'));
+        resolve({ mediaType: m[1], data: m[2], src: ev.target.result });
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  },
+
   init() {
     document.getElementById('chat-close').addEventListener('click',()=>Chat.close());
     document.getElementById('chat-send').addEventListener('click',()=>Chat.send());
@@ -2770,6 +2800,30 @@ const Chat = {
       if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();Chat.send();}
     });
     inp.addEventListener('input',()=>{inp.style.height='auto';inp.style.height=Math.min(inp.scrollHeight,100)+'px';});
+
+    // Image attach button
+    document.getElementById('chat-attach').addEventListener('click', () => document.getElementById('chat-img-input').click());
+    document.getElementById('chat-img-input').addEventListener('change', async ev => {
+      const file = ev.target.files[0]; if (!file) return;
+      try { const img = await Chat._loadImg(file); Chat._pendingImg = img; Chat._showImgPreview(img.src); }
+      catch(_) { toast('Could not load image', 'warn'); }
+    });
+    document.getElementById('chat-img-remove').addEventListener('click', () => Chat._clearImg());
+
+    // Paste image from clipboard
+    inp.addEventListener('paste', async ev => {
+      const items = ev.clipboardData?.items;
+      if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) {
+          ev.preventDefault();
+          try { const img = await Chat._loadImg(item.getAsFile()); Chat._pendingImg = img; Chat._showImgPreview(img.src); }
+          catch(_) { toast('Could not paste image', 'warn'); }
+          break;
+        }
+      }
+    });
+
     Chat.renderTabs();
     Chat._renderSkillsBar();
     if (State.employees.length) Chat.setEmp(State.employees[0].id, false);
@@ -2893,7 +2947,17 @@ const Chat = {
     const div = document.createElement('div');
     div.className = 'msg'+(isUser?' user':'');
     if (isUser) {
-      div.innerHTML = `<div class="msg-bubble msg-bubble--user">${escHtml(text)}</div>`;
+      // content can be a string or an array (vision: image+text blocks)
+      let html = '';
+      if (Array.isArray(text)) {
+        const imgBlock = text.find(b => b.type === 'image');
+        const textBlock = text.find(b => b.type === 'text');
+        if (imgBlock?.source?.data) html += `<img src="data:${imgBlock.source.media_type};base64,${imgBlock.source.data}" class="chat-msg-img" alt="">`;
+        if (textBlock?.text) html += escHtml(textBlock.text);
+      } else {
+        html = escHtml(text);
+      }
+      div.innerHTML = `<div class="msg-bubble msg-bubble--user">${html}</div>`;
     } else {
       div.innerHTML = `<div class="msg-av" style="background:${color}22;color:${color}">${av}</div>
          <div class="msg-body">
@@ -4294,16 +4358,29 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
 
   async send() {
     const inp = document.getElementById('chat-input');
-    const text = inp.value.trim(); if(!text||!Chat.activeEmpId) return;
+    const text = inp.value.trim();
+    const pendingImg = Chat._pendingImg;
+    if (!text && !pendingImg) return;
+    if (!Chat.activeEmpId) return;
     const e = getEmp(Chat.activeEmpId); if(!e) return;
     // Lock empId so switching employees mid-stream doesn't bleed messages
     const empId = Chat.activeEmpId;
     inp.value = ''; inp.style.height = 'auto';
+    Chat._clearImg();
+
+    // Build message content — array if image attached, plain string otherwise
+    let msgContent;
+    if (pendingImg) {
+      msgContent = [{ type:'image', source:{ type:'base64', media_type:pendingImg.mediaType, data:pendingImg.data } }];
+      if (text) msgContent.push({ type:'text', text });
+    } else {
+      msgContent = text;
+    }
 
     // Intent router — intercept and route before normal chat
-    if (e.id === 'e_router') { await IntentRouter.handle(e, text); return; }
+    if (e.id === 'e_router') { await IntentRouter.handle(e, text || '[image]'); return; }
 
-    Chat.addBubble(empId, e.name, e.color, text, true);
+    Chat.addBubble(empId, e.name, e.color, msgContent, true);
     const skillInject = Chat._getSkillInject(text);
     if (skillInject) toast(`Running ${text.split(' ')[0]} skill…`,'',2000);
 
