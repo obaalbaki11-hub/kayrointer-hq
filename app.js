@@ -2763,6 +2763,7 @@ const IntentRouter = {
 const Chat = {
   activeEmpId: null,
   _pendingImg: null,
+  _sessions: {},
 
   _clearImg() {
     Chat._pendingImg = null;
@@ -4444,46 +4445,76 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     // isActive: true only when the user is still looking at this agent's chat
     const isActive = () => Chat.activeEmpId === empId;
 
-    for await (const chunk of AI.stream(history, sysPrompt, { model: e.model })) {
-      if (isActive()) document.getElementById('chat-typing')?.remove();
-
-      // Handle search sentinel \x00SEARCH:query\x00
-      if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
-        const query = chunk.slice(8, -1);
+    if (e.model?.startsWith('agent_')) {
+      // ── Managed agent: use Sessions API (not /v1/messages) ──
+      if (!Chat._sessions) Chat._sessions = {};
+      const sessionState = {
+        get _sessionId() { return Chat._sessions[empId] || null; },
+        set _sessionId(v) { Chat._sessions[empId] = v; },
+      };
+      const agentText = Array.isArray(msgContent)
+        ? (msgContent.find(b => b.type === 'text')?.text || '[see attached image]')
+        : (text || '[image]');
+      try {
+        for await (const chunk of agentSessionStream(e.model, sessionState, agentText)) {
+          if (isActive()) document.getElementById('chat-typing')?.remove();
+          full += chunk;
+          if (isActive()) {
+            if (!bubble.isConnected) msgs.appendChild(bubble);
+            bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+        }
+      } catch(agentErr) {
         if (isActive()) {
+          document.getElementById('chat-typing')?.remove();
           if (!bubble.isConnected) msgs.appendChild(bubble);
-          searchPill?.remove();
-          searchPill = document.createElement('div');
-          searchPill.className = 'search-pill';
-          searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
-          bubble.querySelector('.msg-bubble').appendChild(searchPill);
+          bubble.querySelector('#stream-bubble').innerHTML = `<span style="color:var(--danger)">⚠️ ${escHtml(agentErr.message)}</span>`;
+        }
+      }
+    } else {
+      // ── Normal model: AI.stream via /v1/messages ──
+      for await (const chunk of AI.stream(history, sysPrompt, { model: e.model })) {
+        if (isActive()) document.getElementById('chat-typing')?.remove();
+
+        // Handle search sentinel \x00SEARCH:query\x00
+        if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
+          const query = chunk.slice(8, -1);
+          if (isActive()) {
+            if (!bubble.isConnected) msgs.appendChild(bubble);
+            searchPill?.remove();
+            searchPill = document.createElement('div');
+            searchPill.className = 'search-pill';
+            searchPill.innerHTML = `<span class="search-spinner"></span> Searching: <em>${escHtml(query)}</em>`;
+            bubble.querySelector('.msg-bubble').appendChild(searchPill);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+          continue;
+        }
+
+        // Handle app action sentinel \x00ACTION:display\x00
+        if (chunk.startsWith('\x00ACTION:') && chunk.endsWith('\x00')) {
+          const display = chunk.slice(8, -1);
+          if (isActive()) {
+            if (!bubble.isConnected) msgs.appendChild(bubble);
+            searchPill?.remove();
+            const pill = document.createElement('div');
+            pill.className = 'action-pill';
+            pill.innerHTML = display;
+            bubble.querySelector('.msg-bubble').appendChild(pill);
+            msgs.scrollTop = msgs.scrollHeight;
+          }
+          continue;
+        }
+
+        // Normal text chunk
+        full += chunk;
+        if (isActive()) {
+          searchPill?.remove(); searchPill = null;
+          if (!bubble.isConnected) msgs.appendChild(bubble);
+          bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
-        continue;
-      }
-
-      // Handle app action sentinel \x00ACTION:display\x00
-      if (chunk.startsWith('\x00ACTION:') && chunk.endsWith('\x00')) {
-        const display = chunk.slice(8, -1);
-        if (isActive()) {
-          if (!bubble.isConnected) msgs.appendChild(bubble);
-          searchPill?.remove();
-          const pill = document.createElement('div');
-          pill.className = 'action-pill';
-          pill.innerHTML = display;
-          bubble.querySelector('.msg-bubble').appendChild(pill);
-          msgs.scrollTop = msgs.scrollHeight;
-        }
-        continue;
-      }
-
-      // Normal text chunk
-      full += chunk;
-      if (isActive()) {
-        searchPill?.remove(); searchPill = null;
-        if (!bubble.isConnected) msgs.appendChild(bubble);
-        bubble.querySelector('#stream-bubble').innerHTML = Chat._md(full);
-        msgs.scrollTop = msgs.scrollHeight;
       }
     }
 
