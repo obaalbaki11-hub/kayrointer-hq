@@ -2216,6 +2216,12 @@ const Auth = {
 // ACCOUNTING PAGE — GAAP/IFRS Bookkeeping Agent (Ana)
 // ══════════════════════════════════════════════════════════════
 // Shared Sessions API stream — used by all agent_* pages
+function _agentErrMsg(data) {
+  if (!data) return null;
+  if (typeof data === 'string') return data;
+  return data.error?.message || data.message || (typeof data.error === 'string' ? data.error : null) || JSON.stringify(data);
+}
+
 // content: string OR array of Anthropic content blocks (text + image)
 async function* agentSessionStream(agentId, state, content) {
   if (!state._sessionId) {
@@ -2224,8 +2230,9 @@ async function* agentSessionStream(agentId, state, content) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ agent_id: agentId }),
     });
-    const d = await r.json();
-    if (!r.ok || !d.id) throw new Error(d.error || 'Failed to create agent session');
+    let d;
+    try { d = await r.json(); } catch { throw new Error(`Session create failed (${r.status})`); }
+    if (!r.ok || !d.id) throw new Error(_agentErrMsg(d) || `Session create failed (${r.status})`);
     state._sessionId = d.id;
   }
   const res = await fetch(`${BACKEND_URL}/api/agent/turn`, {
@@ -2234,8 +2241,9 @@ async function* agentSessionStream(agentId, state, content) {
     body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }], stream: true }),
   });
   if (!res.ok) {
+    if (res.status === 404 || res.status === 410) state._sessionId = null; // session expired
     let msg;
-    try { msg = (await res.json())?.error?.message; } catch { msg = await res.text(); }
+    try { msg = _agentErrMsg(await res.json()); } catch { try { msg = await res.text(); } catch { msg = null; } }
     throw new Error(msg || `Agent error ${res.status}`);
   }
   for await (const ev of AI._parseSSE(res)) {
