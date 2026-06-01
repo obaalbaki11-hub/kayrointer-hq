@@ -2216,7 +2216,8 @@ const Auth = {
 // ACCOUNTING PAGE — GAAP/IFRS Bookkeeping Agent (Ana)
 // ══════════════════════════════════════════════════════════════
 // Shared Sessions API stream — used by all agent_* pages
-async function* agentSessionStream(agentId, state, text) {
+// content: string OR array of Anthropic content blocks (text + image)
+async function* agentSessionStream(agentId, state, content) {
   if (!state._sessionId) {
     const r = await fetch(`${BACKEND_URL}/api/agent/session`, {
       method: 'POST',
@@ -2230,7 +2231,7 @@ async function* agentSessionStream(agentId, state, text) {
   const res = await fetch(`${BACKEND_URL}/api/agent/turn`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content: text }], stream: true }),
+    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }], stream: true }),
   });
   if (!res.ok) {
     let msg;
@@ -2246,6 +2247,7 @@ const AccountingPage = {
   _history: [],
   _emp: null,
   _sessionId: null,
+  _pendingImg: null,
 
   init(container) {
     AccountingPage._emp = getEmp('e_acct');
@@ -2302,7 +2304,13 @@ const AccountingPage = {
             <div class="agent-pg-welcome-sub">Ask Ana to create journal entries, reconcile accounts, categorize transactions, flag anomalies, or generate audit-ready reports — all under GAAP/IFRS standards.</div>
           </div>
         </div>
+        <input type="file" id="acct-img-input" accept="image/*" style="display:none">
+        <div class="agent-pg-img-preview" id="acct-img-preview">
+          <img id="acct-img-thumb" src="" alt="">
+          <button class="agent-pg-img-remove" id="acct-img-remove">✕</button>
+        </div>
         <div class="agent-pg-input-row">
+          <button class="agent-pg-attach" id="acct-attach" title="Attach image">📎</button>
           <textarea class="agent-pg-input" id="acct-input" rows="1"
             placeholder="e.g. Create a journal entry for $5,000 software subscription paid on 2025-06-01…"></textarea>
           <button class="agent-pg-send" id="acct-send" style="background:${color}">↑</button>
@@ -2321,28 +2329,63 @@ const AccountingPage = {
     document.getElementById('acct-clear').addEventListener('click', () => {
       AccountingPage._history = [];
       AccountingPage._sessionId = null;
+      AccountingPage._pendingImg = null;
+      document.getElementById('acct-img-preview').classList.remove('visible');
       document.getElementById('acct-messages').innerHTML = '';
+    });
+
+    document.getElementById('acct-attach').addEventListener('click', () => document.getElementById('acct-img-input').click());
+    document.getElementById('acct-img-input').addEventListener('change', async ev => {
+      const file = ev.target.files[0]; if (!file) return;
+      try { const img = await Chat._loadImg(file); AccountingPage._pendingImg = img; document.getElementById('acct-img-preview').classList.add('visible'); document.getElementById('acct-img-thumb').src = img.src; }
+      catch(_) { toast('Could not load image', 'warn'); }
+    });
+    document.getElementById('acct-img-remove').addEventListener('click', () => {
+      AccountingPage._pendingImg = null;
+      document.getElementById('acct-img-preview').classList.remove('visible');
+      document.getElementById('acct-img-thumb').src = '';
+      document.getElementById('acct-img-input').value = '';
     });
 
     const sendBtn = document.getElementById('acct-send');
     const input   = document.getElementById('acct-input');
     input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
     input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); AccountingPage._send(); } });
+    input.addEventListener('paste', async ev => {
+      const items = ev.clipboardData?.items; if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) { ev.preventDefault(); try { const img = await Chat._loadImg(item.getAsFile()); AccountingPage._pendingImg = img; document.getElementById('acct-img-preview').classList.add('visible'); document.getElementById('acct-img-thumb').src = img.src; } catch(_) {} break; }
+      }
+    });
     sendBtn.addEventListener('click', () => AccountingPage._send());
   },
 
   async _send() {
     const input = document.getElementById('acct-input');
     const text  = (input.value || '').trim();
-    if (!text) return;
+    const pendingImg = AccountingPage._pendingImg;
+    if (!text && !pendingImg) return;
     input.value = ''; input.style.height = 'auto';
+    AccountingPage._pendingImg = null;
+    document.getElementById('acct-img-preview')?.classList.remove('visible');
+    const acctThumb = document.getElementById('acct-img-thumb'); if (acctThumb) acctThumb.src = '';
 
     const msgs = document.getElementById('acct-messages');
     const emp  = AccountingPage._emp;
     const color = emp?.color || '#22c55e';
 
+    // Build content blocks
+    let content;
+    if (pendingImg) {
+      content = [{ type:'image', source:{ type:'base64', media_type:pendingImg.mediaType, data:pendingImg.data } }];
+      if (text) content.push({ type:'text', text });
+    } else { content = text; }
+
     // User bubble
-    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+    let userHtml = '';
+    if (pendingImg) userHtml += `<img src="${pendingImg.src}" class="chat-msg-img" alt="">`;
+    if (text) userHtml += escHtml(text);
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${userHtml}</div></div>`;
 
     // AI bubble (streaming)
     const aiId = 'acct-ai-' + Date.now();
@@ -2356,7 +2399,7 @@ const AccountingPage = {
     try {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
       if (emp?.model?.startsWith('agent_')) {
-        for await (const chunk of agentSessionStream(emp.model, AccountingPage, text)) {
+        for await (const chunk of agentSessionStream(emp.model, AccountingPage, content)) {
           full += chunk;
           if (aiEl) aiEl.innerHTML = marked.parse(full);
           msgs.scrollTop = msgs.scrollHeight;
@@ -2387,6 +2430,7 @@ const InvestmentsPage = {
   _history: [],
   _emp: null,
   _sessionId: null,
+  _pendingImg: null,
 
   init(container) {
     InvestmentsPage._emp = getEmp('e_invest');
@@ -2443,7 +2487,13 @@ const InvestmentsPage = {
             <div class="agent-pg-welcome-sub">Ask Victor to analyze your portfolio, research macro trends, run valuations, propose rebalancing or hedging strategies, and deliver structured investment verdicts with cited data.</div>
           </div>
         </div>
+        <input type="file" id="invest-img-input" accept="image/*" style="display:none">
+        <div class="agent-pg-img-preview" id="invest-img-preview">
+          <img id="invest-img-thumb" src="" alt="">
+          <button class="agent-pg-img-remove" id="invest-img-remove">✕</button>
+        </div>
         <div class="agent-pg-input-row">
+          <button class="agent-pg-attach" id="invest-attach" title="Attach image">📎</button>
           <textarea class="agent-pg-input" id="invest-input" rows="1"
             placeholder="e.g. Analyze my FAANG-heavy portfolio, 60% tech, 20% bonds, 20% cash — 10yr horizon, moderate-aggressive risk…"></textarea>
           <button class="agent-pg-send" id="invest-send" style="background:${color}">↑</button>
@@ -2461,27 +2511,61 @@ const InvestmentsPage = {
     document.getElementById('invest-clear').addEventListener('click', () => {
       InvestmentsPage._history = [];
       InvestmentsPage._sessionId = null;
+      InvestmentsPage._pendingImg = null;
+      document.getElementById('invest-img-preview').classList.remove('visible');
       document.getElementById('invest-messages').innerHTML = '';
+    });
+
+    document.getElementById('invest-attach').addEventListener('click', () => document.getElementById('invest-img-input').click());
+    document.getElementById('invest-img-input').addEventListener('change', async ev => {
+      const file = ev.target.files[0]; if (!file) return;
+      try { const img = await Chat._loadImg(file); InvestmentsPage._pendingImg = img; document.getElementById('invest-img-preview').classList.add('visible'); document.getElementById('invest-img-thumb').src = img.src; }
+      catch(_) { toast('Could not load image', 'warn'); }
+    });
+    document.getElementById('invest-img-remove').addEventListener('click', () => {
+      InvestmentsPage._pendingImg = null;
+      document.getElementById('invest-img-preview').classList.remove('visible');
+      document.getElementById('invest-img-thumb').src = '';
+      document.getElementById('invest-img-input').value = '';
     });
 
     const sendBtn = document.getElementById('invest-send');
     const input   = document.getElementById('invest-input');
     input.addEventListener('input', () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 140) + 'px'; });
     input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); InvestmentsPage._send(); } });
+    input.addEventListener('paste', async ev => {
+      const items = ev.clipboardData?.items; if (!items) return;
+      for (const item of items) {
+        if (item.type.startsWith('image/')) { ev.preventDefault(); try { const img = await Chat._loadImg(item.getAsFile()); InvestmentsPage._pendingImg = img; document.getElementById('invest-img-preview').classList.add('visible'); document.getElementById('invest-img-thumb').src = img.src; } catch(_) {} break; }
+      }
+    });
     sendBtn.addEventListener('click', () => InvestmentsPage._send());
   },
 
   async _send() {
     const input = document.getElementById('invest-input');
     const text  = (input.value || '').trim();
-    if (!text) return;
+    const pendingImg = InvestmentsPage._pendingImg;
+    if (!text && !pendingImg) return;
     input.value = ''; input.style.height = 'auto';
+    InvestmentsPage._pendingImg = null;
+    document.getElementById('invest-img-preview')?.classList.remove('visible');
+    const invThumb = document.getElementById('invest-img-thumb'); if (invThumb) invThumb.src = '';
 
     const msgs = document.getElementById('invest-messages');
     const emp  = InvestmentsPage._emp;
     const color = emp?.color || '#f59e0b';
 
-    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+    let content;
+    if (pendingImg) {
+      content = [{ type:'image', source:{ type:'base64', media_type:pendingImg.mediaType, data:pendingImg.data } }];
+      if (text) content.push({ type:'text', text });
+    } else { content = text; }
+
+    let userHtml = '';
+    if (pendingImg) userHtml += `<img src="${pendingImg.src}" class="chat-msg-img" alt="">`;
+    if (text) userHtml += escHtml(text);
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${userHtml}</div></div>`;
 
     const aiId = 'invest-ai-' + Date.now();
     msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}">
@@ -2494,7 +2578,7 @@ const InvestmentsPage = {
     try {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
       if (emp?.model?.startsWith('agent_')) {
-        for await (const chunk of agentSessionStream(emp.model, InvestmentsPage, text)) {
+        for await (const chunk of agentSessionStream(emp.model, InvestmentsPage, content)) {
           full += chunk;
           if (aiEl) aiEl.innerHTML = marked.parse(full);
           msgs.scrollTop = msgs.scrollHeight;
@@ -2558,7 +2642,7 @@ const SalesPage = (() => {
 function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, welcomeTitle, welcomeSub, placeholder, useSearch, maxTokens) {
   return {
     init(container) {
-      stateRef.emp = getEmp(empId); stateRef.history = []; stateRef._sessionId = null;
+      stateRef.emp = getEmp(empId); stateRef.history = []; stateRef._sessionId = null; stateRef._pendingImg = null;
       const emp = stateRef.emp;
       const c = emp?.color || '#3b82f6';
       document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
@@ -2590,7 +2674,13 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
               <div class="agent-pg-welcome-sub">${welcomeSub}</div>
             </div>
           </div>
+          <input type="file" id="agpg-img-input" accept="image/*" style="display:none">
+          <div class="agent-pg-img-preview" id="agpg-img-preview">
+            <img id="agpg-img-thumb" src="" alt="">
+            <button class="agent-pg-img-remove" id="agpg-img-remove">✕</button>
+          </div>
           <div class="agent-pg-input-row">
+            <button class="agent-pg-attach" id="agpg-attach" title="Attach image">📎</button>
             <textarea class="agent-pg-input" id="agpg-input" rows="1" placeholder="${escHtml(placeholder)}"></textarea>
             <button class="agent-pg-send" id="agpg-send" style="background:${c}">↑</button>
           </div>
@@ -2600,19 +2690,48 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
         document.getElementById('agpg-input').value = b.dataset.starter;
         document.getElementById('agpg-input').focus();
       }));
-      document.getElementById('agpg-clear').addEventListener('click', () => { stateRef.history=[]; stateRef._sessionId=null; document.getElementById('agpg-messages').innerHTML=''; });
+      document.getElementById('agpg-clear').addEventListener('click', () => { stateRef.history=[]; stateRef._sessionId=null; stateRef._pendingImg=null; document.getElementById('agpg-img-preview').classList.remove('visible'); document.getElementById('agpg-messages').innerHTML=''; });
+      document.getElementById('agpg-attach').addEventListener('click', () => document.getElementById('agpg-img-input').click());
+      document.getElementById('agpg-img-input').addEventListener('change', async ev => {
+        const file = ev.target.files[0]; if (!file) return;
+        try { const img = await Chat._loadImg(file); stateRef._pendingImg = img; document.getElementById('agpg-img-preview').classList.add('visible'); document.getElementById('agpg-img-thumb').src = img.src; }
+        catch(_) { toast('Could not load image', 'warn'); }
+      });
+      document.getElementById('agpg-img-remove').addEventListener('click', () => {
+        stateRef._pendingImg = null; document.getElementById('agpg-img-preview').classList.remove('visible');
+        document.getElementById('agpg-img-thumb').src = ''; document.getElementById('agpg-img-input').value = '';
+      });
       const inp = document.getElementById('agpg-input');
       inp.addEventListener('input', () => { inp.style.height='auto'; inp.style.height=Math.min(inp.scrollHeight,140)+'px'; });
+      inp.addEventListener('paste', async ev => {
+        const items = ev.clipboardData?.items; if (!items) return;
+        for (const item of items) { if (item.type.startsWith('image/')) { ev.preventDefault(); try { const img = await Chat._loadImg(item.getAsFile()); stateRef._pendingImg = img; document.getElementById('agpg-img-preview').classList.add('visible'); document.getElementById('agpg-img-thumb').src = img.src; } catch(_) {} break; } }
+      });
       const doSend = () => this._doSend(stateRef, initial, c, useSearch, maxTokens);
       inp.addEventListener('keydown', e => { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();} });
       document.getElementById('agpg-send').addEventListener('click', doSend);
     },
     async _doSend(st, initial, c, useSearch, maxTokens) {
       const inp = document.getElementById('agpg-input');
-      const text = (inp.value||'').trim(); if(!text) return;
+      const text = (inp.value||'').trim();
+      const pendingImg = st._pendingImg;
+      if(!text && !pendingImg) return;
       inp.value=''; inp.style.height='auto';
+      st._pendingImg = null;
+      document.getElementById('agpg-img-preview')?.classList.remove('visible');
+      const agpgThumb = document.getElementById('agpg-img-thumb'); if (agpgThumb) agpgThumb.src = '';
+
+      let content;
+      if (pendingImg) {
+        content = [{ type:'image', source:{ type:'base64', media_type:pendingImg.mediaType, data:pendingImg.data } }];
+        if (text) content.push({ type:'text', text });
+      } else { content = text; }
+
       const msgs = document.getElementById('agpg-messages');
-      msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+      let userHtml = '';
+      if (pendingImg) userHtml += `<img src="${pendingImg.src}" class="chat-msg-img" alt="">`;
+      if (text) userHtml += escHtml(text);
+      msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${userHtml}</div></div>`;
       const aiId = 'agpg-' + Date.now();
       msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}"><div class="agent-pg-av-sm" style="background:${c}20;color:${c}">${initial}</div><div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div></div>`;
       msgs.scrollTop = msgs.scrollHeight;
@@ -2620,11 +2739,11 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
       try {
         const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
         if (st.emp?.model?.startsWith('agent_')) {
-          for await (const chunk of agentSessionStream(st.emp.model, st, text)) {
+          for await (const chunk of agentSessionStream(st.emp.model, st, content)) {
             full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
           }
         } else {
-          st.history.push({ role:'user', content:text });
+          st.history.push({ role:'user', content });
           for await (const chunk of AI.stream(st.history, st.emp?.system||'', { model:st.emp?.model, search:useSearch, appTools:false, max_tokens:maxTokens })) {
             full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
           }
