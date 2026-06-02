@@ -752,8 +752,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','adstudio','memory','ops','compete','settings','plans','security','skills'],
-  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -2924,13 +2924,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -8133,6 +8133,14 @@ const DesignStudio = {
     });
 
     DesignStudio._renderGallery();
+
+    // Pre-fill from Social Studio "Export to Design Studio"
+    if (window._soc2design) {
+      const el = document.getElementById('ds-prompt');
+      if (el) { el.value = window._soc2design; el.dispatchEvent(new Event('input')); el.focus(); }
+      delete window._soc2design;
+      toast('Social Studio content loaded — hit Generate ✓', 'success');
+    }
   },
 
   async _generate(container) {
@@ -8921,6 +8929,432 @@ Now write the complete HTML document. Start immediately with <!DOCTYPE html>.`;
   },
 
   destroy() { AdStudio._format = 'square'; AdStudio._anim = 'cinematic'; },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  PAGE: SOCIAL STUDIO
+// ══════════════════════════════════════════════════════════════
+const SocialStudio = {
+  _drafts: [],
+  _current: null,
+  _format: 'carousel',
+  _tone: 'professional',
+  _generating: false,
+
+  init(container) {
+    SocialStudio._drafts = JSON.parse(localStorage.getItem('kayro_social_drafts') || '[]');
+    SocialStudio._current = null;
+    SocialStudio._generating = false;
+    SocialStudio._format = 'carousel';
+    SocialStudio._tone = 'professional';
+
+    const company = State.settings?.companyName || 'our company';
+    const brainFacts = State.brain?.facts || [];
+
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn primary" id="soc-new-btn">+ New Post</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
+    document.getElementById('soc-new-btn')?.addEventListener('click', () => SocialStudio._resetRight());
+
+    container.innerHTML = `
+    <div class="soc-root">
+      <div class="soc-left">
+        <div class="soc-form-card">
+          <div class="soc-form-title">✍️ Content Brief</div>
+
+          <label class="soc-label">TOPIC / GOAL</label>
+          <textarea class="soc-input" id="soc-topic" rows="3" placeholder="e.g. Why AI agents cost less than one full-time hire"></textarea>
+
+          <label class="soc-label">FORMAT</label>
+          <div class="soc-seg" id="soc-format-seg">
+            <button class="soc-seg-btn active" data-fmt="carousel">📊 Carousel (6–8 slides)</button>
+            <button class="soc-seg-btn" data-fmt="reel">🎬 Reel Script (30s)</button>
+            <button class="soc-seg-btn" data-fmt="single">📸 Single Post</button>
+          </div>
+
+          <label class="soc-label">TONE</label>
+          <div class="soc-seg" id="soc-tone-seg">
+            <button class="soc-seg-btn active" data-tone="professional">📋 Professional</button>
+            <button class="soc-seg-btn" data-tone="punchy">⚡ Punchy</button>
+            <button class="soc-seg-btn" data-tone="educational">🎓 Educational</button>
+          </div>
+
+          <label class="soc-label">TARGET AUDIENCE <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:10px">(optional)</span></label>
+          <input class="soc-input" id="soc-audience" type="text" placeholder="e.g. startup founders, ops managers">
+
+          ${brainFacts.length ? `<div class="soc-context-pill">🧠 ${brainFacts.length} brain facts · brand context auto-loaded</div>` : ''}
+
+          <button class="soc-generate-btn" id="soc-generate">✨ Generate Content</button>
+        </div>
+
+        <div id="soc-draft-list">${SocialStudio._renderDraftListHTML()}</div>
+      </div>
+
+      <div class="soc-right" id="soc-right">
+        <div class="soc-empty-state">
+          <div class="soc-empty-icon">✨</div>
+          <div class="soc-empty-title">Social Studio</div>
+          <div class="soc-empty-sub">Describe your topic, choose a format and tone, then let Zara (Social Media Manager) craft ready-to-post Instagram content — personalised with your brand context.</div>
+        </div>
+      </div>
+    </div>`;
+
+    container.querySelectorAll('#soc-format-seg .soc-seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('#soc-format-seg .soc-seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        SocialStudio._format = btn.dataset.fmt;
+      });
+    });
+    container.querySelectorAll('#soc-tone-seg .soc-seg-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        container.querySelectorAll('#soc-tone-seg .soc-seg-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        SocialStudio._tone = btn.dataset.tone;
+      });
+    });
+
+    document.getElementById('soc-generate')?.addEventListener('click', () =>
+      SocialStudio._generate(brainFacts, company));
+
+    SocialStudio._bindDraftClicks(container);
+  },
+
+  _resetRight() {
+    document.getElementById('soc-topic').value = '';
+    document.getElementById('soc-audience').value = '';
+    document.getElementById('soc-right').innerHTML = `
+      <div class="soc-empty-state">
+        <div class="soc-empty-icon">✨</div>
+        <div class="soc-empty-title">Ready for a new post</div>
+        <div class="soc-empty-sub">Fill in the brief on the left and hit Generate.</div>
+      </div>`;
+  },
+
+  async _generate(brainFacts, company) {
+    if (SocialStudio._generating) return;
+    const topic = (document.getElementById('soc-topic')?.value || '').trim();
+    if (!topic) { toast('Enter a topic first', 'info'); return; }
+
+    const audience = (document.getElementById('soc-audience')?.value || '').trim();
+    SocialStudio._generating = true;
+    const btn = document.getElementById('soc-generate');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<span class="ds-gen-spin">◌</span> Generating…'; }
+
+    const right = document.getElementById('soc-right');
+    if (right) right.innerHTML = `<div class="soc-loading"><div class="ads-load-ring" style="border-top-color:#6366f1"></div><div>Zara is crafting your ${SocialStudio._format} content…</div></div>`;
+
+    const toneMap = {
+      professional: 'authoritative, credible, polished — speaks like a respected industry expert',
+      punchy:       'bold, short punchy sentences, high energy, scroll-stopping, uses power words',
+      educational:  'clear, value-first, step-by-step, teaches something concrete in every slide',
+    };
+
+    const ctxLines = brainFacts.slice(0, 12)
+      .map(f => `- ${f.category || 'fact'}: ${(f.text || '').slice(0, 130)}`)
+      .filter(l => l.length > 15).join('\n');
+
+    const formatInstructions = {
+      carousel: `Generate a 6-8 slide Instagram carousel. Return ONLY raw JSON — no markdown fences, no explanation, start with {:
+{
+  "format": "carousel",
+  "topic": "${topic.replace(/"/g,'\\\"')}",
+  "slides": [
+    { "slide": 1, "type": "hook",    "headline": "Bold scroll-stopping hook headline", "body": "2-3 punchy lines that tease the value", "visual": "layout/color/imagery direction for designer" },
+    { "slide": 2, "type": "content", "headline": "...", "body": "one insight, max 3 lines", "visual": "..." },
+    { "slide": 3, "type": "content", "headline": "...", "body": "...", "visual": "..." },
+    { "slide": 4, "type": "content", "headline": "...", "body": "...", "visual": "..." },
+    { "slide": 5, "type": "content", "headline": "...", "body": "...", "visual": "..." },
+    { "slide": 6, "type": "content", "headline": "...", "body": "...", "visual": "..." },
+    { "slide": 7, "type": "cta",     "headline": "CTA headline", "body": "Follow / save / DM action", "visual": "brand colors, logo", "cta": "Follow @handle for more" }
+  ]
+}
+Rules: Slide 1 must stop the scroll — no filler openers. Each content slide = one clear insight + 2-3 line body. Visual notes are brief aesthetic/layout directions for a designer (not captions).`,
+
+      reel: `Generate a 30-second Instagram Reel script. Return ONLY raw JSON — no markdown, start with {:
+{
+  "format": "reel",
+  "topic": "${topic.replace(/"/g,'\\\"')}",
+  "duration": "30s",
+  "scenes": [
+    { "scene": 1, "timestamp": "0:00-0:03", "onscreen": "Hook text shown on screen", "voiceover": "What you say out loud", "visual": "camera/visual direction" },
+    { "scene": 2, "timestamp": "0:03-0:08", "onscreen": "...", "voiceover": "...", "visual": "..." },
+    { "scene": 3, "timestamp": "0:08-0:15", "onscreen": "...", "voiceover": "...", "visual": "..." },
+    { "scene": 4, "timestamp": "0:15-0:22", "onscreen": "...", "voiceover": "...", "visual": "..." },
+    { "scene": 5, "timestamp": "0:22-0:27", "onscreen": "...", "voiceover": "...", "visual": "..." },
+    { "scene": 6, "timestamp": "0:27-0:30", "onscreen": "CTA text", "voiceover": "CTA line", "visual": "brand end card" }
+  ]
+}
+Scene 1: pattern-interrupt hook (question or bold claim). Scenes 2-5: rapid-fire value delivery. Scene 6: CTA. Max 1-2 sentences VO per scene.`,
+
+      single: `Generate a single Instagram post. Return ONLY raw JSON — no markdown, start with {:
+{
+  "format": "single",
+  "topic": "${topic.replace(/"/g,'\\\"')}",
+  "hook": "First line that stops the scroll (no greeting, no filler)",
+  "caption": "Full Instagram caption with line breaks for breathing room. Value-first. Storytelling if possible. 150-300 words.",
+  "hashtags": ["#relevantTag1", "#relevantTag2", "#relevantTag3", "#relevantTag4", "#relevantTag5"],
+  "visual": "Visual direction for the image or graphic — colors, style, what to show"
+}`,
+    };
+
+    const sys = `You are Zara, expert Social Media Manager at ${company}. You specialise in high-performing Instagram content that converts followers into customers.
+${ctxLines ? `\nBrand knowledge:\n${ctxLines}` : ''}
+${audience ? `Target audience: ${audience}` : ''}
+Tone: ${toneMap[SocialStudio._tone] || SocialStudio._tone}
+Platform: Instagram
+CRITICAL: Output ONLY valid JSON. No markdown fences. No text before or after. Start immediately with {`;
+
+    let raw = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role: 'user', content: formatInstructions[SocialStudio._format] }],
+        sys,
+        { search: false, appTools: false, max_tokens: 4096, model: 'claude-opus-4-7' }
+      )) raw += chunk;
+
+      const data = SocialStudio._parseJSON(raw);
+      if (!data) throw new Error('Could not parse JSON response — try again');
+
+      SocialStudio._current = data;
+      SocialStudio._renderOutput(data);
+      SocialStudio._saveDraft(data, topic);
+    } catch(e) {
+      if (right) right.innerHTML = `<div class="soc-empty-state"><div class="soc-empty-icon" style="font-size:32px">✕</div><div class="soc-empty-title" style="color:var(--red)">Generation failed</div><div class="soc-empty-sub">${escHtml(e.message)}</div></div>`;
+    }
+
+    SocialStudio._generating = false;
+    if (btn) { btn.disabled = false; btn.innerHTML = '✨ Generate Content'; }
+  },
+
+  _parseJSON(raw) {
+    let s = raw.trim().replace(/^```[a-z]*\n?/i,'').replace(/```\s*$/i,'').trim();
+    const a = s.indexOf('{'), b = s.lastIndexOf('}');
+    if (a === -1 || b === -1) return null;
+    s = s.slice(a, b + 1);
+    try { return JSON.parse(s); } catch {
+      try { return JSON.parse(s + ']}'); } catch {}
+      try { return JSON.parse(s + '"]}'); } catch {}
+      return null;
+    }
+  },
+
+  _renderOutput(data) {
+    const right = document.getElementById('soc-right');
+    if (!right) return;
+    const fmt = data.format;
+    const items = data.slides || data.scenes || [];
+    const fmtLabel = fmt === 'carousel' ? `${items.length} slides` : fmt === 'reel' ? `${items.length} scenes · ${data.duration||'30s'}` : 'Single post';
+
+    let cardsHtml = '';
+    if (fmt === 'carousel') {
+      cardsHtml = items.map((s, i) => `
+        <div class="soc-card" data-idx="${i}">
+          <div class="soc-card-hdr">
+            <span class="soc-slide-num">Slide ${s.slide}</span>
+            ${s.type ? `<span class="soc-slide-type">${s.type}</span>` : ''}
+            <div style="margin-left:auto;display:flex;gap:5px">
+              <button class="soc-card-btn soc-regen" data-idx="${i}" title="Regenerate slide">↺ Redo</button>
+              <button class="soc-card-btn soc-copy-slide" data-idx="${i}" title="Copy slide">⎘ Copy</button>
+            </div>
+          </div>
+          <div class="soc-card-body">
+            <div class="soc-field-group"><div class="soc-field-label">Headline</div>
+              <div class="soc-editable" contenteditable="true" data-field="headline" data-idx="${i}">${escHtml(s.headline||'')}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">Body</div>
+              <div class="soc-editable" contenteditable="true" data-field="body" data-idx="${i}">${escHtml(s.body||'')}</div></div>
+            ${s.cta?`<div class="soc-field-group"><div class="soc-field-label">CTA</div><div class="soc-editable" contenteditable="true" data-field="cta" data-idx="${i}">${escHtml(s.cta)}</div></div>`:''}
+            <div class="soc-field-group"><div class="soc-field-label">🎨 Visual direction</div>
+              <div class="soc-visual-note">${escHtml(s.visual||'')}</div></div>
+          </div>
+        </div>`).join('');
+    } else if (fmt === 'reel') {
+      cardsHtml = items.map((s, i) => `
+        <div class="soc-card" data-idx="${i}">
+          <div class="soc-card-hdr">
+            <span class="soc-slide-num">Scene ${s.scene}</span>
+            <span class="soc-slide-type">${s.timestamp||''}</span>
+            <div style="margin-left:auto;display:flex;gap:5px">
+              <button class="soc-card-btn soc-regen" data-idx="${i}">↺ Redo</button>
+              <button class="soc-card-btn soc-copy-slide" data-idx="${i}">⎘ Copy</button>
+            </div>
+          </div>
+          <div class="soc-card-body">
+            <div class="soc-field-group"><div class="soc-field-label">📺 On-screen text</div>
+              <div class="soc-editable" contenteditable="true" data-field="onscreen" data-idx="${i}">${escHtml(s.onscreen||'')}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">🎙 Voiceover</div>
+              <div class="soc-editable" contenteditable="true" data-field="voiceover" data-idx="${i}">${escHtml(s.voiceover||'')}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">🎨 Visual direction</div>
+              <div class="soc-visual-note">${escHtml(s.visual||'')}</div></div>
+          </div>
+        </div>`).join('');
+    } else {
+      cardsHtml = `
+        <div class="soc-card soc-card--single">
+          <div class="soc-card-hdr"><span class="soc-slide-num">Caption</span>
+            <div style="margin-left:auto"><button class="soc-card-btn soc-copy-slide" data-idx="0">⎘ Copy all</button></div></div>
+          <div class="soc-card-body">
+            <div class="soc-field-group"><div class="soc-field-label">Hook line</div>
+              <div class="soc-editable" contenteditable="true" data-field="hook" data-idx="0">${escHtml(data.hook||'')}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">Full caption</div>
+              <div class="soc-editable" contenteditable="true" data-field="caption" data-idx="0" style="min-height:90px">${escHtml(data.caption||'')}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">Hashtags</div>
+              <div class="soc-editable" contenteditable="true" data-field="hashtags_str" data-idx="0">${escHtml((data.hashtags||[]).join(' '))}</div></div>
+            <div class="soc-field-group"><div class="soc-field-label">🎨 Visual direction</div>
+              <div class="soc-visual-note">${escHtml(data.visual||'')}</div></div>
+          </div>
+        </div>`;
+    }
+
+    right.innerHTML = `
+      <div class="soc-output-hdr">
+        <div>
+          <div style="font-size:15px;font-weight:700;color:var(--text)">${escHtml(data.topic||'Untitled')}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px">${fmtLabel} · Generated by Zara</div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+          <button class="tb-btn" id="soc-copy-all">⎘ Copy All</button>
+          <button class="tb-btn primary" id="soc-export-design">🎨 Export to Design Studio</button>
+        </div>
+      </div>
+      <div class="soc-cards-grid">${cardsHtml}</div>`;
+
+    document.getElementById('soc-copy-all')?.addEventListener('click', () => {
+      navigator.clipboard.writeText(SocialStudio._exportText(data));
+      toast('All content copied ✓', 'success');
+    });
+
+    document.getElementById('soc-export-design')?.addEventListener('click', () => {
+      const slides = data.slides || data.scenes || [];
+      window._soc2design = slides.length
+        ? `Instagram ${data.format} — ${data.topic}\n\n` + slides.map((s,i)=>`Slide ${i+1}: ${s.headline||s.onscreen||''}\n${s.body||s.voiceover||''}`).join('\n\n')
+        : `${data.hook||''}\n\n${data.caption||''}`;
+      Router.navigate('design');
+    });
+
+    right.querySelectorAll('.soc-copy-slide').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.idx);
+        const item = (data.slides||data.scenes||[])[idx] || data;
+        const text = item.headline
+          ? `${item.headline}\n\n${item.body||''}${item.cta?'\n\nCTA: '+item.cta:''}`
+          : item.onscreen
+            ? `[${item.timestamp}] On-screen: ${item.onscreen}\nVO: ${item.voiceover||''}`
+            : `${data.hook||''}\n\n${data.caption||''}\n\n${(data.hashtags||[]).join(' ')}`;
+        navigator.clipboard.writeText(text);
+        toast('Copied ✓', 'success');
+      });
+    });
+
+    right.querySelectorAll('.soc-regen').forEach(btn => {
+      btn.addEventListener('click', () => SocialStudio._regenSlide(data, parseInt(btn.dataset.idx)));
+    });
+
+    right.querySelectorAll('.soc-editable').forEach(el => {
+      el.addEventListener('input', () => {
+        const idx = parseInt(el.dataset.idx), field = el.dataset.field, val = el.innerText;
+        if (data.slides?.[idx]) data.slides[idx][field] = val;
+        else if (data.scenes?.[idx]) data.scenes[idx][field] = val;
+        else data[field] = val;
+      });
+    });
+  },
+
+  async _regenSlide(data, idx) {
+    const items = data.slides || data.scenes;
+    if (!items?.[idx]) return;
+    const item = items[idx];
+    const card = document.querySelector(`.soc-card[data-idx="${idx}"]`);
+    const btn = card?.querySelector('.soc-regen');
+    if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+    const isCarousel = !!data.slides;
+    const ref = isCarousel ? `Slide ${item.slide}` : `Scene ${item.scene} (${item.timestamp})`;
+    const ctx = isCarousel
+      ? `Carousel: "${data.topic}". Current slide:\nHeadline: ${item.headline}\nBody: ${item.body}`
+      : `Reel: "${data.topic}". Scene ${item.timestamp}:\nOn-screen: ${item.onscreen}\nVO: ${item.voiceover}`;
+
+    const sys = `You are Zara, Instagram content expert. Regenerate ONE ${isCarousel?'carousel slide':'reel scene'} with stronger copy. Return ONLY valid JSON for the single item (no array, no markdown).`;
+    const userMsg = `${ctx}\n\nRegenerate with stronger, more scroll-stopping copy. Same structure. Return as JSON: ${isCarousel?'{"headline":"...","body":"...","visual":"..."}':'{"onscreen":"...","voiceover":"...","visual":"..."}'}`;
+
+    let raw = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role:'user', content:userMsg }],
+        sys,
+        { search:false, appTools:false, max_tokens:512, model:'claude-opus-4-7' }
+      )) raw += chunk;
+
+      const parsed = SocialStudio._parseJSON(raw);
+      if (parsed) {
+        Object.assign(items[idx], parsed);
+        card?.querySelectorAll('.soc-editable').forEach(el => {
+          if (parsed[el.dataset.field] !== undefined) el.innerText = parsed[el.dataset.field];
+        });
+        const vnEl = card?.querySelector('.soc-visual-note');
+        if (vnEl && parsed.visual) vnEl.textContent = parsed.visual;
+        toast('Slide regenerated ✓', 'success');
+      }
+    } catch(e) { toast('Redo failed: ' + e.message, 'error'); }
+
+    if (btn) { btn.disabled = false; btn.textContent = '↺ Redo'; }
+  },
+
+  _exportText(data) {
+    if (data.slides) return data.slides.map(s=>`--- Slide ${s.slide} (${s.type||''}) ---\n${s.headline}\n\n${s.body}${s.cta?'\n\nCTA: '+s.cta:''}\nVisual: ${s.visual}`).join('\n\n');
+    if (data.scenes) return data.scenes.map(s=>`[${s.timestamp}] Scene ${s.scene}\nOn-screen: ${s.onscreen}\nVO: ${s.voiceover}\nVisual: ${s.visual}`).join('\n\n');
+    return `${data.hook||''}\n\n${data.caption||''}\n\n${(data.hashtags||[]).join(' ')}`;
+  },
+
+  _saveDraft(data, topic) {
+    const draft = { id: uid(), topic: (topic||data.topic||'Untitled').slice(0,80), format: data.format, data, ts: Date.now() };
+    SocialStudio._drafts.unshift(draft);
+    SocialStudio._drafts = SocialStudio._drafts.slice(0, 20);
+    try { localStorage.setItem('kayro_social_drafts', JSON.stringify(SocialStudio._drafts)); } catch(_) {}
+    const listEl = document.getElementById('soc-draft-list');
+    if (listEl) {
+      listEl.innerHTML = SocialStudio._renderDraftListHTML();
+      SocialStudio._bindDraftClicks(listEl);
+    }
+  },
+
+  _renderDraftListHTML() {
+    if (!SocialStudio._drafts.length) return '';
+    const fmtIcon = { carousel:'📊', reel:'🎬', single:'📸' };
+    return `<div class="soc-drafts">
+      <div class="soc-label" style="margin-bottom:8px">SAVED DRAFTS</div>
+      ${SocialStudio._drafts.slice(0,8).map(d=>`
+        <div class="soc-draft-item" data-did="${d.id}">
+          <span style="font-size:16px">${fmtIcon[d.format]||'📱'}</span>
+          <div style="flex:1;min-width:0">
+            <div class="soc-draft-title">${escHtml(d.topic.slice(0,38))}</div>
+            <div class="soc-draft-meta">${d.format} · ${new Date(d.ts).toLocaleDateString()}</div>
+          </div>
+          <button class="soc-draft-del" data-did="${d.id}">✕</button>
+        </div>`).join('')}
+    </div>`;
+  },
+
+  _bindDraftClicks(root) {
+    root.querySelectorAll('.soc-draft-item').forEach(item => {
+      item.addEventListener('click', e => {
+        if (e.target.classList.contains('soc-draft-del')) return;
+        const d = SocialStudio._drafts.find(x => x.id === item.dataset.did);
+        if (d) { SocialStudio._current = d.data; SocialStudio._renderOutput(d.data); }
+      });
+    });
+    root.querySelectorAll('.soc-draft-del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        SocialStudio._drafts = SocialStudio._drafts.filter(d => d.id !== btn.dataset.did);
+        try { localStorage.setItem('kayro_social_drafts', JSON.stringify(SocialStudio._drafts)); } catch(_) {}
+        btn.closest('.soc-draft-item').remove();
+      });
+    });
+  },
+
+  destroy() { SocialStudio._current = null; SocialStudio._generating = false; },
 };
 
 // ══════════════════════════════════════════════════════════════
