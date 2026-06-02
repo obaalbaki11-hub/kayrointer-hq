@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://kayrointer.com/sitemap.xml
