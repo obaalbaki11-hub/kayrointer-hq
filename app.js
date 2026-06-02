@@ -7610,6 +7610,8 @@ const Settings = {
           <input class="form-input" id="s-site-url" value="${escHtml(s.siteUrl||'kayrointer.com')}" placeholder="yourcompany.com">
         </div>
         <button class="btn btn-primary" id="s-save-co">Save Company Info</button>
+        <button class="btn" id="s-rerun-wizard" style="margin-top:10px">🧙 Re-run Setup Wizard</button>
+        <div class="form-hint" style="margin-top:6px">Re-run the setup wizard to update your company profile and re-brief all your agents.</div>
       </div>
       <div class="s-card full">
         <div class="s-card-title">🤖 Claude AI</div>
@@ -7813,6 +7815,10 @@ const Settings = {
       save('settings');
       document.getElementById('brand-name').textContent=State.settings.companyName;
       toast('Company info saved — all agents updated','success');
+    });
+    document.getElementById('s-rerun-wizard').addEventListener('click',()=>{
+      State.onboarded = false;
+      Onboarding.show();
     });
     document.getElementById('s-save-key').addEventListener('click',()=>{
       const pk  = document.getElementById('s-platform-key').value.trim();
