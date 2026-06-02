@@ -1501,10 +1501,19 @@ iframe{display:block;width:${w}px;height:${h}px;border:none;max-width:100%}
     };
   },
 
+  _stripThinking(t) {
+    return t
+      .replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '')  // complete blocks
+      .replace(/<thinking>[\s\S]*?<\/thinking>/gi, '')
+      .replace(/<reasoning>[\s\S]*/i, '')  // unclosed — rest is reasoning
+      .replace(/<thinking>[\s\S]*/i, '')
+      .trim();
+  },
+
   _saveToBrain({ text, category='general' }) {
     if (!State.brain?.facts) { if(!State.brain) State.brain={}; State.brain.facts=[]; }
     // Strip extended thinking blocks before saving
-    const clean = text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
+    const clean = AppTools._stripThinking(text);
     if (!clean) return { result: 'Nothing to save.', display: '' };
     const emp = State.employees.find(e=>e.id===Chat?.activeEmpId);
     State.brain.facts.unshift({ id:uid(), text: clean, category, source:'AI Employee', sourceAgent:emp?.name||'AI', sourceEmpId:emp?.id||null, timestamp:Date.now() });
@@ -4478,7 +4487,7 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
     // Pull the first meaningful non-separator line as a subtitle
     const firstLine = responseText.split('\n').map(l=>l.trim()).find(l=>l && !l.match(/^[═=\-—#*]+$/) && l.length > 4) || skillCmd;
     const title = `[${skillLabel}] ${firstLine.replace(/^#+\s*/,'').slice(0,70)}`;
-    const cleaned = responseText.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi, '').trim();
+    const cleaned = AppTools._stripThinking(responseText);
     const stored = cleaned.length > 4000
       ? cleaned.slice(0, 4000) + '\n\n[… full output in chat history]'
       : cleaned;
@@ -9036,7 +9045,7 @@ const BrainPage = {
     grid.innerHTML = `<div class="brain-facts-list">${facts.map(f=>{
       const cat = BRAIN_CATEGORIES[f.category] || {emoji:'•',label:f.category||'general',color:'var(--text2)'};
       const date = new Date(f.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'});
-      const displayText = f.text.replace(/<reasoning>[\s\S]*?<\/reasoning>/gi,'').trim();
+      const displayText = AppTools._stripThinking(f.text);
       return `<div class="brain-fact-card" data-id="${f.id}">
         <div class="brain-fact-cat-pill" style="background:${cat.color}18;color:${cat.color}">${cat.emoji} ${cat.label}</div>
         <div class="brain-fact-text">${escHtml(displayText)}</div>
