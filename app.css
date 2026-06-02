@@ -1264,6 +1264,13 @@ td.editing .cell-editor{display:block}
 .script-meta{font-size:10px;color:var(--text3);margin-top:3px;font-family:var(--font)}
 .script-body{padding:16px;margin:0;border-top:1px solid var(--border);background:#F5F5F8;font-size:11px;color:var(--text2);line-height:1.7;white-space:pre-wrap;font-family:var(--mono);overflow-x:auto}
 
+/* ─── Ad Studio Tab Bar ──────────────────────────────────────── */
+.ads-tab-bar{display:flex;gap:4px;padding:12px 16px 0;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.ads-tab{background:none;border:none;padding:9px 18px;font-size:13px;font-weight:600;color:var(--text3);cursor:pointer;font-family:var(--font);border-radius:8px 8px 0 0;border:1px solid transparent;border-bottom:none;transition:all .15s;position:relative;bottom:-1px}
+.ads-tab:hover{color:var(--text2);background:var(--surface2)}
+.ads-tab.active{color:var(--accent);background:var(--bg);border-color:var(--border);border-bottom-color:var(--bg)}
+.ads-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+
 /* ─── Design Studio ─────────────────────────────────────────── */
 .ds-root{display:flex;height:100%;min-height:0;overflow:hidden}
 

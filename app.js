@@ -749,6 +749,9 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 
   {id:'e_pr',name:'Blake',role:'PR & Communications',model:'claude-opus-4-7',color:'#f43f5e',bodyHex:0xf43f5e,skinHex:0xfbbf24,pos:[-8,8],status:'online',skills:['Press Releases','Media Pitches','Crisis Comms','Brand Voice','Thought Leadership'],hired:Date.now(),tasks:0,
    system:`You are Blake, a sharp PR & Communications specialist at [company]. Write press releases, craft media pitches, manage crisis communications, and build thought leadership content. Write for journalists — punchy, factual, newsworthy. Press release format: Headline → Dateline → Lede → Body (inverted pyramid) → Boilerplate → Contact. For pitches: Hook → Why now → Why this journalist → Ask.`},
+
+  {id:'e_video',name:'Cleo',role:'Video Production Agent',model:'agent_01JCFxN4aeZYnateGiokfdxL',color:'#a855f7',bodyHex:0xa855f7,skinHex:0xf0c89a,pos:[4,-10],status:'online',skills:['Video Scripts','AI Video Prompts','Runway Gen-3','Sora','Luma','Campaign Strategy'],hired:Date.now(),tasks:0,
+   system:`You are Cleo, Lead Video Production & Creative Agent at [company]. Transform raw product features or marketing goals into high-converting video structures, scripts, and production-ready prompts for AI video generators (Runway Gen-3, Sora, Luma). Identify the primary business goal, target audience, and main CTA. Structure every video: 0–3s Hook, 3–15s Problem & Solution, 15–30s CTA. Every scene must include camera movement and lighting/aesthetic style. Output: Campaign Strategy overview, then a scene-by-scene breakdown table with Timestamp | Visual Script | On-Screen Text | AI Video Generator Prompt.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -8280,6 +8283,9 @@ const AdStudio = {
   _format: 'square',
   _anim:   'cinematic',
   _ads:    [],
+  _videoEmp: null,
+  _videoHistory: [],
+  _videoSessionId: null,
 
   _formats: {
     square:    { label:'Instagram Square',  w:1080, h:1080, icon:'⬛' },
@@ -8301,12 +8307,16 @@ const AdStudio = {
 
   init(container) {
     AdStudio._ads = JSON.parse(localStorage.getItem('kayro_ads') || '[]');
+    AdStudio._videoEmp = getEmp('e_video');
+    AdStudio._videoHistory = [];
+    AdStudio._videoSessionId = null;
 
     document.getElementById('topbar-right').innerHTML = `
       <button class="tb-btn primary" id="ads-new-btn">+ New Ad</button>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn').addEventListener('click', () => Chat.toggle());
     document.getElementById('ads-new-btn').addEventListener('click', () => {
+      document.getElementById('ads-tab-ad')?.click();
       document.getElementById('ads-prompt').value = '';
       document.getElementById('ads-prompt').focus();
     });
@@ -8317,79 +8327,217 @@ const AdStudio = {
     const animOpts = Object.entries(AdStudio._anims).map(([k,v]) =>
       `<button class="ads-anim-btn${k===AdStudio._anim?' active':''}" data-anim="${k}">${k.charAt(0).toUpperCase()+k.slice(1)}</button>`).join('');
 
-    container.innerHTML = `<div class="ds-root">
-      <div class="ds-left">
-        <div class="ds-left-inner">
+    const vEmp = AdStudio._videoEmp;
+    const vColor = vEmp?.color || '#a855f7';
+    const vShortId = 'agent_01JC…kdxL';
 
-          <div class="ds-section-label">QUICK START</div>
-          <div class="ds-quick-grid">
-            ${[
-              ['Product Launch',  'Epic product launch ad — show the product hero with dramatic reveal animation, bold headline, and CTA'],
-              ['Black Friday',    'Black Friday sale ad — massive discount typography (70% OFF), countdown timer, red/black urgency design'],
-              ['App Promo',       'Mobile app promo ad — phone mockup with floating UI, feature bullets animating in, download CTA'],
-              ['Brand Story',     'Brand story ad — minimal elegant animation with company name, tagline reveal, and soft logo transition'],
-              ['Testimonial',     'Social proof ad — quote from a happy customer animates in with star rating and company logo'],
-              ['Countdown',       'Countdown timer ad — real JS countdown to a deadline, urgency colors, animated digits'],
-            ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
-          </div>
-
-          <div class="ds-divider"></div>
-          <div class="ds-section-label">FORMAT</div>
-          <div class="ads-fmt-list">${fmtOpts}</div>
-
-          <div class="ds-section-label" style="margin-top:14px">ANIMATION STYLE</div>
-          <div class="ads-anim-row">${animOpts}</div>
-
-          <div class="ds-section-label" style="margin-top:14px">DESCRIBE YOUR AD</div>
-          <textarea class="ds-prompt" id="ads-prompt" rows="5"
-            placeholder="Describe your ad — product, offer, audience, vibe…&#10;&#10;e.g. Instagram ad for a luxury skincare brand launch. Show a gold bottle, animated particles, tagline 'Your skin deserves more' fading in, shop now button."></textarea>
-
-        </div>
-        <div class="ads-left-footer">
-          <button class="ds-generate-btn" id="ads-generate">🎬 Generate Ad</button>
-          <div class="ds-gen-status" id="ads-gen-status"></div>
-        </div>
-      </div>
-
-      <div class="ds-right">
-        <div class="ads-preview-area" id="ads-preview-area">
-          <div class="ds-empty-state">
-            <div class="ds-empty-icon">🎬</div>
-            <div class="ds-empty-title">Your ad appears here</div>
-            <div class="ds-empty-sub">Pick a quick start or describe your ad, choose a format and style, then hit Generate. Powered by Claude Opus 4.7.</div>
-          </div>
-        </div>
-      </div>
+    container.innerHTML = `
+    <div class="ads-tab-bar">
+      <button class="ads-tab active" id="ads-tab-ad">🎬 Ad Designer</button>
+      <button class="ads-tab" id="ads-tab-video">🎥 Video Script</button>
     </div>
-    <div class="ads-gallery-section" id="ads-gallery"></div>`;
 
-    // Quick starts
+    <div id="ads-panel-ad" class="ads-panel">
+      <div class="ds-root">
+        <div class="ds-left">
+          <div class="ds-left-inner">
+            <div class="ds-section-label">QUICK START</div>
+            <div class="ds-quick-grid">
+              ${[
+                ['Product Launch',  'Epic product launch ad — show the product hero with dramatic reveal animation, bold headline, and CTA'],
+                ['Black Friday',    'Black Friday sale ad — massive discount typography (70% OFF), countdown timer, red/black urgency design'],
+                ['App Promo',       'Mobile app promo ad — phone mockup with floating UI, feature bullets animating in, download CTA'],
+                ['Brand Story',     'Brand story ad — minimal elegant animation with company name, tagline reveal, and soft logo transition'],
+                ['Testimonial',     'Social proof ad — quote from a happy customer animates in with star rating and company logo'],
+                ['Countdown',       'Countdown timer ad — real JS countdown to a deadline, urgency colors, animated digits'],
+              ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
+            </div>
+            <div class="ds-divider"></div>
+            <div class="ds-section-label">FORMAT</div>
+            <div class="ads-fmt-list">${fmtOpts}</div>
+            <div class="ds-section-label" style="margin-top:14px">ANIMATION STYLE</div>
+            <div class="ads-anim-row">${animOpts}</div>
+            <div class="ds-section-label" style="margin-top:14px">DESCRIBE YOUR AD</div>
+            <textarea class="ds-prompt" id="ads-prompt" rows="5"
+              placeholder="Describe your ad — product, offer, audience, vibe…&#10;&#10;e.g. Instagram ad for a luxury skincare brand launch. Show a gold bottle, animated particles, tagline 'Your skin deserves more' fading in, shop now button."></textarea>
+          </div>
+          <div class="ads-left-footer">
+            <button class="ds-generate-btn" id="ads-generate">🎬 Generate Ad</button>
+            <div class="ds-gen-status" id="ads-gen-status"></div>
+          </div>
+        </div>
+        <div class="ds-right">
+          <div class="ads-preview-area" id="ads-preview-area">
+            <div class="ds-empty-state">
+              <div class="ds-empty-icon">🎬</div>
+              <div class="ds-empty-title">Your ad appears here</div>
+              <div class="ds-empty-sub">Pick a quick start or describe your ad, choose a format and style, then hit Generate. Powered by Claude Opus 4.7.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="ads-gallery-section" id="ads-gallery"></div>
+    </div>
+
+    <div id="ads-panel-video" class="ads-panel" style="display:none">
+      <div class="agent-pg-root">
+        <div class="agent-pg-left">
+          <div class="agent-pg-card" style="--ac:${vColor}">
+            <div class="agent-pg-av" style="background:${vColor}20;border-color:${vColor}40;color:${vColor}">🎥</div>
+            <div class="agent-pg-name">Cleo</div>
+            <div class="agent-pg-role">Video Production Agent</div>
+            <div class="agent-pg-badge">Scripts · Prompts · AI Video</div>
+            <div class="agent-pg-model">${vShortId}</div>
+          </div>
+
+          <div class="agent-pg-section-lbl">QUICK ACTIONS</div>
+          ${[
+            ['📱 TikTok / Reels',   'Create a 30-second TikTok/Reels video script for: '],
+            ['🖥 YouTube Ad',        'Create a 60-second YouTube pre-roll ad script for: '],
+            ['🚀 Product Launch',    'Create a product launch video campaign for: '],
+            ['💡 Problem → Solution','Create a problem/solution video script for: '],
+            ['⭐ Testimonial Video', 'Create a customer testimonial video structure for: '],
+            ['🎯 Retargeting Ad',    'Create a 15-second retargeting video script for: '],
+          ].map(([label, starter]) =>
+            `<button class="agent-qa-btn" data-starter="${escHtml(starter)}" style="--ac:${vColor}">${label}</button>`
+          ).join('')}
+
+          <div class="agent-pg-section-lbl" style="margin-top:16px">PLATFORMS</div>
+          <div class="agent-pg-tags">
+            ${['Runway Gen-3','Sora','Luma','TikTok','Reels','YouTube','9:16','16:9'].map(t=>
+              `<span class="agent-pg-tag" style="background:${vColor}12;color:${vColor};border-color:${vColor}30">${t}</span>`
+            ).join('')}
+          </div>
+        </div>
+
+        <div class="agent-pg-right">
+          <div class="agent-pg-chat-hdr">
+            <div style="font-size:13px;font-weight:700;color:var(--text)">Cleo — Video Production Agent</div>
+            <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">${vShortId} · Powered by Claude Platform</div>
+            <button class="agent-pg-clear" id="video-clear">Clear</button>
+          </div>
+          <div class="agent-pg-messages" id="video-messages">
+            <div class="agent-pg-welcome">
+              <div class="agent-pg-welcome-icon" style="color:${vColor}">🎥</div>
+              <div class="agent-pg-welcome-title">Video Production Agent Ready</div>
+              <div class="agent-pg-welcome-sub">Tell Cleo your product, goal, and target platform. She'll deliver a full campaign strategy, scene-by-scene breakdown with timestamps, on-screen text, and production-ready AI video prompts for Runway Gen-3, Sora, and Luma.</div>
+            </div>
+          </div>
+          <div class="agent-pg-input-row">
+            <textarea class="agent-pg-input" id="video-input" rows="1"
+              placeholder="e.g. TikTok ad for our AI workforce app — target: startup founders, goal: signups, CTA: 'Start free trial'…"></textarea>
+            <button class="agent-pg-send" id="video-send" style="background:${vColor}">↑</button>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    // Tab switching
+    container.querySelectorAll('.ads-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        container.querySelectorAll('.ads-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        const isVideo = tab.id === 'ads-tab-video';
+        document.getElementById('ads-panel-ad').style.display   = isVideo ? 'none' : '';
+        document.getElementById('ads-panel-video').style.display = isVideo ? '' : 'none';
+      });
+    });
+
+    // Ad Designer: Quick starts
     container.querySelectorAll('.ds-quick-btn').forEach(btn => btn.addEventListener('click', () => {
       document.getElementById('ads-prompt').value = btn.dataset.prompt;
     }));
 
-    // Format selector
+    // Ad Designer: Format selector
     container.querySelectorAll('.ads-fmt-btn').forEach(btn => btn.addEventListener('click', () => {
       container.querySelectorAll('.ads-fmt-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       AdStudio._format = btn.dataset.fmt;
     }));
 
-    // Animation style selector
+    // Ad Designer: Animation style selector
     container.querySelectorAll('.ads-anim-btn').forEach(btn => btn.addEventListener('click', () => {
       container.querySelectorAll('.ads-anim-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       AdStudio._anim = btn.dataset.anim;
     }));
 
-    // Generate
+    // Ad Designer: Generate
     const genBtn = document.getElementById('ads-generate');
     genBtn.addEventListener('click', () => AdStudio._generate(container));
     container.querySelector('#ads-prompt').addEventListener('keydown', e => {
       if (e.key === 'Enter' && e.metaKey) AdStudio._generate(container);
     });
 
+    // Video Script: Quick actions
+    container.querySelectorAll('.agent-qa-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('video-input').value = btn.dataset.starter;
+        document.getElementById('video-input').focus();
+      });
+    });
+
+    // Video Script: Clear
+    document.getElementById('video-clear').addEventListener('click', () => {
+      AdStudio._videoHistory = [];
+      AdStudio._videoState = { _sessionId: null };
+      document.getElementById('video-messages').innerHTML = '';
+    });
+
+    // Video Script: Send
+    const vInput = document.getElementById('video-input');
+    const vSend  = document.getElementById('video-send');
+    vInput.addEventListener('input', () => { vInput.style.height = 'auto'; vInput.style.height = Math.min(vInput.scrollHeight, 140) + 'px'; });
+    vInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); AdStudio._videoSend(); } });
+    vSend.addEventListener('click', () => AdStudio._videoSend());
+
     AdStudio._renderGallery();
+  },
+
+  async _videoSend() {
+    const input = document.getElementById('video-input');
+    const text  = (input.value || '').trim(); if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+
+    const msgs  = document.getElementById('video-messages');
+    const emp   = AdStudio._videoEmp;
+    const color = emp?.color || '#a855f7';
+
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+
+    const aiId = 'video-ai-' + Date.now();
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}">
+      <div class="agent-pg-av-sm" style="background:${color}20;color:${color}">🎥</div>
+      <div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div>
+    </div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    // agentSessionStream needs an object with _sessionId to persist the session
+    if (!AdStudio._videoState) AdStudio._videoState = { _sessionId: null };
+
+    let full = '';
+    try {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (emp?.model?.startsWith('agent_')) {
+        for await (const chunk of agentSessionStream(emp.model, AdStudio._videoState, text)) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      } else {
+        AdStudio._videoHistory.push({ role:'user', content:text });
+        for await (const chunk of AI.stream(AdStudio._videoHistory, emp?.system||'', { model:emp?.model, search:false, appTools:false, max_tokens:8192 })) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+        AdStudio._videoHistory.push({ role:'assistant', content:full });
+      }
+    } catch(e) {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (aiEl) aiEl.innerHTML = `<span style="color:var(--red)">Error: ${escHtml(e.message)}</span>`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
   },
 
   async _generate(container) {
