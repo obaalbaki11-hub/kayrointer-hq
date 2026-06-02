@@ -8584,63 +8584,91 @@ CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script be
       const modalBody = document.getElementById('html-ad-modal-body');
       if (!modalBody) return;
 
-      // iPhone 15 Pro dimensions: 393×852 logical px, ratio 0.4613
       const IPHONE_RATIO = 393 / 852;
       const BEZEL_X = 0.034, BEZEL_TOP = 0.037, BEZEL_BOT = 0.035;
 
-      // Compute phone size to fit the modal (leave room for toolbar)
-      const availH = Math.min(window.innerHeight * 0.72 - 56, 720);
+      const availH = Math.min(window.innerHeight * 0.72 - 56, 700);
       const availW = Math.min(window.innerWidth * 0.96 - 64, 860);
-      const fh = Math.min(availH, availW / IPHONE_RATIO);
-      const fw = fh * IPHONE_RATIO;
-      const scrW = fw * (1 - BEZEL_X * 2);
-      const scrH = fh * (1 - BEZEL_TOP - BEZEL_BOT);
 
-      const loadAd = () => {
+      const writeAd = () => {
         const f = document.getElementById('html-ad-iframe');
         if (f) { f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close(); }
       };
 
+      const renderAdView = (mode) => {
+        document.querySelectorAll('.had-view-btn').forEach(b => b.style.fontWeight = b.dataset.v === mode ? '700' : '400');
+        const wrap = document.getElementById('had-wrap');
+        if (!wrap) return;
+
+        if (mode === 'iphone') {
+          const fh = Math.min(availH, availW / IPHONE_RATIO);
+          const fw = fh * IPHONE_RATIO;
+          const scrW = fw * (1 - BEZEL_X * 2);
+          const scrH = fh * (1 - BEZEL_TOP - BEZEL_BOT);
+          wrap.innerHTML = `
+            <div class="ads-iphone" style="width:${fw}px;height:${fh}px;border-radius:${fw*0.114}px;position:relative;flex-shrink:0">
+              <div class="iph-mute"  style="top:${fh*0.14}px;height:${fh*0.036}px"></div>
+              <div class="iph-vol1"  style="top:${fh*0.2}px;height:${fh*0.07}px"></div>
+              <div class="iph-vol2"  style="top:${fh*0.29}px;height:${fh*0.07}px"></div>
+              <div class="iph-power" style="top:${fh*0.2}px;height:${fh*0.1}px"></div>
+              <div class="iph-screen" style="border-radius:${fw*0.105}px;top:${fh*BEZEL_TOP}px;left:${fw*BEZEL_X}px;width:${scrW}px;height:${scrH}px">
+                <div class="iph-island" style="width:${fw*0.28}px;height:${fw*0.045}px;border-radius:${fw*0.025}px;top:${scrH*0.018}px"></div>
+                <div style="position:absolute;inset:0;overflow:hidden;border-radius:${fw*0.1}px">
+                  <iframe id="html-ad-iframe" style="width:${scrW}px;height:${scrH}px;border:none;position:absolute;top:0;left:0" sandbox="allow-scripts allow-same-origin"></iframe>
+                </div>
+                <div class="iph-statusbar" style="height:${scrH*0.06}px"></div>
+                <div class="iph-home" style="bottom:${scrH*0.012}px;width:${scrW*0.33}px"></div>
+              </div>
+            </div>`;
+        } else if (mode === 'landscape') {
+          // 16:9 widescreen frame with thin bezel
+          const lw = Math.min(availW, availH * (16/9));
+          const lh = lw * (9/16);
+          wrap.innerHTML = `
+            <div style="width:${lw}px;height:${lh}px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 8px #1a1a1a,0 0 0 10px #2a2a2a,0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
+              <iframe id="html-ad-iframe" style="width:${lw}px;height:${lh}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>`;
+        } else {
+          // fullscreen — fill the dark background
+          wrap.innerHTML = `
+            <div style="width:${availW}px;height:${availH}px;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
+              <iframe id="html-ad-iframe" style="width:${availW}px;height:${availH}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+            </div>`;
+        }
+        writeAd();
+      };
+
       modalBody.innerHTML = `
-        <div style="display:flex;gap:8px;align-items:center;padding:0 0 14px 0;flex-wrap:wrap">
-          <button id="html-ad-replay" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">↺ Replay</button>
-          <button id="html-ad-copy" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">⎘ Copy HTML</button>
-          <button id="html-ad-download" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">⬇ Download .html</button>
+        <div style="display:flex;gap:8px;align-items:center;padding:0 0 12px 0;flex-wrap:wrap">
+          <div style="display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden">
+            <button class="had-view-btn" data-v="iphone"    style="padding:6px 14px;border:none;background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer;font-weight:700">📱 iPhone</button>
+            <button class="had-view-btn" data-v="landscape" style="padding:6px 14px;border:none;border-left:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">📺 Landscape</button>
+            <button class="had-view-btn" data-v="full"      style="padding:6px 14px;border:none;border-left:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">🖥 Fullscreen</button>
+          </div>
+          <button id="html-ad-replay" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">↺ Replay</button>
+          <button id="html-ad-copy" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">⎘ Copy</button>
+          <button id="html-ad-download" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">⬇ Download</button>
           <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">${Math.round(html.length/1024)}KB · Opus 4.7</span>
         </div>
-        <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#1a1a2e 0%,#0d0d14 100%);border-radius:14px;padding:24px">
-          <div class="ads-iphone" style="width:${fw}px;height:${fh}px;border-radius:${fw*0.114}px;position:relative;flex-shrink:0">
-            <div class="iph-mute"  style="top:${fh*0.14}px;height:${fh*0.036}px"></div>
-            <div class="iph-vol1"  style="top:${fh*0.2}px;height:${fh*0.07}px"></div>
-            <div class="iph-vol2"  style="top:${fh*0.29}px;height:${fh*0.07}px"></div>
-            <div class="iph-power" style="top:${fh*0.2}px;height:${fh*0.1}px"></div>
-            <div class="iph-screen" style="border-radius:${fw*0.105}px;top:${fh*BEZEL_TOP}px;left:${fw*BEZEL_X}px;width:${scrW}px;height:${scrH}px">
-              <div class="iph-island" style="width:${fw*0.28}px;height:${fw*0.045}px;border-radius:${fw*0.025}px;top:${scrH*0.018}px"></div>
-              <div style="position:absolute;inset:0;overflow:hidden;border-radius:${fw*0.1}px">
-                <iframe id="html-ad-iframe" style="width:${scrW}px;height:${scrH}px;border:none;position:absolute;top:0;left:0" sandbox="allow-scripts allow-same-origin"></iframe>
-              </div>
-              <div class="iph-statusbar" style="height:${scrH*0.06}px"></div>
-              <div class="iph-home" style="bottom:${scrH*0.012}px;width:${scrW*0.33}px"></div>
-            </div>
-          </div>
+        <div id="had-stage" style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#1a1a2e 0%,#0d0d14 100%);border-radius:14px;padding:20px">
+          <div id="had-wrap" style="display:flex;align-items:center;justify-content:center"></div>
         </div>`;
 
-      loadAd();
+      renderAdView('iphone');
 
       const titleEl = document.getElementById('modal-title');
-      if (titleEl) titleEl.textContent = '📱 Screen Record Preview';
+      if (titleEl) titleEl.textContent = 'Screen Record Preview';
 
-      document.getElementById('html-ad-replay')?.addEventListener('click', loadAd);
+      document.querySelectorAll('.had-view-btn').forEach(b =>
+        b.addEventListener('click', () => renderAdView(b.dataset.v)));
+      document.getElementById('html-ad-replay')?.addEventListener('click', writeAd);
       document.getElementById('html-ad-copy')?.addEventListener('click', () => {
-        navigator.clipboard.writeText(html);
-        toast('HTML copied ✓', 'success');
+        navigator.clipboard.writeText(html); toast('HTML copied ✓', 'success');
       });
       document.getElementById('html-ad-download')?.addEventListener('click', () => {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(new Blob([html], { type:'text/html' }));
-        a.download = 'kayro-ad.html';
-        a.click();
-        URL.revokeObjectURL(a.href);
+        a.download = 'kayro-ad.html'; a.click(); URL.revokeObjectURL(a.href);
       });
 
       Usage.trackUsage(Math.ceil(html.length / 4));
