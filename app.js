@@ -752,6 +752,9 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 
   {id:'e_video',name:'Cleo',role:'Video Production Agent',model:'agent_01JCFxN4aeZYnateGiokfdxL',color:'#a855f7',bodyHex:0xa855f7,skinHex:0xf0c89a,pos:[4,-10],status:'online',skills:['Video Scripts','AI Video Prompts','Runway Gen-3','Sora','Luma','Campaign Strategy'],hired:Date.now(),tasks:0,
    system:`You are Cleo, Lead Video Production & Creative Agent at [company]. Transform raw product features or marketing goals into high-converting video structures, scripts, and production-ready prompts for AI video generators (Runway Gen-3, Sora, Luma). Identify the primary business goal, target audience, and main CTA. Structure every video: 0–3s Hook, 3–15s Problem & Solution, 15–30s CTA. Every scene must include camera movement and lighting/aesthetic style. Output: Campaign Strategy overview, then a scene-by-scene breakdown table with Timestamp | Visual Script | On-Screen Text | AI Video Generator Prompt.`},
+
+  {id:'e_brain_agent',name:'Sage',role:'Second Brain Agent',model:'agent_01B8mAA5G1JgwAPXiZkajygd',color:'#6366f1',bodyHex:0x6366f1,skinHex:0xf0c89a,pos:[0,-6],status:'online',skills:['Knowledge Synthesis','Memory Recall','Context Retrieval','Research Distillation','Insight Generation'],hired:Date.now(),tasks:0,
+   system:`You are Sage, the Kayro Interactive Second Brain Agent. You store, retrieve, and synthesise company knowledge. Help users remember facts, recall context, surface insights, and build a connected knowledge base.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -8773,8 +8776,13 @@ Now write the complete HTML document. Start immediately with <!DOCTYPE html>.`;
 const BrainPage = {
   _filterCat: 'all',
   _searchQ: '',
+  _agentState: { _sessionId: null },
+  _agentEmp: null,
 
   init(container) {
+    BrainPage._agentEmp = getEmp('e_brain_agent');
+    BrainPage._agentState = { _sessionId: null };
+
     document.getElementById('topbar-right').innerHTML = `
       <button class="tb-btn primary" id="brain-feed-btn">📥 Feed the Brain</button>
       <button class="tb-btn" id="brain-add-btn">+ Remember</button>
@@ -8837,6 +8845,51 @@ const BrainPage = {
         </div>
       </div>
 
+      <!-- SECOND BRAIN AGENT CHAT -->
+      <div class="brain-agent-section">
+        <div class="brain-agent-left">
+          <div class="brain-agent-card">
+            <div class="brain-agent-av">🧠</div>
+            <div class="brain-agent-name">Sage</div>
+            <div class="brain-agent-role">Second Brain Agent</div>
+            <div class="brain-agent-id">agent_01B8…jygd</div>
+          </div>
+          <div class="brain-agent-actions">
+            ${[
+              ['💾 Remember this',  'Remember this for me: '],
+              ['🔍 Recall context', 'What do we know about: '],
+              ['🔗 Find connections','What connects these ideas: '],
+              ['💡 Synthesise',     'Synthesise everything we know about: '],
+              ['📋 Summarise topic','Give me a summary of everything stored about: '],
+              ['🗑️ What to forget', 'What knowledge is outdated or no longer relevant about: '],
+            ].map(([label, starter])=>
+              `<button class="brain-agent-qa" data-starter="${escHtml(starter)}">${label}</button>`
+            ).join('')}
+          </div>
+        </div>
+        <div class="brain-agent-right">
+          <div class="brain-agent-chat-hdr">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:var(--text)">Sage — Second Brain Agent</div>
+              <div style="font-size:11px;color:var(--text3);font-family:var(--mono)">agent_01B8mAA5G1JgwAPXiZkajygd · Powered by Claude Platform</div>
+            </div>
+            <button class="agent-pg-clear" id="brain-agent-clear">Clear</button>
+          </div>
+          <div class="brain-agent-messages" id="brain-agent-messages">
+            <div class="agent-pg-welcome">
+              <div class="agent-pg-welcome-icon" style="color:#6366f1">🧠</div>
+              <div class="agent-pg-welcome-title">Second Brain Agent Ready</div>
+              <div class="agent-pg-welcome-sub">Ask Sage to store facts, recall context, find connections between ideas, or synthesise everything you know on a topic. Your knowledge base, made conversational.</div>
+            </div>
+          </div>
+          <div class="agent-pg-input-row">
+            <textarea class="agent-pg-input" id="brain-agent-input" rows="1"
+              placeholder="Ask your Second Brain anything… e.g. What do we know about our ICP?"></textarea>
+            <button class="agent-pg-send" id="brain-agent-send" style="background:#6366f1">↑</button>
+          </div>
+        </div>
+      </div>
+
       <!-- 6 PILLARS -->
       <div class="brain-pillars">
         ${pillars.map(p=>`<div class="brain-pillar-card" style="--pc:${p.color}">
@@ -8879,6 +8932,22 @@ const BrainPage = {
       BrainPage._renderTabs(); BrainPage._renderFacts(); BrainPage._renderStats();
       toast('Removed from Brain','success');
     });
+    // Second Brain Agent
+    container.querySelectorAll('.brain-agent-qa').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.getElementById('brain-agent-input').value = btn.dataset.starter;
+        document.getElementById('brain-agent-input').focus();
+      });
+    });
+    document.getElementById('brain-agent-clear').addEventListener('click', () => {
+      BrainPage._agentState = { _sessionId: null };
+      document.getElementById('brain-agent-messages').innerHTML = '';
+    });
+    const baInput = document.getElementById('brain-agent-input');
+    baInput.addEventListener('input', () => { baInput.style.height = 'auto'; baInput.style.height = Math.min(baInput.scrollHeight, 140) + 'px'; });
+    baInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); BrainPage._agentSend(); } });
+    document.getElementById('brain-agent-send').addEventListener('click', () => BrainPage._agentSend());
+
     BrainPage._filterCat = 'all';
     BrainPage._searchQ = '';
     BrainPage._renderTabs();
@@ -8887,7 +8956,48 @@ const BrainPage = {
     BrainPage._migrateMemory();
   },
 
-  destroy() { BrainPage._filterCat = 'all'; BrainPage._searchQ = ''; },
+  destroy() { BrainPage._filterCat = 'all'; BrainPage._searchQ = ''; BrainPage._agentState = { _sessionId: null }; },
+
+  async _agentSend() {
+    const input = document.getElementById('brain-agent-input');
+    const text  = (input.value || '').trim(); if (!text) return;
+    input.value = ''; input.style.height = 'auto';
+
+    const msgs  = document.getElementById('brain-agent-messages');
+    const emp   = BrainPage._agentEmp;
+    const color = '#6366f1';
+
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--user"><div class="agent-pg-bubble agent-pg-bubble--user">${escHtml(text)}</div></div>`;
+
+    const aiId = 'brain-ai-' + Date.now();
+    msgs.innerHTML += `<div class="agent-pg-msg agent-pg-msg--ai" id="${aiId}">
+      <div class="agent-pg-av-sm" style="background:${color}20;color:${color}">🧠</div>
+      <div class="agent-pg-bubble agent-pg-bubble--ai"><span class="agent-typing">●●●</span></div>
+    </div>`;
+    msgs.scrollTop = msgs.scrollHeight;
+
+    let full = '';
+    try {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (emp?.model?.startsWith('agent_')) {
+        for await (const chunk of agentSessionStream(emp.model, BrainPage._agentState, text)) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      } else {
+        for await (const chunk of AI.stream([{role:'user',content:text}], emp?.system || '', { search: false, appTools: false, max_tokens: 4096 })) {
+          full += chunk;
+          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      }
+    } catch(e) {
+      const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+      if (aiEl) aiEl.innerHTML = `<span style="color:var(--red)">Error: ${escHtml(e.message)}</span>`;
+    }
+    msgs.scrollTop = msgs.scrollHeight;
+  },
 
   _migrateMemory() {
     if (State.brain._migrated) return;
