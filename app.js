@@ -8330,54 +8330,8 @@ const AdStudio = {
     const vShortId = 'agent_01JC…kdxL';
 
     container.innerHTML = `
-    <div class="ads-tab-bar">
-      <button class="ads-tab active" id="ads-tab-ad">🎬 Ad Designer</button>
-      <button class="ads-tab" id="ads-tab-video">🎥 Video Script</button>
-    </div>
-
-    <div id="ads-panel-ad" class="ads-panel">
-      <div class="ds-root">
-        <div class="ds-left">
-          <div class="ds-left-inner">
-            <div class="ds-section-label">QUICK START</div>
-            <div class="ds-quick-grid">
-              ${[
-                ['Product Launch',  'Epic product launch ad — show the product hero with dramatic reveal animation, bold headline, and CTA'],
-                ['Black Friday',    'Black Friday sale ad — massive discount typography (70% OFF), countdown timer, red/black urgency design'],
-                ['App Promo',       'Mobile app promo ad — phone mockup with floating UI, feature bullets animating in, download CTA'],
-                ['Brand Story',     'Brand story ad — minimal elegant animation with company name, tagline reveal, and soft logo transition'],
-                ['Testimonial',     'Social proof ad — quote from a happy customer animates in with star rating and company logo'],
-                ['Countdown',       'Countdown timer ad — real JS countdown to a deadline, urgency colors, animated digits'],
-              ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
-            </div>
-            <div class="ds-divider"></div>
-            <div class="ds-section-label">FORMAT</div>
-            <div class="ads-fmt-list">${fmtOpts}</div>
-            <div class="ds-section-label" style="margin-top:14px">ANIMATION STYLE</div>
-            <div class="ads-anim-row">${animOpts}</div>
-            <div class="ds-section-label" style="margin-top:14px">DESCRIBE YOUR AD</div>
-            <textarea class="ds-prompt" id="ads-prompt" rows="5"
-              placeholder="Describe your ad — product, offer, audience, vibe…&#10;&#10;e.g. Instagram ad for a luxury skincare brand launch. Show a gold bottle, animated particles, tagline 'Your skin deserves more' fading in, shop now button."></textarea>
-          </div>
-          <div class="ads-left-footer">
-            <button class="ds-generate-btn" id="ads-generate">🎬 Generate Ad</button>
-            <div class="ds-gen-status" id="ads-gen-status"></div>
-          </div>
-        </div>
-        <div class="ds-right">
-          <div class="ads-preview-area" id="ads-preview-area">
-            <div class="ds-empty-state">
-              <div class="ds-empty-icon">🎬</div>
-              <div class="ds-empty-title">Your ad appears here</div>
-              <div class="ds-empty-sub">Pick a quick start or describe your ad, choose a format and style, then hit Generate. Powered by Claude Opus 4.7.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="ads-gallery-section" id="ads-gallery"></div>
-    </div>
-
-    <div id="ads-panel-video" class="ads-panel" style="display:none">
+    <div style="height:100%;display:flex;flex-direction:column;overflow:hidden">
+    <div id="ads-panel-video" class="ads-panel">
       <div class="agent-pg-root">
         <div class="agent-pg-left">
           <div class="agent-pg-card" style="--ac:${vColor}">
@@ -8429,43 +8383,6 @@ const AdStudio = {
         </div>
       </div>
     </div>`;
-
-    // Tab switching
-    container.querySelectorAll('.ads-tab').forEach(tab => {
-      tab.addEventListener('click', () => {
-        container.querySelectorAll('.ads-tab').forEach(t => t.classList.remove('active'));
-        tab.classList.add('active');
-        const isVideo = tab.id === 'ads-tab-video';
-        document.getElementById('ads-panel-ad').style.display   = isVideo ? 'none' : '';
-        document.getElementById('ads-panel-video').style.display = isVideo ? '' : 'none';
-      });
-    });
-
-    // Ad Designer: Quick starts
-    container.querySelectorAll('.ds-quick-btn').forEach(btn => btn.addEventListener('click', () => {
-      document.getElementById('ads-prompt').value = btn.dataset.prompt;
-    }));
-
-    // Ad Designer: Format selector
-    container.querySelectorAll('.ads-fmt-btn').forEach(btn => btn.addEventListener('click', () => {
-      container.querySelectorAll('.ads-fmt-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      AdStudio._format = btn.dataset.fmt;
-    }));
-
-    // Ad Designer: Animation style selector
-    container.querySelectorAll('.ads-anim-btn').forEach(btn => btn.addEventListener('click', () => {
-      container.querySelectorAll('.ads-anim-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      AdStudio._anim = btn.dataset.anim;
-    }));
-
-    // Ad Designer: Generate
-    const genBtn = document.getElementById('ads-generate');
-    genBtn.addEventListener('click', () => AdStudio._generate(container));
-    container.querySelector('#ads-prompt').addEventListener('keydown', e => {
-      if (e.key === 'Enter' && e.metaKey) AdStudio._generate(container);
-    });
 
     // Video Script: Quick actions
     container.querySelectorAll('.agent-qa-btn').forEach(btn => {
