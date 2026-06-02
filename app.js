@@ -8472,6 +8472,7 @@ const AdStudio = {
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cleo-video-script.md'; a.click(); URL.revokeObjectURL(a.href);
           });
           bubbleEl.appendChild(bar);
+          msgs.scrollTop = msgs.scrollHeight;
         }
       }
     } catch(e) {
