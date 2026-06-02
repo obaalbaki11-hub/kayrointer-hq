@@ -6462,7 +6462,7 @@ End every report with: RELIABILITY SCORE: [0-100 infrastructure health score wit
 // ══════════════════════════════════════════════════════════════
 const Tasks = {
   init(container) {
-    container.innerHTML = `<div style="height:100%;padding:16px;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+    container.innerHTML = `<div style="height:100%;padding:16px;display:flex;flex-direction:column;gap:0;overflow:hidden">
       <div class="kanban-wrap" id="kanban"></div>
     </div>`;
     document.getElementById('topbar-right').innerHTML = `
@@ -6476,31 +6476,37 @@ const Tasks = {
   render() {
     const wrap = document.getElementById('kanban'); if(!wrap) return;
     const colClass={todo:'k-todo',inprogress:'k-inprogress',review:'k-review',done:'k-done'};
-    wrap.innerHTML = COLS.map(col=>`
-      <div class="k-col">
-        <div class="k-col-hdr ${colClass[col]}">
-          <span>${COL_LABELS[col]}</span>
-          <span style="opacity:.6">${State.tasks.filter(t=>t.column===col).length}</span>
+    wrap.innerHTML = COLS.map(col=>{
+      const cards = State.tasks.filter(t=>t.column===col);
+      return `<div class="k-col ${colClass[col]}">
+        <div class="k-col-hdr">
+          <div class="k-col-stripe"></div>
+          <span class="k-col-hdr-label">${COL_LABELS[col]}</span>
+          <span class="k-col-count">${cards.length}</span>
         </div>
         <div class="k-cards" id="col-${col}" data-col="${col}">
-          ${State.tasks.filter(t=>t.column===col).map(t=>Tasks._card(t)).join('')}
+          ${cards.length ? cards.map(t=>Tasks._card(t)).join('') : '<div class="k-empty">No tasks yet</div>'}
         </div>
-      </div>`).join('');
+        <button class="k-add-card" data-col="${col}">＋ Add card</button>
+      </div>`;
+    }).join('');
     Tasks._wireEvents();
   },
   _card(t) {
     const emp = t.assignee?getEmp(t.assignee):null;
     const latest = t.aiUpdates?.slice(-1)[0];
     return `<div class="k-card" draggable="true" data-tid="${t.id}">
-      <div class="k-card-title">${escHtml(t.title)}</div>
-      <div class="k-card-meta">
-        <span class="priority-pill p-${t.priority||'medium'}">${(t.priority||'medium').toUpperCase()}</span>
-        ${emp?`<div class="k-assignee"><div class="k-av" style="background:${emp.color}22;color:${emp.color}">${emp.name[0]}</div>${escHtml(emp.name)}</div>`:'<div class="k-assignee" style="color:var(--text3)">Unassigned</div>'}
-      </div>
+      <div class="k-card-title" data-tid="${t.id}">${escHtml(t.title)}</div>
       ${latest?`<div class="k-ai-update">🤖 ${escHtml(latest.text)}</div>`:''}
-      <div style="display:flex;gap:6px;margin-top:10px">
-        <button class="btn btn-sm t-ai-btn" data-tid="${t.id}" style="font-size:10px">🤖 AI Update</button>
-        <button class="btn btn-sm t-del-btn" data-tid="${t.id}" style="font-size:10px;color:var(--text3)">✕</button>
+      <div class="k-card-footer">
+        <div class="k-card-left">
+          <span class="priority-pill p-${t.priority||'medium'}">${(t.priority||'medium').toUpperCase()}</span>
+        </div>
+        ${emp?`<div class="k-assignee"><div class="k-av" style="background:${emp.color}22;color:${emp.color}">${emp.name[0]}</div>${escHtml(emp.name)}</div>`:'<div class="k-assignee" style="color:var(--text3);font-size:11px">Unassigned</div>'}
+      </div>
+      <div class="k-card-actions">
+        <button class="k-action-btn t-ai-btn" data-tid="${t.id}">🤖 AI Update</button>
+        <button class="k-action-btn del t-del-btn" data-tid="${t.id}">✕</button>
       </div>
     </div>`;
   },
@@ -6512,7 +6518,7 @@ const Tasks = {
     });
     wrap.querySelectorAll('.k-cards').forEach(col=>{
       col.addEventListener('dragover',e=>{e.preventDefault();col.classList.add('drag-over');});
-      col.addEventListener('dragleave',()=>col.classList.remove('drag-over'));
+      col.addEventListener('dragleave',e=>{if(!col.contains(e.relatedTarget))col.classList.remove('drag-over');});
       col.addEventListener('drop',e=>{
         e.preventDefault();col.classList.remove('drag-over');
         const tid=e.dataTransfer.getData('text/plain');
@@ -6520,10 +6526,69 @@ const Tasks = {
         if(task){const prev=task.column;task.column=col.dataset.col;save('tasks');Tasks.render();if(col.dataset.col==='done'&&prev!=='done')try{KayroEvents.emit('task_done',task);}catch(_){}}
       });
     });
+    wrap.querySelectorAll('.k-card-title[data-tid]').forEach(el=>el.addEventListener('click',e=>{e.stopPropagation();Tasks.openDetail(el.dataset.tid);}));
     wrap.querySelectorAll('.t-ai-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();Tasks.aiUpdate(btn.dataset.tid);}));
     wrap.querySelectorAll('.t-del-btn').forEach(btn=>btn.addEventListener('click',e=>{e.stopPropagation();Tasks.delete(btn.dataset.tid);}));
+    wrap.querySelectorAll('.k-add-card').forEach(btn=>btn.addEventListener('click',()=>Tasks.openAddModal(btn.dataset.col)));
   },
-  openAddModal() {
+  openDetail(tid) {
+    const task = State.tasks.find(t=>t.id===tid); if(!task) return;
+    const emp = task.assignee?getEmp(task.assignee):null;
+    const emps = State.employees;
+    const updates = (task.aiUpdates||[]).map(u=>`<div style="font-size:12px;color:var(--text2);background:var(--surface2);border-radius:8px;padding:8px 10px;margin-bottom:6px;border:1px solid var(--border);line-height:1.55">🤖 ${escHtml(u.text)}</div>`).join('');
+    Modal.open(task.title, `
+      <div class="form-group">
+        <label class="form-label">TITLE</label>
+        <input class="form-input" id="td-title" value="${escHtml(task.title)}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">DESCRIPTION</label>
+        <textarea class="form-textarea" id="td-desc">${escHtml(task.desc||'')}</textarea>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">STATUS</label>
+          <select class="form-select" id="td-col">
+            ${COLS.map(c=>`<option value="${c}"${task.column===c?' selected':''}>${COL_LABELS[c]}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PRIORITY</label>
+          <select class="form-select" id="td-priority">
+            <option value="low"${task.priority==='low'?' selected':''}>Low</option>
+            <option value="medium"${(!task.priority||task.priority==='medium')?' selected':''}>Medium</option>
+            <option value="high"${task.priority==='high'?' selected':''}>High</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">ASSIGN TO</label>
+        <select class="form-select" id="td-assignee">
+          <option value="">Unassigned</option>
+          ${emps.map(e=>`<option value="${e.id}"${task.assignee===e.id?' selected':''}>${escHtml(e.name)} — ${escHtml(e.role)}</option>`).join('')}
+        </select>
+      </div>
+      ${updates?`<div class="form-group"><label class="form-label">AI UPDATES</label>${updates}</div>`:''}
+      <div class="modal-actions">
+        <button class="btn btn-danger btn-sm" id="td-del">Delete Task</button>
+        <button class="btn btn-primary" id="td-save">Save Changes</button>
+      </div>`, {
+      onOpen() {
+        document.getElementById('td-save').addEventListener('click',()=>{
+          task.title   = document.getElementById('td-title').value.trim()||task.title;
+          task.desc    = document.getElementById('td-desc').value.trim();
+          task.column  = document.getElementById('td-col').value;
+          task.priority= document.getElementById('td-priority').value;
+          task.assignee= document.getElementById('td-assignee').value||null;
+          save('tasks');Modal.close();Tasks.render();toast('Task updated','success');
+        });
+        document.getElementById('td-del').addEventListener('click',()=>{
+          Tasks.delete(tid);Modal.close();
+        });
+      }
+    });
+  },
+  openAddModal(defaultCol='todo') {
     const emps = State.employees;
     Modal.open('Add Task', `
       <div class="form-group">
@@ -6534,19 +6599,27 @@ const Tasks = {
         <label class="form-label">DESCRIPTION (optional)</label>
         <textarea class="form-textarea" id="t-desc" placeholder="Add details…"></textarea>
       </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="form-group">
+          <label class="form-label">STATUS</label>
+          <select class="form-select" id="t-col">
+            ${COLS.map(c=>`<option value="${c}"${c===defaultCol?' selected':''}>${COL_LABELS[c]}</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">PRIORITY</label>
+          <select class="form-select" id="t-priority">
+            <option value="low">Low</option>
+            <option value="medium" selected>Medium</option>
+            <option value="high">High</option>
+          </select>
+        </div>
+      </div>
       <div class="form-group">
         <label class="form-label">ASSIGN TO</label>
         <select class="form-select" id="t-assignee">
           <option value="">Unassigned</option>
           ${emps.map(e=>`<option value="${e.id}">${escHtml(e.name)} — ${escHtml(e.role)}</option>`).join('')}
-        </select>
-      </div>
-      <div class="form-group">
-        <label class="form-label">PRIORITY</label>
-        <select class="form-select" id="t-priority">
-          <option value="low">Low</option>
-          <option value="medium" selected>Medium</option>
-          <option value="high">High</option>
         </select>
       </div>
       <div class="modal-actions">
@@ -6558,9 +6631,9 @@ const Tasks = {
         document.getElementById('t-submit').addEventListener('click',()=>{
           const title=document.getElementById('t-title').value.trim();
           if(!title){toast('Title required','error');return;}
-          const newTask={id:uid(),title,desc:document.getElementById('t-desc').value.trim(),column:'todo',assignee:document.getElementById('t-assignee').value||null,priority:document.getElementById('t-priority').value,aiUpdates:[],createdAt:new Date().toISOString().slice(0,10)};
+          const newTask={id:uid(),title,desc:document.getElementById('t-desc').value.trim(),column:document.getElementById('t-col').value,assignee:document.getElementById('t-assignee').value||null,priority:document.getElementById('t-priority').value,aiUpdates:[],createdAt:new Date().toISOString().slice(0,10)};
           State.tasks.push(newTask);
-          save('tasks');Modal.close();Tasks.render();toast('Task added');
+          save('tasks');Modal.close();Tasks.render();toast('Task added','success');
           try{KayroEvents.emit('task_created',newTask);}catch(_){}
           try{const ae=newTask.assignee?getEmp(newTask.assignee):null;if(ae)HQ._addFeedItem(ae,`New task assigned: "${title.slice(0,50)}"`);}catch(_){}
         });
