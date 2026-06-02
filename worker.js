@@ -289,7 +289,8 @@ async function handleAI(request, env, origin) {
 // ══════════════════════════════════════════════════════════════
 // MANAGED AGENTS — SESSIONS API
 // ══════════════════════════════════════════════════════════════
-const AGENT_BETA = 'managed-agents-2025-05-14';
+const AGENT_BETA = 'managed-agents-2026-04-01';
+const AGENT_ENV_ID = 'env_01SRmdRthMHQsJpVQaEXKqe3';
 
 async function handleAgentSession(request, env, origin) {
   const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
@@ -299,7 +300,7 @@ async function handleAgentSession(request, env, origin) {
   const { agent_id } = body;
   if (!agent_id) return json({ error: 'agent_id required' }, 400, origin);
 
-  const res = await fetch(`https://api.anthropic.com/v1/agents/${agent_id}/sessions`, {
+  const res = await fetch(`https://api.anthropic.com/v1/sessions?beta=true`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -307,7 +308,10 @@ async function handleAgentSession(request, env, origin) {
       'anthropic-version': '2023-06-01',
       'anthropic-beta': AGENT_BETA,
     },
-    body: JSON.stringify({}),
+    body: JSON.stringify({
+      agent: { type: 'agent', id: agent_id },
+      environment_id: AGENT_ENV_ID,
+    }),
   });
 
   if (!res.ok) {
@@ -322,32 +326,52 @@ async function handleAgentTurn(request, env, origin) {
   if (!key) return json({ error: 'No Anthropic API key configured' }, 500, origin);
   let body = {};
   try { body = JSON.parse(await request.text()); } catch {}
-  const { session_id, messages, stream = true } = body;
+  const { session_id, messages } = body;
   if (!session_id || !messages) return json({ error: 'session_id and messages required' }, 400, origin);
 
-  const res = await fetch(`https://api.anthropic.com/v1/sessions/${session_id}/turns`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-      'anthropic-beta': AGENT_BETA,
-    },
-    body: JSON.stringify({ messages, stream }),
+  const agentHeaders = {
+    'Content-Type': 'application/json',
+    'x-api-key': key,
+    'anthropic-version': '2023-06-01',
+    'anthropic-beta': AGENT_BETA,
+  };
+
+  // Convert messages → events format expected by Sessions API
+  const events = messages.map(msg => ({
+    type: 'user.message',
+    content: typeof msg.content === 'string'
+      ? [{ type: 'text', text: msg.content }]
+      : msg.content,
+  }));
+
+  // 1. Establish the SSE stream connection first (await headers so the TCP socket is open)
+  const streamRes = await fetch(`https://api.anthropic.com/v1/sessions/${session_id}/events/stream?beta=true`, {
+    method: 'GET',
+    headers: { ...agentHeaders, 'Accept': 'text/event-stream' },
   });
 
-  if (!res.ok) {
-    const t = await res.text();
-    return new Response(t, { status: res.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
+  if (!streamRes.ok) {
+    const t = await streamRes.text();
+    return new Response(t, { status: streamRes.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
   }
 
-  if (stream) {
-    return new Response(res.body, {
-      status: 200,
-      headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
-    });
+  // 2. Now send the user event — stream is already connected, won't miss the response
+  const sendRes = await fetch(`https://api.anthropic.com/v1/sessions/${session_id}/events?beta=true`, {
+    method: 'POST',
+    headers: agentHeaders,
+    body: JSON.stringify({ events }),
+  });
+
+  if (!sendRes.ok) {
+    const t = await sendRes.text();
+    return new Response(t, { status: sendRes.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
   }
-  return json(await res.json(), 200, origin);
+
+  // 3. Pipe the stream body back to the client
+  return new Response(streamRes.body, {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
+  });
 }
 
 // ══════════════════════════════════════════════════════════════

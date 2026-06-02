@@ -870,7 +870,11 @@ const Modal = {
     document.getElementById('modal-overlay').classList.add('open');
     if (opts.onOpen) opts.onOpen();
   },
-  close() { document.getElementById('modal-overlay').classList.remove('open'); }
+  close() {
+    document.getElementById('modal-overlay').classList.remove('open');
+    const mbox = document.getElementById('modal-box');
+    if (mbox) { mbox.style.width = ''; mbox.style.maxWidth = ''; }
+  }
 };
 document.getElementById('modal-close').addEventListener('click', Modal.close);
 document.getElementById('modal-overlay').addEventListener('click', e => {
@@ -2248,6 +2252,7 @@ async function* agentSessionStream(agentId, state, content) {
   const dec = new TextDecoder();
   let buf = '';
   let errMsg = null;
+  let sseEvent = null; // track `event:` line type
   outer: while (true) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -2255,21 +2260,24 @@ async function* agentSessionStream(agentId, state, content) {
     const lines = buf.split('\n');
     buf = lines.pop();
     for (const line of lines) {
-      if (!line.startsWith('data: ')) continue;
-      const raw = line.slice(6);
+      if (line.startsWith('event: ')) { sseEvent = line.slice(7).trim(); continue; }
+      if (!line.startsWith('data: ')) { if (line === '') sseEvent = null; continue; }
+      const raw = line.slice(6).trim();
       if (raw === '[DONE]') break outer;
-      try {
-        const ev = JSON.parse(raw);
-        if (ev.type === 'agent.message') {
-          for (const block of (ev.content || [])) {
-            if (block.type === 'text' && block.text) yield block.text;
-          }
-        } else if (ev.type === 'session.status_idle' || ev.type === 'session.status_terminated') {
-          break outer;
-        } else if (ev.type === 'session.error') {
-          errMsg = ev.error?.message || 'Agent error'; break outer;
+      let ev = {};
+      try { ev = JSON.parse(raw); } catch {}
+      // resolve event type from either JSON body or SSE event: field
+      const etype = ev.type || sseEvent || '';
+      sseEvent = null;
+      if (etype === 'agent.message') {
+        for (const block of (ev.content || [])) {
+          if (block.type === 'text' && block.text) yield block.text;
         }
-      } catch {}
+      } else if (etype === 'session.status_idle' || etype === 'session.status_terminated') {
+        break outer;
+      } else if (etype === 'session.error') {
+        errMsg = (ev.error?.message) || ev.message || 'Agent error'; break outer;
+      }
     }
   }
   if (errMsg) throw new Error(errMsg);
@@ -8448,11 +8456,173 @@ const AdStudio = {
         }
         AdStudio._videoHistory.push({ role:'assistant', content:full });
       }
+      // Append action buttons inside the bubble after Cleo's response
+      if (full) {
+        const bubbleEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
+        if (bubbleEl) {
+          const capturedScript = full;
+          const bar = document.createElement('div');
+          bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.07)';
+          bar.innerHTML = `
+            <button class="video-gen-html-btn" style="padding:8px 16px;border-radius:8px;border:none;background:#a855f7;color:#fff;font-size:13px;font-weight:600;cursor:pointer">🎬 Generate HTML Ad</button>
+            <button class="video-dl-script-btn" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);background:rgba(0,0,0,0.03);color:var(--text);font-size:13px;font-weight:500;cursor:pointer">⬇ Download Script</button>`;
+          bar.querySelector('.video-gen-html-btn').addEventListener('click', () => AdStudio._generateHTMLAd(capturedScript));
+          bar.querySelector('.video-dl-script-btn').addEventListener('click', () => {
+            const blob = new Blob([capturedScript], { type: 'text/markdown' });
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cleo-video-script.md'; a.click(); URL.revokeObjectURL(a.href);
+          });
+          bubbleEl.appendChild(bar);
+        }
+      }
     } catch(e) {
       const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
       if (aiEl) aiEl.innerHTML = `<span style="color:var(--red)">Error: ${escHtml(e.message)}</span>`;
     }
     msgs.scrollTop = msgs.scrollHeight;
+  },
+
+  async _generateHTMLAd(cleoScript) {
+    const color = '#a855f7';
+
+    // Widen modal for preview
+    const mbox = document.getElementById('modal-box');
+    if (mbox) { mbox.style.width = '900px'; mbox.style.maxWidth = '96vw'; }
+
+    // Open modal with loading state
+    Modal.open('Generating HTML Ad…', `
+      <div id="html-ad-modal-body" style="display:flex;flex-direction:column;height:72vh;min-height:500px">
+        <div id="html-ad-loading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
+          <div style="width:48px;height:48px;border:3px solid ${color}30;border-top-color:${color};border-radius:50%;animation:spinLive 0.8s linear infinite"></div>
+          <div style="font-size:14px;color:var(--text2)">Claude Opus 4.7 is composing your HTML ad…</div>
+          <div style="font-size:12px;color:var(--text3)">This takes about 20–30 seconds</div>
+        </div>
+      </div>
+    `);
+
+    const sys = `You are the world's best HTML motion designer and creative director, specializing in Apple-quality animated presentations and video ads.
+
+Your job: transform a video production script into a stunning, scene-based animated HTML presentation that plays exactly like a polished video ad.
+
+TECHNICAL ARCHITECTURE — follow this exact pattern:
+
+1. STRUCTURE: Multiple <div class="scene" id="s0"> … </div> divs inside a <div class="stage">. Each scene is position:absolute;inset:0 and hidden (opacity:0). The active scene fades in.
+
+2. TIMING: Use a requestAnimationFrame loop. Define a W array:
+   const W = [
+     { el:'s0', start:0,    end:4000  },
+     { el:'s1', start:4000, end:10000 },
+     // etc.
+   ];
+   Total duration 30,000–40,000ms depending on scene count. Each scene gets 4–7 seconds.
+
+3. ANIMATION HELPERS:
+   .rv { opacity:0; transform:translateY(16px); filter:blur(6px); }
+   .rv.show { animation:rv 1.3s cubic-bezier(0.22,1,0.36,1) forwards; }
+   @keyframes rv { to { opacity:1; transform:translateY(0); filter:blur(0); } }
+   .fd { opacity:0; }
+   .fd.show { animation:fd 1.5s ease forwards; }
+   @keyframes fd { to { opacity:1; } }
+   Elements with data-d="700" get a setTimeout delay before adding .show class.
+
+4. SCENE ENTRY: When a scene becomes active, call revealIn(sceneEl) which adds .show to all .rv and .fd children with their data-d delays.
+
+5. STARTER OVERLAY: A full-screen overlay with a play button. On click: remove overlay, start rAF loop.
+
+6. PROGRESS BAR: <div class="progress"> at bottom, width updated each frame.
+
+7. REPLAY BUTTON: Fixed bottom button that appears when animation ends, resets and restarts.
+
+DESIGN SYSTEM — Apple-style light:
+- Background: #f5f5f7 (body), #ffffff (cards/scenes)
+- Primary text: #1d1d1f
+- Secondary text: #6e6e73
+- Accent: #0071e3
+- Font: Import DM Sans (weights 300 400 500 600 700 800) + JetBrains Mono from Google Fonts
+- Radius: 18–26px on cards, 980px on pills
+- Shadows: 0 8px 24px rgba(0,0,0,0.06) for cards, 0 40px 90px rgba(0,0,0,0.12) for hero
+- .rv/.fd delays stagger 200ms–800ms apart per element on a scene
+
+SCENE IDEAS (adapt to the script — don't copy literally, derive from context):
+- S0: Intro — logo/brand mark animation, big title, tagline fade
+- S1: Hero — product mockup or grid showcasing the main offer
+- S2: Stats — one massive number at a time (spec slam) — 3 quick numbers rotating
+- S3: Feature tiles — 2×2 grid of feature cards with icons
+- S4: Statement — single bold emotional line, no clutter
+- S5: Pricing — plan cards side by side
+- S6: CTA — brand, headline, CTA pill button, URL
+
+ABSOLUTE RULES:
+- Output RAW HTML ONLY — first character must be <!DOCTYPE html>
+- No markdown fences, no preamble, no explanation after the HTML
+- Fully self-contained EXCEPT for Google Fonts import (allowed)
+- html,body width:100%;height:100%;overflow:hidden
+- Every element on every scene must have an animation (rv, fd, or custom)
+- The spec slam (S2-style) must use JS to cycle through stats with .show/.out transitions
+- CTA button must have a pulsing box-shadow animation (looping)
+
+CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script below. Extract the hook, key benefits, any numbers mentioned, and the CTA.`;
+
+    let html = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role:'user', content:`VIDEO PRODUCTION SCRIPT:\n\n${cleoScript}\n\nNow generate the complete animated HTML ad. Start immediately with <!DOCTYPE html>.` }],
+        sys,
+        { search:false, appTools:false, max_tokens:16000, model:'claude-opus-4-7' }
+      )) {
+        html += chunk;
+        // Update modal title with progress indicator
+        const titleEl = document.getElementById('modal-title');
+        if (titleEl && html.length > 100) {
+          titleEl.textContent = `Generating HTML Ad… (${Math.round(html.length/100)*100} chars)`;
+        }
+      }
+
+      html = html.trim().replace(/^```[^\n]*\n?/, '').replace(/```\s*$/, '').trim();
+      if (!html.startsWith('<') || html.length < 500) throw new Error('Invalid HTML output');
+
+      const modalBody = document.getElementById('html-ad-modal-body');
+      if (!modalBody) return;
+
+      modalBody.innerHTML = `
+        <div style="display:flex;gap:8px;align-items:center;padding:0 0 12px 0;flex-wrap:wrap">
+          <button id="html-ad-copy" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">⎘ Copy HTML</button>
+          <button id="html-ad-download" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">⬇ Download</button>
+          <button id="html-ad-replay" style="padding:7px 14px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px;cursor:pointer">↺ Replay</button>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">${Math.round(html.length/1024)}KB · Claude Opus 4.7</span>
+        </div>
+        <div style="flex:1;min-height:0;border-radius:12px;overflow:hidden;box-shadow:0 0 0 1px var(--border)">
+          <iframe id="html-ad-iframe" style="width:100%;height:100%;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+        </div>`;
+
+      const iframe = document.getElementById('html-ad-iframe');
+      if (iframe) { iframe.contentDocument.open(); iframe.contentDocument.write(html); iframe.contentDocument.close(); }
+
+      const titleEl = document.getElementById('modal-title');
+      if (titleEl) titleEl.textContent = 'HTML Ad — Preview';
+
+      document.getElementById('html-ad-copy')?.addEventListener('click', () => {
+        navigator.clipboard.writeText(html);
+        toast('HTML copied ✓', 'success');
+      });
+      document.getElementById('html-ad-download')?.addEventListener('click', () => {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([html], { type:'text/html' }));
+        a.download = 'kayro-ad.html';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+      document.getElementById('html-ad-replay')?.addEventListener('click', () => {
+        const f = document.getElementById('html-ad-iframe');
+        if (f) { f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close(); }
+      });
+
+      Usage.trackUsage(Math.ceil(html.length / 4));
+    } catch(e) {
+      const modalBody = document.getElementById('html-ad-modal-body');
+      if (modalBody) modalBody.innerHTML = `<div style="padding:40px;text-align:center;color:var(--red)">${escHtml(e.message || String(e))}</div>`;
+      const titleEl = document.getElementById('modal-title');
+      if (titleEl) titleEl.textContent = 'Generation Failed';
+    }
   },
 
   async _generate(container) {
