@@ -8556,7 +8556,8 @@ ABSOLUTE RULES:
 - Output RAW HTML ONLY — first character must be <!DOCTYPE html>
 - No markdown fences, no preamble, no explanation after the HTML
 - Fully self-contained EXCEPT for Google Fonts import (allowed)
-- html,body width:100%;height:100%;overflow:hidden
+- html,body { width:390px; height:844px; overflow:hidden; margin:0; padding:0; } — EXACT phone dimensions, 9:16 portrait reel format
+- ALL font sizes must fit within 390px width — use clamp() with a max around 48px for headlines, 32px for subheads, 16px for body. Nothing should overflow horizontally.
 - Every element on every scene must have an animation (rv, fd, or custom)
 - The spec slam (S2-style) must use JS to cycle through stats with .show/.out transitions
 - CTA button must have a pulsing box-shadow animation (looping)
@@ -8595,44 +8596,59 @@ CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script be
         if (f) { f.contentDocument.open(); f.contentDocument.write(html); f.contentDocument.close(); }
       };
 
+      // Real device logical pixels — ad renders at these dimensions, then scaled down
+      const REEL_W = 390, REEL_H = 844;    // iPhone portrait (9:16 reel)
+      const LAND_W = 1280, LAND_H = 720;   // 16:9 landscape
+
       const renderAdView = (mode) => {
-        document.querySelectorAll('.had-view-btn').forEach(b => b.style.fontWeight = b.dataset.v === mode ? '700' : '400');
+        document.querySelectorAll('.had-view-btn').forEach(b => {
+          b.style.fontWeight = b.dataset.v === mode ? '700' : '400';
+          b.style.background = b.dataset.v === mode ? 'rgba(0,0,0,0.08)' : '';
+        });
         const wrap = document.getElementById('had-wrap');
         if (!wrap) return;
 
         if (mode === 'iphone') {
+          // Phone frame sized to fit, iframe renders at real 390×844, scaled to fit screen area
           const fh = Math.min(availH, availW / IPHONE_RATIO);
           const fw = fh * IPHONE_RATIO;
           const scrW = fw * (1 - BEZEL_X * 2);
           const scrH = fh * (1 - BEZEL_TOP - BEZEL_BOT);
+          const scale = Math.min(scrW / REEL_W, scrH / REEL_H);
+          const dispW = REEL_W * scale, dispH = REEL_H * scale;
+          const offX = (scrW - dispW) / 2, offY = (scrH - dispH) / 2;
           wrap.innerHTML = `
             <div class="ads-iphone" style="width:${fw}px;height:${fh}px;border-radius:${fw*0.114}px;position:relative;flex-shrink:0">
               <div class="iph-mute"  style="top:${fh*0.14}px;height:${fh*0.036}px"></div>
               <div class="iph-vol1"  style="top:${fh*0.2}px;height:${fh*0.07}px"></div>
               <div class="iph-vol2"  style="top:${fh*0.29}px;height:${fh*0.07}px"></div>
               <div class="iph-power" style="top:${fh*0.2}px;height:${fh*0.1}px"></div>
-              <div class="iph-screen" style="border-radius:${fw*0.105}px;top:${fh*BEZEL_TOP}px;left:${fw*BEZEL_X}px;width:${scrW}px;height:${scrH}px">
-                <div class="iph-island" style="width:${fw*0.28}px;height:${fw*0.045}px;border-radius:${fw*0.025}px;top:${scrH*0.018}px"></div>
-                <div style="position:absolute;inset:0;overflow:hidden;border-radius:${fw*0.1}px">
-                  <iframe id="html-ad-iframe" style="width:${scrW}px;height:${scrH}px;border:none;position:absolute;top:0;left:0" sandbox="allow-scripts allow-same-origin"></iframe>
+              <div class="iph-screen" style="border-radius:${fw*0.105}px;top:${fh*BEZEL_TOP}px;left:${fw*BEZEL_X}px;width:${scrW}px;height:${scrH}px;overflow:hidden">
+                <div class="iph-island" style="width:${fw*0.28}px;height:${fw*0.045}px;border-radius:${fw*0.025}px;top:${scrH*0.018}px;z-index:10"></div>
+                <div style="position:absolute;top:${offY}px;left:${offX}px;width:${dispW}px;height:${dispH}px;overflow:hidden">
+                  <iframe id="html-ad-iframe" style="width:${REEL_W}px;height:${REEL_H}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(5)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
                 </div>
-                <div class="iph-statusbar" style="height:${scrH*0.06}px"></div>
-                <div class="iph-home" style="bottom:${scrH*0.012}px;width:${scrW*0.33}px"></div>
+                <div class="iph-statusbar" style="height:${scrH*0.06}px;z-index:10"></div>
+                <div class="iph-home" style="bottom:${scrH*0.012}px;width:${scrW*0.33}px;z-index:10"></div>
               </div>
             </div>`;
+
         } else if (mode === 'landscape') {
-          // 16:9 widescreen frame with thin bezel
-          const lw = Math.min(availW, availH * (16/9));
-          const lh = lw * (9/16);
+          const lw = Math.min(availW, availH * (LAND_W/LAND_H));
+          const lh = lw * (LAND_H/LAND_W);
+          const scale = Math.min(lw / LAND_W, lh / LAND_H);
           wrap.innerHTML = `
-            <div style="width:${lw}px;height:${lh}px;border-radius:12px;overflow:hidden;box-shadow:0 0 0 8px #1a1a1a,0 0 0 10px #2a2a2a,0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
-              <iframe id="html-ad-iframe" style="width:${lw}px;height:${lh}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+            <div style="width:${lw}px;height:${lh}px;border-radius:10px;overflow:hidden;box-shadow:0 0 0 8px #1c1c1e,0 0 0 10px #2c2c2e,0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
+              <iframe id="html-ad-iframe" style="width:${LAND_W}px;height:${LAND_H}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(5)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>`;
+
         } else {
-          // fullscreen — fill the dark background
+          // Fullscreen — use 9:16 portrait aspect rendered at reel resolution, scaled to fill
+          const scale = Math.min(availW / REEL_W, availH / REEL_H);
+          const dispW = REEL_W * scale, dispH = REEL_H * scale;
           wrap.innerHTML = `
-            <div style="width:${availW}px;height:${availH}px;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
-              <iframe id="html-ad-iframe" style="width:${availW}px;height:${availH}px;border:none;display:block" sandbox="allow-scripts allow-same-origin"></iframe>
+            <div style="width:${dispW}px;height:${dispH}px;border-radius:12px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.8);flex-shrink:0;position:relative">
+              <iframe id="html-ad-iframe" style="width:${REEL_W}px;height:${REEL_H}px;border:none;position:absolute;top:0;left:0;transform:scale(${scale.toFixed(5)});transform-origin:top left" sandbox="allow-scripts allow-same-origin"></iframe>
             </div>`;
         }
         writeAd();
