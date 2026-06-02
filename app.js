@@ -2223,17 +2223,44 @@ async function* agentSessionStream(agentId, state, content) {
   const res = await fetch(`${BACKEND_URL}/api/agent/turn`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }], stream: true }),
+    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }] }),
   });
   if (!res.ok) {
-    if (res.status === 404 || res.status === 410) state._sessionId = null; // session expired
+    if (res.status === 404 || res.status === 410) state._sessionId = null;
     let msg;
     try { msg = _agentErrMsg(await res.json()); } catch { try { msg = await res.text(); } catch { msg = null; } }
     throw new Error(msg || `Agent error ${res.status}`);
   }
-  for await (const ev of AI._parseSSE(res)) {
-    if (ev.type === 'text') yield ev.text;
+  // Parse managed agents SSE — events are complete messages, not streaming deltas
+  const reader = res.body.getReader();
+  const dec = new TextDecoder();
+  let buf = '';
+  let errMsg = null;
+  outer: while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += dec.decode(value, { stream: true });
+    const lines = buf.split('\n');
+    buf = lines.pop();
+    for (const line of lines) {
+      if (!line.startsWith('data: ')) continue;
+      const raw = line.slice(6);
+      if (raw === '[DONE]') break outer;
+      try {
+        const ev = JSON.parse(raw);
+        if (ev.type === 'agent.message') {
+          for (const block of (ev.content || [])) {
+            if (block.type === 'text' && block.text) yield block.text;
+          }
+        } else if (ev.type === 'session.status_idle' || ev.type === 'session.status_terminated') {
+          break outer;
+        } else if (ev.type === 'session.error') {
+          errMsg = ev.error?.message || 'Agent error'; break outer;
+        }
+      } catch {}
+    }
   }
+  if (errMsg) throw new Error(errMsg);
 }
 
 const AccountingPage = {
