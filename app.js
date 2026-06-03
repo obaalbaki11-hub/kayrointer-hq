@@ -728,6 +728,8 @@ const State = {
   chatHistory: {},
   memory: {},
   brain: { facts: [] },
+  trust: { autoRun: false },
+  swarmRuns: [],
   usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[], msgsToday:0, searchesToday:0 },
   opsImages: [],
   opsScripts: [],
@@ -752,8 +754,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills'],
-  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -817,7 +819,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','usage','opsImages','opsScripts','onboarded','competitors'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','usage','opsImages','opsScripts','onboarded','competitors'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -828,6 +830,8 @@ function loadState() {
   if (!State.memory) State.memory = {};
   if (!State.designs) State.designs = [];
   if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
+  if (!State.trust) State.trust = { autoRun: false };
+  if (!Array.isArray(State.swarmRuns)) State.swarmRuns = [];
   // Re-seed whenever new default facts are added (keyed by id, not text)
   const existingIds = new Set(State.brain.facts.map(f=>f.id));
   const newFacts = DEFAULT_BRAIN_FACTS.filter(f => !existingIds.has(f.id));
@@ -1592,6 +1596,81 @@ iframe{display:block;width:${w}px;height:${h}px;border:none;max-width:100%}
   },
 };
 
+// ── ACTION GUARD ──────────────────────────────────────────────
+// Every real-world agent action (send_email, etc.) passes through
+// ActionGuard. If State.trust.autoRun is false, a modal blocks
+// execution until the user explicitly approves or cancels.
+const ActionGuard = {
+  // Tools that touch the outside world and need approval
+  GUARDED: new Set(['send_email']),
+  _resolve: null,
+
+  // Returns Promise<{approved:bool}>
+  check(toolName, args) {
+    if (!ActionGuard.GUARDED.has(toolName)) return Promise.resolve({ approved: true });
+    if (State.trust?.autoRun) return Promise.resolve({ approved: true });
+    return new Promise(resolve => {
+      ActionGuard._resolve = resolve;
+      ActionGuard._showModal(toolName, args);
+    });
+  },
+
+  _showModal(toolName, args) {
+    const autoOn = !!State.trust?.autoRun;
+    let actionHtml = '';
+    let previewHtml = '';
+    if (toolName === 'send_email') {
+      actionHtml = `
+        <div class="ag-action-row">
+          <div class="ag-action-icon">✉️</div>
+          <div>
+            <div class="ag-action-what">Send an email</div>
+            <div class="ag-action-detail">To: <b>${escHtml(args.to||'')}</b><br>Subject: <b>${escHtml(args.subject||'')}</b></div>
+          </div>
+        </div>`;
+      if (args.body) {
+        const preview = args.body.slice(0, 500) + (args.body.length > 500 ? '…' : '');
+        previewHtml = `<details class="ag-preview"><summary>Preview email body</summary><pre class="ag-preview-body">${escHtml(preview)}</pre></details>`;
+      }
+    }
+    Modal.open('⚡ Action Requires Approval', `
+      <div class="ag-modal">
+        <p class="ag-desc">Your AI agent wants to take a real-world action:</p>
+        ${actionHtml}
+        ${previewHtml}
+        <label class="ag-auto-label">
+          <input type="checkbox" id="ag-autorun" ${autoOn ? 'checked' : ''}>
+          <span>Auto-approve all future actions this session</span>
+        </label>
+        <div class="ag-btns">
+          <button class="btn-primary ag-approve-btn" id="ag-approve">✅ Approve &amp; Execute</button>
+          <button class="ag-reject-btn" id="ag-reject">❌ Cancel Action</button>
+        </div>
+      </div>
+    `);
+    document.getElementById('ag-approve')?.addEventListener('click', () => {
+      const autoRun = document.getElementById('ag-autorun')?.checked;
+      if (autoRun && State.trust) { State.trust.autoRun = true; save('trust'); }
+      Modal.close();
+      const r = ActionGuard._resolve;
+      ActionGuard._resolve = null;
+      r?.({ approved: true });
+    });
+    document.getElementById('ag-reject')?.addEventListener('click', () => {
+      Modal.close();
+      const r = ActionGuard._resolve;
+      ActionGuard._resolve = null;
+      r?.({ approved: false });
+    });
+  },
+
+  setAutoRun(val) {
+    if (!State.trust) State.trust = { autoRun: false };
+    State.trust.autoRun = !!val;
+    save('trust');
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -1731,8 +1810,24 @@ const AI = {
           res = await fetchWithRetry(cfg, loopMsgs, system, loopExtra);
           if (!res.ok) { yield await toolErrMsg(res); break; }
 
-        // ── Send email (async) ───────────────────────────────────
+        // ── Send email (async, approval-gated) ──────────────────
         } else if (toolName === 'send_email') {
+          yield `\x00ACTION:⏳ Waiting for approval to send email to <b>${escHtml(toolInput.to||'')}</b>…\x00`;
+          const approval = await ActionGuard.check('send_email', toolInput);
+          if (!approval.approved) {
+            yield `\x00ACTION:⛔ Email cancelled by user\x00`;
+            const toolResult = 'The user reviewed and declined to send this email. Do not retry — let them know it was cancelled.';
+            loopMsgs = [...loopMsgs,
+              { role:'assistant', content:[
+                ...(assistantText?[{type:'text',text:assistantText}]:[]),
+                {type:'tool_use',id:toolId,name:toolName,input:toolInput}
+              ]},
+              { role:'user', content:[{type:'tool_result',tool_use_id:toolId,content:toolResult}] }
+            ];
+            res = await fetchWithRetry(cfg, loopMsgs, system, loopExtra);
+            if (!res.ok) { yield await toolErrMsg(res); break; }
+            continue;
+          }
           yield `\x00ACTION:✉️ Sending email to <b>${escHtml(toolInput.to||'')}</b>…\x00`;
           const { result, display } = await AppTools._sendEmail(toolInput);
           yield `\x00ACTION:${display}\x00`;
@@ -2919,18 +3014,564 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
   };
 }
 
+// ── CONNECTORS PAGE ───────────────────────────────────────────
+const ConnectorsPage = {
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
+    ConnectorsPage._render(container);
+  },
+
+  _render(container) {
+    const s = State.settings;
+    const ai = State.automations?.integrations || {};
+
+    const connectors = [
+      { id:'gmail',   icon:'📧', name:'Gmail',        desc:'Send emails directly from your inbox. Powers Cold Email and all send_email agent actions.',
+        agents:['Chris','ARIA'], status:!!s.gmailEmail, label: s.gmailEmail ? `${s.gmailEmail}` : null,
+        actions:[
+          { text: s.gmailEmail ? 'Reconnect' : 'Connect Gmail', fn: () => { Modal.close(); GmailAPI.connect(); } },
+          ...(s.gmailEmail ? [{ text:'Disconnect', danger:true, fn:() => { GmailAPI.disconnect(); ConnectorsPage._render(container); } }] : []),
+        ]},
+      { id:'apollo',  icon:'🔍', name:'Apollo / Hunter.io', desc:'Lead intelligence and email finding. Powers the Inside Sales agent for prospect research.',
+        agents:['Chris','Claude'], status:!!(s.apolloKey||s.platformHunterKey), label: (s.apolloKey||s.platformHunterKey) ? 'API key saved' : null,
+        actions:[{ text:'Configure →', fn:() => Router.navigate('apollo') }]},
+      { id:'meta',    icon:'📊', name:'Meta Ads',     desc:'Manage Facebook & Instagram ad campaigns. Powers Marketing and Ad Studio agents.',
+        agents:['Alex','Claude'], status:!!s.metaToken, label: s.metaToken ? (s.metaAccount||'Connected') : null,
+        actions:[{ text:'Configure →', fn:() => Router.navigate('meta') }]},
+      { id:'slack',   icon:'💬', name:'Slack',         desc:'Post workflow updates and alerts to your Slack workspace via incoming webhook.',
+        agents:['ARIA','Claude'], status:!!ai.slackWebhookUrl, label: ai.slackWebhookUrl ? 'Webhook active' : null,
+        actions:[{ text: ai.slackWebhookUrl ? 'Update webhook' : 'Add webhook', fn:() => ConnectorsPage._webhookModal(container,'slackWebhookUrl','Slack Webhook URL','https://hooks.slack.com/services/…') }]},
+      { id:'hubspot', icon:'🤝', name:'HubSpot CRM',  desc:'Sync contacts and deals. Lets Sales and Marketing agents update CRM records.',
+        agents:['Chris','Alex'], status:!!ai.hubspotKey, label: ai.hubspotKey ? 'API key saved' : null,
+        actions:[{ text: ai.hubspotKey ? 'Update key' : 'Add API key', fn:() => ConnectorsPage._keyModal(container,'hubspotKey','HubSpot Private App Key') }]},
+      { id:'notion',  icon:'📝', name:'Notion',        desc:'Create and update Notion pages for docs, wikis, and project notes.',
+        agents:['ARIA','Claude'], status:!!ai.notionKey, label: ai.notionKey ? 'Integration key saved' : null,
+        actions:[{ text: ai.notionKey ? 'Update key' : 'Add key', fn:() => ConnectorsPage._keyModal(container,'notionKey','Notion Integration Key') }]},
+      { id:'zapier',  icon:'⚡', name:'Zapier',        desc:'Trigger any Zap from agent workflows. Connects 5,000+ apps automatically.',
+        agents:['Claude','ARIA'], status:!!ai.zapierWebhookUrl, label: ai.zapierWebhookUrl ? 'Webhook active' : null,
+        actions:[{ text: ai.zapierWebhookUrl ? 'Update' : 'Add webhook', fn:() => ConnectorsPage._webhookModal(container,'zapierWebhookUrl','Zapier Catch Hook URL','https://hooks.zapier.com/hooks/catch/…') }]},
+      { id:'emailjs', icon:'📮', name:'EmailJS',       desc:'Transactional email fallback when Gmail is not connected.',
+        agents:['Chris'], status:!!(s.ejServiceId||s.platformEjServiceId), label: (s.ejServiceId||s.platformEjServiceId) ? 'Configured' : null,
+        actions:[{ text:'Configure →', fn:() => Router.navigate('settings') }]},
+    ];
+
+    const connectedCount = connectors.filter(c => c.status).length;
+    const autoOn = !!State.trust?.autoRun;
+
+    container.innerHTML = `<div class="cn-root page-scroll">
+      <div class="cn-header">
+        <div>
+          <div class="cn-title">Connectors</div>
+          <div class="cn-subtitle">${connectedCount} of ${connectors.length} connected &nbsp;·&nbsp; Give your agents real tools to take action</div>
+        </div>
+        <div class="cn-trust-wrap">
+          <div class="cn-trust-label">Agent auto-approve</div>
+          <label class="cn-toggle-pill">
+            <input type="checkbox" id="cn-autorun" ${autoOn ? 'checked' : ''}>
+            <span class="cn-toggle-track"></span>
+          </label>
+          <div class="cn-trust-hint" id="cn-trust-hint">${autoOn ? 'Agents act autonomously — no prompts' : 'You approve before every real-world action'}</div>
+        </div>
+      </div>
+
+      <div class="cn-grid">
+        ${connectors.map(c => `
+          <div class="cn-card ${c.status ? 'cn-card--on' : ''}">
+            <div class="cn-card-top">
+              <div class="cn-icon">${c.icon}</div>
+              <div class="cn-card-name">${escHtml(c.name)}</div>
+              <div class="cn-badge ${c.status ? 'cn-badge--on' : ''}">
+                ${c.status ? '● Connected' : '○ Not set up'}
+              </div>
+            </div>
+            ${c.label ? `<div class="cn-card-label">${escHtml(c.label)}</div>` : ''}
+            <div class="cn-card-desc">${escHtml(c.desc)}</div>
+            <div class="cn-card-agents">${c.agents.map(a => `<span class="cn-tag">${escHtml(a)}</span>`).join('')}</div>
+            <div class="cn-card-btns">
+              ${c.actions.map((a,i) => `<button class="cn-btn ${a.danger?'cn-btn--danger':''}" data-cid="${c.id}" data-ai="${i}">${escHtml(a.text)}</button>`).join('')}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>`;
+
+    // Wire connector buttons
+    const allConnectors = connectors;
+    container.querySelectorAll('.cn-btn').forEach(btn => {
+      const c = allConnectors.find(x => x.id === btn.dataset.cid);
+      const ai = parseInt(btn.dataset.ai);
+      if (c?.actions[ai]) btn.addEventListener('click', c.actions[ai].fn);
+    });
+
+    // Auto-run toggle
+    document.getElementById('cn-autorun')?.addEventListener('change', e => {
+      ActionGuard.setAutoRun(e.target.checked);
+      const hint = document.getElementById('cn-trust-hint');
+      if (hint) hint.textContent = e.target.checked ? 'Agents act autonomously — no prompts' : 'You approve before every real-world action';
+      toast(e.target.checked ? 'Auto-approve ON — agents will act without asking' : 'Approval mode — you control every action', e.target.checked ? 'success' : 'info');
+    });
+  },
+
+  _webhookModal(container, field, label, placeholder) {
+    const cur = State.automations?.integrations?.[field] || '';
+    Modal.open(`Connect ${label}`, `
+      <div style="padding:4px 0">
+        <label class="auth-label">${escHtml(label)}</label>
+        <input class="auth-input" id="cn-wh-inp" placeholder="${escHtml(placeholder)}" value="${escHtml(cur)}">
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn-primary" id="cn-wh-save" style="flex:1">Save</button>
+          ${cur ? `<button id="cn-wh-del" style="padding:10px 16px;border:1px solid var(--red);background:none;border-radius:8px;color:var(--red);cursor:pointer;font-weight:600">Remove</button>` : ''}
+        </div>
+      </div>`);
+    const save_ = () => {
+      const val = document.getElementById('cn-wh-inp')?.value.trim();
+      if (!State.automations) State.automations = { scheduledPosts:[], integrations:{} };
+      if (!State.automations.integrations) State.automations.integrations = {};
+      State.automations.integrations[field] = val;
+      save('automations');
+      Modal.close();
+      ConnectorsPage._render(container);
+      toast(val ? 'Webhook saved' : 'Webhook removed', 'success');
+    };
+    document.getElementById('cn-wh-save')?.addEventListener('click', save_);
+    document.getElementById('cn-wh-del')?.addEventListener('click', () => {
+      if (State.automations?.integrations) State.automations.integrations[field] = '';
+      save('automations');
+      Modal.close();
+      ConnectorsPage._render(container);
+      toast('Webhook removed', 'success');
+    });
+  },
+
+  _keyModal(container, field, label) {
+    const cur = State.automations?.integrations?.[field] || '';
+    Modal.open(`Connect ${label}`, `
+      <div style="padding:4px 0">
+        <label class="auth-label">${escHtml(label)}</label>
+        <input class="auth-input" id="cn-key-inp" type="password" placeholder="Paste your key…" value="${escHtml(cur)}">
+        <div style="display:flex;gap:8px;margin-top:16px">
+          <button class="btn-primary" id="cn-key-save" style="flex:1">Save</button>
+          ${cur ? `<button id="cn-key-del" style="padding:10px 16px;border:1px solid var(--red);background:none;border-radius:8px;color:var(--red);cursor:pointer;font-weight:600">Remove</button>` : ''}
+        </div>
+      </div>`);
+    document.getElementById('cn-key-save')?.addEventListener('click', () => {
+      const val = document.getElementById('cn-key-inp')?.value.trim();
+      if (!State.automations) State.automations = { scheduledPosts:[], integrations:{} };
+      if (!State.automations.integrations) State.automations.integrations = {};
+      State.automations.integrations[field] = val;
+      save('automations');
+      Modal.close();
+      ConnectorsPage._render(container);
+      toast('Key saved', 'success');
+    });
+    document.getElementById('cn-key-del')?.addEventListener('click', () => {
+      if (State.automations?.integrations) State.automations.integrations[field] = '';
+      save('automations');
+      Modal.close();
+      ConnectorsPage._render(container);
+      toast('Key removed', 'success');
+    });
+  },
+
+  destroy() {},
+};
+
+// ── SWARM MODE ─────────────────────────────────────────────────
+// Parallel agent runner: plans → fans out N agents → verifies each
+// result → synthesises → checkpoints progress to State.swarmRuns.
+const SwarmMode = {
+  _active: null, // currently displayed run id
+
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
+    SwarmMode._render(container);
+  },
+
+  // ── RENDER SHELL ──────────────────────────────────────────────
+  _render(container) {
+    const runs = State.swarmRuns || [];
+    const incomplete = runs.filter(r => r.status !== 'done' && r.status !== 'failed');
+
+    container.innerHTML = `<div class="sw-root">
+      <!-- LEFT PANEL -->
+      <div class="sw-left page-scroll">
+        <div class="sw-left-title">Swarm Mode</div>
+        <div class="sw-left-sub">Fan out a goal across multiple specialist agents in parallel — each result is verified before being merged.</div>
+
+        <div class="sw-goal-wrap">
+          <div class="sw-goal-label">What's the goal?</div>
+          <textarea class="sw-goal-inp" id="sw-goal" rows="4" placeholder="e.g. Research 20 target accounts in the fintech space and draft personalised cold email openers for each…"></textarea>
+          <button class="sw-run-btn" id="sw-plan-btn">🧠 Plan Swarm →</button>
+        </div>
+
+        ${incomplete.length ? `
+          <div class="sw-resume-label">IN PROGRESS</div>
+          ${incomplete.map(r => `
+            <div class="sw-resume-card" data-rid="${r.id}">
+              <div class="sw-rc-goal">${escHtml(r.goal.slice(0,60))}${r.goal.length>60?'…':''}</div>
+              <div class="sw-rc-meta">${r.subtasks.filter(s=>s.status==='done'||s.status==='verified').length}/${r.subtasks.length} done · ${new Date(r.createdAt).toLocaleDateString()}</div>
+              <button class="sw-rc-resume" data-rid="${r.id}">▶ Resume</button>
+            </div>
+          `).join('')}
+        ` : ''}
+
+        ${runs.length ? `
+          <div class="sw-resume-label" style="margin-top:16px">HISTORY</div>
+          ${runs.slice(0,5).map(r => `
+            <div class="sw-history-item ${r.id===SwarmMode._active?'sw-history-item--active':''}" data-rid="${r.id}">
+              <div class="sw-hi-goal">${escHtml(r.goal.slice(0,50))}${r.goal.length>50?'…':''}</div>
+              <div class="sw-hi-meta">${r.subtasks.length} agents · <span class="sw-hi-status sw-hi-status--${r.status}">${r.status}</span></div>
+            </div>
+          `).join('')}
+        ` : ''}
+      </div>
+
+      <!-- RIGHT PANEL -->
+      <div class="sw-right page-scroll" id="sw-right">
+        <div class="sw-empty">
+          <div class="sw-empty-icon">🐝</div>
+          <div class="sw-empty-title">No active swarm</div>
+          <div class="sw-empty-sub">Type a big goal on the left and hit Plan Swarm to decompose it across your AI team.</div>
+        </div>
+      </div>
+    </div>`;
+
+    document.getElementById('sw-plan-btn')?.addEventListener('click', () => SwarmMode._startPlan(container));
+    document.getElementById('sw-goal')?.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && e.ctrlKey) SwarmMode._startPlan(container);
+    });
+
+    container.querySelectorAll('.sw-rc-resume, .sw-history-item').forEach(el => {
+      el.addEventListener('click', () => {
+        const rid = el.dataset.rid || el.closest('[data-rid]')?.dataset.rid;
+        if (!rid) return;
+        const run = (State.swarmRuns||[]).find(r => r.id === rid);
+        if (run) SwarmMode._showRun(run, document.getElementById('sw-right'));
+      });
+    });
+  },
+
+  // ── STEP 1: PLAN ──────────────────────────────────────────────
+  async _startPlan(container) {
+    const goal = document.getElementById('sw-goal')?.value.trim();
+    if (!goal) { toast('Enter a goal first', 'error'); return; }
+    const btn = document.getElementById('sw-plan-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '🧠 Planning…'; }
+    const right = document.getElementById('sw-right');
+    if (right) right.innerHTML = `<div class="sw-loading"><div class="ads-load-ring" style="border-top-color:#6366f1"></div><div>Manager is decomposing your goal into subtasks…</div></div>`;
+
+    const emps = State.employees.filter(e => !['e_router','e_claude'].includes(e.id));
+    const empList = emps.map(e => `${e.id}|${e.name}|${e.role}`).join('\n');
+    const brainCtx = (State.brain?.facts||[]).slice(0,8).map(f=>f.text).join('\n');
+    const company = State.settings.companyName || 'the company';
+    const sys = `You are the AI Manager at ${company}. Decompose a user goal into 3–6 parallel subtasks, each assigned to the best specialist.
+Available specialists:
+${empList}
+Company context:
+${brainCtx}
+Return ONLY valid JSON — no markdown, no explanation:
+{
+  "plan": "One sentence describing the overall approach",
+  "estimatedTokens": 12000,
+  "subtasks": [
+    {"id":"st1","title":"Short task title","agentId":"agent_id","agentName":"Agent Name","goal":"Detailed instruction for the agent (2-4 sentences). Include relevant context from the goal."}
+  ]
+}
+Rules: 3–6 subtasks max. Pick different agents where possible. Each subtask must be independently executable. estimatedTokens = rough total across all subtasks.`;
+
+    let raw = '';
+    try {
+      for await (const chunk of AI.stream([{role:'user',content:`Goal: ${goal}`}], sys, { search:false, appTools:false, max_tokens:1500, model:'claude-haiku-4-5-20251001' })) {
+        raw += chunk;
+      }
+      const plan = SwarmMode._parseJSON(raw);
+      if (!plan?.subtasks?.length) throw new Error('No subtasks returned');
+      if (btn) { btn.disabled = false; btn.textContent = '🧠 Plan Swarm →'; }
+      SwarmMode._showPlanConfirm(plan, goal, container);
+    } catch(e) {
+      if (btn) { btn.disabled = false; btn.textContent = '🧠 Plan Swarm →'; }
+      if (right) right.innerHTML = `<div class="sw-empty"><div class="sw-empty-icon">⚠️</div><div class="sw-empty-title">Planning failed</div><div class="sw-empty-sub">${escHtml(e.message)}</div></div>`;
+      toast('Could not plan swarm — try again', 'error');
+    }
+  },
+
+  // ── STEP 2: CONFIRM & LAUNCH ──────────────────────────────────
+  _showPlanConfirm(plan, goal, container) {
+    const right = document.getElementById('sw-right');
+    if (!right) return;
+    const tokenEst = plan.estimatedTokens || plan.subtasks.length * 2000;
+    right.innerHTML = `
+      <div class="sw-plan-card">
+        <div class="sw-plan-title">Proposed Swarm Plan</div>
+        <div class="sw-plan-summary">${escHtml(plan.plan)}</div>
+        <div class="sw-plan-subtasks">
+          ${plan.subtasks.map((s,i) => `
+            <div class="sw-plan-subtask">
+              <div class="sw-pst-num">${i+1}</div>
+              <div>
+                <div class="sw-pst-agent">${escHtml(s.agentName)}</div>
+                <div class="sw-pst-title">${escHtml(s.title)}</div>
+                <div class="sw-pst-goal">${escHtml(s.goal)}</div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+        <div class="sw-cost-warn">
+          ⚠️ This will run <b>${plan.subtasks.length} agents in parallel</b> and consume approximately <b>~${(tokenEst/1000).toFixed(0)}k tokens</b>. Verification and synthesis add extra calls.
+        </div>
+        <div style="display:flex;gap:10px;margin-top:16px">
+          <button class="btn-primary sw-launch-btn" id="sw-launch" style="background:#6366f1;border-color:#6366f1">🚀 Launch Swarm</button>
+          <button class="sw-cancel-btn" id="sw-cancel">Cancel</button>
+        </div>
+      </div>`;
+
+    document.getElementById('sw-launch')?.addEventListener('click', () => SwarmMode._launch(plan, goal, container));
+    document.getElementById('sw-cancel')?.addEventListener('click', () => {
+      right.innerHTML = `<div class="sw-empty"><div class="sw-empty-icon">🐝</div><div class="sw-empty-title">Cancelled</div><div class="sw-empty-sub">Enter a new goal when you're ready.</div></div>`;
+    });
+  },
+
+  // ── STEP 3: EXECUTE ───────────────────────────────────────────
+  async _launch(plan, goal, container) {
+    // Create run object and checkpoint immediately
+    const runId = uid();
+    const run = {
+      id: runId, goal, plan: plan.plan,
+      subtasks: plan.subtasks.map(s => ({
+        ...s, status:'queued', result:'', verifyScore:0, verifyNote:'', startedAt:null, doneAt:null,
+      })),
+      status:'running', synthesis:'', createdAt:Date.now(), completedAt:null,
+    };
+    State.swarmRuns.unshift(run);
+    save('swarmRuns');
+    SwarmMode._active = runId;
+
+    const right = document.getElementById('sw-right');
+    SwarmMode._showRun(run, right);
+
+    // Fan out all subtasks in parallel
+    const promises = run.subtasks.map((st, i) => SwarmMode._runSubtask(runId, i, right));
+    await Promise.allSettled(promises);
+
+    // Synthesis pass
+    const current = (State.swarmRuns||[]).find(r => r.id === runId);
+    if (current) {
+      current.status = 'verifying';
+      save('swarmRuns');
+      await SwarmMode._synthesize(runId, right);
+    }
+
+    SwarmMode._render(container); // refresh left panel history
+  },
+
+  // ── RUN ONE SUBTASK ───────────────────────────────────────────
+  async _runSubtask(runId, idx, right) {
+    const run = (State.swarmRuns||[]).find(r => r.id === runId);
+    if (!run) return;
+    const st = run.subtasks[idx];
+    st.status = 'running'; st.startedAt = Date.now();
+    save('swarmRuns');
+    SwarmMode._refreshCard(runId, idx, right);
+
+    const emp = State.employees.find(e => e.id === st.agentId);
+    const sys = emp?.system || `You are ${st.agentName}, an AI specialist. Complete the task given to you thoroughly and concisely. Return your result in plain text or markdown.`;
+    const ctx = (State.brain?.facts||[]).slice(0,6).map(f=>f.text).join('\n');
+    const userMsg = `${st.goal}\n\nCompany context:\n${ctx}`;
+
+    let result = '';
+    try {
+      for await (const chunk of AI.stream([{role:'user',content:userMsg}], sys, {
+        search:false, appTools:false, max_tokens:2048, model:'claude-haiku-4-5-20251001',
+      })) {
+        if (chunk.startsWith('\x00')) continue;
+        result += chunk;
+        st.result = result;
+        SwarmMode._refreshCard(runId, idx, right);
+      }
+      st.status = 'done'; st.doneAt = Date.now();
+    } catch(e) {
+      st.status = 'failed'; st.result = `Error: ${e.message}`; st.doneAt = Date.now();
+    }
+    save('swarmRuns');
+    SwarmMode._refreshCard(runId, idx, right);
+
+    // Verify this subtask immediately
+    if (st.status === 'done') await SwarmMode._verify(runId, idx, right);
+  },
+
+  // ── VERIFY ONE SUBTASK ────────────────────────────────────────
+  async _verify(runId, idx, right) {
+    const run = (State.swarmRuns||[]).find(r => r.id === runId);
+    if (!run) return;
+    const st = run.subtasks[idx];
+    const sys = `You are a quality reviewer. Score the output below 1–5 and flag issues.
+Return ONLY JSON: {"score":4,"pass":true,"note":"Brief reason"}
+score 1=unusable 2=poor 3=ok 4=good 5=excellent. pass=true if score>=3.`;
+    let raw = '';
+    try {
+      raw = await AI.once([{role:'user',content:`Task: ${st.goal}\n\nOutput:\n${st.result.slice(0,3000)}`}], sys);
+      const v = SwarmMode._parseJSON(raw);
+      st.verifyScore = v?.score || 3;
+      st.verifyNote  = v?.note  || '';
+      st.status = (v?.pass !== false) ? 'verified' : 'rejected';
+    } catch(_) {
+      st.status = 'verified'; st.verifyScore = 3; st.verifyNote = 'Auto-passed';
+    }
+    save('swarmRuns');
+    SwarmMode._refreshCard(runId, idx, right);
+  },
+
+  // ── SYNTHESIZE ────────────────────────────────────────────────
+  async _synthesize(runId, right) {
+    const run = (State.swarmRuns||[]).find(r => r.id === runId);
+    if (!run) return;
+    const verifiedResults = run.subtasks
+      .filter(s => s.status === 'verified' || s.status === 'done')
+      .map((s,i) => `## ${s.agentName}: ${s.title}\n${s.result}`)
+      .join('\n\n---\n\n');
+
+    if (!verifiedResults) { run.status = 'done'; save('swarmRuns'); return; }
+
+    SwarmMode._showSynthesisLoading(right);
+    const sys = `You are the AI Manager. Synthesize the outputs from multiple specialist agents into one cohesive, actionable summary.
+Be concise. Use headers for each key insight. End with a clear "Next Steps" section.`;
+    const userMsg = `Goal: ${run.goal}\n\n${verifiedResults}`;
+
+    let synthesis = '';
+    try {
+      for await (const chunk of AI.stream([{role:'user',content:userMsg}], sys, { search:false, appTools:false, max_tokens:2048 })) {
+        if (!chunk.startsWith('\x00')) { synthesis += chunk; }
+        SwarmMode._updateSynthesis(synthesis, right);
+      }
+      run.synthesis = synthesis;
+      run.status = 'done'; run.completedAt = Date.now();
+    } catch(e) {
+      run.synthesis = `Synthesis failed: ${e.message}`;
+      run.status = 'failed';
+    }
+    save('swarmRuns');
+    SwarmMode._showRun(run, right);
+  },
+
+  // ── UI HELPERS ────────────────────────────────────────────────
+  _showRun(run, right) {
+    if (!right) return;
+    const doneCount = run.subtasks.filter(s => ['done','verified','rejected'].includes(s.status)).length;
+    const verifiedCount = run.subtasks.filter(s => s.status === 'verified').length;
+    right.innerHTML = `
+      <div class="sw-run-header">
+        <div class="sw-run-goal">${escHtml(run.goal)}</div>
+        <div class="sw-run-meta">${doneCount}/${run.subtasks.length} complete &nbsp;·&nbsp; ${verifiedCount} verified &nbsp;·&nbsp; <span class="sw-run-status sw-hi-status--${run.status}">${run.status}</span></div>
+        <div class="sw-run-progress"><div class="sw-run-bar" style="width:${run.subtasks.length?Math.round(doneCount/run.subtasks.length*100):0}%"></div></div>
+      </div>
+
+      <div class="sw-cards-grid" id="sw-cards-grid">
+        ${run.subtasks.map((s,i) => SwarmMode._cardHtml(s, i)).join('')}
+      </div>
+
+      ${run.synthesis ? `
+        <div class="sw-synthesis" id="sw-synthesis">
+          <div class="sw-syn-hdr">
+            <div class="sw-syn-title">🧩 Manager Synthesis</div>
+            <button class="tb-btn" id="sw-save-brain">🧠 Save to Brain</button>
+          </div>
+          <div class="sw-syn-body markdown-body">${marked.parse(run.synthesis)}</div>
+        </div>
+      ` : '<div id="sw-synthesis"></div>'}
+    `;
+
+    document.getElementById('sw-save-brain')?.addEventListener('click', () => {
+      if (!run.synthesis) return;
+      const emp = State.employees[0];
+      State.brain.facts.unshift({ id:uid(), text:`Swarm synthesis (${run.goal.slice(0,60)}): ${run.synthesis.slice(0,1000)}`, category:'business', source:'Swarm Mode', sourceAgent:'Manager', sourceEmpId:emp?.id||null, timestamp:Date.now() });
+      save('brain');
+      toast('Synthesis saved to Brain ✓', 'success');
+    });
+  },
+
+  _cardHtml(st, i) {
+    const statusIcons = { queued:'⏳', running:'🔄', done:'✅', verified:'✅', rejected:'⚠️', failed:'❌' };
+    const icon = statusIcons[st.status] || '⏳';
+    const scoreStars = st.verifyScore ? '★'.repeat(st.verifyScore) + '☆'.repeat(5-st.verifyScore) : '';
+    const preview = st.result ? st.result.slice(0, 200) + (st.result.length > 200 ? '…' : '') : '';
+    return `
+      <div class="sw-card sw-card--${st.status}" id="swc-${i}">
+        <div class="sw-card-hdr">
+          <div class="sw-card-agent">${escHtml(st.agentName)}</div>
+          <div class="sw-card-status">${icon} ${st.status}</div>
+        </div>
+        <div class="sw-card-title">${escHtml(st.title)}</div>
+        ${st.status === 'running' ? '<div class="sw-card-streaming">Working…<span class="sw-dots"><span>.</span><span>.</span><span>.</span></span></div>' : ''}
+        ${preview ? `<div class="sw-card-preview">${escHtml(preview)}</div>` : ''}
+        ${st.verifyNote ? `<div class="sw-card-verify">${scoreStars} ${escHtml(st.verifyNote)}</div>` : ''}
+        ${st.result ? `<details class="sw-card-full"><summary>Full output</summary><div class="sw-card-full-body">${escHtml(st.result)}</div></details>` : ''}
+      </div>`;
+  },
+
+  _refreshCard(runId, idx, right) {
+    const run = (State.swarmRuns||[]).find(r => r.id === runId);
+    if (!run) return;
+    const st = run.subtasks[idx];
+
+    // Update progress header
+    const doneCount = run.subtasks.filter(s => ['done','verified','rejected'].includes(s.status)).length;
+    const pct = run.subtasks.length ? Math.round(doneCount/run.subtasks.length*100) : 0;
+    const bar = right?.querySelector('.sw-run-bar');
+    if (bar) bar.style.width = pct + '%';
+    const meta = right?.querySelector('.sw-run-meta');
+    if (meta) meta.innerHTML = `${doneCount}/${run.subtasks.length} complete &nbsp;·&nbsp; ${run.subtasks.filter(s=>s.status==='verified').length} verified &nbsp;·&nbsp; <span class="sw-run-status sw-hi-status--${run.status}">${run.status}</span>`;
+
+    // Replace card
+    const el = right?.querySelector(`#swc-${idx}`);
+    if (el) el.outerHTML = SwarmMode._cardHtml(st, idx);
+  },
+
+  _showSynthesisLoading(right) {
+    const syn = right?.querySelector('#sw-synthesis');
+    if (syn) syn.innerHTML = `<div class="sw-syn-loading"><div class="ads-load-ring" style="border-top-color:#6366f1"></div><div>Manager is synthesizing results…</div></div>`;
+  },
+
+  _updateSynthesis(text, right) {
+    const syn = right?.querySelector('#sw-synthesis');
+    if (!syn) return;
+    if (!syn.querySelector('.sw-synthesis')) {
+      syn.innerHTML = `<div class="sw-synthesis"><div class="sw-syn-hdr"><div class="sw-syn-title">🧩 Synthesizing…</div></div><div class="sw-syn-body markdown-body">${marked.parse(text)}</div></div>`;
+    } else {
+      const body = syn.querySelector('.sw-syn-body');
+      if (body) body.innerHTML = marked.parse(text);
+    }
+  },
+
+  _parseJSON(raw) {
+    let s = raw.trim();
+    const fence = s.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fence) s = fence[1].trim();
+    const bracket = s.match(/\{[\s\S]*\}/);
+    if (bracket) s = bracket[0];
+    try { return JSON.parse(s); } catch(_) {}
+    try { return JSON.parse(s + ']}'); } catch(_) {}
+    return null;
+  },
+
+  destroy() { SwarmMode._active = null; },
+};
+
 // ── ROUTER ────────────────────────────────────────────────────
 const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -4951,6 +5592,38 @@ const HQ = {
         </div>
       </div>
 
+      <!-- QUICK START / TODAY'S GOAL -->
+      <div class="hq-qs-wrap" id="hq-qs-section">
+        <div class="hq-qs-inner">
+          <div class="hq-qs-lhs">
+            <div class="hq-qs-label">What do you want to accomplish today?</div>
+            <div class="hq-qs-row">
+              <textarea class="hq-qs-inp" id="hq-qs-input" rows="1" placeholder="e.g. Research 20 target accounts and write personalised cold email openers for each…"></textarea>
+              <button class="hq-qs-btn" id="hq-qs-btn">Plan it →</button>
+            </div>
+          </div>
+          <div class="hq-qs-connectors">
+            ${(() => {
+              const s = State.settings;
+              const ai = State.automations?.integrations || {};
+              const items = [
+                { icon:'📧', name:'Gmail',   on: !!s.gmailEmail },
+                { icon:'🔍', name:'Apollo',  on: !!(s.apolloKey||s.platformHunterKey) },
+                { icon:'📊', name:'Meta',    on: !!s.metaToken },
+                { icon:'💬', name:'Slack',   on: !!ai.slackWebhookUrl },
+                { icon:'🤝', name:'HubSpot', on: !!ai.hubspotKey },
+              ];
+              const connCount = items.filter(x=>x.on).length;
+              return `<div class="hq-qs-conn-title">${connCount}/${items.length} tools connected</div>
+              <div class="hq-qs-conn-row">
+                ${items.map(x=>`<div class="hq-qs-conn-dot ${x.on?'hq-qs-conn-dot--on':''}" title="${x.name}">${x.icon}</div>`).join('')}
+                <button class="hq-qs-conn-link" onclick="Router.navigate('connectors')">Manage →</button>
+              </div>`;
+            })()}
+          </div>
+        </div>
+      </div>
+
       <!-- MAIN LAYOUT -->
       <div class="hq-layout">
 
@@ -5018,6 +5691,87 @@ const HQ = {
     document.getElementById('hq-hire-card')?.addEventListener('click',Employees.openHireModal);
     document.getElementById('hq-ask-btn')?.addEventListener('click',HQ._askRoom);
     document.getElementById('hq-ask-input')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();HQ._askRoom();}});
+    document.getElementById('hq-qs-btn')?.addEventListener('click',HQ._planGoal);
+    document.getElementById('hq-qs-input')?.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();HQ._planGoal();}});
+  },
+
+  // ── QUICK START: GOAL → WORKFLOW PROPOSAL ────────────────────
+  async _planGoal() {
+    const goal = document.getElementById('hq-qs-input')?.value.trim();
+    if (!goal) return;
+    const btn = document.getElementById('hq-qs-btn');
+    if (btn) { btn.textContent = 'Planning…'; btn.disabled = true; }
+
+    const brainCtx  = (State.brain?.facts||[]).slice(0,8).map(f=>f.text).join('\n');
+    const company   = State.settings.companyName || 'the company';
+    const empStr    = State.employees.filter(e=>e.id!=='e_router').map(e=>`${e.name} (${e.role})`).join(', ');
+    const sys = `You are the AI Manager at ${company}. Given a user goal, design a practical 3–5 step workflow using the available AI team. Return ONLY valid JSON — no markdown fence, no extra text:
+{
+  "title": "Short workflow title (4-6 words)",
+  "summary": "One sentence describing the outcome.",
+  "steps": [
+    {"n":1,"agent":"Agent name","task":"Specific task description","requiresApproval":false}
+  ]
+}
+Available agents: ${empStr}
+Company context: ${brainCtx}
+Rules: requiresApproval:true if the step sends emails, posts content, or spends money. Limit to 3–5 steps.`;
+
+    let raw = '';
+    try {
+      for await (const chunk of AI.stream([{role:'user',content:`Goal: ${goal}`}], sys, { search:false, appTools:false, max_tokens:800, model:'claude-haiku-4-5-20251001' })) {
+        if (!chunk.startsWith('\x00')) raw += chunk;
+      }
+      const plan = JSON.parse((raw.match(/\{[\s\S]*\}/) || ['{}'])[0]);
+      if (!plan.steps?.length) throw new Error('no steps');
+      HQ._showWorkflowCard(plan, goal);
+    } catch(e) {
+      toast('Could not plan — try being more specific', 'error');
+    }
+    if (btn) { btn.textContent = 'Plan it →'; btn.disabled = false; }
+  },
+
+  _showWorkflowCard(plan, goal) {
+    const colors = ['#4f8cff','#10d98a','#f59e0b','#a855f7','#ef4444'];
+    Modal.open(`📋 ${escHtml(plan.title)}`, `
+      <div style="padding:4px 0">
+        <div style="font-size:13px;color:var(--text2);margin-bottom:18px;line-height:1.6">${escHtml(plan.summary)}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px">
+          ${(plan.steps||[]).map((s,i)=>`
+            <div style="display:flex;align-items:flex-start;gap:12px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+              <div style="width:26px;height:26px;border-radius:50%;background:${colors[i%colors.length]};color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;margin-top:1px">${s.n}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-weight:600;font-size:13px;color:var(--text)">${escHtml(s.agent)}</div>
+                <div style="font-size:12px;color:var(--text2);margin-top:3px;line-height:1.5">${escHtml(s.task)}</div>
+              </div>
+              ${s.requiresApproval?'<div style="font-size:11px;color:#f59e0b;flex-shrink:0;padding-top:2px">⚠️ approval</div>':''}
+            </div>`).join('')}
+        </div>
+        <div style="background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:8px;padding:10px 13px;font-size:12px;color:var(--text2);margin-bottom:18px">
+          ⚡ Actions marked "approval" will pause and ask you before executing (e.g. sending emails).
+          ${State.trust?.autoRun ? ' <b>Auto-approve is currently ON</b> — disable it in <a onclick="Router.navigate(\'connectors\');Modal.close()" style="cursor:pointer;color:#6366f1">Connectors</a>.' : ''}
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-primary" id="hq-plan-run">🚀 Create Tasks</button>
+          <button class="sw-cancel-btn" id="hq-plan-swarm">🐝 Run as Swarm</button>
+          <button class="sw-cancel-btn" id="hq-plan-cancel">Maybe later</button>
+        </div>
+      </div>`);
+    document.getElementById('hq-plan-run')?.addEventListener('click', () => {
+      const tasks = (plan.steps||[]).map(s => ({ title:`${s.agent}: ${s.task}`, assignee:s.agent, priority:'high' }));
+      AppTools._createTasksBulk({ tasks });
+      Modal.close();
+      toast('Workflow added to your task board', 'success');
+    });
+    document.getElementById('hq-plan-swarm')?.addEventListener('click', () => {
+      Modal.close();
+      Router.navigate('swarm');
+      setTimeout(() => {
+        const inp = document.getElementById('sw-goal');
+        if (inp) { inp.value = goal; }
+      }, 300);
+    });
+    document.getElementById('hq-plan-cancel')?.addEventListener('click', () => Modal.close());
   },
 
   _ROLE_CMDS: {
