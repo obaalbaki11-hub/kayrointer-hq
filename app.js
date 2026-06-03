@@ -8473,11 +8473,19 @@ const AdStudio = {
           bar.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:12px;border-top:1px solid rgba(0,0,0,0.07)';
           bar.innerHTML = `
             <button class="video-gen-html-btn" style="padding:8px 16px;border-radius:8px;border:none;background:#a855f7;color:#fff;font-size:13px;font-weight:600;cursor:pointer">🎬 Generate HTML Ad</button>
-            <button class="video-dl-script-btn" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);background:rgba(0,0,0,0.03);color:var(--text);font-size:13px;font-weight:500;cursor:pointer">⬇ Download Script</button>`;
+            <button class="video-dl-script-btn" style="padding:8px 14px;border-radius:8px;border:1px solid rgba(0,0,0,0.1);background:rgba(0,0,0,0.03);color:var(--text);font-size:13px;font-weight:500;cursor:pointer">⬇ Script</button>
+            <button class="video-remotion-btn" style="padding:8px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-size:13px;font-weight:600;cursor:pointer">🎬 Remotion Preview</button>`;
           bar.querySelector('.video-gen-html-btn').addEventListener('click', () => AdStudio._generateHTMLAd(capturedScript));
           bar.querySelector('.video-dl-script-btn').addEventListener('click', () => {
             const blob = new Blob([capturedScript], { type: 'text/markdown' });
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cleo-video-script.md'; a.click(); URL.revokeObjectURL(a.href);
+          });
+          bar.querySelector('.video-remotion-btn').addEventListener('click', () => {
+            const company = State.settings?.companyName || 'Kayro Interactive';
+            const accent = State.settings?.accentColor || '#0071e3';
+            const url = `http://localhost:3000?compositionId=KayroBrandSpot`;
+            window.open(url, '_blank');
+            toast('Opening Brand Spot in Remotion — run: cd kayro-hq/remotion && npx remotion studio', 'info');
           });
           bubbleEl.appendChild(bar);
           msgs.scrollTop = msgs.scrollHeight;
@@ -9215,7 +9223,8 @@ CRITICAL: Output ONLY valid JSON. No markdown fences. No text before or after. S
         </div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
           <button class="tb-btn" id="soc-copy-all">⎘ Copy All</button>
-          <button class="tb-btn primary" id="soc-export-design">🎨 Export to Design Studio</button>
+          <button class="tb-btn primary" id="soc-export-design">🎨 Design Studio</button>
+          ${fmt !== 'single' ? `<button class="tb-btn" id="soc-remotion-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed">🎬 Remotion Preview</button>` : ''}
         </div>
       </div>
       <div class="soc-cards-grid">${cardsHtml}</div>`;
@@ -9231,6 +9240,18 @@ CRITICAL: Output ONLY valid JSON. No markdown fences. No text before or after. S
         ? `Instagram ${data.format} — ${data.topic}\n\n` + slides.map((s,i)=>`Slide ${i+1}: ${s.headline||s.onscreen||''}\n${s.body||s.voiceover||''}`).join('\n\n')
         : `${data.hook||''}\n\n${data.caption||''}`;
       Router.navigate('design');
+    });
+
+    document.getElementById('soc-remotion-btn')?.addEventListener('click', () => {
+      const compId = fmt === 'reel' ? 'KayroReel' : 'KayroCarousel';
+      const company = State.settings?.companyName || 'Kayro Interactive';
+      const accent = State.settings?.accentColor || '#0071e3';
+      const props = fmt === 'reel'
+        ? { topic: data.topic||'', scenes: data.scenes||[], accentColor: accent, company }
+        : { topic: data.topic||'', slides: data.slides||[], accentColor: accent, company };
+      const url = `http://localhost:3000?compositionId=${compId}&inputProps=${encodeURIComponent(JSON.stringify(props))}`;
+      window.open(url, '_blank');
+      toast('Opening Remotion Studio — make sure it\'s running: cd remotion && npx remotion studio', 'info');
     });
 
     right.querySelectorAll('.soc-copy-slide').forEach(btn => {
