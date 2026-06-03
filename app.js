@@ -754,8 +754,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm'],
-  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm','remotion'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm','remotion'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -3014,6 +3014,206 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
   };
 }
 
+// ── REMOTION PAGE ─────────────────────────────────────────────
+const RemotionPage = {
+  _studioUrl: 'http://localhost:3000',
+
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = `
+      <button class="tb-btn" id="rmt-launch-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed">▶ Start Studio</button>
+      <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
+    document.getElementById('rmt-launch-btn')?.addEventListener('click', () => RemotionPage._openStudio());
+    RemotionPage._render(container);
+  },
+
+  _render(container) {
+    const company = State.settings.companyName || 'Kayro Interactive';
+    const accent  = State.settings.accentColor  || '#0071e3';
+
+    const comps = [
+      {
+        id: 'KayroCarousel',
+        icon: '🖼',
+        name: 'Carousel',
+        dims: '1080 × 1080',
+        fps: 30,
+        dur: '18.5 s',
+        use: 'Instagram · LinkedIn · Twitter',
+        desc: 'Apple-style 6-slide carousel. Each slide has a headline, body, and optional CTA. Auto-paced with progress dots.',
+        from: 'Social Studio',
+      },
+      {
+        id: 'KayroReel',
+        icon: '📱',
+        name: 'Reel / Short',
+        dims: '1080 × 1920',
+        fps: 30,
+        dur: '30 s',
+        use: 'Instagram Reels · TikTok · Shorts',
+        desc: 'Dark cinematic 6-scene vertical reel. Each scene has on-screen text, a voiceover subtitle, and ambient glow.',
+        from: 'Social Studio',
+      },
+      {
+        id: 'KayroBrandSpot',
+        icon: '🎬',
+        name: 'Brand Spot',
+        dims: '1920 × 1080',
+        fps: 30,
+        dur: '33 s',
+        use: 'YouTube · LinkedIn · Presentations',
+        desc: 'Full 33-second brand film: hero opener → stats showcase → 3 feature scenes → CTA with animated ring.',
+        from: 'Ad Studio',
+      },
+    ];
+
+    container.innerHTML = `<div class="rmt-root page-scroll">
+
+      <!-- HEADER -->
+      <div class="rmt-header">
+        <div class="rmt-header-left">
+          <div class="rmt-logo">🎬</div>
+          <div>
+            <div class="rmt-title">Remotion Studio</div>
+            <div class="rmt-sub">Render production-quality videos from your AI-generated content</div>
+          </div>
+        </div>
+        <div class="rmt-status-pill" id="rmt-status">
+          <span class="rmt-status-dot"></span> Studio offline
+        </div>
+      </div>
+
+      <!-- START GUIDE -->
+      <div class="rmt-guide-card" id="rmt-guide">
+        <div class="rmt-guide-title">Start Remotion Studio</div>
+        <div class="rmt-guide-sub">Remotion renders at your comp's native resolution (no browser scaling). Run one terminal command:</div>
+        <div class="rmt-code-block">
+          <code id="rmt-cmd">cd kayro-hq/remotion &amp;&amp; npx remotion studio</code>
+          <button class="rmt-copy-btn" id="rmt-copy" title="Copy command">⎘</button>
+        </div>
+        <div class="rmt-guide-steps">
+          <div class="rmt-step"><span class="rmt-step-n">1</span>Open a terminal in the <code>kayro-hq</code> folder</div>
+          <div class="rmt-step"><span class="rmt-step-n">2</span>Run the command above — studio opens at <code>localhost:3000</code></div>
+          <div class="rmt-step"><span class="rmt-step-n">3</span>Click any composition card below to open it in the studio</div>
+          <div class="rmt-step"><span class="rmt-step-n">4</span>Render to MP4 with the blue Render button inside the studio</div>
+        </div>
+        <button class="rmt-check-btn" id="rmt-check">Check if running →</button>
+      </div>
+
+      <!-- COMPOSITION CARDS -->
+      <div class="rmt-section-label">Compositions</div>
+      <div class="rmt-comps-grid">
+        ${comps.map(c => `
+          <div class="rmt-comp-card">
+            <div class="rmt-comp-top">
+              <div class="rmt-comp-icon">${c.icon}</div>
+              <div class="rmt-comp-meta">
+                <div class="rmt-comp-name">${c.name}</div>
+                <div class="rmt-comp-dims">${c.dims} · ${c.fps}fps · ${c.dur}</div>
+              </div>
+            </div>
+            <div class="rmt-comp-desc">${escHtml(c.desc)}</div>
+            <div class="rmt-comp-use">📺 ${escHtml(c.use)}</div>
+            <div class="rmt-comp-footer">
+              <span class="rmt-comp-source">Generated by: <b>${c.from}</b></span>
+              <button class="rmt-open-btn" data-cid="${c.id}">Open in Studio →</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- WORKFLOW SECTION -->
+      <div class="rmt-section-label" style="margin-top:28px">How it works</div>
+      <div class="rmt-workflow-row">
+        ${[
+          ['✨','Generate','Use Social Studio or Ad Studio to generate your script and content.'],
+          ['🎬','Preview','Click "Remotion Preview" in the output or open a comp card above.'],
+          ['✏️','Edit Props','Edit the defaultProps in <code>remotion/src/Root.tsx</code> or pass props via URL.'],
+          ['🎞','Render','Hit the blue Render button in Remotion Studio — exports MP4 at full resolution.'],
+        ].map(([icon,label,desc]) => `
+          <div class="rmt-wf-step">
+            <div class="rmt-wf-icon">${icon}</div>
+            <div class="rmt-wf-label">${label}</div>
+            <div class="rmt-wf-desc">${desc}</div>
+          </div>
+        `).join('')}
+      </div>
+
+      <!-- EMBEDDED PREVIEW -->
+      <div class="rmt-section-label" style="margin-top:28px">Live Preview</div>
+      <div class="rmt-iframe-wrap" id="rmt-iframe-wrap">
+        <div class="rmt-iframe-placeholder" id="rmt-iframe-ph">
+          <div>Studio is not running</div>
+          <div style="font-size:12px;opacity:.6;margin-top:6px">Start it with the command above, then click "Check if running"</div>
+        </div>
+      </div>
+
+    </div>`;
+
+    // Wire buttons
+    container.querySelectorAll('.rmt-open-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const url = `${RemotionPage._studioUrl}?compositionId=${btn.dataset.cid}`;
+        window.open(url, '_blank');
+        toast('Opening composition in Remotion Studio', 'success');
+      });
+    });
+
+    document.getElementById('rmt-copy')?.addEventListener('click', () => {
+      navigator.clipboard.writeText('cd kayro-hq/remotion && npx remotion studio');
+      const btn = document.getElementById('rmt-copy');
+      if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⎘'; }, 2000); }
+    });
+
+    document.getElementById('rmt-check')?.addEventListener('click', () => RemotionPage._checkStudio(container));
+  },
+
+  async _checkStudio(container) {
+    const pill = document.getElementById('rmt-status');
+    const btn  = document.getElementById('rmt-check');
+    if (btn)  btn.textContent = 'Checking…';
+    if (pill) pill.innerHTML  = '<span class="rmt-status-dot rmt-status-dot--checking"></span> Checking…';
+
+    try {
+      // Try a no-cors HEAD request — if it doesn't throw, port is open
+      await fetch(`${RemotionPage._studioUrl}`, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
+      // Running
+      if (pill) pill.innerHTML = '<span class="rmt-status-dot rmt-status-dot--on"></span> Studio running';
+      if (pill) pill.classList.add('rmt-status--on');
+      const guide = document.getElementById('rmt-guide');
+      if (guide) guide.style.display = 'none';
+      RemotionPage._embedStudio(container);
+      toast('Remotion Studio is running ✓', 'success');
+    } catch(_) {
+      if (pill) pill.innerHTML = '<span class="rmt-status-dot"></span> Studio offline';
+      if (pill) pill.classList.remove('rmt-status--on');
+      toast('Remotion Studio not detected — run the command and try again', 'error');
+    }
+    if (btn) btn.textContent = 'Check if running →';
+  },
+
+  _embedStudio(container) {
+    const wrap = document.getElementById('rmt-iframe-wrap');
+    if (!wrap) return;
+    const ph = document.getElementById('rmt-iframe-ph');
+    if (ph) ph.style.display = 'none';
+    if (!wrap.querySelector('iframe')) {
+      const frame = document.createElement('iframe');
+      frame.src = RemotionPage._studioUrl;
+      frame.className = 'rmt-iframe';
+      frame.allow = 'autoplay';
+      wrap.appendChild(frame);
+    }
+  },
+
+  _openStudio() {
+    window.open(RemotionPage._studioUrl, '_blank');
+    toast('Opening Remotion Studio in new tab — make sure it\'s running: cd kayro-hq/remotion && npx remotion studio', 'info');
+  },
+
+  destroy() {},
+};
+
 // ── CONNECTORS PAGE ───────────────────────────────────────────
 const ConnectorsPage = {
   init(container) {
@@ -3565,13 +3765,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
