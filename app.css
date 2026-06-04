@@ -1198,26 +1198,19 @@ td.editing .cell-editor{display:block}
 /* ── CLAUDE MANAGER CARD ─────────────────────────────────────── */
 .hq-manager-card{
   grid-column: 1 / -1;
-  border-color:rgba(91,46,255,.4)!important;
-  background:linear-gradient(135deg,#0d0a1e 0%,#120830 50%,#0a0d1f 100%)!important;
-  box-shadow:0 2px 24px rgba(91,46,255,.18),0 0 0 1px rgba(91,46,255,.12) inset!important;
+  border-color:rgba(91,46,255,.25)!important;
+  background:#ffffff!important;
+  box-shadow:0 2px 16px rgba(91,46,255,.1),0 0 0 1px rgba(91,46,255,.1) inset!important;
 }
 .hq-manager-card:hover{
-  border-color:rgba(91,46,255,.6)!important;
-  box-shadow:0 8px 36px rgba(91,46,255,.25),0 0 0 1px rgba(91,46,255,.2) inset!important;
+  border-color:rgba(91,46,255,.45)!important;
+  box-shadow:0 8px 28px rgba(91,46,255,.15),0 0 0 1px rgba(91,46,255,.18) inset!important;
 }
-.hq-manager-card .hq-card-name{color:#fff!important}
-.hq-manager-card .hq-card-role{color:rgba(255,255,255,0.6)!important}
-.hq-manager-card .hq-act-txt{color:rgba(255,255,255,0.55)!important}
-.hq-manager-card .hq-badge{color:rgba(255,255,255,0.45)!important;border-color:rgba(255,255,255,0.1)!important;background:rgba(255,255,255,0.05)!important}
-.hq-manager-card .hq-skill-chip{color:rgba(255,255,255,0.8)!important;border-color:rgba(91,46,255,.3)!important;background:rgba(91,46,255,.12)!important}
-.hq-manager-card .hq-card-activity{background:rgba(255,255,255,0.04)!important}
-.hq-manager-card .hq-online-dot{border-color:#0d0a1e!important}
 .hq-manager-crown{
   font-size:10px;font-weight:700;letter-spacing:.8px;
   color:var(--accent);padding:5px 14px;margin:-16px -16px 0;
-  border-bottom:1px solid rgba(91,46,255,.18);
-  background:linear-gradient(90deg,rgba(91,46,255,.15),rgba(91,46,255,.04));
+  border-bottom:1px solid rgba(91,46,255,.12);
+  background:linear-gradient(90deg,rgba(91,46,255,.07),transparent);
   border-radius:16px 16px 0 0;
 }
 @media(max-width:700px){.hq-manager-card{grid-column:auto}}
@@ -2461,16 +2454,15 @@ input,textarea,select,button{font-family:var(--font)}
 /* ── HQ SPECIALISTS SECTION ─────────────────────────────────── */
 .hq-spec-section{margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:8px}
 .hq-spec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.hq-spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hq-spec-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
 .hq-spec-card{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left;width:100%}
-.hq-spec-card:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.hq-spec-card:hover{border-color:var(--accent);background:var(--accent-dim)}
 .hq-spec-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center}
 .hq-spec-info{flex:1;min-width:0}
 .hq-spec-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hq-spec-desc{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .hq-spec-arrow{font-size:14px;color:var(--text3);flex-shrink:0;opacity:0;transition:opacity .15s}
-.hq-spec-card:hover .hq-spec-arrow{opacity:1}
-@media(max-width:1100px){.hq-spec-grid{grid-template-columns:repeat(3,1fr)}}
+.hq-spec-card:hover .hq-spec-arrow{opacity:1;color:var(--accent)}
 @media(max-width:700px){.hq-spec-grid{grid-template-columns:repeat(2,1fr)}}
 
 /* ── COMPANY PROFILE PAGE ───────────────────────────────────── */

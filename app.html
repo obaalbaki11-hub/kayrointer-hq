@@ -7,21 +7,21 @@
 <title>Kayro Interactive — AI Workforce</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%233b82f6'/><text y='72' font-size='62' font-family='sans-serif' font-weight='900' fill='white' text-anchor='middle' x='50'>K</text></svg>">
 <link href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="app.css?v=20260604e">
+<link rel="stylesheet" href="app.css?v=20260604f">
 <style>
-/* inline override — bypasses CDN-cached app.css */
-.hq-manager-card{border-color:rgba(91,46,255,.4)!important;background:linear-gradient(135deg,#0d0a1e 0%,#120830 50%,#0a0d1f 100%)!important;box-shadow:0 2px 24px rgba(91,46,255,.18),0 0 0 1px rgba(91,46,255,.12) inset!important}
-.hq-manager-card .hq-card-name{color:#fff!important}
-.hq-manager-card .hq-card-role{color:rgba(255,255,255,.6)!important}
-.hq-manager-card .hq-act-txt{color:rgba(255,255,255,.55)!important}
-.hq-manager-card .hq-badge{color:rgba(255,255,255,.45)!important;border-color:rgba(255,255,255,.1)!important;background:rgba(255,255,255,.05)!important}
-.hq-manager-card .hq-skill-chip{color:rgba(255,255,255,.8)!important;border-color:rgba(91,46,255,.3)!important;background:rgba(91,46,255,.12)!important}
-.hq-manager-card .hq-card-activity{background:rgba(255,255,255,.04)!important}
-.hq-manager-card .hq-online-dot{border-color:#0d0a1e!important}
-.hq-manager-crown{color:#7c5cff!important;border-bottom:1px solid rgba(91,46,255,.18)!important;background:linear-gradient(90deg,rgba(91,46,255,.15),rgba(91,46,255,.04))!important}
+.hq-manager-card{border-color:rgba(91,46,255,.25)!important;background:#ffffff!important;box-shadow:0 2px 16px rgba(91,46,255,.1),0 0 0 1px rgba(91,46,255,.1) inset!important}
+.hq-manager-card .hq-card-name{color:var(--text)!important}
+.hq-manager-card .hq-card-role{color:var(--text2)!important}
+.hq-manager-card .hq-act-txt{color:var(--text2)!important}
+.hq-manager-card .hq-badge{color:var(--text3)!important;border-color:var(--border)!important;background:var(--surface2)!important}
+.hq-manager-card .hq-skill-chip{color:var(--accent)!important;border-color:var(--accent-dim2)!important;background:var(--accent-dim)!important}
+.hq-manager-card .hq-card-activity{background:var(--surface2)!important}
+.hq-manager-card .hq-online-dot{border-color:#fff!important}
+.hq-manager-crown{color:var(--accent)!important;border-bottom:1px solid rgba(91,46,255,.12)!important;background:linear-gradient(90deg,rgba(91,46,255,.07),transparent)!important}
 .hq-agent-grid{grid-template-columns:repeat(3,1fr)!important}
-@media(max-width:1100px){.hq-agent-grid{grid-template-columns:repeat(2,1fr)!important}}
-@media(max-width:600px){.hq-agent-grid{grid-template-columns:1fr!important}}
+.hq-spec-grid{grid-template-columns:repeat(3,1fr)!important}
+@media(max-width:1100px){.hq-agent-grid{grid-template-columns:repeat(2,1fr)!important}.hq-spec-grid{grid-template-columns:repeat(2,1fr)!important}}
+@media(max-width:600px){.hq-agent-grid{grid-template-columns:1fr!important}.hq-spec-grid{grid-template-columns:1fr!important}}
 </style>
 </head>
 <body>
@@ -159,6 +159,6 @@
 <!-- Markdown renderer for chat -->
 <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
 <!-- Firebase SDKs (loaded lazily when config is saved) -->
-<script src="app.js?v=20260604e"></script>
+<script src="app.js?v=20260604f"></script>
 </body>
 </html>
