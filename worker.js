@@ -17,6 +17,7 @@ function cors(origin) {
     'Access-Control-Allow-Origin': allowed,
     'Access-Control-Allow-Methods': 'GET, POST, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization, x-api-key, anthropic-version, anthropic-dangerous-direct-browser-access',
+    'Access-Control-Allow-Credentials': 'true',
     'Access-Control-Max-Age': '86400',
   };
 }
@@ -48,6 +49,13 @@ export default {
       // AI Proxy — Bedrock if AWS creds set, else Anthropic
       // agent_* models (Claude Platform Agents) must always go to Anthropic directly
       if (path === '/api/ai') {
+        // C4/C5: require valid session before proxying to Anthropic (closes open-key abuse)
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        const limitMsg = await checkUsageLimits(env, authR.session.uid, authR.session.plan);
+        if (limitMsg) return json({ error: limitMsg }, 402, origin);
+        await recordUsage(env, authR.session.uid);
+
         let useAI = handleAI;
         if (env.AWS_ACCESS_KEY_ID) {
           // Peek at model field without consuming the body
@@ -57,14 +65,27 @@ export default {
             if (!String(b.model || '').startsWith('agent_')) useAI = handleAIBedrock;
           } catch (_) { useAI = handleAIBedrock; }
         }
-        return useAI(request, env, origin);
+        return useAI(request, env, origin, authR.session.uid);
       }
-      if (path === '/api/agent/session')        return handleAgentSession(request, env, origin);
-      if (path === '/api/agent/turn')           return handleAgentTurn(request, env, origin);
+      if (path === '/api/agent/session') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleAgentSession(request, env, origin);
+      }
+      if (path === '/api/agent/turn') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        const limitMsg = await checkUsageLimits(env, authR.session.uid, authR.session.plan);
+        if (limitMsg) return json({ error: limitMsg }, 402, origin);
+        await recordUsage(env, authR.session.uid);
+        return handleAgentTurn(request, env, origin);
+      }
       if (path === '/api/ping')                return handlePing(request, env, origin);
       if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
       if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
       if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
+      if (path === '/api/usage/me')            return handleUsageMe(request, env, origin);
+      if (path === '/api/admin/usage')         return handleAdminUsage(request, env, origin);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -143,6 +164,94 @@ async function awsSig4(method, urlStr, extraHeaders, body, accessKey, secretKey,
 }
 
 // ══════════════════════════════════════════════════════════════
+// MODEL COST RATES — $/M tokens (Anthropic list price, verify at anthropic.com/pricing)
+// ══════════════════════════════════════════════════════════════
+const MODEL_COSTS = {
+  'claude-opus-4-7':            { input: 15.00, output: 75.00 },
+  'claude-opus-4-6':            { input: 15.00, output: 75.00 },
+  'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
+  'claude-sonnet-4-5':          { input:  3.00, output: 15.00 },
+  'claude-haiku-4-5-20251001':  { input:  0.80, output:  4.00 },
+  'claude-haiku-4-5':           { input:  0.80, output:  4.00 },
+  'claude-3-5-sonnet-20241022': { input:  3.00, output: 15.00 },
+  'claude-3-5-haiku-20241022':  { input:  0.80, output:  4.00 },
+  'claude-3-haiku-20240307':    { input:  0.25, output:  1.25 },
+};
+const RESALE_RATE = 18.00; // $/M tokens — what you charge users
+
+function modelCostUSD(model, inputTokens, outputTokens) {
+  const rates = MODEL_COSTS[model] || MODEL_COSTS['claude-sonnet-4-6'];
+  return (inputTokens / 1_000_000) * rates.input + (outputTokens / 1_000_000) * rates.output;
+}
+
+// Records per-user and global token usage to KV
+async function recordTokenUsage(env, uid, model, inputTokens, outputTokens) {
+  if (!env.USERS || !uid) return;
+  const date = todayKey();
+  const cost = modelCostUSD(model, inputTokens, outputTokens);
+  const revenue = ((inputTokens + outputTokens) / 1_000_000) * RESALE_RATE;
+
+  // Per-user daily detail
+  const key = `tokens:${uid}:${date}`;
+  const raw = (await env.USERS.get(key, { type: 'json' })) ||
+    { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0, revenueUSD: 0, models: {} };
+  raw.calls++;
+  raw.inputTokens += inputTokens;
+  raw.outputTokens += outputTokens;
+  raw.costUSD      = parseFloat(((raw.costUSD || 0)    + cost).toFixed(8));
+  raw.revenueUSD   = parseFloat(((raw.revenueUSD || 0) + revenue).toFixed(8));
+  const m = raw.models[model] || { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0 };
+  m.calls++; m.inputTokens += inputTokens; m.outputTokens += outputTokens;
+  m.costUSD = parseFloat(((m.costUSD || 0) + cost).toFixed(8));
+  raw.models[model] = m;
+  await env.USERS.put(key, JSON.stringify(raw), { expirationTtl: 90 * 24 * 60 * 60 });
+
+  // Global daily aggregate (best-effort; race conditions are acceptable for analytics)
+  const gKey = `tokens:global:${date}`;
+  const g = (await env.USERS.get(gKey, { type: 'json' })) ||
+    { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0, revenueUSD: 0, models: {} };
+  g.calls++; g.inputTokens += inputTokens; g.outputTokens += outputTokens;
+  g.costUSD    = parseFloat(((g.costUSD || 0)    + cost).toFixed(8));
+  g.revenueUSD = parseFloat(((g.revenueUSD || 0) + revenue).toFixed(8));
+  const gm = g.models[model] || { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0 };
+  gm.calls++; gm.inputTokens += inputTokens; gm.outputTokens += outputTokens;
+  gm.costUSD = parseFloat(((gm.costUSD || 0) + cost).toFixed(8));
+  g.models[model] = gm;
+  await env.USERS.put(gKey, JSON.stringify(g), { expirationTtl: 90 * 24 * 60 * 60 });
+}
+
+// TransformStream that taps the Anthropic SSE to extract token counts without blocking the response
+function makeUsageTapper(env, uid, model) {
+  let buf = '';
+  let inputTokens = 0, outputTokens = 0;
+  const dec = new TextDecoder();
+  return new TransformStream({
+    transform(chunk, controller) {
+      buf += dec.decode(chunk, { stream: true });
+      const lines = buf.split('\n');
+      buf = lines.pop(); // keep any incomplete line
+      for (const line of lines) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.type === 'message_start' && ev.message?.usage?.input_tokens) {
+            inputTokens = ev.message.usage.input_tokens;
+          } else if (ev.type === 'message_delta' && ev.usage?.output_tokens) {
+            outputTokens = ev.usage.output_tokens;
+          }
+        } catch {}
+      }
+      controller.enqueue(chunk);
+    },
+    flush() {
+      if ((inputTokens || outputTokens) && uid) {
+        recordTokenUsage(env, uid, model, inputTokens, outputTokens).catch(() => {});
+      }
+    },
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
 // AI PROXY — BEDROCK (used when AWS creds are set)
 // ══════════════════════════════════════════════════════════════
 const BEDROCK_MODEL_MAP = {
@@ -154,7 +263,7 @@ const BEDROCK_MODEL_MAP = {
   'claude-3-haiku-20240307':    'us.anthropic.claude-3-haiku-20240307-v1:0',
 };
 
-async function handleAIBedrock(request, env, origin) {
+async function handleAIBedrock(request, env, origin, uid = null) {
   const accessKey = env.AWS_ACCESS_KEY_ID;
   const secretKey = env.AWS_SECRET_ACCESS_KEY;
   const region    = env.AWS_REGION || 'us-east-1';
@@ -195,6 +304,11 @@ async function handleAIBedrock(request, env, origin) {
   if (!data.id)    data.id    = 'bedrock-' + Date.now();
   if (!data.model) data.model = anthropicModel;
   if (!data.role)  data.role  = 'assistant';
+
+  // Record token usage (Bedrock returns full counts in the response JSON)
+  if (data.usage && uid) {
+    recordTokenUsage(env, uid, anthropicModel, data.usage.input_tokens || 0, data.usage.output_tokens || 0).catch(() => {});
+  }
 
   if (!wasStream) return json(data, 200, origin);
 
@@ -239,7 +353,7 @@ async function handleAIBedrock(request, env, origin) {
 // ══════════════════════════════════════════════════════════════
 // AI PROXY — ANTHROPIC (fallback when no AWS creds)
 // ══════════════════════════════════════════════════════════════
-async function handleAI(request, env, origin) {
+async function handleAI(request, env, origin, uid = null) {
   const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
   if (!key) {
     return json({ error: { message: 'Anthropic API key not set. Run: npx wrangler secret put ANTHROPIC_KEY — then paste your sk-ant- key.' } }, 500, origin);
@@ -274,16 +388,23 @@ async function handleAI(request, env, origin) {
     });
   }
 
-  // Streaming: proxy Anthropic SSE directly to client
+  // Streaming: tap SSE to extract token counts, then proxy to client
   if (wasStream) {
-    return new Response(res.body, {
+    const model = bodyObj.model || 'claude-sonnet-4-6';
+    const tapper = makeUsageTapper(env, uid, model);
+    return new Response(res.body.pipeThrough(tapper), {
       status: 200,
       headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
     });
   }
 
-  // Non-streaming: return JSON as-is
-  return json(await res.json(), 200, origin);
+  // Non-streaming: extract token counts from response and record
+  const responseData = await res.json();
+  if (responseData.usage && uid) {
+    const model = bodyObj.model || 'claude-sonnet-4-6';
+    recordTokenUsage(env, uid, model, responseData.usage.input_tokens || 0, responseData.usage.output_tokens || 0).catch(() => {});
+  }
+  return json(responseData, 200, origin);
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -375,6 +496,88 @@ async function handleAgentTurn(request, env, origin) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// USAGE ENDPOINTS
+// ══════════════════════════════════════════════════════════════
+
+// GET /api/usage/me — authenticated user's own token usage for a given date
+async function handleUsageMe(request, env, origin) {
+  const authR = await requireSession(request, env, origin);
+  if (!authR.ok) return authR.response;
+  if (!env.USERS) return json({ error: 'Usage tracking not available (KV not configured)' }, 503, origin);
+
+  const url = new URL(request.url);
+  const date = url.searchParams.get('date') || todayKey();
+  const uid  = authR.session.uid;
+
+  const [tokenData, msgData] = await Promise.all([
+    env.USERS.get(`tokens:${uid}:${date}`, { type: 'json' }),
+    env.USERS.get(`usage:${uid}:${date}`,  { type: 'json' }),
+  ]);
+
+  const plan  = authR.session.plan || 'free';
+  const limit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).messages;
+  const t = tokenData || { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0, revenueUSD: 0, models: {} };
+  const marginUSD = parseFloat(((t.revenueUSD || 0) - (t.costUSD || 0)).toFixed(8));
+
+  return json({
+    date, uid, plan, dailyMsgLimit: limit,
+    messages:    (msgData || {}).messages || 0,
+    calls:       t.calls,
+    inputTokens: t.inputTokens,
+    outputTokens: t.outputTokens,
+    totalTokens: t.inputTokens + t.outputTokens,
+    costUSD:     t.costUSD,
+    revenueUSD:  t.revenueUSD,
+    marginUSD,
+    marginPct:   t.costUSD > 0 ? parseFloat(((marginUSD / t.revenueUSD) * 100).toFixed(1)) : null,
+    models:      t.models,
+  }, 200, origin);
+}
+
+// GET /api/admin/usage — admin-only global usage dashboard (gated to owner email)
+// Optional: ?date=YYYYMMDD for a specific day, defaults to today
+// Returns today's global aggregate + last 7 days
+async function handleAdminUsage(request, env, origin) {
+  const authR = await requireSession(request, env, origin);
+  if (!authR.ok) return authR.response;
+  const ADMIN_EMAIL = 'obaalbaki11@gmail.com';
+  if (authR.session.email !== ADMIN_EMAIL) return json({ error: 'Forbidden' }, 403, origin);
+  if (!env.USERS) return json({ error: 'KV not configured' }, 503, origin);
+
+  const url  = new URL(request.url);
+  const date = url.searchParams.get('date') || todayKey();
+
+  // Fetch last 7 days of global aggregates in parallel
+  const dateKeys = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(); d.setDate(d.getDate() - i);
+    return d.toISOString().slice(0, 10).replace(/-/g, '');
+  });
+  const rows = await Promise.all(
+    dateKeys.map(dk => env.USERS.get(`tokens:global:${dk}`, { type: 'json' })
+      .then(v => ({ date: dk, ...(v || { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0, revenueUSD: 0 }) })))
+  );
+
+  const today = rows[0];
+  const marginUSD = parseFloat(((today.revenueUSD || 0) - (today.costUSD || 0)).toFixed(6));
+  const blendedCostPerM = today.inputTokens + today.outputTokens > 0
+    ? parseFloat(((today.costUSD / ((today.inputTokens + today.outputTokens) / 1_000_000))).toFixed(2))
+    : 0;
+
+  return json({
+    today: {
+      ...today,
+      marginUSD,
+      marginPct: today.costUSD > 0 ? parseFloat(((marginUSD / (today.revenueUSD || 1)) * 100).toFixed(1)) : null,
+      blendedCostPerMTokens: blendedCostPerM,
+      resalePricePerMTokens: RESALE_RATE,
+    },
+    last7Days: rows,
+    modelRates: MODEL_COSTS,
+    resaleRate: RESALE_RATE,
+  }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
 // HEALTH CHECK
 // ══════════════════════════════════════════════════════════════
 async function handlePing(request, env, origin) {
@@ -456,7 +659,59 @@ async function handleHunter(request, env, origin, path) {
 // Setup: npx wrangler kv:namespace create USERS
 //        npx wrangler secret put JWT_SECRET
 // ══════════════════════════════════════════════════════════════
-const AUTH_TOKEN_TTL = 30 * 24 * 60 * 60; // 30 days in seconds
+const AUTH_TOKEN_TTL   = 30 * 24 * 60 * 60; // 30 days  — KV-backed Worker JWTs (email/password)
+const AUTH_SESSION_TTL = 24 * 60 * 60;        // 24 hours — httpOnly session cookies (all auth paths)
+
+// Daily message caps per plan (server-side source of truth for C4)
+const PLAN_LIMITS = {
+  free:       { messages: 10  },
+  growth:     { messages: 100 },
+  scale:      { messages: 500 },
+  enterprise: { messages: Infinity },
+};
+
+function parseCookie(header, name) {
+  if (!header) return null;
+  const entry = header.split(';').map(s => s.trim()).find(s => s.startsWith(name + '='));
+  return entry ? entry.slice(name.length + 1) : null;
+}
+
+function sessionCookie(token, clear = false) {
+  return [
+    `kayro_session=${clear ? '' : token}`,
+    'HttpOnly', 'Secure', 'SameSite=None', 'Path=/',
+    clear ? 'Max-Age=0' : `Max-Age=${AUTH_SESSION_TTL}`,
+  ].join('; ');
+}
+
+// Returns { ok: true, session } or { ok: false, response } — never throws
+async function requireSession(request, env, origin) {
+  if (!env.JWT_SECRET) return { ok: false, response: json({ error: 'Server misconfigured.' }, 500, origin) };
+  const token = parseCookie(request.headers.get('Cookie'), 'kayro_session');
+  if (!token) return { ok: false, response: json({ error: 'Authentication required.' }, 401, origin) };
+  const payload = await jwtVerify(token, env.JWT_SECRET);
+  if (!payload) return { ok: false, response: json({ error: 'Session expired. Please sign in again.' }, 401, origin) };
+  return { ok: true, session: payload };
+}
+
+function todayKey() { return new Date().toISOString().slice(0, 10).replace(/-/g, ''); }
+
+async function checkUsageLimits(env, uid, plan) {
+  const limit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).messages;
+  if (limit === Infinity || !env.USERS) return null;
+  const raw = await env.USERS.get(`usage:${uid}:${todayKey()}`, { type: 'json' });
+  const used = (raw || {}).messages || 0;
+  if (used >= limit) return `Daily message limit reached for your ${plan || 'free'} plan (${limit}/day). Upgrade for more.`;
+  return null;
+}
+
+async function recordUsage(env, uid) {
+  if (!env.USERS) return;
+  const key = `usage:${uid}:${todayKey()}`;
+  const raw = await env.USERS.get(key, { type: 'json' });
+  const msgs = ((raw || {}).messages || 0) + 1;
+  await env.USERS.put(key, JSON.stringify({ messages: msgs }), { expirationTtl: 2 * 24 * 60 * 60 });
+}
 
 async function jwtSign(payload, secret) {
   const enc = new TextEncoder();
@@ -499,6 +754,7 @@ async function hashPassword(password, salt, iterations = 600000) {
 const RL_CONFIG = {
   signin: { max: 10, window: 15 * 60 }, // 10 failures per 15 min per IP
   signup: { max:  5, window: 60 * 60 }, //  5 attempts per hour per IP
+  guest:  { max: 20, window: 60 * 60 }, // 20 guest sessions per hour per IP
 };
 
 async function rlCheck(env, action, ip) {
@@ -543,6 +799,13 @@ async function handleAuth(request, env, origin, path) {
     if (!payload) return json({ error: 'Invalid or expired token' }, 401, origin);
     return json({ uid: payload.uid, email: payload.email, name: payload.name, plan: payload.plan || 'free' }, 200, origin);
   }
+
+  // ── Session / cookie endpoints — each function parses its own body ──────────
+  if (sub === '/firebase') return handleFirebaseAuth(request, env, origin);
+  if (sub === '/session')  return handleSessionFromJWT(request, env, origin);
+  if (sub === '/guest')    return handleGuestAuth(request, env, origin);
+  if (sub === '/logout')   return handleLogout(request, env, origin);
+  if (sub === '/plan')     return handlePlanActivation(request, env, origin);
 
   let body = {};
   try { body = JSON.parse(await request.text()); } catch {}
@@ -609,6 +872,136 @@ async function handleAuth(request, env, origin, path) {
   }
 
   return json({ error: 'Unknown auth endpoint' }, 404, origin);
+}
+
+// ── POST /api/auth/firebase — exchange Firebase ID token for session cookie ──
+// Firebase Web API key is public (it's in app.js already); using it here is safe.
+const FIREBASE_REST_KEY = 'AIzaSyDbNHzaw0A_itQxpqwOQfsUb3of52RR6pY';
+
+async function handleFirebaseAuth(request, env, origin) {
+  const secret = env.JWT_SECRET;
+  if (!secret) return json({ error: 'JWT_SECRET not set' }, 500, origin);
+
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { idToken } = body;
+  if (!idToken) return json({ error: 'idToken required' }, 400, origin);
+
+  // Verify the Firebase ID token via the Firebase REST accounts:lookup endpoint.
+  // This is exactly what the Firebase Admin SDK does internally.
+  const firebaseRes = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_REST_KEY}`,
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) }
+  );
+  if (!firebaseRes.ok) return json({ error: 'Invalid or expired Firebase token' }, 401, origin);
+  const fbData = await firebaseRes.json();
+  if (!fbData.users?.[0]) return json({ error: 'Invalid or expired Firebase token' }, 401, origin);
+
+  const { localId: uid, email = '', displayName } = fbData.users[0];
+  const name = displayName || email.split('@')[0] || 'User';
+
+  // Server-side plan lookup — localStorage value is never trusted
+  const plan = (env.USERS ? await env.USERS.get(`plan:${uid}`) : null) || 'free';
+
+  const sessionToken = await jwtSign(
+    { uid, email, name, plan, isGuest: false, exp: Math.floor(Date.now()/1000) + AUTH_SESSION_TTL },
+    secret
+  );
+  return new Response(JSON.stringify({ uid, email, name, plan }), {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie(sessionToken) },
+  });
+}
+
+// ── POST /api/auth/session — exchange a Worker JWT for an httpOnly session cookie
+async function handleSessionFromJWT(request, env, origin) {
+  const secret = env.JWT_SECRET;
+  if (!secret) return json({ error: 'JWT_SECRET not set' }, 500, origin);
+
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { token: workerJWT } = body;
+  if (!workerJWT) return json({ error: 'token required' }, 400, origin);
+
+  const payload = await jwtVerify(workerJWT, secret);
+  if (!payload) return json({ error: 'Invalid or expired token' }, 401, origin);
+
+  // Re-read plan from KV in case it changed since the JWT was minted
+  const plan = (env.USERS ? await env.USERS.get(`plan:${payload.uid}`) : null) || payload.plan || 'free';
+
+  const sessionToken = await jwtSign(
+    { uid: payload.uid, email: payload.email, name: payload.name, plan, isGuest: false, exp: Math.floor(Date.now()/1000) + AUTH_SESSION_TTL },
+    secret
+  );
+  return new Response(JSON.stringify({ uid: payload.uid, email: payload.email, name: payload.name, plan }), {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie(sessionToken) },
+  });
+}
+
+// ── POST /api/auth/guest — issue a guest session cookie (IP + day based UID) ─
+async function handleGuestAuth(request, env, origin) {
+  const secret = env.JWT_SECRET;
+  if (!secret) return json({ error: 'JWT_SECRET not set' }, 500, origin);
+
+  const ip = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
+  const wait = await rlCheck(env, 'guest', ip);
+  if (wait !== null) return json({ error: `Too many requests. Try again in ${Math.ceil(wait / 60)} minute(s).` }, 429, origin);
+  await rlRecord(env, 'guest', ip);
+
+  // Rotate daily so the UID isn't permanently tied to an IP address
+  const day = new Date().toISOString().slice(0, 10);
+  const uid = 'guest_' + (await sha256Hex(ip + '|' + day + '|' + secret.slice(0, 8))).slice(0, 16);
+
+  const sessionToken = await jwtSign(
+    { uid, email: null, name: 'Guest', plan: 'free', isGuest: true, exp: Math.floor(Date.now()/1000) + AUTH_SESSION_TTL },
+    secret
+  );
+  return new Response(JSON.stringify({ uid, name: 'Guest', plan: 'free', isGuest: true }), {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie(sessionToken) },
+  });
+}
+
+// ── POST /api/auth/logout — clear the session cookie ────────────────────────
+async function handleLogout(request, env, origin) {
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie('', true) },
+  });
+}
+
+// ── POST /api/auth/plan — validate plan code, update KV, re-issue cookie ────
+async function handlePlanActivation(request, env, origin) {
+  const authR = await requireSession(request, env, origin);
+  if (!authR.ok) return authR.response;
+
+  const secret = env.JWT_SECRET;
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { code } = body;
+  if (!code) return json({ error: 'code required' }, 400, origin);
+
+  const PLAN_CODES = {
+    'KAYRO-GROWTH': 'growth', 'KAYRO-SCALE': 'scale',
+    'KAYRO-ENTERPRISE': 'enterprise', 'KAYRO-FREE': 'free',
+  };
+  const upper = code.toUpperCase().trim();
+  const planMatch = Object.entries(PLAN_CODES).find(([prefix]) => upper === prefix || upper.startsWith(prefix + '-'));
+  if (!planMatch) return json({ error: 'Invalid plan code' }, 400, origin);
+  const newPlan = planMatch[1];
+
+  const { uid, email, name } = authR.session;
+  if (env.USERS) await env.USERS.put(`plan:${uid}`, newPlan);
+
+  const sessionToken = await jwtSign(
+    { uid, email, name, plan: newPlan, isGuest: false, exp: Math.floor(Date.now()/1000) + AUTH_SESSION_TTL },
+    secret
+  );
+  return new Response(JSON.stringify({ plan: newPlan }), {
+    status: 200,
+    headers: { ...cors(origin), 'Content-Type': 'application/json', 'Set-Cookie': sessionCookie(sessionToken) },
+  });
 }
 
 // ══════════════════════════════════════════════════════════════

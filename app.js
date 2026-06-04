@@ -696,7 +696,7 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
   {id:'e_social',name:'Zara',role:'Social Media Manager',model:'claude-opus-4-7',color:'#6366f1',bodyHex:0x6366f1,skinHex:0xfbbf24,pos:[11,-2],status:'online',skills:['Content Creation','Community Management','Platform Strategy','Viral Campaigns','Analytics'],hired:Date.now(),tasks:0,
    system:`You are Zara, a creative Social Media Manager at [company]. Write platform-native content for Twitter/X, LinkedIn, Instagram, and TikTok. Understand tone differences per platform. Always write 3 variations when drafting posts. Include hooks, hashtag recommendations, and optimal posting times. For campaigns: Theme → Platform → Content Pillars → Posting Cadence → Engagement Tactics.`},
 
-  {id:'e_support',name:'Kai',role:'Customer Support Lead',model:'claude-opus-4-7',color:'#10b981',bodyHex:0x10b981,skinHex:0xf5c285,pos:[-3,-11],status:'online',skills:['Ticket Resolution','Knowledge Base','Escalation Handling','CSAT','Support Ops'],hired:Date.now(),tasks:0,
+  {id:'e_support',name:'Kai',role:'Customer Support Lead',model:'claude-sonnet-4-6',color:'#10b981',bodyHex:0x10b981,skinHex:0xf5c285,pos:[-3,-11],status:'online',skills:['Ticket Resolution','Knowledge Base','Escalation Handling','CSAT','Support Ops'],hired:Date.now(),tasks:0,
    system:`You are Kai, a customer-obsessed Support Lead at [company]. Write support responses, build FAQ/knowledge base articles, design escalation workflows, and coach agents on CSAT improvement. Tone: warm, clear, solution-focused. Always resolve first, explain second. Format support articles as: Problem → Cause → Step-by-Step Fix → Prevention Tip.`},
 
   {id:'e_data',name:'Iris',role:'Data Analyst',model:'claude-opus-4-7',color:'#22d3ee',bodyHex:0x22d3ee,skinHex:0xf0c89a,pos:[3,11],status:'online',skills:['Data Analysis','SQL','Dashboards','A/B Testing','Business Intelligence'],hired:Date.now(),tasks:0,
@@ -1748,7 +1748,7 @@ const AI = {
   async _fetchStream(cfg, messages, system, extraBody={}) {
     const { max_tokens: maxTok, ...restExtra } = extraBody;
     return fetch(cfg.url, {
-      method: 'POST', headers: cfg.headers,
+      method: 'POST', headers: cfg.headers, credentials: 'include',
       body: JSON.stringify({
         model: {'claude-3-5-sonnet-20241022':'claude-sonnet-4-6','claude-3-5-haiku-20241022':'claude-haiku-4-5-20251001','claude-3-haiku-20240307':'claude-haiku-4-5-20251001'}[State.settings.model] || State.settings.model || 'claude-sonnet-4-6',
         max_tokens: maxTok || 4096,
@@ -1810,6 +1810,9 @@ const AI = {
       let res = await AI._fetchStream(cfg, messages, system, extraBody);
       if (!res.ok) {
         let body = {}; try { body = await res.json(); } catch(_) {}
+        // Kayro-layer errors: { error: "string" } — distinct from Anthropic { error: { message } }
+        if (res.status === 401 && typeof body.error === 'string') { Auth.signOut(); yield '⚠️ Session expired — please sign in again.'; return; }
+        if (res.status === 402) { toast('Daily message limit reached. Upgrade your plan for more.', 'error'); yield '⚠️ Daily message limit reached. Upgrade your plan in Plans & Tokens.'; return; }
         const msg = body?.error?.message || `HTTP ${res.status}`;
         const hint = res.status===401 ? '\n\n→ Anthropic credits exhausted. Go to console.anthropic.com → Billing → add credits to restore AI.'
                    : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
@@ -2006,6 +2009,12 @@ const Usage = {
     const planResult = PlanGate.activate(upper);
     if (planResult !== false) {
       PlansPage._updateSidebarBadge();
+      // Sync plan activation to server so Worker enforces the new limits
+      fetch(`${BACKEND_URL}/api/auth/plan`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: upper }),
+      }).catch(()=>{});
       return { name: PLAN_CONFIG[planResult].name + ' Plan', tokens: 0, xp: 0, _isPlan: true, plan: planResult };
     }
     // Legacy token packs
@@ -2141,7 +2150,15 @@ const Auth = {
     if (stored) {
       try { Auth.user = JSON.parse(stored); } catch(_) {}
     }
-    if (Auth.user) { Auth._hideOverlay(); Auth._renderUserArea(); return; }
+    if (Auth.user) {
+      Auth._hideOverlay();
+      Auth._renderUserArea();
+      // Silently refresh server-side session cookie on page load
+      if (Auth.user.isGuest) {
+        fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
+      }
+      return;
+    }
 
     // Always use hardcoded Firebase config (falls back to Settings override if set)
     const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
@@ -2198,6 +2215,12 @@ const Auth = {
               localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
               Auth._hideOverlay();
               Auth._renderUserArea();
+              // Exchange Firebase ID token for a server-issued httpOnly session cookie
+              user.getIdToken().then(idToken => fetch(`${BACKEND_URL}/api/auth/firebase`, {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ idToken }),
+              })).catch(()=>{});
             } else {
               // Firebase says not authenticated. Distinguish session types:
               // - Guest and Worker-JWT sessions are not managed by Firebase — keep them.
@@ -2279,12 +2302,18 @@ const Auth = {
     if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/signin`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
+        method: 'POST', headers: {'Content-Type':'application/json'}, credentials: 'include',
         body: JSON.stringify({ email, password: pass }),
       });
       const data = await res.json();
       if (!res.ok) { Auth._showError(data.error || 'Sign in failed'); return; }
-      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, token: data.token };
+      // Exchange JWT for httpOnly session cookie, then drop token from client storage
+      await fetch(`${BACKEND_URL}/api/auth/session`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: data.token }),
+      }).catch(()=>{});
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan };
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
@@ -2307,12 +2336,18 @@ const Auth = {
     if (btn) { btn.disabled = true; btn.textContent = 'Creating account…'; }
     try {
       const res = await fetch(`${BACKEND_URL}/api/auth/signup`, {
-        method: 'POST', headers: {'Content-Type':'application/json'},
+        method: 'POST', headers: {'Content-Type':'application/json'}, credentials: 'include',
         body: JSON.stringify({ email, password: pass }),
       });
       const data = await res.json();
       if (!res.ok) { Auth._showError(data.error || 'Sign up failed'); return; }
-      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, token: data.token };
+      // Exchange JWT for httpOnly session cookie, then drop token from client storage
+      await fetch(`${BACKEND_URL}/api/auth/session`, {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: data.token }),
+      }).catch(()=>{});
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan };
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
@@ -2326,9 +2361,11 @@ const Auth = {
     localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
     Auth._hideOverlay();
     Auth._renderUserArea();
+    fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
   },
 
   signOut() {
+    fetch(`${BACKEND_URL}/api/auth/logout`, { method: 'POST', credentials: 'include' }).catch(()=>{});
     Auth.user = null;
     localStorage.removeItem('kayro_auth_user');
     if (typeof firebase !== 'undefined' && firebase.apps.length) {
@@ -2389,6 +2426,7 @@ async function* agentSessionStream(agentId, state, content) {
     const r = await fetch(`${BACKEND_URL}/api/agent/session`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
       body: JSON.stringify({ agent_id: agentId }),
     });
     let d;
@@ -2399,6 +2437,7 @@ async function* agentSessionStream(agentId, state, content) {
   const res = await fetch(`${BACKEND_URL}/api/agent/turn`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
     body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }] }),
   });
   if (!res.ok) {
@@ -8710,12 +8749,64 @@ const OpsPage = {
       </div>
     </div>`;
     document.getElementById('ops-upgrade-btn').addEventListener('click', () => Router.navigate('plans'));
+    // Fetch real server-side token data and inject it below the upgrade row
+    OpsPage._loadServerUsage();
     OpsPage._countdownInterval = setInterval(() => {
       const cel = document.getElementById('token-countdown'); if (!cel) { clearInterval(OpsPage._countdownInterval); return; }
       const n = new Date(); const mi = new Date(n); mi.setHours(24,0,0,0);
       const sl = Math.max(0,Math.floor((mi-n)/1000));
       cel.textContent = `${fmt2(Math.floor(sl/3600))}:${fmt2(Math.floor((sl%3600)/60))}:${fmt2(sl%60)}`;
     }, 1000);
+  },
+
+  // ── SERVER-SIDE USAGE ─────────────────────────────────────────
+  async _loadServerUsage() {
+    const wrap = document.querySelector('.tokens-page .token-upgrade-row');
+    if (!wrap) return;
+    const box = document.createElement('div');
+    box.id = 'srv-usage-box';
+    box.style.cssText = 'margin-top:14px;padding:12px 16px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);font-size:12px';
+    box.innerHTML = '<div style="color:var(--text3)">Loading server stats…</div>';
+    wrap.after(box);
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/usage/me`, { credentials: 'include' });
+      if (!res.ok) { box.innerHTML = '<div style="color:var(--text3)">Server stats unavailable</div>'; return; }
+      const d = await res.json();
+      const fmtCost = v => '$' + (v||0).toFixed(4);
+      const margin = ((d.marginUSD||0) >= 0) ? `<span style="color:var(--green)">+${fmtCost(d.marginUSD)}</span>` : `<span style="color:var(--danger)">${fmtCost(d.marginUSD)}</span>`;
+      const isAdmin = Auth.user?.email === 'obaalbaki11@gmail.com';
+      box.innerHTML = `
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <span style="font-weight:600;color:var(--text)">📡 Server-Verified Usage (${d.date})</span>
+          ${isAdmin ? '<button id="srv-admin-btn" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--text2);cursor:pointer">Admin View →</button>' : ''}
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+          <div><div style="color:var(--text3)">Messages</div><div style="font-weight:600;color:var(--text)">${d.messages||0} / ${d.dailyMsgLimit===null?'∞':d.dailyMsgLimit}</div></div>
+          <div><div style="color:var(--text3)">Tokens (real)</div><div style="font-weight:600;color:var(--text)">${Usage._fmtK(d.totalTokens||0)}</div></div>
+          <div><div style="color:var(--text3)">My cost</div><div style="font-weight:600;color:var(--danger)">${fmtCost(d.costUSD)}</div></div>
+        </div>
+        ${Object.keys(d.models||{}).length ? `<div style="margin-top:8px;color:var(--text3)">${Object.entries(d.models).map(([m,v])=>`${m.replace('claude-','').replace('-20251001','')}: ${Usage._fmtK(v.inputTokens+v.outputTokens)} tok, ${fmtCost(v.costUSD)}`).join(' · ')}</div>` : ''}`;
+      document.getElementById('srv-admin-btn')?.addEventListener('click', () => OpsPage._loadAdminUsage());
+    } catch { box.innerHTML = '<div style="color:var(--text3)">Server stats unavailable</div>'; }
+  },
+
+  async _loadAdminUsage() {
+    try {
+      const res = await fetch(`${BACKEND_URL}/api/admin/usage`, { credentials: 'include' });
+      if (!res.ok) { toast('Admin access denied', 'error'); return; }
+      const d = await res.json();
+      const t = d.today;
+      const fmtCost = v => '$' + (v||0).toFixed(4);
+      const rows = d.last7Days.map(r => `<tr><td>${r.date}</td><td>${r.calls||0}</td><td>${Usage._fmtK((r.inputTokens||0)+(r.outputTokens||0))}</td><td style="color:var(--danger)">${fmtCost(r.costUSD)}</td><td style="color:var(--green)">${fmtCost(r.revenueUSD)}</td><td>${fmtCost((r.revenueUSD||0)-(r.costUSD||0))}</td></tr>`).join('');
+      const body = `<div style="font-size:13px">
+        <div style="margin-bottom:10px;font-weight:700">Today: ${t.calls||0} calls · Blended cost ${t.blendedCostPerMTokens||0}/M · Resale $${t.resalePricePerMTokens}/M</div>
+        <table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="color:var(--text3)"><th>Date</th><th>Calls</th><th>Tokens</th><th>Cost</th><th>Revenue</th><th>Margin</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>`;
+      showModal('📊 Admin Usage Dashboard', body);
+    } catch { toast('Could not load admin stats', 'error'); }
   },
 
   // ── CONTENT STUDIO ────────────────────────────────────────────
@@ -9827,7 +9918,7 @@ CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script be
       for await (const chunk of AI.stream(
         [{ role:'user', content:`VIDEO PRODUCTION SCRIPT:\n\n${cleoScript}\n\nNow generate the complete animated HTML ad. Start immediately with <!DOCTYPE html>.` }],
         sys,
-        { search:false, appTools:false, max_tokens:16000, model:'claude-opus-4-7' }
+        { search:false, appTools:false, max_tokens:16000, model:'claude-sonnet-4-6' }
       )) {
         html += chunk;
         // Update modal title with progress indicator
@@ -10010,7 +10101,7 @@ Now write the complete HTML document. Start immediately with <!DOCTYPE html>.`;
       for await (const chunk of AI.stream(
         [{ role:'user', content:`Create the ad. Output only raw HTML starting with <!DOCTYPE html>.` }],
         sys,
-        { search:false, appTools:false, max_tokens:8192, model:'claude-opus-4-7' }
+        { search:false, appTools:false, model:'claude-sonnet-4-6', max_tokens:8192 }
       )) html += chunk;
 
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
