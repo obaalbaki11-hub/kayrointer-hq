@@ -6109,15 +6109,47 @@ const HQ = {
           <div class="hq-panel">
             <div class="hq-panel-hdr"><span class="hq-panel-title">POWER SKILLS (type in chat)</span></div>
             <div class="hq-panel-body hq-skills-ref">
-              ${[['/gsd','Break any goal into a full sprint plan'],
-                 ['/brainstorm','5-angle idea generation on any topic'],
+              <div class="hq-skill-category">Strategy & Planning</div>
+              ${[['/gsd','Full sprint plan from any goal'],
                  ['/brief','Morning brief — status, priorities, risks'],
-                 ['/email','Write a ready-to-send cold email'],
-                 ['/proposal','Full business proposal'],
-                 ['/contract','Contract draft'],
-                 ['/seo','SEO audit + keyword strategy'],
+                 ['/brainstorm','5-angle idea generation'],
+                 ['/strategy','GTM plan, OKRs, or 90-day roadmap'],
+                 ['/delegate','Break goal into assigned team tasks'],
+                 ['/autopilot','Agent works autonomously on top task'],
+                 ['/prd','Product requirements document']
+                ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
+              <div class="hq-skill-category">Marketing & Content</div>
+              ${[['/email','Write a ready-to-send cold email'],
                  ['/social','Twitter, LinkedIn & Instagram content'],
-                 ['/autopilot','Agent works autonomously on their tasks']
+                 ['/seo','SEO audit + keyword strategy'],
+                 ['/copy','Sales or landing page copy'],
+                 ['/campaign','Full marketing campaign plan'],
+                 ['/blog','Long-form blog post'],
+                 ['/outreach','Personalized outreach sequence'],
+                 ['/pitch','Investor or sales pitch deck outline']
+                ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
+              <div class="hq-skill-category">Engineering</div>
+              ${[['/arch','System architecture design'],
+                 ['/code','Write or refactor code'],
+                 ['/audit','Code or product review']
+                ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
+              <div class="hq-skill-category">Business & Legal</div>
+              ${[['/proposal','Full business proposal'],
+                 ['/contract','Contract draft'],
+                 ['/legal','Legal research & drafting'],
+                 ['/rfp','RFP analyzer — fit score + outline'],
+                 ['/onboard','Customer onboarding plan'],
+                 ['/sales-audit','Sales comms quality audit']
+                ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
+              <div class="hq-skill-category">Finance & Research</div>
+              ${[['/invoice','Extract invoice / receipt data'],
+                 ['/expense','Expense report from transactions'],
+                 ['/tax','Tax planning & deduction finder'],
+                 ['/meeting','Transcript → minutes & action items'],
+                 ['/screen','Stock / business idea screener'],
+                 ['/sector','Full sector market overview'],
+                 ['/competitive','Deep competitive analysis'],
+                 ['/property','Real estate research report']
                 ].map(([cmd,desc])=>`<div class="hq-skill-row"><div class="hq-skill-cmd">${cmd}</div><div class="hq-skill-desc">${desc}</div></div>`).join('')}
             </div>
           </div>
