@@ -730,6 +730,19 @@ const State = {
   brain: { facts: [] },
   trust: { autoRun: false },
   swarmRuns: [],
+  company: {
+    tenantId: null,
+    name: '', industry: '', description: '', icp: '',
+    voice: 'professional',
+    voiceRules: [],
+    positioning: '',
+    goals: [],
+    products: [],
+    competitors: [],
+    agentRules: '',
+    agentCustomizations: {},
+    createdAt: null, updatedAt: null,
+  },
   usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[], msgsToday:0, searchesToday:0 },
   opsImages: [],
   opsScripts: [],
@@ -754,8 +767,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm','remotion'],
-  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm','remotion'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm','remotion','company'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm','remotion','company'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -819,7 +832,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','usage','opsImages','opsScripts','onboarded','competitors'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','company','usage','opsImages','opsScripts','onboarded','competitors'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -832,6 +845,8 @@ function loadState() {
   if (!State.brain || !State.brain.facts) State.brain = { facts: [] };
   if (!State.trust) State.trust = { autoRun: false };
   if (!Array.isArray(State.swarmRuns)) State.swarmRuns = [];
+  if (!State.company || typeof State.company !== 'object') State.company = { tenantId: null, name:'', industry:'', description:'', icp:'', voice:'professional', voiceRules:[], positioning:'', goals:[], products:[], competitors:[], agentRules:'', agentCustomizations:{}, createdAt:null, updatedAt:null };
+  if (!State.company.tenantId) { State.company.tenantId = crypto.randomUUID(); save('company'); }
   // Re-seed whenever new default facts are added (keyed by id, not text)
   const existingIds = new Set(State.brain.facts.map(f=>f.id));
   const newFacts = DEFAULT_BRAIN_FACTS.filter(f => !existingIds.has(f.id));
@@ -1671,6 +1686,44 @@ const ActionGuard = {
   },
 };
 
+// ── CONTEXT INJECTOR ──────────────────────────────────────────
+// Prepends multi-tenant framing + company profile to every agent's system prompt.
+// Single injection point — all 46 agents inherit this automatically via AI.stream().
+const ContextInjector = {
+  build() {
+    const c = State.company || {};
+    if (!c.name) return '';
+
+    const parts = [
+      '[MULTI-TENANT PLATFORM — READ FIRST]',
+      'You are an AI employee inside Kayro Interactive, a platform that serves many different companies.',
+      `This session's employer is: ${c.name}. Everything below defines this company only.`,
+      'Never assume, reference, or carry over context, names, or details from any other company or session.',
+      '',
+      `[COMPANY CONTEXT — ${c.name.toUpperCase()}]`,
+    ];
+
+    if (c.industry)           parts.push(`Industry: ${c.industry}`);
+    if (c.description)        parts.push(`What we do: ${c.description}`);
+    if (c.icp)                parts.push(`Ideal customer: ${c.icp}`);
+    if (c.voice)              parts.push(`Voice/tone: ${c.voice}`);
+    if (c.positioning)        parts.push(`Positioning: ${c.positioning}`);
+    if (c.goals?.length)      parts.push(`Goals: ${c.goals.join(', ')}`);
+    if (c.products?.length)   parts.push(`Products/services: ${c.products.join(', ')}`);
+    if (c.competitors?.length) parts.push(`Competitors to be aware of: ${c.competitors.join(', ')}`);
+    if (c.agentRules)         parts.push(`Agent rules (apply always): ${c.agentRules}`);
+
+    // Append up to 6 most recent brain facts for grounding
+    const facts = (State.brain?.facts || []).slice(0, 6);
+    if (facts.length) {
+      parts.push('Team memory:');
+      facts.forEach(f => parts.push(`• ${f.text}`));
+    }
+
+    return parts.join('\n') + '\n\n';
+  },
+};
+
 // ── AI CLIENT ─────────────────────────────────────────────────
 const AI = {
   _headers(key) {
@@ -1738,6 +1791,8 @@ const AI = {
   },
 
   async *stream(messages, system, opts={}) {
+    // Prepend multi-tenant framing + company profile to every agent call (skip only for raw/utility calls)
+    if (!opts.noContext) system = ContextInjector.build() + (system || '');
     const cfg = AI._getApiConfig();
     if (!cfg.ok) { yield cfg.err; return; }
     const useSearch = WebSearch.canSearch() && opts.search !== false;
@@ -3214,6 +3269,163 @@ const RemotionPage = {
   destroy() {},
 };
 
+// ── COMPANY PROFILE PAGE ─────────────────────────────────────
+const CompanyProfilePage = {
+  init(container) {
+    document.getElementById('topbar-right').innerHTML = `<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
+    document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
+    CompanyProfilePage._render(container);
+  },
+
+  _render(container) {
+    const c = State.company || {};
+    const voices = ['professional','friendly & warm','bold & direct','casual & conversational','technical & precise'];
+
+    container.innerHTML = `<div class="cp-root page-scroll">
+
+      <div class="cp-header">
+        <div>
+          <div class="cp-title">Company Profile</div>
+          <div class="cp-sub">This profile is injected into every agent's system prompt — keeping all 46 AI employees aligned to your specific business.</div>
+        </div>
+        <div class="cp-tenant-badge">Tenant ID: <code>${escHtml(c.tenantId||'—')}</code></div>
+      </div>
+
+      <div class="cp-grid">
+
+        <!-- SECTION: Identity -->
+        <div class="cp-section">
+          <div class="cp-section-title">Identity</div>
+          <div class="cp-field"><label class="cp-label">COMPANY NAME</label>
+            <input class="cp-input" id="cp-name" value="${escHtml(c.name||'')}"></div>
+          <div class="cp-row2">
+            <div class="cp-field"><label class="cp-label">INDUSTRY</label>
+              <select class="cp-input cp-select" id="cp-industry">
+                ${['SaaS / Software','Agency / Services','E-commerce','Consulting','Media / Content','Real Estate','Healthcare','Finance','Education','Other'].map(i=>`<option value="${i}" ${c.industry===i?'selected':''}>${i}</option>`).join('')}
+              </select></div>
+            <div class="cp-field"><label class="cp-label">WEBSITE / URL</label>
+              <input class="cp-input" id="cp-site" value="${escHtml(State.settings.siteUrl||'')}"></div>
+          </div>
+          <div class="cp-field"><label class="cp-label">WHAT WE DO <span class="cp-hint">— used as context in every agent call</span></label>
+            <textarea class="cp-input cp-textarea" id="cp-desc" rows="3">${escHtml(c.description||'')}</textarea></div>
+          <div class="cp-field"><label class="cp-label">IDEAL CUSTOMER (ICP)</label>
+            <input class="cp-input" id="cp-icp" value="${escHtml(c.icp||'')}" placeholder="B2B SaaS founders, SMB owners…"></div>
+        </div>
+
+        <!-- SECTION: Brand -->
+        <div class="cp-section">
+          <div class="cp-section-title">Brand & Voice</div>
+          <div class="cp-field"><label class="cp-label">VOICE / TONE</label>
+            <div class="cp-voice-grid" id="cp-voice-grid">
+              ${voices.map(v=>`<label class="cp-voice-chip ${(c.voice||'professional')===v?'cp-voice-chip--on':''}">
+                <input type="radio" name="cp-voice" value="${v}" ${(c.voice||'professional')===v?'checked':''} style="display:none">${v}</label>`).join('')}
+            </div></div>
+          <div class="cp-field"><label class="cp-label">POSITIONING — what makes you different</label>
+            <input class="cp-input" id="cp-positioning" value="${escHtml(c.positioning||'')}" placeholder="We're the only platform that…"></div>
+          <div class="cp-row2">
+            <div class="cp-field"><label class="cp-label">PRODUCTS / SERVICES <span class="cp-hint">comma-sep</span></label>
+              <input class="cp-input" id="cp-products" value="${escHtml((c.products||[]).join(', '))}" placeholder="Product A, Service B…"></div>
+            <div class="cp-field"><label class="cp-label">COMPETITORS <span class="cp-hint">comma-sep</span></label>
+              <input class="cp-input" id="cp-competitors" value="${escHtml((c.competitors||[]).join(', '))}" placeholder="Competitor A, B…"></div>
+          </div>
+        </div>
+
+        <!-- SECTION: Goals -->
+        <div class="cp-section">
+          <div class="cp-section-title">Goals & Rules</div>
+          <div class="cp-field"><label class="cp-label">CURRENT GOALS <span class="cp-hint">comma-sep</span></label>
+            <input class="cp-input" id="cp-goals" value="${escHtml((c.goals||[]).join(', '))}" placeholder="Get more customers, Grow revenue…"></div>
+          <div class="cp-field"><label class="cp-label">GLOBAL AGENT RULE <span class="cp-hint">— every agent follows this without exception</span></label>
+            <textarea class="cp-input cp-textarea" id="cp-agent-rules" rows="2" placeholder="Never promise specific delivery dates. Always recommend a call for deals over $5k.">${escHtml(c.agentRules||'')}</textarea></div>
+        </div>
+
+        <!-- SECTION: Preview -->
+        <div class="cp-section cp-section--preview">
+          <div class="cp-section-title">Context Preview <span class="cp-hint">— what every agent sees before your instructions</span></div>
+          <pre class="cp-preview-box" id="cp-preview">${escHtml(ContextInjector.build()||'[No company profile set — fill in the fields above]')}</pre>
+        </div>
+
+      </div>
+
+      <div class="cp-actions">
+        <button class="cp-save-btn" id="cp-save">Save Profile</button>
+        <div class="cp-save-hint">Changes take effect immediately — all agents are updated live.</div>
+      </div>
+
+    </div>`;
+
+    // Voice chip interactivity
+    container.querySelectorAll('.cp-voice-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        container.querySelectorAll('.cp-voice-chip').forEach(c => c.classList.remove('cp-voice-chip--on'));
+        chip.classList.add('cp-voice-chip--on');
+        chip.querySelector('input').checked = true;
+        CompanyProfilePage._refreshPreview(container);
+      });
+    });
+
+    // Live preview refresh on key inputs
+    ['cp-name','cp-desc','cp-icp','cp-positioning','cp-products','cp-competitors','cp-agent-rules','cp-goals'].forEach(id => {
+      document.getElementById(id)?.addEventListener('input', () => CompanyProfilePage._refreshPreview(container));
+    });
+
+    document.getElementById('cp-save')?.addEventListener('click', () => CompanyProfilePage._save(container));
+  },
+
+  _refreshPreview(container) {
+    // Build a temporary company object from current inputs for the preview
+    const tmp = {
+      name:        document.getElementById('cp-name')?.value.trim() || State.company.name,
+      industry:    document.getElementById('cp-industry')?.value || State.company.industry,
+      description: document.getElementById('cp-desc')?.value.trim() || State.company.description,
+      icp:         document.getElementById('cp-icp')?.value.trim() || State.company.icp,
+      voice:       container.querySelector('input[name="cp-voice"]:checked')?.value || State.company.voice,
+      positioning: document.getElementById('cp-positioning')?.value.trim() || State.company.positioning,
+      products:    (document.getElementById('cp-products')?.value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      competitors: (document.getElementById('cp-competitors')?.value||'').split(',').map(s=>s.trim()).filter(Boolean),
+      agentRules:  document.getElementById('cp-agent-rules')?.value.trim() || State.company.agentRules,
+      goals:       (document.getElementById('cp-goals')?.value||'').split(',').map(s=>s.trim()).filter(Boolean),
+    };
+
+    const saved = { ...State.company };
+    Object.assign(State.company, tmp);
+    const preview = document.getElementById('cp-preview');
+    if (preview) preview.textContent = ContextInjector.build() || '[No company profile set]';
+    Object.assign(State.company, saved);
+  },
+
+  _save(container) {
+    const c = State.company;
+    c.name         = document.getElementById('cp-name')?.value.trim() || c.name;
+    c.industry     = document.getElementById('cp-industry')?.value || c.industry;
+    c.description  = document.getElementById('cp-desc')?.value.trim() || c.description;
+    c.icp          = document.getElementById('cp-icp')?.value.trim() || c.icp;
+    c.voice        = container.querySelector('input[name="cp-voice"]:checked')?.value || c.voice;
+    c.positioning  = document.getElementById('cp-positioning')?.value.trim() || c.positioning;
+    c.products     = (document.getElementById('cp-products')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    c.competitors  = (document.getElementById('cp-competitors')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    c.agentRules   = document.getElementById('cp-agent-rules')?.value.trim() || c.agentRules;
+    c.goals        = (document.getElementById('cp-goals')?.value||'').split(',').map(s=>s.trim()).filter(Boolean);
+    c.updatedAt    = Date.now();
+
+    const site = document.getElementById('cp-site')?.value.trim();
+    if (site) { State.settings.siteUrl = site; save('settings'); }
+
+    // Mirror company name into settings so topbar/sidebar stay in sync
+    if (c.name) { State.settings.companyName = c.name; save('settings'); }
+
+    save('company');
+
+    // Update preview with saved state
+    const preview = document.getElementById('cp-preview');
+    if (preview) preview.textContent = ContextInjector.build() || '[No company profile set]';
+
+    toast('Company profile saved — all agents updated', 'success');
+  },
+
+  destroy() {},
+};
+
 // ── CONNECTORS PAGE ───────────────────────────────────────────
 const ConnectorsPage = {
   init(container) {
@@ -3765,13 +3977,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -5880,10 +6092,44 @@ const HQ = {
 
         </div>
       </div>
+
+      <!-- SPECIALISTS SECTION -->
+      <div class="hq-spec-section">
+        <div class="hq-spec-hdr">
+          <span class="hq-panel-title">SPECIALISTS</span>
+          <span class="hq-panel-badge">12 departments</span>
+        </div>
+        <div class="hq-spec-grid">
+          ${[
+            { page:'accounting',  icon:'📒', name:'Accounting',       desc:'P&L, bookkeeping, financial reports' },
+            { page:'investments', icon:'📈', name:'Investments',      desc:'Portfolio analysis, market research' },
+            { page:'orchestrator',icon:'🧩', name:'Orchestrator',     desc:'Multi-agent coordination & delegation' },
+            { page:'sales',       icon:'🤝', name:'Inside Sales',     desc:'Lead follow-up, deals, CRM workflows' },
+            { page:'legal',       icon:'⚖️', name:'Legal',            desc:'Contracts, compliance, risk review' },
+            { page:'marketing',   icon:'📣', name:'Marketing',        desc:'Campaigns, copy, brand strategy' },
+            { page:'hr',          icon:'👥', name:'HR',               desc:'Hiring, onboarding, performance' },
+            { page:'seo',         icon:'🔍', name:'SEO',              desc:'Rankings, keywords, content strategy' },
+            { page:'social',      icon:'📱', name:'Social Media',     desc:'Posts, engagement, community' },
+            { page:'support',     icon:'🎧', name:'Customer Support', desc:'Tickets, NPS, churn prevention' },
+            { page:'data',        icon:'📊', name:'Data',             desc:'Analytics, dashboards, insights' },
+            { page:'pr',          icon:'📰', name:'PR & Comms',       desc:'Press, media relations, reputation' },
+          ].map(s=>`
+            <button class="hq-spec-card" data-page="${s.page}">
+              <div class="hq-spec-icon">${s.icon}</div>
+              <div class="hq-spec-info">
+                <div class="hq-spec-name">${s.name}</div>
+                <div class="hq-spec-desc">${s.desc}</div>
+              </div>
+              <div class="hq-spec-arrow">→</div>
+            </button>`).join('')}
+        </div>
+      </div>
+
     </div>`;
 
     // Wire events
     container.querySelectorAll('.hq-chat-btn').forEach(b=>b.addEventListener('click',()=>Chat.open(b.dataset.eid)));
+    container.querySelectorAll('.hq-spec-card').forEach(b=>b.addEventListener('click',()=>Router.navigate(b.dataset.page)));
     container.querySelectorAll('.hq-cmd-btn').forEach(b=>b.addEventListener('click',()=>{
       Chat.open(b.dataset.eid);
       setTimeout(()=>{const inp=document.getElementById('chat-input');if(inp){inp.value=b.dataset.cmd;Chat.send();}},300);
@@ -12904,8 +13150,9 @@ const Onboarding = {
       { n:1, title:'Your company', sub:'Let\'s set up your AI headquarters.' },
       { n:2, title:'What you do', sub:'Give your agents full context.' },
       { n:3, title:'Your goals', sub:'What do you need help with most?' },
-      { n:4, title:'Quick context', sub:'Anything else your team should know?' },
-      { n:5, title:'Build your team', sub:'Pick the AI employees you want from day one.' },
+      { n:4, title:'Brand & voice', sub:'Help your agents sound like you.' },
+      { n:5, title:'Quick context', sub:'Anything else your team should know?' },
+      { n:6, title:'Build your team', sub:'Pick the AI employees you want from day one.' },
     ];
     const s = steps[Onboarding._step - 1];
     const d = Onboarding._data;
@@ -12956,6 +13203,24 @@ const Onboarding = {
         <div class="ob-field" style="margin-top:12px"><label class="ob-label">BIGGEST CHALLENGE RIGHT NOW</label>
           <textarea class="ob-input ob-textarea" id="ob-challenge" placeholder="Our main bottleneck is…" rows="2">${escHtml(d.challenge||'')}</textarea></div>`;
     } else if (Onboarding._step === 4) {
+      const voices = ['professional','friendly & warm','bold & direct','casual & conversational','technical & precise'];
+      body = `
+        <div class="ob-field"><label class="ob-label">BRAND VOICE / TONE</label>
+          <div class="ob-voice-grid" id="ob-voice-grid">
+            ${voices.map(v=>`<label class="ob-voice-chip ${(d.voice||'professional')===v?'ob-voice-chip--on':''}">
+              <input type="radio" name="ob-voice" value="${v}" ${(d.voice||'professional')===v?'checked':''} style="display:none">${v}</label>`).join('')}
+          </div></div>
+        <div class="ob-field"><label class="ob-label">PRODUCTS / SERVICES <span style="font-weight:400;opacity:.6">(comma-separated)</span></label>
+          <input class="ob-input" id="ob-products" placeholder="Kayro HQ, AI Workforce, Social Studio…" value="${escHtml(d.products||'')}"></div>
+        <div class="ob-row2">
+          <div class="ob-field"><label class="ob-label">MAIN COMPETITORS</label>
+            <input class="ob-input" id="ob-competitors" placeholder="Jasper, Copy.ai, Notion AI…" value="${escHtml(d.competitors||'')}"></div>
+          <div class="ob-field"><label class="ob-label">WHAT MAKES YOU DIFFERENT?</label>
+            <input class="ob-input" id="ob-positioning" placeholder="We're the only platform that…" value="${escHtml(d.positioning||'')}"></div>
+        </div>
+        <div class="ob-field"><label class="ob-label">ONE RULE ALL AGENTS MUST FOLLOW</label>
+          <input class="ob-input" id="ob-agent-rule" placeholder="Never promise specific delivery dates. Always recommend a call for deals > $5k." value="${escHtml(d.agentRule||'')}"></div>`;
+    } else if (Onboarding._step === 5) {
       body = `
         <div class="ob-field"><label class="ob-label">CURRENT TOOLS YOU USE</label>
           <input class="ob-input" id="ob-tools" placeholder="Notion, Slack, HubSpot, Stripe…" value="${escHtml(d.tools||'')}"></div>
@@ -12963,7 +13228,7 @@ const Onboarding = {
           <input class="ob-input" id="ob-priority" placeholder="Launch our new pricing page and get 10 paying customers" value="${escHtml(d.priority||'')}"></div>
         <div class="ob-field"><label class="ob-label">ANYTHING ELSE YOUR AGENTS SHOULD KNOW?</label>
           <textarea class="ob-input ob-textarea" id="ob-extra" placeholder="We're pre-revenue. Our differentiator is… Our tone is…" rows="3">${escHtml(d.extra||'')}</textarea></div>`;
-    } else if (Onboarding._step === 5) {
+    } else if (Onboarding._step === 6) {
       // Always-on: Claude (manager) + ARIA (assistant) + Iris (router) are required
       const selectable = DEFAULT_EMPLOYEES.filter(e => !['e_claude','e7','e_router'].includes(e.id));
       const selected = d.selectedEmpIds || selectable.map(e => e.id);
@@ -12998,7 +13263,7 @@ const Onboarding = {
         <div class="ob-body">${body}</div>
         <div class="ob-footer">
           ${Onboarding._step > 1 ? '<button class="ob-back-btn" id="ob-back">← Back</button>' : '<div></div>'}
-          <button class="ob-next-btn" id="ob-next">${Onboarding._step === 5 ? '🚀 Launch My HQ' : 'Continue →'}</button>
+          <button class="ob-next-btn" id="ob-next">${Onboarding._step === 6 ? '🚀 Launch My HQ' : 'Continue →'}</button>
         </div>
         <button class="ob-skip" id="ob-skip">Skip for now</button>
       </div>`;
@@ -13008,6 +13273,15 @@ const Onboarding = {
       item.addEventListener('click', () => {
         item.classList.toggle('ob-check-item--on');
         item.querySelector('input').checked = item.classList.contains('ob-check-item--on');
+      });
+    });
+
+    // Voice chip toggle logic
+    el.querySelectorAll('.ob-voice-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        el.querySelectorAll('.ob-voice-chip').forEach(c => c.classList.remove('ob-voice-chip--on'));
+        chip.classList.add('ob-voice-chip--on');
+        chip.querySelector('input').checked = true;
       });
     });
 
@@ -13048,10 +13322,16 @@ const Onboarding = {
       d.goals     = [...document.querySelectorAll('#ob-goals input:checked')].map(i=>i.value);
       d.challenge = document.getElementById('ob-challenge')?.value.trim() || '';
     } else if (Onboarding._step === 4) {
+      d.voice       = document.querySelector('input[name="ob-voice"]:checked')?.value || 'professional';
+      d.products    = document.getElementById('ob-products')?.value.trim() || '';
+      d.competitors = document.getElementById('ob-competitors')?.value.trim() || '';
+      d.positioning = document.getElementById('ob-positioning')?.value.trim() || '';
+      d.agentRule   = document.getElementById('ob-agent-rule')?.value.trim() || '';
+    } else if (Onboarding._step === 5) {
       d.tools     = document.getElementById('ob-tools')?.value.trim() || '';
       d.priority  = document.getElementById('ob-priority')?.value.trim() || '';
       d.extra     = document.getElementById('ob-extra')?.value.trim() || '';
-    } else if (Onboarding._step === 5) {
+    } else if (Onboarding._step === 6) {
       d.selectedEmpIds = [...document.querySelectorAll('.ob-emp-card--on')].map(c => c.dataset.id);
     }
   },
@@ -13065,7 +13345,7 @@ const Onboarding = {
       toast('Enter your company name to continue', 'error');
       return;
     }
-    if (Onboarding._step < 5) { Onboarding._step++; Onboarding._render(); }
+    if (Onboarding._step < 6) { Onboarding._step++; Onboarding._render(); }
     else Onboarding._finish(false);
   },
 
@@ -13078,6 +13358,28 @@ const Onboarding = {
     if (d.site)      State.settings.siteUrl      = d.site;
     save('settings');
 
+    // Populate Company Context Profile (multi-tenant personalization layer)
+    const now = Date.now();
+    if (!skipped && d.company) {
+      if (!State.company.tenantId) State.company.tenantId = crypto.randomUUID();
+      State.company.name         = d.company;
+      State.company.industry     = d.industry || '';
+      State.company.description  = d.desc || '';
+      State.company.icp          = d.icp || '';
+      State.company.voice        = d.voice || 'professional';
+      State.company.positioning  = d.positioning || '';
+      State.company.goals        = d.goals || [];
+      State.company.products     = d.products ? d.products.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      State.company.competitors  = d.competitors ? d.competitors.split(',').map(s=>s.trim()).filter(Boolean) : [];
+      State.company.agentRules   = d.agentRule || '';
+      State.company.createdAt    = State.company.createdAt || now;
+      State.company.updatedAt    = now;
+      save('company');
+    } else if (d.company && !State.company.name) {
+      State.company.name = d.company;
+      save('company');
+    }
+
     // Update sidebar brand
     if (d.company) {
       const bn = document.getElementById('brand-name');
@@ -13086,7 +13388,6 @@ const Onboarding = {
 
     if (!skipped) {
       // Feed to Brain
-      const now = Date.now();
       const emp = State.employees[0];
       const push = (text, category) => {
         if (!text || text.length < 3) return;
@@ -13099,12 +13400,16 @@ const Onboarding = {
       if (d.icp)        push(`Ideal customer / ICP: ${d.icp}`, 'customer');
       if (d.goals?.length) push(`Top priorities: ${d.goals.join(', ')}.`, 'business');
       if (d.challenge)  push(`Biggest current challenge: ${d.challenge}`, 'business');
+      if (d.positioning) push(`What makes us different: ${d.positioning}`, 'business');
+      if (d.products)   push(`Products/services: ${d.products}`, 'business');
+      if (d.competitors) push(`Main competitors: ${d.competitors}`, 'business');
+      if (d.agentRule)  push(`Agent rule: ${d.agentRule}`, 'process');
       if (d.tools)      push(`Current tools in use: ${d.tools}`, 'process');
       if (d.priority)   push(`AI team top priority this month: ${d.priority}`, 'business');
       if (d.extra)      push(`Additional context: ${d.extra}`, 'business');
 
       save('brain');
-      toast('🧠 Your HQ is ready — agents are briefed!', 'success', 5000);
+      toast('🧠 Your HQ is ready — agents are briefed!', 'success');
     }
 
     // Filter employees based on user selection (always keep core 3)

@@ -1196,19 +1196,27 @@ td.editing .cell-editor{display:block}
 /* ── CLAUDE MANAGER CARD ─────────────────────────────────────── */
 .hq-manager-card{
   grid-column: 1 / -1;
-  border-color:rgba(224,117,64,.3)!important;
-  background:linear-gradient(135deg,rgba(224,117,64,.07) 0%,rgba(224,117,64,.02) 50%,rgba(14,20,32,.95) 100%)!important;
-  box-shadow:0 2px 20px rgba(224,117,64,.12),0 0 0 1px rgba(224,117,64,.1) inset!important;
+  border-color:rgba(224,117,64,.35)!important;
+  background:linear-gradient(135deg,#1a0f06 0%,#1c1208 40%,#0e1420 100%)!important;
+  box-shadow:0 2px 20px rgba(224,117,64,.15),0 0 0 1px rgba(224,117,64,.12) inset!important;
 }
 .hq-manager-card:hover{
-  border-color:rgba(224,117,64,.5)!important;
-  box-shadow:0 8px 32px rgba(224,117,64,.2),0 0 0 1px rgba(224,117,64,.15) inset!important;
+  border-color:rgba(224,117,64,.55)!important;
+  box-shadow:0 8px 32px rgba(224,117,64,.22),0 0 0 1px rgba(224,117,64,.18) inset!important;
 }
+/* Force readable text on the dark manager card background */
+.hq-manager-card .hq-card-name{color:#fff!important}
+.hq-manager-card .hq-card-role{color:rgba(255,255,255,0.6)!important}
+.hq-manager-card .hq-act-txt{color:rgba(255,255,255,0.55)!important}
+.hq-manager-card .hq-badge{color:rgba(255,255,255,0.45)!important;border-color:rgba(255,255,255,0.1)!important;background:rgba(255,255,255,0.05)!important}
+.hq-manager-card .hq-skill-chip{color:rgba(255,255,255,0.75)!important;border-color:rgba(255,255,255,0.12)!important;background:rgba(255,255,255,0.06)!important}
+.hq-manager-card .hq-card-activity{background:rgba(255,255,255,0.05)!important}
+.hq-manager-card .hq-online-dot{border-color:#1a1208!important}
 .hq-manager-crown{
   font-size:10px;font-weight:700;letter-spacing:.8px;
   color:#e07540;padding:5px 14px;margin:-16px -16px 0;
-  border-bottom:1px solid rgba(224,117,64,.12);
-  background:linear-gradient(90deg,rgba(224,117,64,.1),rgba(224,117,64,.04));
+  border-bottom:1px solid rgba(224,117,64,.15);
+  background:linear-gradient(90deg,rgba(224,117,64,.14),rgba(224,117,64,.04));
   border-radius:16px 16px 0 0;
 }
 @media(max-width:700px){.hq-manager-card{grid-column:auto}}
@@ -2448,3 +2456,52 @@ input,textarea,select,button{font-family:var(--font)}
 .rmt-iframe{width:100%;height:100%;border:none;display:block}
 @media(max-width:900px){.rmt-workflow-row{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:640px){.rmt-root{padding:16px}.rmt-comps-grid{grid-template-columns:1fr}.rmt-workflow-row{grid-template-columns:1fr}.rmt-header{flex-direction:column;align-items:flex-start}}
+
+/* ── HQ SPECIALISTS SECTION ─────────────────────────────────── */
+.hq-spec-section{margin-top:24px;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:18px 20px;margin-bottom:8px}
+.hq-spec-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.hq-spec-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.hq-spec-card{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:11px 13px;cursor:pointer;transition:border-color .15s,background .15s;text-align:left;width:100%}
+.hq-spec-card:hover{border-color:var(--accent);background:rgba(59,130,246,.05)}
+.hq-spec-icon{font-size:20px;flex-shrink:0;width:32px;text-align:center}
+.hq-spec-info{flex:1;min-width:0}
+.hq-spec-name{font-size:12.5px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hq-spec-desc{font-size:11px;color:var(--text3);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hq-spec-arrow{font-size:14px;color:var(--text3);flex-shrink:0;opacity:0;transition:opacity .15s}
+.hq-spec-card:hover .hq-spec-arrow{opacity:1}
+@media(max-width:1100px){.hq-spec-grid{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:700px){.hq-spec-grid{grid-template-columns:repeat(2,1fr)}}
+
+/* ── COMPANY PROFILE PAGE ───────────────────────────────────── */
+.cp-root{padding:28px 32px;max-width:960px;margin:0 auto}
+.cp-header{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:28px;flex-wrap:wrap}
+.cp-title{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-0.5px}
+.cp-sub{font-size:13px;color:var(--text3);line-height:1.6;margin-top:4px;max-width:520px}
+.cp-tenant-badge{font-size:11px;color:var(--text3);background:var(--surface2);border:1px solid var(--border);padding:6px 12px;border-radius:8px;white-space:nowrap;flex-shrink:0;margin-top:4px}
+.cp-tenant-badge code{font-family:var(--mono);font-size:10px;color:var(--accent)}
+.cp-grid{display:flex;flex-direction:column;gap:20px}
+.cp-section{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:22px 24px;display:flex;flex-direction:column;gap:14px}
+.cp-section--preview{}
+.cp-section-title{font-size:13px;font-weight:700;color:var(--text);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:2px}
+.cp-field{display:flex;flex-direction:column;gap:6px}
+.cp-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--text3)}
+.cp-hint{font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;opacity:.7}
+.cp-input{background:var(--surface2);border:1px solid var(--border);border-radius:9px;padding:10px 13px;font-size:13.5px;color:var(--text);font-family:var(--sans);transition:border-color .15s;outline:none;width:100%;box-sizing:border-box}
+.cp-input:focus{border-color:var(--accent)}
+.cp-textarea{resize:vertical;min-height:72px}
+.cp-select{cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23888'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center}
+.cp-row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cp-voice-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px}
+.cp-voice-chip{padding:7px 15px;border-radius:980px;border:1.5px solid var(--border);font-size:12px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s;user-select:none;white-space:nowrap}
+.cp-voice-chip--on{border-color:var(--accent);color:var(--accent);background:rgba(59,130,246,.08)}
+.cp-preview-box{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:16px;font-family:var(--mono);font-size:11.5px;color:var(--text2);line-height:1.7;white-space:pre-wrap;word-break:break-word;margin:0;max-height:320px;overflow-y:auto}
+.cp-actions{margin-top:24px;display:flex;align-items:center;gap:16px;padding-bottom:40px}
+.cp-save-btn{padding:12px 32px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;transition:background .15s}
+.cp-save-btn:hover{background:#2563eb}
+.cp-save-hint{font-size:12px;color:var(--text3)}
+@media(max-width:640px){.cp-root{padding:16px}.cp-row2{grid-template-columns:1fr}.cp-header{flex-direction:column}.cp-tenant-badge{display:none}}
+
+/* ── ONBOARDING — Brand & Voice step extras ──────────────────── */
+.ob-voice-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.ob-voice-chip{padding:8px 16px;border-radius:980px;border:1.5px solid var(--border);font-size:12.5px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s;user-select:none}
+.ob-voice-chip--on{border-color:#3b82f6;color:#3b82f6;background:rgba(59,130,246,.1)}
