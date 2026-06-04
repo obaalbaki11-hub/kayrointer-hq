@@ -86,6 +86,7 @@ export default {
       if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
       if (path === '/api/usage/me')            return handleUsageMe(request, env, origin);
       if (path === '/api/admin/usage')         return handleAdminUsage(request, env, origin);
+      if (path === '/api/enterprise-lead')     return handleEnterpriseLead(request, env, origin);
 
       // Flights (Duffel)
       if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
@@ -592,6 +593,39 @@ async function handlePing(request, env, origin) {
   const body = await res.json();
   if (res.ok) return json({ ok: true, status: res.status }, 200, origin);
   return json({ ok: false, status: res.status, raw: body }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ENTERPRISE LEAD CAPTURE
+// ══════════════════════════════════════════════════════════════
+async function handleEnterpriseLead(request, env, origin) {
+  let body = {};
+  try { body = JSON.parse(await request.text()); } catch {}
+  const { name, company, need, email: contactEmail } = body;
+  if (!name || !company) return json({ error: 'name and company are required' }, 400, origin);
+
+  const leadId = Date.now().toString(36) + Math.random().toString(36).slice(2,6);
+  const lead = { id: leadId, name, company, need: need || '', contactEmail: contactEmail || '', submittedAt: new Date().toISOString() };
+
+  // Persist to KV so no lead is lost even if email fails
+  if (env.USERS) {
+    await env.USERS.put(`lead:${leadId}`, JSON.stringify(lead), { expirationTtl: 365 * 24 * 60 * 60 });
+  }
+
+  // Notify via Resend — fire-and-forget, non-blocking
+  if (env.RESEND_KEY) {
+    const fromAddr = env.EMAIL_FROM_DOMAIN
+      ? (env.EMAIL_FROM_DOMAIN.includes('@') ? env.EMAIL_FROM_DOMAIN : `Kayro HQ <noreply@${env.EMAIL_FROM_DOMAIN}>`)
+      : 'onboarding@resend.dev';
+    const text = `New Enterprise inquiry — Kayro Interactive\n\nName: ${name}\nCompany: ${company}\nContact email: ${contactEmail || '(not provided)'}\nWhat they need:\n${need || '(not specified)'}\n\nSubmitted: ${lead.submittedAt}\nLead ID: ${leadId}`;
+    fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.RESEND_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: fromAddr, to: ['obaalbaki11@gmail.com'], subject: `🏢 Enterprise Lead: ${company} — ${name}`, text }),
+    }).catch(() => {});
+  }
+
+  return json({ ok: true, leadId }, 200, origin);
 }
 
 // ══════════════════════════════════════════════════════════════

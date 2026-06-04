@@ -1723,6 +1723,9 @@ td.editing .cell-editor{display:block}
 .plan-cta--primary:hover{opacity:.9;transform:translateY(-1px)}
 .plan-cta--secondary{background:rgba(0,0,0,0.03);color:var(--text2);border:1px solid var(--border)}
 .plan-cta--current{cursor:default;opacity:.7}
+.plan-card--enterprise{border-color:rgba(124,58,237,.35);background:linear-gradient(160deg,rgba(124,58,237,.06) 0%,rgba(79,70,229,.04) 100%);box-shadow:0 0 0 1px rgba(124,58,237,.15)}
+.plan-card--enterprise:hover{box-shadow:0 12px 40px rgba(124,58,237,.2),0 0 0 1px rgba(124,58,237,.3)}
+.plan-card--enterprise .plan-cta--primary{background:linear-gradient(90deg,#7c3aed,#4f46e5);box-shadow:0 2px 12px rgba(124,58,237,.4)}
 /* ── TOKEN MARKETPLACE ───────────────────────────────────────── */
 .tok-market{margin-bottom:56px}
 .tok-market-hdr{text-align:center;margin-bottom:28px}

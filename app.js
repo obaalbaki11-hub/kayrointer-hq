@@ -11141,18 +11141,26 @@ const PlansPage = {
     const current = PlanGate.current();
     const cfg = PlanGate.cfg();
 
+    // ── Profitability math (Sonnet 4.6 blended ~$10.20/M, 40% input / 60% output)
+    const PLAN_ECON = {
+      free:       { tokens:'40K',  allotRaw:40000,   costPerMo:0.41,  revenue:0,  margin:null,  interactions:'~27' },
+      growth:     { tokens:'1M',   allotRaw:1000000, costPerMo:10.20, revenue:29, margin:64.8,  interactions:'~667' },
+      scale:      { tokens:'4M',   allotRaw:4000000, costPerMo:40.80, revenue:99, margin:58.8,  interactions:'~2,667' },
+      enterprise: { tokens:'Custom', allotRaw:0,     costPerMo:null,  revenue:null, margin:null, interactions:'Custom' },
+    };
+
     const plans = [
       {
-        id: 'free', icon: '⚪', name: 'Free', price: '$0', period: 'forever',
-        tagline: 'Try it out',
+        id: 'free', icon: '⚪', name: 'Free', price: '$0', period: '/month',
+        tagline: 'Get a feel for the platform',
         features: [
-          { ok:true,  text:'Headquarters, Tasks, Spreadsheet' },
-          { ok:true,  text:'Cold Email, Design Studio, Brain, Ops' },
-          { ok:true,  text:'10 AI messages / day (own key)' },
-          { ok:false, text:'Claude AI included (no key needed)' },
+          { ok:true,  text:'40K tokens/month (~27 Sonnet interactions)' },
+          { ok:true,  text:'All core pages — HQ, Tasks, Spreadsheet, Email, Brain, Ops' },
+          { ok:true,  text:'10 messages/day · Single user' },
+          { ok:false, text:'Claude AI included — bring your own API key' },
+          { ok:false, text:'Opus toggle' },
           { ok:false, text:'Internet search for agents' },
-          { ok:false, text:'Apollo.io lead search' },
-          { ok:false, text:'Apollo.io & Meta Ads' },
+          { ok:false, text:'Apollo.io · Meta Ads · Ad Studio' },
         ],
         cta: current==='free' ? 'Current Plan' : 'Downgrade',
         ctaStyle: 'secondary',
@@ -11160,53 +11168,55 @@ const PlansPage = {
       },
       {
         id: 'growth', icon: '🚀', name: 'Growth', price: '$29', period: '/month',
-        tagline: 'Claude included — we pay the tokens',
+        tagline: 'The workhorse — everything you need',
         popular: true,
         features: [
-          { ok:true,  text:'Everything in Free' },
-          { ok:true,  text:'Claude AI — unlimited (platform key)', accent: true },
-          { ok:true,  text:'No API keys needed — we cover it' },
-          { ok:true,  text:'5 internet searches/day for staff' },
-          { ok:true,  text:'Spreadsheet & Cold Email' },
-          { ok:true,  text:'Design Studio & Brain' },
-          { ok:true,  text:'Apollo.io & Meta Ads' },
-          { ok:false, text:'Ad Studio — HTML animated ads' },
+          { ok:true,  text:'1M tokens/month included (~667 Sonnet interactions)', accent: true },
+          { ok:true,  text:'Claude AI included — no API key needed' },
+          { ok:true,  text:'Opus toggle — drains tokens at true rate' },
+          { ok:true,  text:'All 28 agents · All Studios · Apollo.io · Meta Ads' },
+          { ok:true,  text:'5 web searches/day for agents' },
+          { ok:true,  text:'100 messages/day · Single user' },
+          { ok:true,  text:'Overage: buy top-up tokens anytime' },
+          { ok:false, text:'Multi-seat' },
         ],
         cta: current==='growth' ? 'Current Plan' : 'Upgrade to Growth',
         ctaStyle: current==='growth' ? 'secondary' : 'primary',
-        payLink: 'https://buy.stripe.com/kayro-growth', // TODO: replace with real Stripe link
+        payLink: 'https://buy.stripe.com/kayro-growth',
       },
       {
         id: 'scale', icon: '⚡', name: 'Scale', price: '$99', period: '/month',
-        tagline: 'Full power — your own API keys',
+        tagline: 'A real capability jump — built for teams',
         features: [
+          { ok:true,  text:'4M tokens/month included (~2,667 Sonnet interactions)', accent: true },
           { ok:true,  text:'Everything in Growth' },
-          { ok:true,  text:'Ad Studio — HTML animated ads', accent: true },
-          { ok:true,  text:'15 internet searches/day for staff' },
-          { ok:true,  text:'Own Anthropic key (you control costs)' },
           { ok:true,  text:'5 team seats' },
+          { ok:true,  text:'15 web searches/day · Higher Studio limits' },
+          { ok:true,  text:'500 messages/day across seats' },
+          { ok:true,  text:'Kling AI video (bring your own key)' },
           { ok:true,  text:'Priority support' },
-          { ok:false, text:'White-label branding' },
+          { ok:false, text:'SSO · Compliance · SLA' },
         ],
         cta: current==='scale' ? 'Current Plan' : 'Upgrade to Scale',
         ctaStyle: current==='scale' ? 'secondary' : 'primary',
-        payLink: 'https://buy.stripe.com/kayro-scale', // TODO: replace with real Stripe link
+        payLink: 'https://buy.stripe.com/kayro-scale',
       },
       {
-        id: 'enterprise', icon: '👑', name: 'Enterprise', price: 'Custom', period: '',
-        tagline: 'White-label + dedicated support',
+        id: 'enterprise', icon: '🏢', name: 'Enterprise', price: null, period: '',
+        tagline: 'Custom volume · Negotiated per customer',
+        contact: true,
         features: [
-          { ok:true,  text:'Everything in Scale' },
-          { ok:true,  text:'White-label branding', accent: true },
-          { ok:true,  text:'Unlimited team seats' },
-          { ok:true,  text:'Custom AI employee personas' },
-          { ok:true,  text:'Dedicated onboarding' },
-          { ok:true,  text:'SLA + priority support' },
-          { ok:true,  text:'Custom integrations' },
+          { ok:true,  text:'Custom token volume — we size to your usage', accent: true },
+          { ok:true,  text:'Unlimited seats · Multi-workspace' },
+          { ok:true,  text:'Opus by default option' },
+          { ok:true,  text:'SSO · Security & compliance review' },
+          { ok:true,  text:'Dedicated onboarding + support' },
+          { ok:true,  text:'Uptime SLA' },
+          { ok:true,  text:'Custom agent personas + white-label' },
         ],
-        cta: current==='enterprise' ? 'Current Plan' : 'Contact Sales',
-        ctaStyle: current==='enterprise' ? 'secondary' : 'primary',
-        payLink: 'mailto:hello@kayrointer.com?subject=Enterprise%20Plan',
+        cta: current==='enterprise' ? 'Current Plan' : 'Contact Sales →',
+        ctaStyle: 'primary',
+        payLink: null,
       },
     ];
 
@@ -11256,26 +11266,58 @@ const PlansPage = {
         </div>
       </div>`;
 
+    const isAdmin = Auth.user?.email === 'obaalbaki11@gmail.com';
+
+    const adminProfitTable = isAdmin ? `
+      <div style="margin-bottom:28px;padding:16px 20px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:12px;font-size:12px">
+        <div style="font-weight:700;color:var(--accent);margin-bottom:10px">📊 Admin: Profitability at Sonnet rates ($10.20/M blended)</div>
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr style="color:var(--text3);text-align:left">
+            <th style="padding:4px 8px">Plan</th><th style="padding:4px 8px">Tokens/mo</th><th style="padding:4px 8px">Interactions</th><th style="padding:4px 8px">My cost</th><th style="padding:4px 8px">Revenue</th><th style="padding:4px 8px">Margin</th>
+          </tr></thead>
+          <tbody>
+            ${Object.entries(PLAN_ECON).map(([id, e]) => `<tr style="border-top:1px solid var(--border)">
+              <td style="padding:5px 8px;font-weight:600;color:${PLAN_CONFIG[id]?.color||'var(--text)'}">${PLAN_CONFIG[id]?.name||id}</td>
+              <td style="padding:5px 8px">${e.tokens}</td>
+              <td style="padding:5px 8px;color:var(--text2)">${e.interactions}/mo</td>
+              <td style="padding:5px 8px;color:var(--danger)">${e.costPerMo!=null?'$'+e.costPerMo.toFixed(2)+'/mo':'negotiated'}</td>
+              <td style="padding:5px 8px;color:var(--green)">${e.revenue!=null?'$'+e.revenue+'/mo':e.revenue===0?'$0':'custom'}</td>
+              <td style="padding:5px 8px;font-weight:700;color:${e.margin&&e.margin>50?'var(--green)':e.margin?'var(--yellow)':'var(--text3)'}">${e.margin!=null?e.margin+'%':'—'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>
+        <div style="margin-top:8px;color:var(--text3);font-size:11px">Worst-case: Growth user maxing 100 msgs/day × 30 days = 4.5M tokens = $45.90 cost → underwater. Message cap is your primary cost protection. Real usage is typically 15–30% of cap.</div>
+      </div>` : '';
+
     const plansHTML = `
       <div class="plans-header">
         <div class="plans-current-badge" style="background:${cfg.color}18;border-color:${cfg.color}30;color:${cfg.color}">
           ${cfg.icon} Current plan: <b>${cfg.name}</b>
         </div>
         <div class="plans-title">Simple, Transparent Pricing</div>
-        <div class="plans-subtitle">Choose the plan that fits your team. Upgrade or downgrade anytime.</div>
+        <div class="plans-subtitle">Plans differ by capability — not just token quantity. Each tier unlocks new tools and access.</div>
       </div>
+      ${adminProfitTable}
       <div class="plans-grid">
         ${plans.map(p => {
-          const planCfg = PLAN_CONFIG[p.id];
+          const planCfg = PLAN_CONFIG[p.id] || {};
           const isCurrent = current === p.id;
-          return `<div class="plan-card${p.popular?' plan-card--popular':''}${isCurrent?' plan-card--active':''}">
+          const isEnterprise = p.contact === true;
+          const priceBlock = isEnterprise
+            ? `<div style="margin:4px 0 2px">
+                <span style="font-size:28px;font-weight:800;letter-spacing:-1px;color:var(--text)">Let's talk</span>
+               </div>
+               <div style="font-size:12px;color:var(--text3);margin-bottom:2px">Custom pricing per customer</div>`
+            : `<div class="plan-price-row">
+                <span class="plan-price">${p.price}</span>
+                <span class="plan-period">${p.period}</span>
+               </div>`;
+          return `<div class="plan-card${p.popular?' plan-card--popular':''}${isCurrent?' plan-card--active':''}${isEnterprise?' plan-card--enterprise':''}">
             ${p.popular ? '<div class="plan-popular-tag">Most Popular</div>' : ''}
+            ${isEnterprise ? '<div class="plan-popular-tag" style="background:linear-gradient(90deg,#7c3aed,#4f46e5);color:#fff;border:none">Enterprise</div>' : ''}
             <div class="plan-icon">${p.icon}</div>
-            <div class="plan-name" style="color:${planCfg.color}">${p.name}</div>
-            <div class="plan-price-row">
-              <span class="plan-price">${p.price}</span>
-              <span class="plan-period">${p.period}</span>
-            </div>
+            <div class="plan-name" style="color:${planCfg.color||'var(--text)'}">${p.name}</div>
+            ${priceBlock}
             <div class="plan-tagline">${p.tagline}</div>
             <div class="plan-divider"></div>
             <ul class="plan-features">
@@ -11285,7 +11327,7 @@ const PlansPage = {
               </li>`).join('')}
             </ul>
             <button class="plan-cta plan-cta--${p.ctaStyle}${isCurrent?' plan-cta--current':''}"
-              data-plan="${p.id}" data-link="${p.payLink||''}">
+              data-plan="${p.id}" data-link="${p.payLink||''}" data-contact="${isEnterprise?'true':''}">
               ${isCurrent ? '✓ ' : ''}${p.cta}
             </button>
           </div>`;
@@ -11303,19 +11345,20 @@ const PlansPage = {
             </tr></thead>
             <tbody>
               ${[
-                ['All core pages (HQ, Tasks, Spreadsheet, Email, Design, Brain, Ops)','✓','✓','✓','✓'],
-                ['AI Messages','10/day','Unlimited','Unlimited','Unlimited'],
-                ['Claude AI (included, no key needed)','✕','✓','✕','✕'],
-                ['Claude AI (own Anthropic key)','✕','✕','✓','✓'],
-                ['Internet search','✕','5/day','15/day','30/day'],
-                ['Spreadsheet & Cold Email','✕','✓','✓','✓'],
-                ['Design Studio & Brain','✕','✓','✓','✓'],
+                ['Token allotment / month','40K','1M','4M','Custom'],
+                ['Approx. Sonnet interactions/mo','~27','~667','~2,667','Negotiated'],
+                ['AI messages / day','10','100','500 (5 seats)','Custom'],
+                ['Claude AI included (no key)','✕','✓','✓','✓'],
+                ['Opus toggle','✕','✓','✓','✓ (default option)'],
+                ['All 28 agents + Studios','✕','✓','✓','✓'],
+                ['Web search for agents','✕','5/day','15/day','30/day'],
                 ['Apollo.io lead search','✕','✓','✓','✓'],
                 ['Meta Ads dashboard','✕','✓','✓','✓'],
                 ['Kling AI video (own key)','✕','✕','✓','✓'],
                 ['Team seats','1','1','5','Unlimited'],
-                ['White-label branding','✕','✕','✕','✓'],
-                ['Priority support','✕','✕','✓','✓'],
+                ['SSO / Compliance','✕','✕','✕','✓'],
+                ['SLA + dedicated support','✕','✕','✕','✓'],
+                ['White-label / custom personas','✕','✕','✕','✓'],
               ].map(row => `<tr>${row.map((cell,i) => {
                 const isCheck = cell === '✓', isCross = cell === '✕';
                 return `<td${i>0?' style="text-align:center"':''}>${isCheck?'<span class="cmp-check">✓</span>':isCross?'<span class="cmp-cross">✕</span>':escHtml(cell)}</td>`;
@@ -11350,12 +11393,13 @@ const PlansPage = {
       btn.addEventListener('click', () => {
         const planId = btn.dataset.plan;
         const link = btn.dataset.link;
+        const isContact = btn.dataset.contact === 'true';
         if (planId === current) return;
+        if (isContact) { PlansPage._showContactModal(); return; }
         if (planId === 'free') {
           State.plan = 'free'; save('plan'); PlansPage._updateSidebarBadge();
           toast('Downgraded to Free plan', 'info'); PlansPage.init(container); return;
         }
-        if (link && link.startsWith('mailto')) { window.location.href = link; return; }
         if (link && link.startsWith('http')) {
           toast('Redirecting to checkout…', 'info', 3000);
           setTimeout(() => window.open(link, '_blank'), 600);
@@ -11401,6 +11445,71 @@ const PlansPage = {
           toast(`Token checkout coming soon — email billing@kayrointer.com to buy ${Usage._fmtK(tokens)} tokens for ${price}`, 'info', 7000);
         }
       });
+    });
+  },
+
+  _showContactModal() {
+    Modal.open('🏢 Enterprise — Let\'s Talk', `
+      <p style="font-size:13px;color:var(--text2);margin-bottom:20px;line-height:1.6">Tell us a bit about your team and what you need. We'll follow up within one business day to discuss custom pricing and setup.</p>
+      <div class="form-group">
+        <label class="form-label">YOUR NAME *</label>
+        <input class="form-input" id="ent-name" type="text" placeholder="Jane Smith" autocomplete="name">
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">COMPANY *</label>
+        <input class="form-input" id="ent-company" type="text" placeholder="Acme Corp" autocomplete="organization">
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">YOUR EMAIL</label>
+        <input class="form-input" id="ent-email" type="email" placeholder="jane@acmecorp.com" autocomplete="email">
+      </div>
+      <div class="form-group" style="margin-top:12px">
+        <label class="form-label">WHAT DO YOU NEED?</label>
+        <textarea class="form-input" id="ent-need" rows="4" placeholder="e.g. 10 seats for our marketing team, white-label for our SaaS product, custom token volume…" style="resize:vertical"></textarea>
+      </div>
+      <div id="ent-err" style="font-size:12px;color:var(--danger);min-height:16px;margin-top:8px"></div>
+      <div style="display:flex;gap:10px;margin-top:16px">
+        <button class="btn btn-primary" id="ent-submit" style="flex:1">Send Inquiry →</button>
+        <button class="btn" id="ent-cancel">Cancel</button>
+      </div>`, {
+      onOpen() {
+        document.getElementById('ent-cancel').addEventListener('click', Modal.close);
+        document.getElementById('ent-submit').addEventListener('click', async () => {
+          const name    = (document.getElementById('ent-name').value||'').trim();
+          const company = (document.getElementById('ent-company').value||'').trim();
+          const email   = (document.getElementById('ent-email').value||'').trim();
+          const need    = (document.getElementById('ent-need').value||'').trim();
+          const errEl   = document.getElementById('ent-err');
+          if (!name || !company) { errEl.textContent = 'Name and company are required.'; return; }
+          const btn = document.getElementById('ent-submit');
+          btn.disabled = true; btn.textContent = 'Sending…';
+          errEl.textContent = '';
+          try {
+            const res = await fetch(`${BACKEND_URL}/api/enterprise-lead`, {
+              method: 'POST', credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ name, company, email, need }),
+            });
+            if (res.ok) {
+              Modal.close();
+              toast('Thanks! We\'ll be in touch within one business day.', 'success', 6000);
+            } else {
+              throw new Error('Server error');
+            }
+          } catch {
+            // Fallback: open mailto so the lead is never lost
+            const sub = encodeURIComponent(`Enterprise Inquiry — ${company}`);
+            const body = encodeURIComponent(`Name: ${name}\nCompany: ${company}\nEmail: ${email}\n\nWhat I need:\n${need}`);
+            window.location.href = `mailto:obaalbaki11@gmail.com?subject=${sub}&body=${body}`;
+            Modal.close();
+            toast('Opening your email client as backup — inquiry sent!', 'info', 5000);
+          } finally {
+            if (document.getElementById('ent-submit')) {
+              btn.disabled = false; btn.textContent = 'Send Inquiry →';
+            }
+          }
+        });
+      }
     });
   },
 
