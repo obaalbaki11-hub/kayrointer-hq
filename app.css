@@ -1196,27 +1196,26 @@ td.editing .cell-editor{display:block}
 /* ── CLAUDE MANAGER CARD ─────────────────────────────────────── */
 .hq-manager-card{
   grid-column: 1 / -1;
-  border-color:rgba(224,117,64,.35)!important;
-  background:linear-gradient(135deg,#1a0f06 0%,#1c1208 40%,#0e1420 100%)!important;
-  box-shadow:0 2px 20px rgba(224,117,64,.15),0 0 0 1px rgba(224,117,64,.12) inset!important;
+  border-color:rgba(91,46,255,.4)!important;
+  background:linear-gradient(135deg,#0d0a1e 0%,#120830 50%,#0a0d1f 100%)!important;
+  box-shadow:0 2px 24px rgba(91,46,255,.18),0 0 0 1px rgba(91,46,255,.12) inset!important;
 }
 .hq-manager-card:hover{
-  border-color:rgba(224,117,64,.55)!important;
-  box-shadow:0 8px 32px rgba(224,117,64,.22),0 0 0 1px rgba(224,117,64,.18) inset!important;
+  border-color:rgba(91,46,255,.6)!important;
+  box-shadow:0 8px 36px rgba(91,46,255,.25),0 0 0 1px rgba(91,46,255,.2) inset!important;
 }
-/* Force readable text on the dark manager card background */
 .hq-manager-card .hq-card-name{color:#fff!important}
 .hq-manager-card .hq-card-role{color:rgba(255,255,255,0.6)!important}
 .hq-manager-card .hq-act-txt{color:rgba(255,255,255,0.55)!important}
 .hq-manager-card .hq-badge{color:rgba(255,255,255,0.45)!important;border-color:rgba(255,255,255,0.1)!important;background:rgba(255,255,255,0.05)!important}
-.hq-manager-card .hq-skill-chip{color:rgba(255,255,255,0.75)!important;border-color:rgba(255,255,255,0.12)!important;background:rgba(255,255,255,0.06)!important}
-.hq-manager-card .hq-card-activity{background:rgba(255,255,255,0.05)!important}
-.hq-manager-card .hq-online-dot{border-color:#1a1208!important}
+.hq-manager-card .hq-skill-chip{color:rgba(255,255,255,0.8)!important;border-color:rgba(91,46,255,.3)!important;background:rgba(91,46,255,.12)!important}
+.hq-manager-card .hq-card-activity{background:rgba(255,255,255,0.04)!important}
+.hq-manager-card .hq-online-dot{border-color:#0d0a1e!important}
 .hq-manager-crown{
   font-size:10px;font-weight:700;letter-spacing:.8px;
-  color:#e07540;padding:5px 14px;margin:-16px -16px 0;
-  border-bottom:1px solid rgba(224,117,64,.15);
-  background:linear-gradient(90deg,rgba(224,117,64,.14),rgba(224,117,64,.04));
+  color:var(--accent);padding:5px 14px;margin:-16px -16px 0;
+  border-bottom:1px solid rgba(91,46,255,.18);
+  background:linear-gradient(90deg,rgba(91,46,255,.15),rgba(91,46,255,.04));
   border-radius:16px 16px 0 0;
 }
 @media(max-width:700px){.hq-manager-card{grid-column:auto}}

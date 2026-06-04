@@ -6036,6 +6036,38 @@ const HQ = {
         </div>
       </div>
 
+      <!-- SPECIALISTS SECTION -->
+      <div class="hq-spec-section">
+        <div class="hq-spec-hdr">
+          <span class="hq-panel-title">SPECIALISTS</span>
+          <span class="hq-panel-badge">12 departments</span>
+        </div>
+        <div class="hq-spec-grid">
+          ${[
+            { page:'accounting',  icon:'📒', name:'Accounting',       desc:'P&L, bookkeeping, financial reports' },
+            { page:'investments', icon:'📈', name:'Investments',      desc:'Portfolio analysis, market research' },
+            { page:'orchestrator',icon:'🧩', name:'Orchestrator',     desc:'Multi-agent coordination & delegation' },
+            { page:'sales',       icon:'🤝', name:'Inside Sales',     desc:'Lead follow-up, deals, CRM workflows' },
+            { page:'legal',       icon:'⚖️', name:'Legal',            desc:'Contracts, compliance, risk review' },
+            { page:'marketing',   icon:'📣', name:'Marketing',        desc:'Campaigns, copy, brand strategy' },
+            { page:'hr',          icon:'👥', name:'HR',               desc:'Hiring, onboarding, performance' },
+            { page:'seo',         icon:'🔍', name:'SEO',              desc:'Rankings, keywords, content strategy' },
+            { page:'social',      icon:'📱', name:'Social Media',     desc:'Posts, engagement, community' },
+            { page:'support',     icon:'🎧', name:'Customer Support', desc:'Tickets, NPS, churn prevention' },
+            { page:'data',        icon:'📊', name:'Data',             desc:'Analytics, dashboards, insights' },
+            { page:'pr',          icon:'📰', name:'PR & Comms',       desc:'Press, media relations, reputation' },
+          ].map(s=>`
+            <button class="hq-spec-card" data-page="${s.page}">
+              <div class="hq-spec-icon">${s.icon}</div>
+              <div class="hq-spec-info">
+                <div class="hq-spec-name">${s.name}</div>
+                <div class="hq-spec-desc">${s.desc}</div>
+              </div>
+              <div class="hq-spec-arrow">→</div>
+            </button>`).join('')}
+        </div>
+      </div>
+
       <!-- MAIN LAYOUT -->
       <div class="hq-layout">
 
@@ -6090,38 +6122,6 @@ const HQ = {
             </div>
           </div>
 
-        </div>
-      </div>
-
-      <!-- SPECIALISTS SECTION -->
-      <div class="hq-spec-section">
-        <div class="hq-spec-hdr">
-          <span class="hq-panel-title">SPECIALISTS</span>
-          <span class="hq-panel-badge">12 departments</span>
-        </div>
-        <div class="hq-spec-grid">
-          ${[
-            { page:'accounting',  icon:'📒', name:'Accounting',       desc:'P&L, bookkeeping, financial reports' },
-            { page:'investments', icon:'📈', name:'Investments',      desc:'Portfolio analysis, market research' },
-            { page:'orchestrator',icon:'🧩', name:'Orchestrator',     desc:'Multi-agent coordination & delegation' },
-            { page:'sales',       icon:'🤝', name:'Inside Sales',     desc:'Lead follow-up, deals, CRM workflows' },
-            { page:'legal',       icon:'⚖️', name:'Legal',            desc:'Contracts, compliance, risk review' },
-            { page:'marketing',   icon:'📣', name:'Marketing',        desc:'Campaigns, copy, brand strategy' },
-            { page:'hr',          icon:'👥', name:'HR',               desc:'Hiring, onboarding, performance' },
-            { page:'seo',         icon:'🔍', name:'SEO',              desc:'Rankings, keywords, content strategy' },
-            { page:'social',      icon:'📱', name:'Social Media',     desc:'Posts, engagement, community' },
-            { page:'support',     icon:'🎧', name:'Customer Support', desc:'Tickets, NPS, churn prevention' },
-            { page:'data',        icon:'📊', name:'Data',             desc:'Analytics, dashboards, insights' },
-            { page:'pr',          icon:'📰', name:'PR & Comms',       desc:'Press, media relations, reputation' },
-          ].map(s=>`
-            <button class="hq-spec-card" data-page="${s.page}">
-              <div class="hq-spec-icon">${s.icon}</div>
-              <div class="hq-spec-info">
-                <div class="hq-spec-name">${s.name}</div>
-                <div class="hq-spec-desc">${s.desc}</div>
-              </div>
-              <div class="hq-spec-arrow">→</div>
-            </button>`).join('')}
         </div>
       </div>
 
