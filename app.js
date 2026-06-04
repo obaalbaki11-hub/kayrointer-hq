@@ -714,7 +714,7 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 
 // ── STATE ──────────────────────────────────────────────────────
 const State = {
-  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', platformHunterKey:'', platformKlingKeyId:'', platformKlingKeySecret:'', platformEjServiceId:'', platformEjTemplateId:'', platformEjPublicKey:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'' },
+  settings: { apiKey:'', platformApiKey:'', platformSearchKey:'', platformHunterKey:'', platformKlingKeyId:'', platformKlingKeySecret:'', platformEjServiceId:'', platformEjTemplateId:'', platformEjPublicKey:'', proxyUrl:'', companyName:'Kayro Interactive', ownerName:'Omar Baalbaki', ownerEmail:'omarbaalbaki@kayrointer.com', siteUrl:'kayrointer.com', ejServiceId:'', ejTemplateId:'', ejPublicKey:'', apolloKey:'', metaToken:'', metaAccount:'', metaPixelId:'', klingKeyId:'', klingKeySecret:'', tavilyKey:'', agentOverrides:{} },
   plan: 'free', // 'free' | 'growth' | 'scale' | 'enterprise'
   planActivatedAt: null,
   employees: [],
@@ -847,6 +847,7 @@ function loadState() {
   if (!Array.isArray(State.swarmRuns)) State.swarmRuns = [];
   if (!State.company || typeof State.company !== 'object') State.company = { tenantId: null, name:'', industry:'', description:'', icp:'', voice:'professional', voiceRules:[], positioning:'', goals:[], products:[], competitors:[], agentRules:'', agentCustomizations:{}, createdAt:null, updatedAt:null };
   if (!State.company.tenantId) { State.company.tenantId = crypto.randomUUID(); save('company'); }
+  if (!State.settings.agentOverrides) State.settings.agentOverrides = {};
   // Re-seed whenever new default facts are added (keyed by id, not text)
   const existingIds = new Set(State.brain.facts.map(f=>f.id));
   const newFacts = DEFAULT_BRAIN_FACTS.filter(f => !existingIds.has(f.id));
@@ -4275,6 +4276,31 @@ const Chat = {
     document.getElementById('cp-av').style.color = e.color;
     document.getElementById('cp-name').textContent = e.name;
     document.getElementById('cp-role').textContent = e.role;
+    // Per-agent model override badge
+    document.getElementById('cp-model-badge')?.remove();
+    if (!e.model?.startsWith('agent_')) {
+      const effectiveModel = State.settings.agentOverrides[e.id] || e.model || '';
+      const isOpus = effectiveModel.includes('opus');
+      const badge = document.createElement('button');
+      badge.id = 'cp-model-badge';
+      badge.title = 'Click to toggle Opus override for this agent';
+      badge.style.cssText = `font-size:10px;padding:2px 7px;border-radius:99px;border:1px solid;cursor:pointer;margin-left:6px;vertical-align:middle;background:${isOpus?'rgba(124,58,237,.15)':'rgba(34,197,94,.12)'};color:${isOpus?'#a855f7':'#22c55e'};border-color:${isOpus?'rgba(124,58,237,.35)':'rgba(34,197,94,.3)'}`;
+      badge.textContent = isOpus ? 'Opus ↩' : 'Sonnet';
+      badge.addEventListener('click', () => {
+        const cur = State.settings.agentOverrides[e.id] || e.model || '';
+        if (cur.includes('opus')) {
+          // Remove override — revert to whatever the agent's native model is after flip
+          delete State.settings.agentOverrides[e.id];
+        } else {
+          // Force Opus for this agent
+          State.settings.agentOverrides[e.id] = 'claude-opus-4-7';
+        }
+        save('settings');
+        Chat.setEmp(e.id); // re-render badge
+        toast(State.settings.agentOverrides[e.id] ? `${e.name} → Opus (override active)` : `${e.name} → default model`, '', 2000);
+      });
+      document.getElementById('cp-name').after(badge);
+    }
     Chat.renderTabs();
     Chat.renderQuickActions(e);
     if (render) Chat.renderMessages();
@@ -5856,7 +5882,8 @@ For each issue: severity (1-5), effort (1-5), impact (1-5). Score = Impact / Eff
       }
     } else {
       // ── Normal model: AI.stream via /v1/messages ──
-      for await (const chunk of AI.stream(history, sysPrompt, { model: e.model })) {
+      const effectiveModel = State.settings.agentOverrides?.[empId] || e.model;
+      for await (const chunk of AI.stream(history, sysPrompt, { model: effectiveModel })) {
         if (isActive()) document.getElementById('chat-typing')?.remove();
 
         // Handle search sentinel \x00SEARCH:query\x00
