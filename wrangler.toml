@@ -19,10 +19,12 @@ compatibility_date = "2024-09-23"
 # AWS_SECRET_ACCESS_KEY  ← IAM user secret key
 # AWS_REGION             ← AWS region, e.g. us-east-1 (default: us-east-1)
 
-# KV Namespaces — uncomment and fill IDs after running:
-#   npx wrangler kv:namespace create USERS
-#   npx wrangler kv:namespace create USERS --preview
+# KV Namespace — user accounts + rate limiting.
+# One-time setup (run from the kayro-hq directory):
+#   npx wrangler kv:namespace create USERS          → copy 'id', paste below
+#   npx wrangler kv:namespace create USERS --preview → copy 'id', paste as preview_id
+# Then uncomment the block below and run: npx wrangler deploy
 # [[kv_namespaces]]
-# binding = "USERS"
-# id = "PASTE_KV_NAMESPACE_ID_HERE"
-# preview_id = "PASTE_KV_PREVIEW_ID_HERE"
+# binding    = "USERS"
+# id         = "PASTE_PROD_NAMESPACE_ID_HERE"
+# preview_id = "PASTE_PREVIEW_NAMESPACE_ID_HERE"

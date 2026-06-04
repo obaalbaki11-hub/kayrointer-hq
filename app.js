@@ -2199,10 +2199,20 @@ const Auth = {
               Auth._hideOverlay();
               Auth._renderUserArea();
             } else {
-              // Only show login screen if there's no locally stored session
+              // Firebase says not authenticated. Distinguish session types:
+              // - Guest and Worker-JWT sessions are not managed by Firebase — keep them.
+              // - Firebase-authenticated sessions (no standalone JWT, not guest) must be
+              //   invalidated when Firebase reports signout (covers deleted/revoked accounts).
               const stored = localStorage.getItem('kayro_auth_user');
               if (stored) {
-                try { Auth.user = JSON.parse(stored); Auth._renderUserArea(); return; } catch(_) {}
+                try {
+                  const parsed = JSON.parse(stored);
+                  if (parsed.isGuest || parsed.token) {
+                    Auth.user = parsed; Auth._renderUserArea(); return;
+                  }
+                  // Firebase user — server says logged out, honour that
+                  localStorage.removeItem('kayro_auth_user');
+                } catch(_) {}
               }
               Auth._showOverlay();
             }

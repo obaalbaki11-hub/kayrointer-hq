@@ -485,14 +485,46 @@ async function jwtVerify(token, secret) {
   } catch { return null; }
 }
 
-async function hashPassword(password, salt) {
+async function hashPassword(password, salt, iterations = 600000) {
   const enc = new TextEncoder();
   const keyMaterial = await crypto.subtle.importKey('raw', enc.encode(password), 'PBKDF2', false, ['deriveBits']);
   const bits = await crypto.subtle.deriveBits(
-    { name:'PBKDF2', salt: enc.encode(salt), iterations: 100000, hash:'SHA-256' },
+    { name:'PBKDF2', salt: enc.encode(salt), iterations, hash:'SHA-256' },
     keyMaterial, 256
   );
   return btoa(String.fromCharCode(...new Uint8Array(bits)));
+}
+
+// ── RATE LIMITING (KV-backed; degrades gracefully if KV not configured yet) ───
+const RL_CONFIG = {
+  signin: { max: 10, window: 15 * 60 }, // 10 failures per 15 min per IP
+  signup: { max:  5, window: 60 * 60 }, //  5 attempts per hour per IP
+};
+
+async function rlCheck(env, action, ip) {
+  if (!env.USERS) return null;
+  const cfg = RL_CONFIG[action] || RL_CONFIG.signin;
+  const raw = await env.USERS.get(`rl:${action}:${ip}`, { type: 'json' });
+  if (!raw) return null;
+  const waitSecs = Math.ceil((raw.resetAt - Date.now()) / 1000);
+  if (raw.count >= cfg.max && waitSecs > 0) return waitSecs;
+  return null;
+}
+
+async function rlRecord(env, action, ip) {
+  if (!env.USERS) return;
+  const cfg = RL_CONFIG[action] || RL_CONFIG.signin;
+  const key = `rl:${action}:${ip}`;
+  const now = Date.now();
+  const raw = await env.USERS.get(key, { type: 'json' });
+  const resetAt = (raw && raw.resetAt > now) ? raw.resetAt : now + cfg.window * 1000;
+  const count   = (raw && raw.resetAt > now) ? raw.count + 1 : 1;
+  await env.USERS.put(key, JSON.stringify({ count, resetAt }), { expirationTtl: cfg.window });
+}
+
+async function rlClear(env, action, ip) {
+  if (!env.USERS) return;
+  await env.USERS.delete(`rl:${action}:${ip}`);
 }
 
 async function handleAuth(request, env, origin, path) {
@@ -501,6 +533,7 @@ async function handleAuth(request, env, origin, path) {
   const hasKV = !!(env.USERS);
 
   const sub = path.replace('/api/auth', '') || '/';
+  const ip  = request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown';
 
   // ── GET /api/auth/me — verify token ─────────────────────────
   if (sub === '/me') {
@@ -520,15 +553,19 @@ async function handleAuth(request, env, origin, path) {
     if (!email || !password) return json({ error: 'Email and password required' }, 400, origin);
     if (password.length < 6) return json({ error: 'Password must be at least 6 characters' }, 400, origin);
 
+    // C3: rate limit — 5 signups per IP per hour
+    const wait = await rlCheck(env, 'signup', ip);
+    if (wait !== null) return json({ error: `Too many attempts. Try again in ${Math.ceil(wait / 60)} minute(s).` }, 429, origin);
+
     if (!hasKV) return json({ error: 'User database not set up. Contact Kayro admin.' }, 503, origin);
 
     const existing = await env.USERS.get(`u:${email.toLowerCase()}`);
-    if (existing) return json({ error: 'Account already exists. Sign in instead.' }, 409, origin);
+    if (existing) { await rlRecord(env, 'signup', ip); return json({ error: 'Account already exists. Sign in instead.' }, 409, origin); }
 
     const salt = crypto.randomUUID();
-    const hash = await hashPassword(password, salt);
-    const uid = 'u_' + crypto.randomUUID().replace(/-/g,'').slice(0,16);
-    const user = { uid, email: email.toLowerCase(), name: name || email.split('@')[0], hash, salt, plan:'free', created: Date.now() };
+    const hash = await hashPassword(password, salt, 600000); // M4: 600k iterations for all new passwords
+    const uid  = 'u_' + crypto.randomUUID().replace(/-/g,'').slice(0,16);
+    const user = { uid, email: email.toLowerCase(), name: name || email.split('@')[0], hash, salt, iterations: 600000, plan:'free', created: Date.now() };
     await env.USERS.put(`u:${email.toLowerCase()}`, JSON.stringify(user));
 
     const token = await jwtSign({ uid, email: user.email, name: user.name, plan:'free', exp: Math.floor(Date.now()/1000) + AUTH_TOKEN_TTL }, secret);
@@ -540,13 +577,32 @@ async function handleAuth(request, env, origin, path) {
     const { email, password } = body;
     if (!email || !password) return json({ error: 'Email and password required' }, 400, origin);
 
+    // C3: rate limit — 10 failures per IP per 15 min
+    const wait = await rlCheck(env, 'signin', ip);
+    if (wait !== null) return json({ error: `Too many attempts. Try again in ${Math.ceil(wait / 60)} minute(s).` }, 429, origin);
+
     if (!hasKV) return json({ error: 'User database not set up. Contact Kayro admin.' }, 503, origin);
 
+    // C2: both "no account" and "wrong password" return the same generic message + status
+    const INVALID = 'Invalid email or password.';
+
     const raw = await env.USERS.get(`u:${email.toLowerCase()}`);
-    if (!raw) return json({ error: 'No account found. Sign up first.' }, 404, origin);
+    if (!raw) { await rlRecord(env, 'signin', ip); return json({ error: INVALID }, 401, origin); }
+
     const user = JSON.parse(raw);
-    const hash = await hashPassword(password, user.salt);
-    if (hash !== user.hash) return json({ error: 'Wrong password.' }, 401, origin);
+    // M4: verify using the stored iteration count (100k for old accounts, 600k for new)
+    const hash = await hashPassword(password, user.salt, user.iterations || 100000);
+    if (hash !== user.hash) { await rlRecord(env, 'signin', ip); return json({ error: INVALID }, 401, origin); }
+
+    // Success — clear rate limit counter
+    await rlClear(env, 'signin', ip);
+
+    // M4: transparently re-hash with 600k iterations on next login for legacy accounts
+    if (!user.iterations || user.iterations < 600000) {
+      user.hash = await hashPassword(password, user.salt, 600000);
+      user.iterations = 600000;
+      await env.USERS.put(`u:${email.toLowerCase()}`, JSON.stringify(user));
+    }
 
     const token = await jwtSign({ uid: user.uid, email: user.email, name: user.name, plan: user.plan || 'free', exp: Math.floor(Date.now()/1000) + AUTH_TOKEN_TTL }, secret);
     return json({ token, uid: user.uid, email: user.email, name: user.name, plan: user.plan || 'free' }, 200, origin);
