@@ -710,6 +710,36 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 
   {id:'e_brain_agent',name:'Sage',role:'Second Brain Agent',model:'agent_01B8mAA5G1JgwAPXiZkajygd',color:'#6366f1',bodyHex:0x6366f1,skinHex:0xf0c89a,pos:[0,-6],status:'online',skills:['Knowledge Synthesis','Memory Recall','Context Retrieval','Research Distillation','Insight Generation'],hired:Date.now(),tasks:0,
    system:`You are Sage, the Kayro Interactive Second Brain Agent. You store, retrieve, and synthesise company knowledge. Help users remember facts, recall context, surface insights, and build a connected knowledge base.`},
+
+  {id:'e_travel',name:'Marco',role:'Senior Travel Concierge',model:'claude-sonnet-4-6',color:'#0ea5e9',bodyHex:0x0ea5e9,skinHex:0xf0c89a,pos:[6,-8],status:'online',skills:['Flight Search','Hotel Search','Itinerary Planning','Fare Comparison','Travel Logistics'],hired:Date.now(),tasks:0,
+   system:`You are Marco, Senior Travel Concierge at [company]. You specialise in finding flights and hotels that match exactly what the user needs — on budget, at the right times, with no guesswork.
+
+Your job is to understand natural-language travel requests and turn them into structured search parameters. You are precise, proactive, and concierge-quality: you confirm ambiguous details before searching rather than guessing, and you present results clearly so the user can compare and decide.
+
+When a user makes a travel request, extract these fields:
+- FLIGHTS: origin IATA code, destination IATA code, departure date (YYYY-MM-DD), return date if round-trip, number of passengers, cabin class (economy/business/first)
+- HOTELS: city IATA code, check-in date (YYYY-MM-DD), check-out date (YYYY-MM-DD), number of adults, number of rooms
+
+If any required field is missing or ambiguous, ask one focused clarifying question before searching. Do not ask multiple questions at once.
+
+When you have all required fields, respond with a JSON block ONLY — no prose before or after it — in this exact format:
+<search>
+{"type":"flights","origin":"DXB","destination":"LHR","departureDate":"2026-06-20","returnDate":"2026-06-22","passengers":1,"cabinClass":"economy"}
+</search>
+
+Or for hotels:
+<search>
+{"type":"hotels","cityCode":"LON","checkIn":"2026-06-20","checkOut":"2026-06-22","adults":1,"rooms":1}
+</search>
+
+Or for both (combined trip):
+<search>
+{"type":"both","origin":"DXB","destination":"LHR","departureDate":"2026-06-20","returnDate":"2026-06-22","passengers":1,"cabinClass":"economy","cityCode":"LON","checkIn":"2026-06-20","checkOut":"2026-06-22","adults":1,"rooms":1}
+</search>
+
+After the search tag, do not add any additional commentary — the UI will handle displaying results.
+
+IATA city codes for hotels (use the city code, not the airport): London=LON, Dubai=DXB, New York=NYC, Paris=PAR, Tokyo=TYO, Singapore=SIN, Amsterdam=AMS, Frankfurt=FRA, Rome=ROM, Barcelona=BCN.`},
 ];
 
 // ── STATE ──────────────────────────────────────────────────────
@@ -4027,13 +4057,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage, travel:TravelPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile',travel:'Travel Concierge'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -13927,6 +13957,492 @@ const SkillsPage = {
     });
   },
   destroy() {},
+};
+
+// ══════════════════════════════════════════════════════════════
+//  TRAVEL CONCIERGE — Marco
+// ══════════════════════════════════════════════════════════════
+const TravelPage = {
+  _emp: null,
+  _history: [],
+  _flightResults: null,   // { offerRequestId, offers[] }
+  _hotelResults: null,    // { hotels[] }
+  _pendingBooking: null,  // { type, data } — populated when confirm modal opens
+
+  init(container) {
+    TravelPage._emp = getEmp('e_travel');
+    TravelPage._history = [];
+    TravelPage._flightResults = null;
+    TravelPage._hotelResults = null;
+    TravelPage._pendingBooking = null;
+
+    container.innerHTML = `<div class="trv-root">
+
+      <!-- LEFT: Marco chat -->
+      <div class="trv-left">
+        <div class="trv-agent-hdr">
+          <div class="trv-agent-av">✈️</div>
+          <div>
+            <div class="trv-agent-name">Marco</div>
+            <div class="trv-agent-role">Senior Travel Concierge · Sonnet 4.6</div>
+          </div>
+          <button class="trv-clear-btn" id="trv-clear">Clear</button>
+        </div>
+        <div class="trv-messages" id="trv-messages">
+          <div class="trv-welcome">
+            <div class="trv-welcome-icon">✈️</div>
+            <div class="trv-welcome-title">Hello, I'm Marco.</div>
+            <div class="trv-welcome-sub">Tell me where you want to go — I'll find flights and hotels and present the best options for you to compare. Bookings always require your explicit confirmation.</div>
+          </div>
+          <div class="trv-quick-row">
+            <button class="trv-quick" data-q="Find me flights from Dubai to London next Friday returning Sunday, economy class">✈️ Dubai → London</button>
+            <button class="trv-quick" data-q="Search business class flights from New York to Tokyo departing June 25">🗾 NYC → Tokyo business</button>
+            <button class="trv-quick" data-q="Find a 4-star hotel in London for 2 nights checking in June 20">🏨 London hotel 2 nights</button>
+            <button class="trv-quick" data-q="I need flights from Singapore to Amsterdam June 18 returning June 22 and a hotel in Amsterdam for those dates">🌐 Full trip planner</button>
+          </div>
+        </div>
+        <div class="trv-input-row">
+          <textarea class="trv-input" id="trv-input" rows="1" placeholder="Where would you like to go?"></textarea>
+          <button class="trv-send" id="trv-send">↑</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Results -->
+      <div class="trv-right" id="trv-right">
+        <div class="trv-results-empty" id="trv-empty">
+          <div class="trv-results-icon">🗺️</div>
+          <div class="trv-results-title">Results will appear here</div>
+          <div class="trv-results-sub">Tell Marco what you're looking for and he'll search flights and hotels.</div>
+          <div class="trv-tip-grid">
+            <div class="trv-tip"><span>💡</span> Use natural language — "next Friday" works</div>
+            <div class="trv-tip"><span>🔍</span> Search is free — compare as many options as you like</div>
+            <div class="trv-tip"><span>🔒</span> Bookings require your explicit confirmation</div>
+            <div class="trv-tip"><span>🧪</span> Test mode — results use Duffel & Amadeus sandbox data</div>
+          </div>
+        </div>
+        <div id="trv-results-panel" style="display:none"></div>
+      </div>
+
+    </div>`;
+
+    // Attach events
+    const input = container.querySelector('#trv-input');
+    const send  = container.querySelector('#trv-send');
+
+    const autoResize = () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 160) + 'px'; };
+    input.addEventListener('input', autoResize);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); TravelPage._send(); } });
+    send.addEventListener('click', () => TravelPage._send());
+    container.querySelector('#trv-clear').addEventListener('click', () => {
+      TravelPage._history = [];
+      TravelPage._flightResults = null;
+      TravelPage._hotelResults = null;
+      container.querySelector('#trv-messages').innerHTML = '';
+      document.getElementById('trv-empty').style.display = '';
+      document.getElementById('trv-results-panel').style.display = 'none';
+    });
+    container.querySelectorAll('.trv-quick').forEach(btn =>
+      btn.addEventListener('click', () => { input.value = btn.dataset.q; TravelPage._send(); })
+    );
+  },
+
+  _addMsg(role, html, raw = '') {
+    const msgs = document.getElementById('trv-messages');
+    if (!msgs) return;
+    const wrap = document.createElement('div');
+    wrap.className = `trv-msg trv-msg--${role}`;
+    if (role === 'user') {
+      wrap.innerHTML = `<div class="trv-bubble trv-bubble--user">${escHtml(raw || html)}</div>`;
+    } else {
+      wrap.innerHTML = `<div class="trv-av">✈️</div><div class="trv-bubble trv-bubble--ai">${html}</div>`;
+    }
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return wrap.querySelector('.trv-bubble--ai');
+  },
+
+  async _send() {
+    const input = document.getElementById('trv-input');
+    const text  = (input?.value || '').trim();
+    if (!text) return;
+    if (!Usage.canMessage()) { toast('Daily message limit reached. Upgrade your plan.', 'error'); return; }
+
+    input.value = '';
+    input.style.height = 'auto';
+
+    // Hide quick prompts after first use
+    document.querySelector('.trv-welcome')?.remove();
+    document.querySelector('.trv-quick-row')?.remove();
+
+    TravelPage._addMsg('user', text, text);
+    TravelPage._history.push({ role: 'user', content: text });
+    Usage.trackMessage();
+
+    // Typing indicator
+    const msgs = document.getElementById('trv-messages');
+    const typing = document.createElement('div');
+    typing.className = 'trv-msg trv-msg--ai'; typing.id = 'trv-typing';
+    typing.innerHTML = `<div class="trv-av">✈️</div><div class="trv-bubble trv-bubble--ai"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+
+    const emp = TravelPage._emp;
+    let full = '';
+    try {
+      for await (const chunk of AI.stream(TravelPage._history, emp?.system || '', { model: 'claude-sonnet-4-6', search: false, appTools: false, max_tokens: 1024 })) {
+        full += chunk;
+      }
+    } catch (e) {
+      typing.remove();
+      TravelPage._addMsg('ai', `<span style="color:var(--danger)">⚠️ ${escHtml(e.message)}</span>`);
+      return;
+    }
+
+    typing.remove();
+    TravelPage._history.push({ role: 'assistant', content: full });
+    Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
+
+    // Check for <search> tag — if present, parse and fire search; show prose if any
+    const searchMatch = full.match(/<search>([\s\S]*?)<\/search>/);
+    if (searchMatch) {
+      let params;
+      try { params = JSON.parse(searchMatch[1].trim()); } catch (_) { params = null; }
+
+      // Show any prose Marco added before the tag
+      const prose = full.replace(/<search>[\s\S]*?<\/search>/, '').trim();
+      if (prose) TravelPage._addMsg('ai', marked.parse(prose));
+
+      if (params) {
+        TravelPage._fireSearch(params);
+      } else {
+        TravelPage._addMsg('ai', '<span style="color:var(--danger)">⚠️ Couldn\'t parse search parameters. Please try rephrasing.</span>');
+      }
+    } else {
+      // Pure conversational reply
+      TravelPage._addMsg('ai', marked.parse(full));
+    }
+  },
+
+  async _fireSearch(params) {
+    const panel = document.getElementById('trv-results-panel');
+    const empty = document.getElementById('trv-empty');
+    if (!panel) return;
+
+    empty.style.display = 'none';
+    panel.style.display = '';
+    panel.innerHTML = `<div class="trv-searching"><div class="trv-search-spin"></div><div class="trv-search-txt">Marco is searching…</div></div>`;
+
+    const searchType = params.type; // 'flights' | 'hotels' | 'both'
+    const searches = [];
+    if (searchType === 'flights' || searchType === 'both') searches.push(TravelPage._searchFlights(params));
+    if (searchType === 'hotels'  || searchType === 'both') searches.push(TravelPage._searchHotels(params));
+
+    const results = await Promise.allSettled(searches);
+    TravelPage._renderResults(params, results, searchType);
+  },
+
+  async _searchFlights(params) {
+    // Step 1: create offer request
+    const r1 = await fetch(`${BACKEND_URL}/api/flights/search`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        origin: params.origin, destination: params.destination,
+        departureDate: params.departureDate, returnDate: params.returnDate || null,
+        passengers: params.passengers || 1, cabinClass: params.cabinClass || 'economy',
+      }),
+    });
+    const d1 = await r1.json();
+    if (!r1.ok || d1.error) throw new Error(d1.error || 'Flight search failed');
+
+    // Step 2: get offers
+    const r2 = await fetch(`${BACKEND_URL}/api/flights/offers?offer_request_id=${d1.offerRequestId}&sort=total_amount&limit=10`, {
+      credentials: 'include',
+    });
+    const d2 = await r2.json();
+    if (!r2.ok || d2.error) throw new Error(d2.error || 'Could not fetch offers');
+
+    TravelPage._flightResults = { offerRequestId: d1.offerRequestId, offers: d2.offers || [] };
+    return TravelPage._flightResults;
+  },
+
+  async _searchHotels(params) {
+    const r = await fetch(`${BACKEND_URL}/api/hotels/search`, {
+      method: 'POST', credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        cityCode: params.cityCode, checkIn: params.checkIn, checkOut: params.checkOut,
+        adults: params.adults || 1, rooms: params.rooms || 1,
+      }),
+    });
+    const d = await r.json();
+    if (!r.ok || d.error) throw new Error(d.error || 'Hotel search failed');
+    TravelPage._hotelResults = { hotels: d.hotels || [] };
+    return TravelPage._hotelResults;
+  },
+
+  _renderResults(params, settled, searchType) {
+    const panel = document.getElementById('trv-results-panel');
+    if (!panel) return;
+
+    const flightRes = settled.find((_, i) => (searchType === 'flights' || searchType === 'both') && i === 0);
+    const hotelRes  = settled.find((_, i) => searchType === 'both' ? i === 1 : (searchType === 'hotels' && i === 0));
+
+    let html = '<div class="trv-results-wrap">';
+
+    // ── Flights section ──────────────────────────────────────────
+    if (searchType === 'flights' || searchType === 'both') {
+      html += `<div class="trv-section-hdr"><span class="trv-section-icon">✈️</span> Flights</div>`;
+      if (flightRes?.status === 'rejected') {
+        html += `<div class="trv-error-card">⚠️ Flight search failed: ${escHtml(flightRes.reason?.message || 'Unknown error')}</div>`;
+      } else {
+        const offers = flightRes?.value?.offers || [];
+        if (!offers.length) {
+          html += `<div class="trv-no-results">No flights found for those dates. Try adjusting your search.</div>`;
+        } else {
+          html += offers.slice(0, 8).map((o, i) => TravelPage._flightCard(o, i)).join('');
+        }
+      }
+    }
+
+    // ── Hotels section ───────────────────────────────────────────
+    if (searchType === 'hotels' || searchType === 'both') {
+      html += `<div class="trv-section-hdr" style="margin-top:${searchType==='both'?'28px':'0'}"><span class="trv-section-icon">🏨</span> Hotels</div>`;
+      if (hotelRes?.status === 'rejected') {
+        html += `<div class="trv-error-card">⚠️ Hotel search failed: ${escHtml(hotelRes.reason?.message || 'Unknown error')}</div>`;
+      } else {
+        const hotels = hotelRes?.value?.hotels || [];
+        if (!hotels.length) {
+          html += `<div class="trv-no-results">No hotels found. The test sandbox has limited inventory — try a major city code like LON or NYC.</div>`;
+        } else {
+          html += hotels.slice(0, 6).map((h, i) => TravelPage._hotelCard(h, i, params)).join('');
+        }
+      }
+    }
+
+    html += '</div>';
+    panel.innerHTML = html;
+
+    // Wire "Select" buttons
+    panel.querySelectorAll('[data-book-flight]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const idx = parseInt(btn.dataset.bookFlight);
+        const offer = (TravelPage._flightResults?.offers || [])[idx];
+        if (offer) TravelPage._showBookingModal('flight', offer, params);
+      });
+    });
+    panel.querySelectorAll('[data-book-hotel]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const hIdx = parseInt(btn.dataset.bookHotel);
+        const oIdx = parseInt(btn.dataset.offerIdx || '0');
+        const hotel = (TravelPage._hotelResults?.hotels || [])[hIdx];
+        const offer = hotel?.offers?.[oIdx];
+        if (hotel && offer) TravelPage._showBookingModal('hotel', { hotel, offer }, params);
+      });
+    });
+
+    // Marco summary message
+    const flightCount = flightRes?.value?.offers?.length || 0;
+    const hotelCount  = hotelRes?.value?.hotels?.length  || 0;
+    let summary = '';
+    if (searchType === 'flights') summary = `Found ${flightCount} flight option${flightCount !== 1 ? 's' : ''}. Results sorted by price — select any to review full details before booking.`;
+    else if (searchType === 'hotels') summary = `Found ${hotelCount} hotel${hotelCount !== 1 ? 's' : ''} with availability. Select any to see full details and confirm.`;
+    else summary = `Found ${flightCount} flight${flightCount!==1?'s':''} and ${hotelCount} hotel${hotelCount!==1?'s':''}. Select options below to review — no booking happens until you confirm.`;
+    TravelPage._addMsg('ai', marked.parse(summary));
+  },
+
+  _fmt(dur) {
+    // ISO8601 duration PT2H30M → "2h 30m"
+    if (!dur) return '';
+    const h = dur.match(/(\d+)H/)?.[1] || 0;
+    const m = dur.match(/(\d+)M/)?.[1] || 0;
+    return [h && `${h}h`, m && `${m}m`].filter(Boolean).join(' ');
+  },
+
+  _fmtDateTime(dt) {
+    if (!dt) return '';
+    const d = new Date(dt);
+    return d.toLocaleString('en-GB', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
+  },
+
+  _flightCard(offer, idx) {
+    const slice = offer.slices?.[0] || {};
+    const returnSlice = offer.slices?.[1];
+    const seg0 = slice.segments?.[0] || {};
+    const isRT = !!returnSlice;
+    const stops = (slice.segments?.length || 1) - 1;
+    const stopLabel = stops === 0 ? '<span class="trv-nonstop">Non-stop</span>' : `<span class="trv-stops">${stops} stop${stops>1?'s':''}</span>`;
+    const price = `${offer.totalCurrency || 'USD'} ${Number(offer.totalAmount).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
+    const cabin = seg0.cabinClass ? seg0.cabinClass.replace('_',' ') : (offer.passengers?.[0]?.cabin_class || '');
+
+    return `<div class="trv-card trv-flight-card">
+      <div class="trv-card-main">
+        <div class="trv-flight-row">
+          <div class="trv-flight-carrier">
+            <div class="trv-carrier-av">${(seg0.carrier||'??').slice(0,2)}</div>
+            <div>
+              <div class="trv-carrier-name">${escHtml(seg0.carrier||'Unknown airline')}</div>
+              <div class="trv-flight-num">${escHtml(seg0.flightNumber||'')}</div>
+            </div>
+          </div>
+          <div class="trv-flight-route">
+            <div class="trv-flight-time">${this._fmtDateTime(seg0.departing)}</div>
+            <div class="trv-route-line"><span class="trv-iata">${escHtml(slice.origin||'')}</span><div class="trv-route-track"><div class="trv-route-dot"></div><div class="trv-route-dur">${this._fmt(slice.duration)}</div><div class="trv-route-dot"></div></div><span class="trv-iata">${escHtml(slice.destination||'')}</span></div>
+            <div class="trv-flight-time">${this._fmtDateTime(slice.segments?.at(-1)?.arriving)}</div>
+          </div>
+        </div>
+        ${isRT ? `<div class="trv-return-badge">↩ Return: ${escHtml(returnSlice.origin||'')} → ${escHtml(returnSlice.destination||'')} · ${this._fmt(returnSlice.duration)}</div>` : ''}
+        <div class="trv-card-meta">
+          ${stopLabel}
+          ${cabin ? `<span class="trv-cabin">${escHtml(cabin)}</span>` : ''}
+          ${offer.expiresAt ? `<span class="trv-expires">Offer expires ${new Date(offer.expiresAt).toLocaleTimeString('en-GB', {hour:'2-digit',minute:'2-digit'})}</span>` : ''}
+        </div>
+      </div>
+      <div class="trv-card-price">
+        <div class="trv-price">${escHtml(price)}</div>
+        <div class="trv-price-sub">total · ${offer.passengers?.length||1} pax</div>
+        <button class="trv-select-btn" data-book-flight="${idx}">Select →</button>
+      </div>
+    </div>`;
+  },
+
+  _hotelCard(hotel, hIdx, params) {
+    const bestOffer = hotel.offers?.[0];
+    if (!bestOffer) return '';
+    const nights = params.checkIn && params.checkOut
+      ? Math.round((new Date(params.checkOut) - new Date(params.checkIn)) / 86400000)
+      : 1;
+    const pricePerNight = Number(bestOffer.price) / nights;
+    const stars = hotel.rating ? '★'.repeat(Math.min(parseInt(hotel.rating)||0, 5)) : '';
+    const amenities = (hotel.amenities||[]).slice(0,4).map(a => `<span class="trv-amenity">${escHtml(a.replace(/_/g,' ').toLowerCase())}</span>`).join('');
+
+    return `<div class="trv-card trv-hotel-card">
+      <div class="trv-card-main">
+        <div class="trv-hotel-hdr">
+          <div>
+            <div class="trv-hotel-name">${escHtml(hotel.name)}</div>
+            ${stars ? `<div class="trv-hotel-stars">${stars}</div>` : ''}
+            <div class="trv-hotel-loc">📍 ${escHtml(hotel.cityCode||'')}</div>
+          </div>
+        </div>
+        <div class="trv-hotel-room">${escHtml(bestOffer.roomType||'Standard room')}${bestOffer.bedType ? ` · ${escHtml(bestOffer.bedType)}` : ''}</div>
+        <div class="trv-hotel-policy" title="${escHtml(bestOffer.cancellationPolicy||'')}">
+          ${bestOffer.cancellationPolicy?.slice(0,60)||'Check cancellation policy'}${(bestOffer.cancellationPolicy?.length||0)>60?'…':''}
+        </div>
+        ${amenities ? `<div class="trv-amenities">${amenities}</div>` : ''}
+      </div>
+      <div class="trv-card-price">
+        <div class="trv-price">${bestOffer.currency||'USD'} ${Number(bestOffer.price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</div>
+        <div class="trv-price-sub">total · ${nights} night${nights!==1?'s':''}</div>
+        <div class="trv-price-pn">${bestOffer.currency||'USD'} ${pricePerNight.toFixed(2)}/night</div>
+        <button class="trv-select-btn" data-book-hotel="${hIdx}" data-offer-idx="0">Select →</button>
+      </div>
+    </div>`;
+  },
+
+  _showBookingModal(type, data, params) {
+    TravelPage._pendingBooking = { type, data, params };
+
+    let detailHtml = '';
+    if (type === 'flight') {
+      const o = data;
+      const slice0 = o.slices?.[0] || {};
+      const seg0   = slice0.segments?.[0] || {};
+      const isRT   = o.slices?.length > 1;
+      detailHtml = `
+        <div class="trv-confirm-detail">
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Airline</span><span>${escHtml(seg0.carrier||'Unknown')}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Route</span><span>${escHtml(slice0.origin||'')} → ${escHtml(slice0.destination||'')}${isRT ? ' (return)' : ''}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Departs</span><span>${TravelPage._fmtDateTime(seg0.departing)}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Arrives</span><span>${TravelPage._fmtDateTime(slice0.segments?.at(-1)?.arriving)}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Duration</span><span>${TravelPage._fmt(slice0.duration)}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Passengers</span><span>${o.passengers?.length||1}</span></div>
+          <div class="trv-confirm-row trv-confirm-total"><span class="trv-confirm-lbl">Total price</span><span class="trv-confirm-price">${o.totalCurrency||'USD'} ${Number(o.totalAmount).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
+        </div>`;
+    } else {
+      const { hotel, offer } = data;
+      const nights = params.checkIn && params.checkOut
+        ? Math.round((new Date(params.checkOut) - new Date(params.checkIn)) / 86400000) : 1;
+      detailHtml = `
+        <div class="trv-confirm-detail">
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Hotel</span><span>${escHtml(hotel.name)}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Room</span><span>${escHtml(offer.roomType||'Standard')}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Check-in</span><span>${escHtml(params.checkIn||'')}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Check-out</span><span>${escHtml(params.checkOut||'')}</span></div>
+          <div class="trv-confirm-row"><span class="trv-confirm-lbl">Nights</span><span>${nights}</span></div>
+          <div class="trv-confirm-row trv-confirm-total"><span class="trv-confirm-lbl">Total price</span><span class="trv-confirm-price">${offer.currency||'USD'} ${Number(offer.price).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</span></div>
+        </div>`;
+    }
+
+    Modal.open(`Confirm ${type === 'flight' ? 'Flight' : 'Hotel'} Booking`, `
+      <div class="trv-modal-wrap">
+        <div class="trv-modal-warning">
+          ⚠️ <strong>Real booking — charges real money.</strong> Review every detail before confirming.
+          Cancellations may be non-refundable.
+        </div>
+
+        ${detailHtml}
+
+        <div class="trv-modal-section">Passenger / Guest Details</div>
+        <div class="trv-modal-fields">
+          <div class="trv-field-row">
+            <div class="trv-field"><label class="trv-lbl">First name *</label><input class="trv-inp" id="bk-first" placeholder="As on passport"></div>
+            <div class="trv-field"><label class="trv-lbl">Last name *</label><input class="trv-inp" id="bk-last" placeholder="As on passport"></div>
+          </div>
+          <div class="trv-field-row">
+            <div class="trv-field"><label class="trv-lbl">Email *</label><input class="trv-inp" id="bk-email" type="email" placeholder="For confirmation"></div>
+            <div class="trv-field"><label class="trv-lbl">Phone</label><input class="trv-inp" id="bk-phone" placeholder="+1 555 000 0000"></div>
+          </div>
+          ${type === 'flight' ? `
+          <div class="trv-field-row">
+            <div class="trv-field"><label class="trv-lbl">Date of birth *</label><input class="trv-inp" id="bk-dob" type="date"></div>
+            <div class="trv-field"><label class="trv-lbl">Gender *</label><select class="trv-inp" id="bk-gender"><option value="">Select…</option><option value="m">Male</option><option value="f">Female</option></select></div>
+          </div>` : ''}
+        </div>
+
+        <div class="trv-modal-disabled-note">
+          🚧 <strong>Booking is currently in review mode.</strong> You can fill in passenger details and review pricing, but the final booking step is disabled until live API credentials are confirmed. No charges will be made.
+        </div>
+
+        <div class="trv-modal-actions">
+          <button class="trv-cancel-btn" onclick="Modal.close()">Cancel</button>
+          <button class="trv-confirm-btn" id="bk-confirm-btn" disabled title="Booking disabled — awaiting credential confirmation">
+            Confirm &amp; Book → (Disabled)
+          </button>
+        </div>
+      </div>
+    `);
+
+    // Validate fields — enable confirm button only when required fields are complete
+    // BOOKING DISABLED — AWAITING APPROVAL. The button stays disabled.
+    // When live booking is enabled, remove the `disabled` attribute here and wire the
+    // click handler to TravelPage._executeBooking(). The modal fields and flow are ready.
+    const fields = ['bk-first','bk-last','bk-email'].concat(type === 'flight' ? ['bk-dob','bk-gender'] : []);
+    const checkReady = () => {
+      const allFilled = fields.every(id => (document.getElementById(id)?.value||'').trim().length > 0);
+      // Button stays disabled regardless — remove the next line when booking goes live
+      // document.getElementById('bk-confirm-btn').disabled = !allFilled;
+    };
+    fields.forEach(id => document.getElementById(id)?.addEventListener('input', checkReady));
+  },
+
+  // BOOKING DISABLED — AWAITING APPROVAL
+  // When live booking is enabled:
+  // 1. Confirm DUFFEL_TOKEN is duffel_live_* (not test)
+  // 2. For hotels: replace hardcoded card in handleHotelBook with real Stripe payment method collection
+  //    - Add a payment method selector in the modal (list saved cards via GET /api/payments/methods)
+  //    - Pass stripePaymentMethodId + stripeCustomerId in the booking POST body
+  // 3. Remove `disabled` from trv-confirm-btn above and wire this function to its click handler
+  async _executeBooking() {
+    // NOT WIRED — intentionally unreachable. See comment above.
+    console.warn('TravelPage._executeBooking: booking is disabled. Enable after credential confirmation.');
+  },
+
+  destroy() {
+    TravelPage._history = [];
+    TravelPage._flightResults = null;
+    TravelPage._hotelResults = null;
+    TravelPage._pendingBooking = null;
+  },
 };
 
 // ══════════════════════════════════════════════════════════════

@@ -2501,6 +2501,124 @@ input,textarea,select,button{font-family:var(--font)}
 .cp-save-hint{font-size:12px;color:var(--text3)}
 @media(max-width:640px){.cp-root{padding:16px}.cp-row2{grid-template-columns:1fr}.cp-header{flex-direction:column}.cp-tenant-badge{display:none}}
 
+/* ── TRAVEL CONCIERGE ────────────────────────────────────────── */
+.trv-root{display:grid;grid-template-columns:380px 1fr;height:calc(100vh - 56px);overflow:hidden}
+@media(max-width:900px){.trv-root{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+
+/* Left panel — Marco chat */
+.trv-left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);height:100%}
+.trv-agent-hdr{display:flex;align-items:center;gap:12px;padding:18px 20px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
+.trv-agent-av{width:40px;height:40px;border-radius:12px;background:rgba(14,165,233,.15);color:#0ea5e9;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.trv-agent-name{font-size:15px;font-weight:700;color:var(--text)}
+.trv-agent-role{font-size:11px;color:var(--text3);margin-top:1px}
+.trv-clear-btn{margin-left:auto;padding:5px 12px;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text3);font-size:12px;cursor:pointer;transition:all .15s}
+.trv-clear-btn:hover{background:var(--surface2);color:var(--text)}
+.trv-messages{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:10px}
+.trv-welcome{text-align:center;padding:24px 12px 8px;color:var(--text2)}
+.trv-welcome-icon{font-size:36px;margin-bottom:12px}
+.trv-welcome-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px}
+.trv-welcome-sub{font-size:13px;line-height:1.6;color:var(--text2)}
+.trv-quick-row{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.trv-quick{padding:9px 14px;border-radius:9px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12.5px;text-align:left;cursor:pointer;transition:all .15s;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.trv-quick:hover{background:rgba(14,165,233,.08);border-color:rgba(14,165,233,.3);color:var(--text)}
+.trv-msg{display:flex;gap:8px;align-items:flex-start}
+.trv-msg--user{justify-content:flex-end}
+.trv-av{width:28px;height:28px;border-radius:8px;background:rgba(14,165,233,.15);color:#0ea5e9;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;margin-top:2px}
+.trv-bubble{padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.6;max-width:100%;word-break:break-word}
+.trv-bubble--user{background:#0ea5e9;color:#fff;border-radius:12px 12px 4px 12px}
+.trv-bubble--ai{background:var(--surface2);color:var(--text);border-radius:4px 12px 12px 12px;flex:1}
+.trv-bubble--ai p{margin:0 0 6px}.trv-bubble--ai p:last-child{margin:0}
+.trv-bubble--ai ul{padding-left:18px;margin:4px 0}
+.trv-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;background:var(--surface)}
+.trv-input{flex:1;resize:none;border:1.5px solid var(--border);border-radius:10px;padding:10px 13px;font-size:13.5px;color:var(--text);background:var(--bg);font-family:var(--font);outline:none;transition:border-color .15s;max-height:160px}
+.trv-input:focus{border-color:#0ea5e9}
+.trv-send{width:38px;height:38px;border-radius:10px;border:none;background:#0ea5e9;color:#fff;font-size:17px;cursor:pointer;flex-shrink:0;transition:background .15s;align-self:flex-end}
+.trv-send:hover{background:#0284c7}
+
+/* Right panel — results */
+.trv-right{flex:1;overflow-y:auto;background:var(--bg);padding:24px}
+.trv-results-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px}
+.trv-results-icon{font-size:48px;margin-bottom:16px;opacity:.5}
+.trv-results-title{font-size:18px;font-weight:700;color:var(--text);margin-bottom:8px}
+.trv-results-sub{font-size:13.5px;color:var(--text2);margin-bottom:28px;max-width:360px}
+.trv-tip-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:480px;width:100%}
+.trv-tip{display:flex;align-items:flex-start;gap:8px;padding:11px 14px;border-radius:10px;border:1px solid var(--border);background:var(--surface);font-size:12px;color:var(--text2);text-align:left}
+.trv-searching{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:80px 20px;gap:16px}
+.trv-search-spin{width:40px;height:40px;border-radius:50%;border:3px solid rgba(14,165,233,.2);border-top-color:#0ea5e9;animation:spinLive .8s linear infinite}
+.trv-search-txt{font-size:14px;color:var(--text2)}
+.trv-results-wrap{display:flex;flex-direction:column;gap:12px}
+.trv-section-hdr{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.trv-section-icon{font-size:16px}
+.trv-no-results{padding:20px;border-radius:12px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:13.5px;text-align:center}
+.trv-error-card{padding:14px 16px;border-radius:10px;border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.06);color:var(--danger);font-size:13px}
+
+/* Result cards */
+.trv-card{display:flex;gap:0;border-radius:14px;border:1px solid var(--border);background:var(--surface);overflow:hidden;transition:box-shadow .15s}
+.trv-card:hover{box-shadow:0 4px 20px rgba(0,0,0,.08)}
+.trv-card-main{flex:1;padding:16px 18px}
+.trv-card-price{min-width:140px;padding:16px;border-left:1px solid var(--border);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;background:var(--surface2)}
+.trv-price{font-size:18px;font-weight:800;color:var(--text)}
+.trv-price-sub{font-size:11px;color:var(--text3)}
+.trv-price-pn{font-size:11.5px;color:var(--text2);margin-top:2px}
+.trv-select-btn{margin-top:10px;padding:8px 16px;border-radius:8px;border:none;background:#0ea5e9;color:#fff;font-size:13px;font-weight:600;cursor:pointer;width:100%;transition:background .15s}
+.trv-select-btn:hover{background:#0284c7}
+
+/* Flight card specifics */
+.trv-flight-row{display:flex;align-items:center;gap:16px}
+.trv-flight-carrier{display:flex;align-items:center;gap:10px;min-width:120px}
+.trv-carrier-av{width:36px;height:36px;border-radius:9px;background:rgba(14,165,233,.12);color:#0ea5e9;font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;text-transform:uppercase}
+.trv-carrier-name{font-size:13px;font-weight:600;color:var(--text)}
+.trv-flight-num{font-size:11px;color:var(--text3);font-family:var(--mono)}
+.trv-flight-route{flex:1;display:flex;align-items:center;gap:10px}
+.trv-flight-time{font-size:12px;color:var(--text2);white-space:nowrap}
+.trv-route-line{display:flex;align-items:center;gap:6px;flex:1}
+.trv-iata{font-size:13px;font-weight:700;color:var(--text)}
+.trv-route-track{flex:1;display:flex;align-items:center;gap:4px;position:relative}
+.trv-route-dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex-shrink:0}
+.trv-route-dur{flex:1;height:1px;background:var(--border);position:relative;text-align:center}
+.trv-route-dur::after{content:attr(data-dur);position:absolute;top:-9px;left:50%;transform:translateX(-50%);font-size:10px;color:var(--text3);white-space:nowrap;background:var(--surface);padding:0 4px}
+.trv-card-meta{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.trv-nonstop{padding:3px 9px;border-radius:980px;background:rgba(34,197,94,.1);color:#16a34a;font-size:11px;font-weight:600}
+.trv-stops{padding:3px 9px;border-radius:980px;background:rgba(245,158,11,.1);color:#d97706;font-size:11px;font-weight:600}
+.trv-cabin{padding:3px 9px;border-radius:980px;border:1px solid var(--border);color:var(--text3);font-size:11px;text-transform:capitalize}
+.trv-expires{font-size:11px;color:var(--text3)}
+.trv-return-badge{margin-top:8px;padding:5px 10px;border-radius:7px;background:rgba(14,165,233,.07);border:1px solid rgba(14,165,233,.15);color:#0ea5e9;font-size:11.5px}
+
+/* Hotel card specifics */
+.trv-hotel-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.trv-hotel-name{font-size:15px;font-weight:700;color:var(--text)}
+.trv-hotel-stars{font-size:12px;color:#f59e0b;letter-spacing:1px;margin-top:2px}
+.trv-hotel-loc{font-size:12px;color:var(--text3);margin-top:3px}
+.trv-hotel-room{font-size:12.5px;color:var(--text2);margin-bottom:5px}
+.trv-hotel-policy{font-size:11.5px;color:var(--text3);margin-bottom:8px;cursor:help}
+.trv-amenities{display:flex;flex-wrap:wrap;gap:5px}
+.trv-amenity{padding:2px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);font-size:10.5px;color:var(--text3);text-transform:capitalize}
+
+/* Booking confirmation modal */
+.trv-modal-wrap{padding:4px 0 8px}
+.trv-modal-warning{padding:12px 14px;border-radius:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#92400e;font-size:13px;margin-bottom:18px;line-height:1.5}
+.trv-confirm-detail{border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:20px}
+.trv-confirm-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;font-size:13.5px;border-bottom:1px solid var(--border)}
+.trv-confirm-row:last-child{border-bottom:none}
+.trv-confirm-lbl{color:var(--text2);font-weight:500}
+.trv-confirm-total{background:var(--surface2)}
+.trv-confirm-price{font-size:16px;font-weight:800;color:var(--text)}
+.trv-modal-section{font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin:0 0 12px}
+.trv-modal-fields{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
+.trv-field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.trv-field{display:flex;flex-direction:column;gap:4px}
+.trv-lbl{font-size:11.5px;font-weight:600;color:var(--text3)}
+.trv-inp{padding:9px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:13.5px;font-family:var(--font);outline:none;transition:border-color .15s}
+.trv-inp:focus{border-color:#0ea5e9}
+.trv-modal-disabled-note{padding:12px 14px;border-radius:10px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);color:var(--text2);font-size:12.5px;margin-bottom:20px;line-height:1.5}
+.trv-modal-actions{display:flex;justify-content:flex-end;gap:10px}
+.trv-cancel-btn{padding:10px 20px;border-radius:9px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13.5px;font-weight:600;cursor:pointer;transition:all .15s}
+.trv-cancel-btn:hover{background:var(--surface2);color:var(--text)}
+.trv-confirm-btn{padding:10px 22px;border-radius:9px;border:none;background:#0ea5e9;color:#fff;font-size:13.5px;font-weight:700;cursor:pointer;transition:background .15s}
+.trv-confirm-btn:disabled{background:var(--surface2);color:var(--text3);cursor:not-allowed}
+.trv-confirm-btn:not(:disabled):hover{background:#0284c7}
+@media(max-width:640px){.trv-field-row{grid-template-columns:1fr}.trv-tip-grid{grid-template-columns:1fr}}
+
 /* ── ONBOARDING — Brand & Voice step extras ──────────────────── */
 .ob-voice-grid{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
 .ob-voice-chip{padding:8px 16px;border-radius:980px;border:1.5px solid var(--border);font-size:12.5px;font-weight:600;color:var(--text3);cursor:pointer;transition:all .15s;user-select:none}
