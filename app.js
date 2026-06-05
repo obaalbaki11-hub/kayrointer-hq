@@ -9870,80 +9870,132 @@ const AdStudio = {
       <div id="html-ad-modal-body" style="display:flex;flex-direction:column;height:72vh;min-height:500px">
         <div id="html-ad-loading" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px">
           <div style="width:48px;height:48px;border:3px solid ${color}30;border-top-color:${color};border-radius:50%;animation:spinLive 0.8s linear infinite"></div>
-          <div style="font-size:14px;color:var(--text2)">Claude Opus 4.7 is composing your HTML ad…</div>
+          <div style="font-size:14px;color:var(--text2)">Claude Sonnet 4.6 is composing your HTML ad…</div>
           <div style="font-size:12px;color:var(--text3)">This takes about 20–30 seconds</div>
         </div>
       </div>
     `);
 
-    const sys = `You are the world's best HTML motion designer and creative director, specializing in Apple-quality animated presentations and video ads.
+    const sys = `You are the world's best HTML motion designer. Complete the provided HTML skeleton to create a polished, scene-based animated reel ad (390×844px portrait) based on the VIDEO PRODUCTION SCRIPT.
 
-Your job: transform a video production script into a stunning, scene-based animated HTML presentation that plays exactly like a polished video ad.
+THE SKELETON STRUCTURE: The document has four fill-in zones — marked with ALL-CAPS comments. Everything else is pre-built and must not be changed.
 
-TECHNICAL ARCHITECTURE — follow this exact pattern:
+FILL IN 1 — @import and :root tokens (inside <style>):
+• Pick ONE Google Font that suits the brand/mood and add @import at the very top of <style>
+• Override the :root CSS variables to match brand colors extracted from the script
+• Dark backgrounds (#050508 to #0f0f14) with vivid accents produce the most striking output
+• Keep --font referencing the imported font family
 
-1. STRUCTURE: Multiple <div class="scene" id="s0"> … </div> divs inside a <div class="stage">. Each scene is position:absolute;inset:0 and hidden (opacity:0). The active scene fades in.
+FILL IN 2 — Scene-specific CSS (inside <style>, after "YOUR SCENE STYLES"):
+• Write layout, typography, and visual rules for each scene
+• Font sizes: clamp(min, preferred, max) — headline max 52px, subhead max 28px, body max 16px
+• Every scene should have one visually distinctive anchor element (gradient orb, animated border, stat card, badge, glass card, etc.)
+• CTA scene: .cta-btn must have a looping pulsing box-shadow @keyframes animation
 
-2. TIMING: Use a requestAnimationFrame loop. Define a W array:
-   const W = [
-     { el:'s0', start:0,    end:4000  },
-     { el:'s1', start:4000, end:10000 },
-     // etc.
-   ];
-   Total duration 30,000–40,000ms depending on scene count. Each scene gets 4–7 seconds.
+FILL IN 3 — Scene HTML (inside <div id="stage">, replacing the placeholder comment):
+• Write 5–6 <div class="scene" id="sN"> elements derived from the script
+• Required scene arc (adapt copy from the script — do not invent unrelated content):
+  S0: Brand intro — company/product name large, tagline underneath
+  S1: Hook — one punchy problem or desire statement, dominant type, sparse
+  S2: Solution showcase — headline + 2–3 tight benefit lines or a visual card
+  S3: Social proof / stats — one huge number (clamp(56px,15vw,88px)) + label, or 2 short testimonial snippets
+  S4: Features — 3 items with a small inline icon prefix (✦ or ▸), left-aligned
+  S5: CTA — brand, closing headline, pill <button class="cta-btn"> with the CTA text from the script
+• Animation rules: every visible element gets class="rv" (rises + deblurs) or class="fd" (fades)
+• Stagger with data-d: first element data-d="0", then 200, 400, 700, 1000 — no element above data-d="1200"
+• Center content horizontally (text-align:center or margin:auto); pad-top 60–80px per scene; max-width:340px auto
 
-3. ANIMATION HELPERS:
-   .rv { opacity:0; transform:translateY(16px); filter:blur(6px); }
-   .rv.show { animation:rv 1.3s cubic-bezier(0.22,1,0.36,1) forwards; }
-   @keyframes rv { to { opacity:1; transform:translateY(0); filter:blur(0); } }
-   .fd { opacity:0; }
-   .fd.show { animation:fd 1.5s ease forwards; }
-   @keyframes fd { to { opacity:1; } }
-   Elements with data-d="700" get a setTimeout delay before adding .show class.
+FILL IN 4 — Timing array W (in the <script>, replacing placeholder):
+• One entry per scene: {id:'s0', start:0, end:6000}
+• 6–8 seconds per scene, seamless loop
+• Example for 5 scenes: 0–6000, 6000–12000, 12000–18000, 18000–24000, 24000–31000
 
-4. SCENE ENTRY: When a scene becomes active, call revealIn(sceneEl) which adds .show to all .rv and .fd children with their data-d delays.
+OUTPUT RULES:
+• Return the complete HTML document — the skeleton below, fully filled in
+• First character must be <!DOCTYPE html> — no markdown, no fences, no preamble
+• The animation engine (revealIn, rAF loop, overlay, progress bar) is pre-built — do not rewrite it`;
 
-5. STARTER OVERLAY: A full-screen overlay with a play button. On click: remove overlay, start rAF loop.
+    // Pre-built animation skeleton embedded in the user message — the model fills in CSS + scene HTML + timing only
+    const skeleton = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<style>
+/* FILL IN 1: @import font + :root token overrides */
+:root {
+  --accent: #5b2eff;
+  --accent2: #a855f7;
+  --bg: #06060c;
+  --text: #ffffff;
+  --text2: #9090a8;
+  --font: system-ui, sans-serif;
+}
 
-6. PROGRESS BAR: <div class="progress"> at bottom, width updated each frame.
+/* === DO NOT CHANGE: core layout & animation engine === */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{width:390px;height:844px;overflow:hidden;background:var(--bg);font-family:var(--font);-webkit-font-smoothing:antialiased}
+.stage{position:relative;width:390px;height:844px;overflow:hidden}
+.scene{position:absolute;inset:0;opacity:0;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+.scene.active{opacity:1;pointer-events:auto}
+.rv{opacity:0;transform:translateY(22px);filter:blur(8px)}
+.rv.show{animation:rv 1.25s cubic-bezier(0.22,1,0.36,1) forwards}
+.fd{opacity:0}
+.fd.show{animation:fd 1.4s ease forwards}
+@keyframes rv{to{opacity:1;transform:none;filter:none}}
+@keyframes fd{to{opacity:1}}
+.prog{position:fixed;bottom:0;left:0;height:3px;background:var(--accent);z-index:100}
+/* === END ENGINE CSS === */
 
-7. REPLAY BUTTON: Fixed bottom button that appears when animation ends, resets and restarts.
+/* FILL IN 2: your scene-specific styles */
 
-DESIGN SYSTEM — Apple-style light:
-- Background: #f5f5f7 (body), #ffffff (cards/scenes)
-- Primary text: #1d1d1f
-- Secondary text: #6e6e73
-- Accent: #0071e3
-- Font: Import DM Sans (weights 300 400 500 600 700 800) + JetBrains Mono from Google Fonts
-- Radius: 18–26px on cards, 980px on pills
-- Shadows: 0 8px 24px rgba(0,0,0,0.06) for cards, 0 40px 90px rgba(0,0,0,0.12) for hero
-- .rv/.fd delays stagger 200ms–800ms apart per element on a scene
+</style>
+</head>
+<body>
+<div class="stage" id="stage">
+<!-- FILL IN 3: scene divs — <div class="scene" id="s0">...</div> etc. -->
+</div>
 
-SCENE IDEAS (adapt to the script — don't copy literally, derive from context):
-- S0: Intro — logo/brand mark animation, big title, tagline fade
-- S1: Hero — product mockup or grid showcasing the main offer
-- S2: Stats — one massive number at a time (spec slam) — 3 quick numbers rotating
-- S3: Feature tiles — 2×2 grid of feature cards with icons
-- S4: Statement — single bold emotional line, no clutter
-- S5: Pricing — plan cards side by side
-- S6: CTA — brand, headline, CTA pill button, URL
+<div class="prog" id="prog" style="width:0%"></div>
 
-ABSOLUTE RULES:
-- Output RAW HTML ONLY — first character must be <!DOCTYPE html>
-- No markdown fences, no preamble, no explanation after the HTML
-- Fully self-contained EXCEPT for Google Fonts import (allowed)
-- html,body { width:390px; height:844px; overflow:hidden; margin:0; padding:0; } — EXACT phone dimensions, 9:16 portrait reel format
-- ALL font sizes must fit within 390px width — use clamp() with a max around 48px for headlines, 32px for subheads, 16px for body. Nothing should overflow horizontally.
-- Every element on every scene must have an animation (rv, fd, or custom)
-- The spec slam (S2-style) must use JS to cycle through stats with .show/.out transitions
-- CTA button must have a pulsing box-shadow animation (looping)
+<div id="ov" style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:200;cursor:pointer;background:rgba(0,0,0,0.88)">
+  <div style="width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,0.1);backdrop-filter:blur(16px);border:2px solid rgba(255,255,255,0.22);display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(91,46,255,0.4)">
+    <div style="width:0;height:0;border-left:30px solid white;border-top:18px solid transparent;border-bottom:18px solid transparent;margin-left:8px"></div>
+  </div>
+</div>
 
-CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script below. Extract the hook, key benefits, any numbers mentioned, and the CTA.`;
+<script>
+/* FILL IN 4: replace W with your scene timing */
+const W=[
+  {id:'s0',start:0,end:6000},
+  {id:'s1',start:6000,end:12000}
+];
+const DUR=W[W.length-1].end;
+
+/* === DO NOT CHANGE: animation engine === */
+function revealIn(sc){sc.querySelectorAll('.rv,.fd').forEach(el=>{const d=parseInt(el.dataset.d||'0');setTimeout(()=>el.classList.add('show'),d);});}
+let t0=null;
+function tick(ts){
+  if(t0===null)t0=ts;
+  const e=(ts-t0)%DUR;
+  document.getElementById('prog').style.width=(e/DUR*100)+'%';
+  W.forEach(c=>{
+    const sc=document.getElementById(c.id);if(!sc)return;
+    const on=e>=c.start&&e<c.end;
+    if(on&&!sc.classList.contains('active')){sc.classList.add('active');revealIn(sc);}
+    if(!on&&sc.classList.contains('active')){sc.classList.remove('active');sc.querySelectorAll('.rv,.fd').forEach(x=>x.classList.remove('show'));}
+  });
+  requestAnimationFrame(tick);
+}
+document.getElementById('ov').addEventListener('click',()=>{document.getElementById('ov').remove();t0=null;requestAnimationFrame(tick);});
+/* === END ENGINE === */
+</script>
+</body>
+</html>`;
 
     let html = '';
     try {
       for await (const chunk of AI.stream(
-        [{ role:'user', content:`VIDEO PRODUCTION SCRIPT:\n\n${cleoScript}\n\nNow generate the complete animated HTML ad. Start immediately with <!DOCTYPE html>.` }],
+        [{ role:'user', content:`VIDEO PRODUCTION SCRIPT:\n\n${cleoScript}\n\n---\n\nComplete this HTML skeleton. Fill in the four marked zones. Return the entire document starting with <!DOCTYPE html>.\n\nSKELETON:\n${skeleton}` }],
         sys,
         { search:false, appTools:false, max_tokens:16000, model:'claude-sonnet-4-6' }
       )) {
@@ -10040,7 +10092,7 @@ CONTENT SOURCE: Base all copy, numbers, features, and CTA on the video script be
           <button id="html-ad-replay" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">↺ Replay</button>
           <button id="html-ad-copy" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">⎘ Copy</button>
           <button id="html-ad-download" style="padding:6px 14px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:12px;cursor:pointer">⬇ Download</button>
-          <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">${Math.round(html.length/1024)}KB · Opus 4.7</span>
+          <span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:var(--mono)">${Math.round(html.length/1024)}KB · Sonnet 4.6</span>
         </div>
         <div id="had-stage" style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#1a1a2e 0%,#0d0d14 100%);border-radius:14px;padding:20px">
           <div id="had-wrap" style="display:flex;align-items:center;justify-content:center"></div>
