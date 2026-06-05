@@ -9425,12 +9425,12 @@ const DesignStudio = {
           <div class="ds-section-label">QUICK START</div>
           <div class="ds-quick-grid">
             ${[
-              ['Landing Page',   'A stunning SaaS landing page hero section with headline, subtext, and CTA button'],
-              ['Pricing Cards',  'Three pricing tier cards: Free, Pro, and Enterprise. Dark theme, modern design'],
-              ['Login Form',     'A sleek sign-in form with email/password fields, Google button, and branding'],
-              ['Dashboard',      'Analytics dashboard with metric cards, a chart placeholder, and data table'],
-              ['Profile Card',   'User profile card with avatar, bio, stats, and follow/message buttons'],
-              ['Email Template', 'Professional HTML email newsletter with header, body, and CTA section'],
+              ['Landing Page',   `Full SaaS marketing page. Dark bg (#0a0f1e). Hero: bold display headline "Build. Ship. Scale." + 2-line subheadline about AI-powered workflow automation + "Start free →" (solid blue pill) + "See how it works" (ghost). Social proof row: 5 company wordmarks (Stripe · Notion · Linear · Vercel · Figma) in muted text below hero. Features: 3-col grid with icon circle + bold title + 2-line description. Pricing strip: 3 tiers (Free/Pro $29/Scale $99). Footer with 4 link columns + copyright.`],
+              ['Pricing Cards',  `3 pricing cards in a horizontal row, very dark bg (#0d0d14). Free: $0/mo, 5 features, ghost outline CTA "Get started". Pro: $29/mo, "Most Popular" badge top-right in blue, 8 features including all Free features, solid blue CTA "Start free trial", subtle blue glow on card border, visually elevated. Enterprise: $99/mo, 5 premium features, purple CTA "Contact sales". Each card: feature rows with ✓ checkmark + text, 48px bold price, per-month label in muted text beneath, cards gently lift and brighten on hover.`],
+              ['Login Form',     `Centered auth card (420px wide) floating on a very dark bg (#050a14) with a subtle radial gradient. Top: wordmark (bold "K" lettermark + "Kayro" text). Heading "Welcome back" 28px + "Sign in to your account" muted subtext. Google OAuth button: white bg, Google G SVG, "Continue with Google", full-width, solid border. Divider with "or" text. Email input with label. Password input with show/hide toggle icon. Row: "Remember me" checkbox + "Forgot password?" right-aligned link. "Sign in →" full-width solid blue button. Footer: "No account? Sign up free" centered link.`],
+              ['Dashboard',      `Full dashboard layout. Left sidebar 220px dark (#0d1117): logo top, 6 nav items (Dashboard highlighted, Analytics, Users, Revenue, Reports, Settings) each with a small icon + label, active item has blue left border + blue text. Main content: topbar with "Dashboard" page title + search bar + notification bell + user avatar. Below: 4 KPI cards in a row — Revenue $84,291 (+12.3% green) · Active Users 12,847 (+8.1%) · Conversion 3.24% (-0.4% red) · ARR $1.01M (+22%). Chart section: title "Revenue Overview" + 6-bar chart using CSS/SVG bars for Jan–Jun with gridlines. Below: "Recent Transactions" table 5 rows with name, amount, status badge (Paid=green, Pending=amber, Failed=red), date.`],
+              ['Profile Card',   `Profile card 340px, dark bg (#111827), border-radius 20px, subtle border. Top: 80px gradient header band (blue #3b82f6 to purple #8b5cf6). Avatar: 72px circle centered, 3px white border, initials "SC" on blue. Name "Sarah Chen" 18px 700 weight. Title "Senior Product Designer · Remote" 13px muted. Bio: 2 lines 13px — "Crafting digital experiences at the intersection of design and engineering. Open to freelance." Stats row with vertical dividers: 847 Posts · 23.4K Followers · 891 Following (bold number + muted label). Two buttons full-width with gap: "Follow" solid blue + "Message" ghost outline. Skills chips row: Figma · Design Systems · CSS · Motion.`],
+              ['Email Template', `HTML email, table-based layout, 600px max-width, all CSS inline. Hidden preheader div. Header: dark #1a1a2e 70px band, white wordmark "Kayro" left-aligned. Hero section: white bg, 42px bold headline "Your free trial ends in 3 days", 16px body text 2 lines about upgrading to keep features, centered blue CTA button "Upgrade now →" with 6px radius, padding 14px 32px. 3-col feature section with thin top border: each col has emoji icon + bold 14px title + 12px muted description (2 lines). Divider line. Light gray (#f9fafb) footer: social icon row (Twitter · LinkedIn · GitHub as text links) + "Unsubscribe · Privacy Policy" centered 11px + company address 10px muted.`],
             ].map(([label, prompt]) => `<button class="ds-quick-btn" data-prompt="${escHtml(prompt)}">${label}</button>`).join('')}
           </div>
 
@@ -9548,26 +9548,45 @@ const DesignStudio = {
     const preview = document.getElementById('ds-preview-area');
     preview.innerHTML = `<div class="ds-generating"><div class="ds-gen-ring" style="border-top-color:${emp.color}"></div><div class="ds-gen-txt" style="color:${emp.color}">${emp.name} is designing…</div></div>`;
 
-    const STYLE_HINTS = {
-      dark:    'Dark background (#0a0a0f), subtle glows, high contrast white text, accent color highlights.',
-      glass:   'Glassmorphism: frosted glass panels (backdrop-filter blur), translucent backgrounds, soft borders, depth layering.',
-      minimal: 'Minimal and clean: lots of white space, subtle grays, no decorative elements, typography-focused.',
-      bold:    'Bold and vibrant: strong colors, thick typography, high energy, large elements, punchy visual hierarchy.',
-      neo:     'Neumorphism: soft shadows, same-color backgrounds, extruded 3D feel, muted palette.',
+    const STYLE_OVERRIDES = {
+      dark:    '--bg:#050508;--surface:#0f0f18;--surface2:#161624;--border:rgba(255,255,255,.07);--text:#e2e8f0;--text2:#94a3b8;--text3:#475569;--accent:#3b82f6. Electric accent glows: box-shadow:0 0 20px var(--accent),0 0 60px rgba(59,130,246,.3). Deep space / premium dark aesthetic.',
+      glass:   'Frosted glass panels throughout: background:rgba(255,255,255,.06);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,.12). Use a vivid gradient or blurred color blobs as the background layer. Layered depth — foreground elements clearly float above background.',
+      minimal: '--bg:#ffffff;--surface:#f9fafb;--surface2:#f3f4f6;--border:#e5e7eb;--text:#111827;--text2:#6b7280;--text3:#9ca3af;--accent:#111827. Swiss design precision: maximum whitespace, zero decoration, typography as the hero, mono or near-mono accent. Every element earns its space.',
+      bold:    'Saturated, high-energy palette. font-weight:800 on all headings. Large elements, strong contrast. Vivid accent (#f59e0b or #ef4444 or #8b5cf6 — pick the strongest). No pastels. Elements are big, confident, unapologetic.',
+      neo:     '--bg:#e0e5ec;--surface:#e0e5ec;--text:#31344b;--accent:#5764ff. All panels: border-radius:16px;box-shadow:6px 6px 12px #b8bec7,-6px -6px 12px #ffffff. Inset elements: box-shadow:inset 4px 4px 8px #b8bec7,inset -4px -4px 8px #ffffff. Soft, extruded, tactile.',
       '':      '',
     };
-    const styleHint = STYLE_HINTS[DesignStudio._style] || '';
-    const typeInstr = {
-      component: 'Generate a self-contained HTML+CSS UI component. Wrap everything in a centered <div>. Include <style> tag.',
-      page:      'Generate a complete single-page HTML document with full layout — nav, hero, sections, footer.',
-      email:     'Generate a pixel-perfect HTML email (table layout, inline CSS, 600px max-width, email-client safe).',
-      card:      'Generate a single beautiful card or widget. Compact, polished, self-contained.',
+    const styleOverride = STYLE_OVERRIDES[DesignStudio._style] || '';
+
+    const TYPE_RULES = {
+      component: `OUTPUT: Self-contained component only — one <style> block + one root <div class="ds-component">. No <html>, no <body>, no <!DOCTYPE>. Center the component in its space. Define all design tokens in :root. Every interactive element needs hover + focus states. Min width 320px, max width fits content naturally.`,
+      page:      `OUTPUT: Complete <!DOCTYPE html> document. Import Inter in <head>. Full-page layout: sticky nav (logo left + 4 links + CTA right) → hero (full-viewport-height, headline + subheadline + 2 CTAs + trust indicator) → 2–3 content sections → footer with 4-column links + copyright. Each section padding 80px top/bottom. Must feel like a funded startup's marketing site.`,
+      email:     `OUTPUT: HTML email. Rules — table-based layout only, all CSS inline (no <style> blocks), 600px max-width centered, no external CSS, no JavaScript, works in Gmail/Outlook/Apple Mail. Include a hidden preheader <div style="display:none;max-height:0;overflow:hidden"> before the main table. Use td padding for spacing, never margins on block elements.`,
+      card:      `OUTPUT: Single compact card or widget, 280–420px wide, self-contained (<style> + root <div>). No <html>/<body>. Every spacing value and font-size is intentional — dense, polished, micro-detail quality. Include hover microinteraction on the card itself.`,
     };
-    const sys = `You are ${emp.name}, ${emp.role} at a world-class design agency. You write ONLY raw, production-quality HTML+CSS — no markdown code blocks, no explanations, no comments. Just the HTML, starting immediately. Load Inter from Google Fonts. Make it genuinely beautiful, pixel-perfect, and impressive. This should look like it came from a $500/hr designer. ${typeInstr[DesignStudio._type]}${styleHint ? ' Style: '+styleHint : ''}`;
+    const typeRule = TYPE_RULES[DesignStudio._type] || TYPE_RULES.component;
+
+    const sys = `You are an expert UI/UX designer and front-end developer. Your output is raw HTML+CSS only — no markdown fences, no backticks, no preamble, no explanation. Start immediately with the opening tag.
+
+DESIGN SYSTEM (always apply; style preset may override specific values):
+• CSS custom properties — define in :root: --bg:#0a0f1e --surface:#111827 --surface2:#1e2a3a --border:rgba(255,255,255,.08) --text:#f1f5f9 --text2:#94a3b8 --text3:#475569 --accent:#3b82f6 --accent2:#8b5cf6 --danger:#ef4444 --success:#22c55e
+• Typography: @import from Google Fonts — Inter weights 300 400 500 600 700 800. Always import it. Letter-spacing -0.02em on headings. Scale: 11px caption · 14px small · 16px body · 20px lead · 28px h3 · 36px h2 · 48–64px display
+• Spacing: multiples of 4. Common gaps: 8 12 16 24 32 48 64 96px. Section vertical padding: 64–96px
+• Radius: 6px small · 10px medium · 16px card · 24px large · 9999px pill
+• Shadows: --sh-sm:0 1px 3px rgba(0,0,0,.4) --sh-md:0 4px 20px rgba(0,0,0,.5) --sh-lg:0 16px 60px rgba(0,0,0,.6)
+• Transitions: 150ms ease on all interactive elements — no element is static
+• No Lorem Ipsum — use realistic, specific copy and real-looking numbers ($84,291 not $0.00)
+• No browser defaults leaking through — every element explicitly styled (buttons, inputs, lists)
+• Gradient overlays, subtle borders, and depth make designs feel premium — use them
+
+${typeRule}
+${styleOverride ? `STYLE PRESET — override the default design tokens with these: ${styleOverride}` : ''}
+
+QUALITY BAR: The output should look like a production-ready Dribbble/Behance shot — clean hierarchy, deliberate whitespace, strong typography, and every interactive state handled. If it looks like a generic AI output, it's not good enough.`;
 
     let html = '';
     try {
-      for await (const chunk of AI.stream([{role:'user',content:`Design this: ${prompt}${styleHint?' Style: '+styleHint:''}`}], sys, { search: false, appTools: false, max_tokens: 8192 })) html += chunk;
+      for await (const chunk of AI.stream([{role:'user',content:`Design request: ${prompt}`}], sys, { search: false, appTools: false, max_tokens: 8192 })) html += chunk;
       html = html.trim().replace(/^```[^\n]*\n?/,'').replace(/```\s*$/,'').trim();
 
       // If the AI returned an error string instead of HTML, surface it properly
