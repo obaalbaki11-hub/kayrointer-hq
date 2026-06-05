@@ -88,16 +88,44 @@ export default {
       if (path === '/api/admin/usage')         return handleAdminUsage(request, env, origin);
       if (path === '/api/enterprise-lead')     return handleEnterpriseLead(request, env, origin);
 
-      // Flights (Duffel)
-      if (path === '/api/flights/search')      return handleFlightSearch(request, env, origin);
-      if (path === '/api/flights/offers')      return handleFlightOffers(request, env, origin);
-      if (path === '/api/flights/book')        return handleFlightBook(request, env, origin);
-      if (path.startsWith('/api/flights/order/')) return handleFlightOrder(request, env, origin, path);
+      // Flights (Duffel) — all endpoints require a valid session
+      if (path === '/api/flights/search') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleFlightSearch(request, env, origin);
+      }
+      if (path === '/api/flights/offers') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleFlightOffers(request, env, origin);
+      }
+      if (path === '/api/flights/book') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleFlightBook(request, env, origin);
+      }
+      if (path.startsWith('/api/flights/order/')) {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleFlightOrder(request, env, origin, path);
+      }
 
-      // Hotels (Amadeus)
-      if (path === '/api/hotels/search')       return handleHotelSearch(request, env, origin);
-      if (path === '/api/hotels/offers')       return handleHotelOffers(request, env, origin);
-      if (path === '/api/hotels/book')         return handleHotelBook(request, env, origin);
+      // Hotels (Amadeus) — all endpoints require a valid session
+      if (path === '/api/hotels/search') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleHotelSearch(request, env, origin);
+      }
+      if (path === '/api/hotels/offers') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleHotelOffers(request, env, origin);
+      }
+      if (path === '/api/hotels/book') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleHotelBook(request, env, origin);
+      }
 
       // Payments (Stripe)
       if (path === '/api/payments/customer')   return handleStripeCustomer(request, env, origin);
