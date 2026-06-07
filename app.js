@@ -860,7 +860,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','company','usage','onboarded','competitors'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','company','usage','onboarded','onboardedUID','competitors'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -2423,12 +2423,15 @@ const Auth = {
 
   // Called after any successful sign-in to navigate into the app
   _afterSignIn() {
-    if (State.onboarded) {
-      if (!Router.current || Router.current === '') Router.navigate('hq');
-    } else {
-      Router.navigate('hq');
-      Onboarding.check();
+    // If onboarding was completed by a different user (e.g. guest), reset it
+    // so this account gets the setup survey on first sign-in.
+    const uid = Auth.user?.uid || 'guest';
+    if (State.onboarded && State.onboardedUID && State.onboardedUID !== uid) {
+      State.onboarded = false;
+      save('onboarded');
     }
+    Router.navigate('hq');
+    Onboarding.check();
   },
 
   signOut() {
@@ -13646,7 +13649,9 @@ const Onboarding = {
     }
 
     State.onboarded = true;
+    State.onboardedUID = Auth.user?.uid || 'guest';
     save('onboarded');
+    save('onboardedUID');
 
     const el = document.getElementById('ob-overlay');
     if (el) { el.classList.add('ob-fade-out'); setTimeout(() => el.remove(), 400); }
