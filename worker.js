@@ -727,8 +727,8 @@ const AUTH_SESSION_TTL = 24 * 60 * 60;        // 24 hours — httpOnly session c
 // Daily message caps per plan (server-side source of truth for C4)
 const PLAN_LIMITS = {
   free:       { messages: 10  },
-  growth:     { messages: 100 },
-  scale:      { messages: 500 },
+  growth:     { messages: 25  },
+  scale:      { messages: 80  },
   enterprise: { messages: Infinity },
 };
 
@@ -763,7 +763,7 @@ async function checkUsageLimits(env, uid, plan) {
   if (limit === Infinity || !env.USERS) return null;
   const raw = await env.USERS.get(`usage:${uid}:${todayKey()}`, { type: 'json' });
   const used = (raw || {}).messages || 0;
-  if (used >= limit) return `Daily message limit reached for your ${plan || 'free'} plan (${limit}/day). Upgrade for more.`;
+  if (used >= limit) return `DAILY_CAP_REACHED:${plan || 'free'}:${limit}`;
   return null;
 }
 

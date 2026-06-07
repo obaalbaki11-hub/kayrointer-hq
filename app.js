@@ -789,8 +789,8 @@ const State = {
 // ── PLAN SYSTEM ────────────────────────────────────────────────
 const PLAN_CONFIG = {
   free:       { name:'Free',       price:0,    color:'#888888', icon:'⚪', desc:'Get started',                        seats:1,   msgLimit:10,       searchLimit:0 },
-  growth:     { name:'Growth',     price:29,   color:'#4f8cff', icon:'🚀', desc:'Claude included — we pay tokens',   seats:1,   msgLimit:100,      searchLimit:5 },
-  scale:      { name:'Scale',      price:99,   color:'#10d98a', icon:'⚡', desc:'Full power — your own API keys',    seats:5,   msgLimit:500,      searchLimit:15 },
+  growth:     { name:'Growth',     price:29,   color:'#4f8cff', icon:'🚀', desc:'Claude included — we pay tokens',   seats:1,   msgLimit:25,       searchLimit:5 },
+  scale:      { name:'Scale',      price:99,   color:'#10d98a', icon:'⚡', desc:'Full power — your own API keys',    seats:5,   msgLimit:80,       searchLimit:15 },
   enterprise: { name:'Enterprise', price:null, color:'#a78bfa', icon:'👑', desc:'White-label + dedicated support',  seats:999, msgLimit:Infinity, searchLimit:30 },
 };
 // pages each plan can access
@@ -1841,7 +1841,16 @@ const AI = {
         let body = {}; try { body = await res.json(); } catch(_) {}
         // Kayro-layer errors: { error: "string" } — distinct from Anthropic { error: { message } }
         if (res.status === 401 && typeof body.error === 'string') { Auth.signOut(); yield '⚠️ Session expired — please sign in again.'; return; }
-        if (res.status === 402) { toast('Daily message limit reached. Upgrade your plan for more.', 'error'); yield '⚠️ Daily message limit reached. Upgrade your plan in Plans & Tokens.'; return; }
+        if (res.status === 402) {
+          const capMsg = (typeof body.error === 'string' && body.error.startsWith('DAILY_CAP_REACHED:')) ? body.error : null;
+          const parts = capMsg ? capMsg.split(':') : [];
+          const capPlan = parts[1] || 'free';
+          const capLimit = parts[2] || '?';
+          const planName = capPlan === 'free' ? 'Free' : capPlan === 'growth' ? 'Growth' : capPlan === 'scale' ? 'Scale' : 'your';
+          toast(`Daily limit hit (${capLimit} messages). Buy a top-up to keep going.`, 'error', 7000);
+          yield `⏸️ **You've used all ${capLimit} daily messages on the ${planName} plan.**\n\nYou can:\n- **[Buy a message top-up →](javascript:Router.navigate('plans'))** — add extra messages without waiting\n- Resume tomorrow when your daily limit resets at midnight UTC\n- Upgrade to a higher plan for a larger daily allowance\n\nTop-ups are available on the Plans & Tokens page.`;
+          return;
+        }
         const msg = body?.error?.message || `HTTP ${res.status}`;
         const hint = res.status===401 ? '\n\n→ Anthropic credits exhausted. Go to console.anthropic.com → Billing → add credits to restore AI.'
                    : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
