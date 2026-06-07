@@ -2225,6 +2225,12 @@ const Auth = {
       if (Auth.user.isGuest) {
         fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
       }
+    } else {
+      // No stored session — show overlay NOW (synchronously) so it's visible before
+      // Firebase scripts finish loading. Without this, Firebase onAuthStateChanged fires
+      // ~300ms after the page already navigated to HQ, causing the overlay to pop up
+      // unexpectedly over the app and sending confused users to guest via the X button.
+      document.getElementById('auth-overlay').style.display = 'flex';
     }
   },
 
@@ -2244,6 +2250,7 @@ const Auth = {
               localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
               Auth._hideOverlay();
               Auth._renderUserArea();
+              Auth._afterSignIn();
               // Exchange Firebase ID token for a server-issued httpOnly session cookie
               user.getIdToken().then(idToken => fetch(`${BACKEND_URL}/api/auth/firebase`, {
                 method: 'POST', credentials: 'include',
@@ -2346,6 +2353,7 @@ const Auth = {
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
+      Auth._afterSignIn();
       toast(`Welcome back, ${data.name}!`, 'success');
     } catch(e) { Auth._showError('Could not reach server. Try again.'); }
     finally { if (btn) { btn.disabled = false; btn.textContent = 'Sign In → Launch HQ'; } }
@@ -2398,6 +2406,7 @@ const Auth = {
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
+      Auth._afterSignIn();
       toast(`Welcome to Kayro, ${data.name}!`, 'success');
     } catch(e) { Auth._showError('Could not reach server. Try again.'); }
     finally { if (btn) { btn.disabled = false; btn.textContent = 'Create Account → Launch HQ'; } }
@@ -2408,7 +2417,18 @@ const Auth = {
     localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
     Auth._hideOverlay();
     Auth._renderUserArea();
+    Auth._afterSignIn();
     fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
+  },
+
+  // Called after any successful sign-in to navigate into the app
+  _afterSignIn() {
+    if (State.onboarded) {
+      if (!Router.current || Router.current === '') Router.navigate('hq');
+    } else {
+      Router.navigate('hq');
+      Onboarding.check();
+    }
   },
 
   signOut() {
@@ -14314,8 +14334,12 @@ PlansPage._updateSidebarBadge();
   const params = new URLSearchParams(window.location.search);
   const inv = params.get('invite');
   if (!inv) {
-    Onboarding.check();
-    if (State.onboarded) Router.navigate('hq');
+    // Only navigate if there's a confirmed session — avoids landing on HQ for 300ms
+    // before Firebase fires onAuthStateChanged(null) and the overlay pops up over it.
+    if (Auth.user) {
+      Onboarding.check();
+      if (State.onboarded) Router.navigate('hq');
+    }
     return;
   }
   try {
