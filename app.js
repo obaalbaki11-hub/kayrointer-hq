@@ -2198,6 +2198,7 @@ const Auth = {
     document.getElementById('auth-signup-btn').addEventListener('click', Auth.signUpEmail);
     document.getElementById('auth-guest-btn').addEventListener('click', Auth.continueAsGuest);
     document.getElementById('auth-password').addEventListener('keydown', e => { if(e.key==='Enter') Auth.signInEmail(); });
+    document.getElementById('auth-forgot-btn')?.addEventListener('click', Auth.forgotPassword);
     document.getElementById('auth-x-btn')?.addEventListener('click', Auth.continueAsGuest);
 
     // Tab switching
@@ -2349,6 +2350,24 @@ const Auth = {
       toast(`Welcome back, ${data.name}!`, 'success');
     } catch(e) { Auth._showError('Could not reach server. Try again.'); }
     finally { if (btn) { btn.disabled = false; btn.textContent = 'Sign In → Launch HQ'; } }
+  },
+
+  async forgotPassword() {
+    const email = (document.getElementById('auth-email').value || '').trim();
+    if (!email) { Auth._showError('Enter your email address first, then click Forgot password.'); return; }
+    const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
+    if (cfg && cfg.apiKey && typeof firebase !== 'undefined' && firebase.auth) {
+      try {
+        await firebase.auth().sendPasswordResetEmail(email);
+        Auth._showError('');
+        const el = document.getElementById('auth-error');
+        if (el) { el.style.color = '#22c55e'; el.textContent = `Reset link sent to ${email} — check your inbox.`; }
+      } catch(e) {
+        Auth._showError(e.message || 'Could not send reset email. Check the address and try again.');
+      }
+    } else {
+      Auth._showError('Password reset requires Firebase — configure Firebase in Settings first.');
+    }
   },
 
   async signUpEmail() {
