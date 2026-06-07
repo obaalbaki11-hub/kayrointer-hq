@@ -24,7 +24,7 @@ compatibility_date = "2024-09-23"
 #   npx wrangler kv:namespace create USERS          → copy 'id', paste below
 #   npx wrangler kv:namespace create USERS --preview → copy 'id', paste as preview_id
 # Then uncomment the block below and run: npx wrangler deploy
-# [[kv_namespaces]]
-# binding    = "USERS"
-# id         = "PASTE_PROD_NAMESPACE_ID_HERE"
-# preview_id = "PASTE_PREVIEW_NAMESPACE_ID_HERE"
+[[kv_namespaces]]
+binding    = "USERS"
+id         = "eaa6e812dfbb45cf9635c11636e2dfe6"
+preview_id = "17f43f999fc34413a7bd6178e3e306ab"
