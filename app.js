@@ -774,8 +774,6 @@ const State = {
     createdAt: null, updatedAt: null,
   },
   usage: { date:'', tokensToday:0, totalTokensUsed:0, tokenBank:0, xp:0, purchaseXP:0, usedCodes:[], msgsToday:0, searchesToday:0 },
-  opsImages: [],
-  opsScripts: [],
   designs: [],
   automations: {
     scheduledPosts: [],  // [{id, platform, videoUrl, caption, hashtags, scheduledAt, status, createdAt}]
@@ -862,7 +860,7 @@ const PlanGate = {
 };
 
 function loadState() {
-  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','company','usage','opsImages','opsScripts','onboarded','competitors'];
+  const keys = ['settings','plan','planActivatedAt','employees','tasks','workbook','contacts','chatHistory','memory','designs','brain','trust','swarmRuns','company','usage','onboarded','competitors'];
   keys.forEach(k => {
     try {
       const v = localStorage.getItem('kayro_'+k);
@@ -8607,11 +8605,11 @@ Write all ${len} emails. Be specific, human, and direct. No fluff.`;
 };
 
 // ══════════════════════════════════════════════════════════════
-//  PAGE: OPERATIONS (Live Activity + Token Tracker + Content Studio)
+//  PAGE: OPERATIONS (Live Activity + Token Tracker)
 // ══════════════════════════════════════════════════════════════
 const OpsPage = {
   _activeTab: 'live',
-  _contentTab: 'images',
+  _contentTab: 'images', // unused — Content Studio removed
   _liveInterval: null,
   _countdownInterval: null,
 
@@ -8622,7 +8620,6 @@ const OpsPage = {
       <div class="ops-tab-bar">
         <button class="ops-tab active" data-tab="live">🔴 Live Activity</button>
         <button class="ops-tab" data-tab="tokens">📊 Token Tracker</button>
-        <button class="ops-tab" data-tab="content">🎬 Content Studio</button>
       </div>
       <div class="ops-content" id="ops-content"></div>
     </div>`;
@@ -8650,7 +8647,6 @@ const OpsPage = {
     if (!el) return;
     if (OpsPage._activeTab === 'live')    OpsPage._renderLive(el);
     if (OpsPage._activeTab === 'tokens')  OpsPage._renderTokens(el);
-    if (OpsPage._activeTab === 'content') OpsPage._renderContent(el);
   },
 
   // ── LIVE ACTIVITY ─────────────────────────────────────────────
@@ -8866,185 +8862,6 @@ const OpsPage = {
     } catch { toast('Could not load admin stats', 'error'); }
   },
 
-  // ── CONTENT STUDIO ────────────────────────────────────────────
-  _renderContent(el) {
-    el.innerHTML = `<div class="content-studio">
-      <div class="content-sub-tabs">
-        <button class="csub-tab${OpsPage._contentTab==='images'?' active':''}" data-ct="images">🖼 Images</button>
-        <button class="csub-tab${OpsPage._contentTab==='video'?' active':''}" data-ct="video">🎬 Video Scripts</button>
-      </div>
-      <div id="csub-body"></div>
-    </div>`;
-    el.querySelectorAll('.csub-tab').forEach(btn => btn.addEventListener('click', () => {
-      el.querySelectorAll('.csub-tab').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      OpsPage._contentTab = btn.dataset.ct;
-      OpsPage._renderCTab(document.getElementById('csub-body'));
-    }));
-    OpsPage._renderCTab(document.getElementById('csub-body'));
-  },
-
-  _renderCTab(el) {
-    if (!el) return;
-    if (OpsPage._contentTab === 'images') OpsPage._renderImages(el);
-    else OpsPage._renderVideoScripts(el);
-  },
-
-  _renderImages(el) {
-    const empOpts = State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');
-    const imgs = (State.opsImages||[]).slice().reverse();
-    el.innerHTML = `<div class="content-gen-layout">
-      <div class="content-gen-form">
-        <div class="content-gen-title">🖼 AI Image Generator</div>
-        <div class="content-gen-sub">Describe what you want — your agent crafts the perfect prompt and generates the image instantly.</div>
-        <div class="form-group" style="margin-top:16px"><label class="form-label">GENERATING AGENT</label>
-          <select class="form-select" id="img-emp">${empOpts}</select></div>
-        <div class="form-group"><label class="form-label">WHAT TO CREATE</label>
-          <textarea class="form-input" id="img-desc" rows="3" placeholder="e.g. Professional hero banner for an AI SaaS company, dark gradient, glowing accent lights, modern tech aesthetic" style="resize:vertical"></textarea></div>
-        <div class="form-group"><label class="form-label">VISUAL STYLE</label>
-          <select class="form-select" id="img-model">
-            <option value="flux-realism">📷 Photorealistic</option>
-            <option value="flux">✨ Standard AI (Flux)</option>
-            <option value="flux-anime">🎨 Illustration / Anime</option>
-            <option value="flux-3d">💎 3D Render</option>
-            <option value="turbo">⚡ Fast (Turbo)</option>
-          </select></div>
-        <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button class="btn btn-primary" id="img-gen-btn">🎨 Generate Image</button>
-          <button class="btn" id="img-ai-btn">✨ AI-craft prompt first</button>
-        </div>
-        <div id="img-status" class="gen-status"></div>
-      </div>
-      <div class="img-gallery-wrap">
-        ${imgs.length ? `<div class="img-gallery">${imgs.map(img=>`
-          <div class="img-card">
-            <img src="${escHtml(img.url)}" alt="${escHtml(img.desc.slice(0,60))}" class="img-card-img" loading="lazy">
-            <div class="img-card-footer">
-              <span class="img-card-agent">${escHtml(img.agent)}</span>
-              <a href="${escHtml(img.url)}" target="_blank" class="img-dl-btn">⬇ Save</a>
-            </div>
-            <div class="img-card-prompt">${escHtml(img.prompt.slice(0,70))}…</div>
-          </div>`).join('')}</div>` : '<div class="empty-state" style="padding:48px 0"><div class="empty-icon">🖼</div><div class="empty-text">Generated images will appear here.<br>Your whole gallery is saved automatically.</div></div>'}
-      </div>
-    </div>`;
-    document.getElementById('img-gen-btn').addEventListener('click', async () => {
-      const desc = (document.getElementById('img-desc').value||'').trim();
-      if (!desc) { toast('Describe what to create first','error'); return; }
-      await OpsPage._genImage(desc, document.getElementById('img-model').value, document.getElementById('img-emp').value, document.getElementById('img-status'));
-    });
-    document.getElementById('img-ai-btn').addEventListener('click', async () => {
-      const desc = (document.getElementById('img-desc').value||'').trim();
-      if (!desc) { toast('Enter a concept first','error'); return; }
-      const empId = document.getElementById('img-emp').value;
-      const emp = getEmp(empId);
-      const status = document.getElementById('img-status');
-      const btn = document.getElementById('img-ai-btn');
-      status.textContent = `${emp?.name||'AI'} is crafting the perfect prompt…`;
-      btn.disabled = true;
-      const sys = `You are a world-class AI image prompt engineer. Given a concept, write a single, detailed image generation prompt optimized for photorealism and specificity. Return ONLY the prompt — no explanation, no quotes, no preamble. Include: subject, style, lighting, mood, composition, color palette, and technical quality descriptors.`;
-      const result = await AI.once([{role:'user',content:`Write an image generation prompt for: ${desc}`}], sys);
-      document.getElementById('img-desc').value = result.trim();
-      status.style.color = 'var(--green)';
-      status.textContent = '✓ Prompt crafted by ' + (emp?.name||'AI') + ' — ready to generate';
-      btn.disabled = false;
-    });
-  },
-
-  async _genImage(desc, model, empId, statusEl) {
-    const emp = getEmp(empId);
-    const btn = document.getElementById('img-gen-btn');
-    if (statusEl) { statusEl.style.color = 'var(--text2)'; statusEl.textContent = `${emp?.name||'AI'} is generating your image — this takes 10-20 seconds…`; }
-    if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
-    try {
-      const seed = Math.floor(Math.random() * 999999);
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(desc)}?width=1024&height=768&model=${model}&seed=${seed}&enhance=true&nologo=true`;
-      await new Promise((res, rej) => { const img = new Image(); img.onload = res; img.onerror = rej; img.src = url; });
-      if (!State.opsImages) State.opsImages = [];
-      State.opsImages.push({ url, prompt: desc, desc, model, agent: emp?.name||'AI', empId, timestamp: Date.now() });
-      save('opsImages');
-      if (statusEl) { statusEl.style.color = 'var(--green)'; statusEl.textContent = '✓ Image generated!'; }
-      Usage.trackUsage(150);
-      OpsPage._renderImages(document.getElementById('csub-body'));
-      toast('Image generated ✓','success');
-    } catch(e) {
-      if (statusEl) { statusEl.style.color = 'var(--danger)'; statusEl.textContent = 'Generation failed. Check your internet connection and try again.'; }
-      if (btn) { btn.disabled = false; btn.textContent = '🎨 Generate Image'; }
-    }
-  },
-
-  _renderVideoScripts(el) {
-    const empOpts = State.employees.map(e=>`<option value="${e.id}">${e.name} — ${e.role}</option>`).join('');
-    const scripts = (State.opsScripts||[]).slice().reverse();
-    el.innerHTML = `<div class="content-gen-layout">
-      <div class="content-gen-form">
-        <div class="content-gen-title">🎬 Video Script Generator</div>
-        <div class="content-gen-sub">Your agent writes a complete, production-ready video script — scenes, voiceover, on-screen text, pacing, and production notes.</div>
-        <div class="form-group" style="margin-top:16px"><label class="form-label">WRITING AGENT</label>
-          <select class="form-select" id="vid-emp">${empOpts}</select></div>
-        <div class="form-group"><label class="form-label">VIDEO CONCEPT / BRIEF</label>
-          <textarea class="form-input" id="vid-concept" rows="4" placeholder="e.g. 60-second product demo for Kayro Interactive targeting startup founders — show the AI team, Ask the Room feature, and task automation. High energy, modern." style="resize:vertical"></textarea></div>
-        <div class="form-group"><label class="form-label">FORMAT</label>
-          <select class="form-select" id="vid-format">
-            <option value="short">⚡ Short-form (15–60s) — TikTok, Reels, YouTube Shorts</option>
-            <option value="explainer">📖 Explainer (1–3 min) — Website, YouTube</option>
-            <option value="ad">🎯 Paid Ad (15–30s) — Meta, Google, LinkedIn</option>
-            <option value="pitch">🤝 Pitch / Demo (3–5 min) — Sales, Investors</option>
-          </select></div>
-        <button class="btn btn-primary" id="vid-gen-btn">🎬 Write Script</button>
-        <div id="vid-status" class="gen-status"></div>
-      </div>
-      <div class="scripts-list-wrap">
-        ${scripts.length ? scripts.map((s,i)=>`<div class="script-card">
-          <div class="script-card-hdr">
-            <div>
-              <div class="script-title">${escHtml(s.title)}</div>
-              <div class="script-meta">${escHtml(s.format)} · ${escHtml(s.agent)} · ${new Date(s.timestamp).toLocaleDateString('en-US',{month:'short',day:'numeric'})}</div>
-            </div>
-            <button class="btn btn-sm script-toggle" data-i="${i}">View</button>
-          </div>
-          <pre class="script-body" id="sbody-${i}" style="display:none">${escHtml(s.content)}</pre>
-        </div>`).join('') : '<div class="empty-state" style="padding:48px 0"><div class="empty-icon">🎬</div><div class="empty-text">Generated scripts appear here.<br>Ready to shoot, share, or hand off to your video team.</div></div>'}
-      </div>
-    </div>`;
-    document.getElementById('vid-gen-btn').addEventListener('click', async () => {
-      const concept = (document.getElementById('vid-concept').value||'').trim();
-      if (!concept) { toast('Enter a video concept first','error'); return; }
-      await OpsPage._genVideoScript(concept, document.getElementById('vid-format').value, document.getElementById('vid-emp').value, document.getElementById('vid-status'));
-    });
-    el.querySelectorAll('.script-toggle').forEach(btn => btn.addEventListener('click', () => {
-      const body = document.getElementById(`sbody-${btn.dataset.i}`);
-      if (!body) return;
-      const open = body.style.display !== 'none';
-      body.style.display = open ? 'none' : 'block';
-      btn.textContent = open ? 'View' : 'Collapse';
-    }));
-  },
-
-  async _genVideoScript(concept, format, empId, statusEl) {
-    const emp = getEmp(empId);
-    const btn = document.getElementById('vid-gen-btn');
-    if (statusEl) { statusEl.style.color='var(--text2)'; statusEl.textContent = `${emp?.name||'AI'} is writing your video script…`; }
-    if (btn) { btn.disabled = true; btn.textContent = 'Writing…'; }
-    const GUIDES = {
-      short: '15–60 second short-form. Hook in the first 2 seconds. Fast cuts, captions-optimized, punchy. No fluff.',
-      explainer: '1–3 minute explainer. Structure: Problem → Solution → How It Works → Social Proof → CTA. Clear VO.',
-      ad: '15–30 second paid ad. Hook → Pain → Solution → CTA. Designed to stop the scroll.',
-      pitch: '3–5 minute pitch/demo. Context → Problem → Solution Demo → Proof → CTA. Professional and compelling.'
-    };
-    const sys = `You are a world-class video scriptwriter. Write complete, production-ready scripts that are specific, emotionally resonant, and ready to shoot. Format every script with: title, scene-by-scene breakdown (visual description, voiceover/dialogue, on-screen text, pacing), and production notes.`;
-    const prompt = `Write a complete video script:\n\nCONCEPT: ${concept}\nFORMAT: ${GUIDES[format]||format}\nWRITER ROLE: ${emp?.role||'Marketing'}\n\nStructure:\n# [TITLE]\n**Format:** [type] | **Duration:** [estimate] | **Tone:** [3 words]\n\n---\n\n## SCENES\n\n**SCENE [N] — [LOCATION / VISUAL]**\n[VISUAL: describe exactly what's on screen]\n[VO/DIALOGUE: exact words spoken]\n[ON SCREEN: text overlays]\n[CUT: pacing note]\n\n(repeat for all scenes)\n\n---\n\n## PRODUCTION NOTES\n[Music style, color grade, camera direction, key visual moments]\n\n## CALL TO ACTION\n[Exact words + visual + URL/handle]`;
-    const content = await AI.once([{role:'user',content:prompt}], sys);
-    const titleMatch = content.match(/^#\s+(.+)/m);
-    const title = titleMatch ? titleMatch[1].trim() : concept.slice(0,60);
-    if (!State.opsScripts) State.opsScripts = [];
-    State.opsScripts.push({ title, content, format, agent: emp?.name||'AI', empId, concept, timestamp: Date.now() });
-    save('opsScripts');
-    if (statusEl) { statusEl.style.color='var(--green)'; statusEl.textContent='✓ Script ready!'; }
-    Usage.trackUsage(Math.ceil(content.length / 4));
-    OpsPage._renderVideoScripts(document.getElementById('csub-body'));
-    toast('Video script ready ✓','success');
-    if (btn) { btn.disabled = false; btn.textContent = '🎬 Write Script'; }
-  },
 };
 
 // ══════════════════════════════════════════════════════════════
