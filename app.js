@@ -2174,22 +2174,8 @@ const Auth = {
   user: null,
 
   init() {
-    // Restore stored user (demo/guest mode)
-    const stored = localStorage.getItem('kayro_auth_user');
-    if (stored) {
-      try { Auth.user = JSON.parse(stored); } catch(_) {}
-    }
-    if (Auth.user) {
-      Auth._hideOverlay();
-      Auth._renderUserArea();
-      // Silently refresh server-side session cookie on page load
-      if (Auth.user.isGuest) {
-        fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
-      }
-      return;
-    }
-
-    // Always use hardcoded Firebase config (falls back to Settings override if set)
+    // Always wire up Firebase and overlay button listeners — even if already logged in,
+    // because signOut() can re-show the overlay later and buttons must work.
     const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
     Auth._initFirebase(cfg);
 
@@ -2227,6 +2213,19 @@ const Auth = {
     tabIn?.addEventListener('click', showSignIn);
     tabUp?.addEventListener('click', showSignUp);
     footLnk?.addEventListener('click', showSignUp);
+
+    // Restore stored user — do this AFTER wiring listeners so sign-out → re-open works
+    const stored = localStorage.getItem('kayro_auth_user');
+    if (stored) {
+      try { Auth.user = JSON.parse(stored); } catch(_) {}
+    }
+    if (Auth.user) {
+      Auth._hideOverlay();
+      Auth._renderUserArea();
+      if (Auth.user.isGuest) {
+        fetch(`${BACKEND_URL}/api/auth/guest`, { method: 'POST', credentials: 'include' }).catch(()=>{});
+      }
+    }
   },
 
   _initFirebase(cfg) {
