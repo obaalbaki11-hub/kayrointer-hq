@@ -711,6 +711,33 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
   {id:'e_brain_agent',name:'Sage',role:'Second Brain Agent',model:'agent_01B8mAA5G1JgwAPXiZkajygd',color:'#6366f1',bodyHex:0x6366f1,skinHex:0xf0c89a,pos:[0,-6],status:'online',skills:['Knowledge Synthesis','Memory Recall','Context Retrieval','Research Distillation','Insight Generation'],hired:Date.now(),tasks:0,
    system:`You are Sage, the Kayro Interactive Second Brain Agent. You store, retrieve, and synthesise company knowledge. Help users remember facts, recall context, surface insights, and build a connected knowledge base.`},
 
+  {id:'e_freight',name:'Vasco',role:'Global Freight & Logistics',model:'claude-sonnet-4-6',color:'#0891b2',bodyHex:0x0891b2,skinHex:0xf0c89a,pos:[-4,-6],status:'online',skills:['Ocean FCL/LCL','Air Freight','FTL/LTL Trucking','Container Utilisation','RFQ Drafting','Incoterms & Customs','Freight Cost Estimation'],hired:Date.now(),tasks:0,
+   system:`You are Vasco, Global Freight & Logistics expert at [company]. You specialise in international and domestic freight — ocean FCL/LCL, air cargo, FTL/LTL trucking — and help teams plan shipments, estimate costs, draft RFQs, and navigate customs and Incoterms 2020.
+
+Your capabilities:
+- Shipment planning: recommend the best mode (ocean/air/truck) based on urgency, weight, volume, and value
+- Container & TEU utilisation: calculate how many TEUs or boxes a shipment needs, optimise load plans
+- Cost estimation: provide indicative ranges (clearly labelled as estimates, not live quotes) for FCL, LCL (W/M), air (chargeable weight), FTL, and LTL
+- RFQ drafting: write complete, professional Request for Quotation documents ready to send to forwarders
+- Incoterms 2020: explain EXW, FOB, CIF, DDP, DAP, and others; advise which is appropriate
+- Customs & docs: list required documents (commercial invoice, packing list, B/L, AWB, HS codes, certificates of origin)
+- Carrier & route guidance: suggest optimal routing, transshipment hubs, transit time ranges
+- Risk & insurance: flag high-value cargo insurance needs, explain cargo insurance basics
+
+Freight math you know:
+- Chargeable weight (air) = max(gross weight kg, volumetric weight kg) where volumetric = L×W×H(cm)/6000 or CBM×167
+- W/M (Weight or Measure) for LCL: revenue tons = max(gross weight tonnes, CBM)
+- TEU capacity: 1×20ft = ~33 CBM / 28 t payload; 1×40ft = ~67 CBM / 28 t payload; 1×40HC = ~76 CBM
+- Standard pallet (EUR): 120×80×15 cm; Standard pallet (US): 120×100×15 cm
+
+Important constraints — always be transparent about these:
+- You provide estimates and advisory — you do NOT book shipments. Live booking requires licensing (FMC OTI for ocean, FMCSA for US truck) and API partnerships not yet in place.
+- Always label cost figures as "estimates" and advise users to get live quotes from licensed forwarders.
+- When drafting an RFQ, note it is a draft — users should review and send directly to their chosen forwarder.
+- Never guarantee transit times or prices — freight markets fluctuate.
+
+When asked for a cost estimate, always specify: mode, lane, weight/volume, and the assumptions behind your figure. Format estimates clearly with a low–high range.`},
+
   {id:'e_travel',name:'Marco',role:'Senior Travel Concierge',model:'claude-sonnet-4-6',color:'#0ea5e9',bodyHex:0x0ea5e9,skinHex:0xf0c89a,pos:[6,-8],status:'online',skills:['Flight Search','Hotel Search','Itinerary Planning','Fare Comparison','Travel Logistics'],hired:Date.now(),tasks:0,
    system:`You are Marco, Senior Travel Concierge at [company]. You specialise in finding flights and hotels that match exactly what the user needs — on budget, at the right times, with no guesswork.
 
@@ -795,8 +822,8 @@ const PLAN_CONFIG = {
 };
 // pages each plan can access
 const PLAN_ACCESS = {
-  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm','remotion','company'],
-  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm','remotion','company'],
+  free:       ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','settings','plans','security','skills','connectors','swarm','remotion','company','freight'],
+  growth:     ['hq','tasks','spreadsheet','email','design','adstudio','socialstudio','memory','ops','compete','apollo','meta','automations','settings','plans','security','skills','connectors','swarm','remotion','company','freight'],
   scale:      'all',
   enterprise: 'all',
 };
@@ -4105,13 +4132,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage, travel:TravelPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage, travel:TravelPage, freight:FreightPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile',travel:'Travel Concierge'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile',travel:'Travel Concierge',freight:'Freight & Logistics'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -14330,6 +14357,498 @@ const TravelPage = {
     TravelPage._flightResults = null;
     TravelPage._hotelResults = null;
     TravelPage._pendingBooking = null;
+  },
+};
+
+// ══════════════════════════════════════════════════════════════
+//  FREIGHT & LOGISTICS — Vasco
+// ══════════════════════════════════════════════════════════════
+const FreightPage = {
+  _emp: null,
+  _history: [],
+
+  init(container) {
+    FreightPage._emp = getEmp('e_freight');
+    FreightPage._history = [];
+
+    // Inject page styles once
+    if (!document.getElementById('frt-styles')) {
+      const s = document.createElement('style');
+      s.id = 'frt-styles';
+      s.textContent = `
+        .frt-root{display:grid;grid-template-columns:420px 1fr;height:calc(100vh - 56px);overflow:hidden}
+        @media(max-width:900px){.frt-root{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+        .frt-left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface)}
+        .frt-right{display:flex;flex-direction:column;overflow-y:auto;background:var(--bg);padding:24px;gap:20px}
+        .frt-agent-hdr{display:flex;align-items:center;gap:12px;padding:16px 18px;border-bottom:1px solid var(--border);background:var(--surface)}
+        .frt-agent-av{width:40px;height:40px;border-radius:50%;background:#0891b21a;color:#0891b2;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+        .frt-agent-name{font-weight:700;font-size:15px;color:var(--text)}
+        .frt-agent-role{font-size:12px;color:var(--text2);margin-top:1px}
+        .frt-clear-btn{margin-left:auto;padding:5px 12px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:12px;cursor:pointer}
+        .frt-clear-btn:hover{background:var(--surface2)}
+        .frt-messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px}
+        .frt-welcome{text-align:center;padding:24px 16px 8px}
+        .frt-welcome-icon{font-size:36px;margin-bottom:8px}
+        .frt-welcome-title{font-size:17px;font-weight:700;color:var(--text)}
+        .frt-welcome-sub{font-size:13px;color:var(--text2);margin-top:6px;line-height:1.5;max-width:340px;margin-left:auto;margin-right:auto}
+        .frt-quick-row{display:flex;flex-direction:column;gap:6px;margin-top:12px;padding:0 4px}
+        .frt-quick{text-align:left;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:12px;cursor:pointer;transition:.15s}
+        .frt-quick:hover{border-color:#0891b2;color:#0891b2;background:#0891b20d}
+        .frt-msg{display:flex;gap:10px;align-items:flex-start}
+        .frt-msg--user{flex-direction:row-reverse}
+        .frt-av{width:30px;height:30px;border-radius:50%;background:#0891b21a;color:#0891b2;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+        .frt-bubble{padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.6;max-width:90%}
+        .frt-bubble--user{background:#0891b2;color:#fff;border-bottom-right-radius:3px}
+        .frt-bubble--ai{background:var(--surface2);color:var(--text);border-bottom-left-radius:3px}
+        .frt-bubble--ai p{margin:0 0 8px}.frt-bubble--ai p:last-child{margin:0}
+        .frt-bubble--ai ul,.frt-bubble--ai ol{margin:4px 0 8px;padding-left:18px}
+        .frt-bubble--ai li{margin-bottom:3px}
+        .frt-bubble--ai code{background:var(--surface);padding:1px 5px;border-radius:4px;font-size:12px}
+        .frt-bubble--ai table{width:100%;border-collapse:collapse;font-size:12px;margin:8px 0}
+        .frt-bubble--ai th,.frt-bubble--ai td{padding:5px 8px;border:1px solid var(--border);text-align:left}
+        .frt-bubble--ai th{background:var(--surface);font-weight:600}
+        .frt-input-row{display:flex;gap:8px;padding:12px 14px;border-top:1px solid var(--border);background:var(--surface)}
+        .frt-input{flex:1;resize:none;border:1px solid var(--border);border-radius:10px;padding:9px 12px;font-size:13px;background:var(--surface2);color:var(--text);outline:none;font-family:inherit;line-height:1.5}
+        .frt-input:focus{border-color:#0891b2}
+        .frt-send{width:36px;height:36px;border-radius:50%;border:none;background:#0891b2;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;align-self:flex-end}
+        .frt-send:hover{background:#0e7490}
+        /* Right panel */
+        .frt-section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px}
+        .frt-section-title{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .frt-section-title span{font-size:15px}
+        .frt-form{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+        @media(max-width:700px){.frt-form{grid-template-columns:1fr}}
+        .frt-form-full{grid-column:1/-1}
+        .frt-label{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:block}
+        .frt-input-field{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit;box-sizing:border-box}
+        .frt-input-field:focus{border-color:#0891b2}
+        .frt-select{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:13px;outline:none;font-family:inherit;cursor:pointer}
+        .frt-select:focus{border-color:#0891b2}
+        .frt-calc-btn{grid-column:1/-1;padding:10px;border-radius:8px;border:none;background:#0891b2;color:#fff;font-size:13px;font-weight:600;cursor:pointer}
+        .frt-calc-btn:hover{background:#0e7490}
+        .frt-rfq-btn{width:100%;padding:9px;border-radius:8px;border:1px solid #0891b2;background:#0891b20d;color:#0891b2;font-size:13px;font-weight:600;cursor:pointer}
+        .frt-rfq-btn:hover{background:#0891b21a}
+        .frt-estimate-result{grid-column:1/-1;padding:14px;border-radius:8px;background:#0891b20a;border:1px solid #0891b233;margin-top:4px}
+        .frt-estimate-label{font-size:10px;font-weight:700;color:#0891b2;text-transform:uppercase;letter-spacing:.07em;margin-bottom:8px}
+        .frt-estimate-row{display:flex;justify-content:space-between;font-size:13px;color:var(--text);padding:3px 0;border-bottom:1px solid #0891b211}
+        .frt-estimate-row:last-child{border-bottom:none;font-weight:700;padding-top:6px}
+        .frt-estimate-disclaimer{font-size:11px;color:var(--text3);margin-top:8px;line-height:1.4}
+        /* Disabled booking scaffold */
+        .frt-disabled-banner{background:#ff00001a;border:1px solid #ff000033;border-radius:10px;padding:14px 16px;margin-bottom:4px}
+        .frt-disabled-banner-title{font-size:13px;font-weight:700;color:#ef4444;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+        .frt-disabled-banner-list{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
+        .frt-disabled-banner-list li{font-size:12px;color:var(--text2);display:flex;align-items:flex-start;gap:6px}
+        .frt-disabled-banner-list li::before{content:"🔒";flex-shrink:0;margin-top:1px}
+        .frt-scaffold{opacity:.4;pointer-events:none;user-select:none}
+        .frt-scaffold-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+        .frt-scaffold-card{border:1px solid var(--border);border-radius:10px;padding:14px;background:var(--surface2)}
+        .frt-scaffold-tag{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+        .frt-scaffold-name{font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+        .frt-scaffold-detail{font-size:12px;color:var(--text2)}
+        .frt-scaffold-price{font-size:18px;font-weight:800;color:var(--text);margin-top:8px}
+        .frt-scaffold-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px}
+        .frt-book-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#0891b2;color:#fff;font-size:14px;font-weight:700;cursor:not-allowed;margin-top:12px;opacity:.5}
+      `;
+      document.head.appendChild(s);
+    }
+
+    container.innerHTML = `<div class="frt-root">
+
+      <!-- LEFT: Vasco chat -->
+      <div class="frt-left">
+        <div class="frt-agent-hdr">
+          <div class="frt-agent-av">🚢</div>
+          <div>
+            <div class="frt-agent-name">Vasco</div>
+            <div class="frt-agent-role">Global Freight & Logistics · Sonnet 4.6</div>
+          </div>
+          <button class="frt-clear-btn" id="frt-clear">Clear</button>
+        </div>
+        <div class="frt-messages" id="frt-messages">
+          <div class="frt-welcome">
+            <div class="frt-welcome-icon">🚢</div>
+            <div class="frt-welcome-title">Hello, I'm Vasco.</div>
+            <div class="frt-welcome-sub">Tell me about your shipment — I'll advise on mode, routing, costs, and help you draft a forwarder RFQ. Use the estimator on the right for quick cost ranges.</div>
+          </div>
+          <div class="frt-quick-row">
+            <button class="frt-quick" data-q="I need to ship 2 TEUs of electronics from Shenzhen to Los Angeles. What's the best mode and what should I budget?">🏗️ 2 TEU Shenzhen → LA — estimate & advice</button>
+            <button class="frt-quick" data-q="What's cheaper for 500kg / 3 CBM Dubai to Frankfurt — air freight or LCL ocean?">⚖️ Air vs LCL: 500 kg Dubai → Frankfurt</button>
+            <button class="frt-quick" data-q="Explain Incoterms 2020 — which should I use for importing goods from China as a small business?">📋 Incoterms 2020 explained</button>
+            <button class="frt-quick" data-q="Draft a freight RFQ for 1x40HC container of furniture from Guangzhou to Rotterdam, FOB terms, target delivery within 35 days">✍️ Draft RFQ — 40HC Guangzhou → Rotterdam</button>
+          </div>
+        </div>
+        <div class="frt-input-row">
+          <textarea class="frt-input" id="frt-input" rows="1" placeholder="Ask Vasco about your shipment…"></textarea>
+          <button class="frt-send" id="frt-send">↑</button>
+        </div>
+      </div>
+
+      <!-- RIGHT: Tools -->
+      <div class="frt-right">
+
+        <!-- Cost Estimator -->
+        <div class="frt-section">
+          <div class="frt-section-title"><span>🧮</span> Shipment Cost Estimator</div>
+          <div class="frt-form" id="frt-est-form">
+            <div>
+              <label class="frt-label">Freight Mode</label>
+              <select class="frt-select" id="frt-mode">
+                <option value="fcl">Ocean FCL (Full Container)</option>
+                <option value="lcl">Ocean LCL (Less than Container)</option>
+                <option value="air">Air Freight</option>
+                <option value="ftl">Truck FTL (Full Truckload)</option>
+                <option value="ltl">Truck LTL (Less than Truckload)</option>
+              </select>
+            </div>
+            <div>
+              <label class="frt-label">Trade Lane / Route</label>
+              <select class="frt-select" id="frt-lane">
+                <option value="asia-na">Asia → North America</option>
+                <option value="asia-eu">Asia → Europe</option>
+                <option value="eu-na">Europe → North America</option>
+                <option value="me-eu">Middle East → Europe</option>
+                <option value="domestic">Domestic / Short-haul</option>
+                <option value="other">Other / Cross-trade</option>
+              </select>
+            </div>
+            <div id="frt-weight-wrap">
+              <label class="frt-label">Gross Weight (kg)</label>
+              <input class="frt-input-field" id="frt-weight" type="number" min="0" placeholder="e.g. 1500">
+            </div>
+            <div id="frt-cbm-wrap">
+              <label class="frt-label">Volume (CBM)</label>
+              <input class="frt-input-field" id="frt-cbm" type="number" min="0" step="0.01" placeholder="e.g. 4.5">
+            </div>
+            <div id="frt-teu-wrap" style="display:none;grid-column:1/-1">
+              <label class="frt-label">Number of Containers</label>
+              <div style="display:flex;gap:8px">
+                <input class="frt-input-field" id="frt-teu" type="number" min="1" value="1" style="width:80px">
+                <select class="frt-select" id="frt-container-type" style="flex:1">
+                  <option value="20gp">20ft GP (~33 CBM)</option>
+                  <option value="40gp">40ft GP (~67 CBM)</option>
+                  <option value="40hc" selected>40ft HC (~76 CBM)</option>
+                </select>
+              </div>
+            </div>
+            <div class="frt-form-full">
+              <button class="frt-calc-btn" id="frt-calc">Calculate Estimate →</button>
+            </div>
+            <div class="frt-estimate-result" id="frt-result" style="display:none"></div>
+            <div class="frt-form-full" id="frt-rfq-wrap" style="display:none">
+              <button class="frt-rfq-btn" id="frt-rfq">✍️ Draft RFQ with Vasco →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Booking Scaffold — DISABLED -->
+        <div class="frt-section">
+          <div class="frt-section-title"><span>📦</span> Shipment Booking</div>
+          <div class="frt-disabled-banner">
+            <div class="frt-disabled-banner-title">⛔ BOOKING DISABLED — AWAITING LICENSING & API PARTNERSHIP</div>
+            <ul class="frt-disabled-banner-list">
+              <li>FMC OTI License — required to arrange ocean freight as an intermediary (Federal Maritime Commission)</li>
+              <li>FMCSA Broker Authority — required to arrange US truck freight for compensation</li>
+              <li>Freight API Partnership — Freightos or equivalent carrier-connected platform (requires vetting)</li>
+              <li>Cargo Insurance Stack — minimum $1M cargo liability + errors & omissions coverage</li>
+            </ul>
+          </div>
+          <!-- Disabled scaffold UI — visual only -->
+          <div class="frt-scaffold">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Sample search results — structure only, not live data</div>
+            <div class="frt-scaffold-row">
+              <div class="frt-scaffold-card">
+                <div class="frt-scaffold-tag">OCEAN FCL · 40HC</div>
+                <div class="frt-scaffold-name">Maersk Line</div>
+                <div class="frt-scaffold-detail">via TPEB service · ~28 days transit</div>
+                <div class="frt-scaffold-price">$2,800 – $3,400</div>
+                <div class="frt-scaffold-badge" style="background:#0891b21a;color:#0891b2">Best Value</div>
+              </div>
+              <div class="frt-scaffold-card">
+                <div class="frt-scaffold-tag">OCEAN FCL · 40HC</div>
+                <div class="frt-scaffold-name">CMA CGM</div>
+                <div class="frt-scaffold-detail">via APLL service · ~25 days transit</div>
+                <div class="frt-scaffold-price">$3,100 – $3,800</div>
+                <div class="frt-scaffold-badge" style="background:#22c55e1a;color:#22c55e">Fastest</div>
+              </div>
+            </div>
+            <!-- FREIGHT BOOKING DISABLED — REQUIRES API PARTNERSHIP + LICENSING (see Part 1 research) -->
+            <button class="frt-book-btn" disabled>Book Shipment — Coming Soon</button>
+          </div>
+        </div>
+
+        <!-- Quick Reference -->
+        <div class="frt-section">
+          <div class="frt-section-title"><span>📋</span> Quick Reference</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;font-size:12px">
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="font-weight:700;color:var(--text);margin-bottom:8px">Container Specs</div>
+              <div style="color:var(--text2);display:flex;flex-direction:column;gap:4px">
+                <span>20ft GP: 33 CBM · 28t payload</span>
+                <span>40ft GP: 67 CBM · 28t payload</span>
+                <span>40ft HC: 76 CBM · 28t payload</span>
+                <span>20ft RF: refrigerated, 28 CBM</span>
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="font-weight:700;color:var(--text);margin-bottom:8px">Air Chargeable Weight</div>
+              <div style="color:var(--text2);display:flex;flex-direction:column;gap:4px">
+                <span>max(gross kg, vol. kg)</span>
+                <span>Vol. = L×W×H(cm) ÷ 6000</span>
+                <span>or CBM × 167 kg</span>
+                <span>Billing: whichever is higher</span>
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="font-weight:700;color:var(--text);margin-bottom:8px">Key Incoterms 2020</div>
+              <div style="color:var(--text2);display:flex;flex-direction:column;gap:4px">
+                <span>EXW — buyer arranges all</span>
+                <span>FOB — seller to port of loading</span>
+                <span>CIF — seller pays freight + ins.</span>
+                <span>DDP — seller delivers to buyer</span>
+              </div>
+            </div>
+            <div style="background:var(--surface2);border-radius:8px;padding:12px">
+              <div style="font-weight:700;color:var(--text);margin-bottom:8px">W/M (LCL Billing)</div>
+              <div style="color:var(--text2);display:flex;flex-direction:column;gap:4px">
+                <span>Revenue tons = max(t, CBM)</span>
+                <span>1 revenue ton = 1t or 1 CBM</span>
+                <span>Billed on whichever is higher</span>
+                <span>Min. charge typically 1 W/M</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>`;
+
+    // Mode toggle — show/hide relevant fields
+    const modeSelect = container.querySelector('#frt-mode');
+    const teuWrap    = container.querySelector('#frt-teu-wrap');
+    const weightWrap = container.querySelector('#frt-weight-wrap');
+    const cbmWrap    = container.querySelector('#frt-cbm-wrap');
+    const toggleFields = () => {
+      const m = modeSelect.value;
+      if (m === 'fcl') {
+        teuWrap.style.display = '';
+        weightWrap.style.display = 'none';
+        cbmWrap.style.display = 'none';
+      } else {
+        teuWrap.style.display = 'none';
+        weightWrap.style.display = '';
+        cbmWrap.style.display = '';
+      }
+    };
+    modeSelect.addEventListener('change', toggleFields);
+    toggleFields();
+
+    // Calculate button
+    container.querySelector('#frt-calc').addEventListener('click', () => FreightPage._calc(container));
+
+    // RFQ button
+    container.querySelector('#frt-rfq').addEventListener('click', () => FreightPage._draftRfq(container));
+
+    // Chat
+    const input = container.querySelector('#frt-input');
+    const send  = container.querySelector('#frt-send');
+    const autoResize = () => { input.style.height = 'auto'; input.style.height = Math.min(input.scrollHeight, 160) + 'px'; };
+    input.addEventListener('input', autoResize);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); FreightPage._send(); } });
+    send.addEventListener('click', () => FreightPage._send());
+    container.querySelector('#frt-clear').addEventListener('click', () => {
+      FreightPage._history = [];
+      container.querySelector('#frt-messages').innerHTML = '';
+    });
+    container.querySelectorAll('.frt-quick').forEach(btn =>
+      btn.addEventListener('click', () => { input.value = btn.dataset.q; FreightPage._send(); })
+    );
+  },
+
+  _calc(container) {
+    const mode     = container.querySelector('#frt-mode').value;
+    const lane     = container.querySelector('#frt-lane').value;
+    const weightKg = parseFloat(container.querySelector('#frt-weight')?.value) || 0;
+    const cbm      = parseFloat(container.querySelector('#frt-cbm')?.value) || 0;
+    const teu      = parseInt(container.querySelector('#frt-teu')?.value) || 1;
+    const ctype    = container.querySelector('#frt-container-type')?.value || '40hc';
+    const result   = container.querySelector('#frt-result');
+    const rfqWrap  = container.querySelector('#frt-rfq-wrap');
+
+    if (mode !== 'fcl' && weightKg <= 0 && cbm <= 0) {
+      toast('Enter weight or volume to estimate', 'error'); return;
+    }
+
+    // Rate tables (indicative market ranges, USD)
+    const fclRates = {
+      'asia-na': { '20gp':[1800,3200], '40gp':[2600,4500], '40hc':[2800,4800] },
+      'asia-eu': { '20gp':[1400,2800], '40gp':[2200,4000], '40hc':[2500,4400] },
+      'eu-na':   { '20gp':[1000,2000], '40gp':[1800,3200], '40hc':[2000,3500] },
+      'me-eu':   { '20gp':[800,1800],  '40gp':[1400,2600], '40hc':[1600,2800] },
+      'domestic':{ '20gp':[600,1200],  '40gp':[1000,1800], '40hc':[1100,2000] },
+      'other':   { '20gp':[1200,2500], '40gp':[2000,3600], '40hc':[2200,4000] },
+    };
+    const lclRatePerWM = { // USD per revenue tonne/CBM
+      'asia-na':55, 'asia-eu':42, 'eu-na':38, 'me-eu':35, 'domestic':20, 'other':45
+    };
+    const airRatePerKg = {
+      'asia-na':4.5, 'asia-eu':3.8, 'eu-na':3.2, 'me-eu':2.8, 'domestic':1.5, 'other':4.0
+    };
+    const ftlRatePerKm = 1.8; // USD/km rough
+    const ltlRateBase  = { 'domestic':250, 'other':400 };
+
+    let rows = [];
+    let mode_label = '';
+    let disclaimer = 'Estimates only — based on indicative market rates (2024–2025). Actual quotes from licensed forwarders will vary by carrier, season, surcharges, and cargo specifics. Always get live RFQs before committing.';
+
+    if (mode === 'fcl') {
+      const r = fclRates[lane]?.[ctype] || fclRates['other'][ctype];
+      const [lo, hi] = r;
+      const total_lo = lo * teu, total_hi = hi * teu;
+      const ctypeLabel = {20:'20ft GP',40:'40ft GP','40hc':'40ft HC'}[ctype] || ctype;
+      mode_label = `Ocean FCL · ${teu}×${ctypeLabel}`;
+      rows = [
+        [`Base ocean freight (${teu}× ${ctypeLabel})`, `$${total_lo.toLocaleString()} – $${total_hi.toLocaleString()}`],
+        ['Origin charges (est.)', '$150 – $300 per container'],
+        ['Destination charges (est.)', '$200 – $450 per container'],
+        ['Documentation', '$50 – $120'],
+        ['TOTAL ESTIMATE', `$${(total_lo+150+200+50).toLocaleString()} – $${(total_hi*teu+300+450+120).toLocaleString()}`],
+      ];
+    } else if (mode === 'lcl') {
+      const wt   = weightKg / 1000; // tonnes
+      const revT = Math.max(wt, cbm) || 1;
+      const rateBase = lclRatePerWM[lane] || 45;
+      const lo   = Math.round(revT * rateBase * 0.85);
+      const hi   = Math.round(revT * rateBase * 1.4);
+      mode_label = `Ocean LCL · ${revT.toFixed(2)} W/M`;
+      rows = [
+        ['Revenue tons (W/M)', `${revT.toFixed(2)} (max of ${wt.toFixed(2)}t, ${cbm}CBM)`],
+        ['Ocean freight', `$${lo} – $${hi}`],
+        ['Origin / CFS handling', '$80 – $180'],
+        ['Destination / CFS', '$100 – $220'],
+        ['TOTAL ESTIMATE', `$${lo+80+100} – $${hi+180+220}`],
+      ];
+      disclaimer += '\nLCL rates are W/M (Weight or Measure) — you pay for whichever is greater.';
+    } else if (mode === 'air') {
+      const volKg  = cbm * 167;
+      const charKg = Math.max(weightKg, volKg) || weightKg || volKg;
+      const rate   = airRatePerKg[lane] || 4.0;
+      const lo     = Math.round(charKg * rate * 0.85);
+      const hi     = Math.round(charKg * rate * 1.35);
+      mode_label   = `Air Freight · ${charKg.toFixed(1)} kg chargeable`;
+      rows = [
+        ['Gross weight', `${weightKg} kg`],
+        ['Volumetric weight', `${volKg.toFixed(1)} kg (${cbm} CBM × 167)`],
+        ['Chargeable weight', `${charKg.toFixed(1)} kg`],
+        ['Air freight', `$${lo} – $${hi}`],
+        ['Origin handling', '$60 – $140'],
+        ['Destination handling', '$80 – $180'],
+        ['TOTAL ESTIMATE', `$${lo+60+80} – $${hi+140+180}`],
+      ];
+    } else if (mode === 'ftl') {
+      const lo = 800, hi = 2200;
+      mode_label = 'Truck FTL';
+      rows = [
+        ['FTL base rate (domestic)', `$${lo} – $${hi}`],
+        ['Fuel surcharge (~15%)', `$${Math.round(lo*.15)} – $${Math.round(hi*.15)}`],
+        ['TOTAL ESTIMATE', `$${Math.round(lo*1.15)} – $${Math.round(hi*1.15)}`],
+      ];
+      disclaimer = 'FTL rates vary widely by lane, distance, and carrier. Request lane-specific quotes. These are rough domestic US/EU ranges.';
+    } else if (mode === 'ltl') {
+      const lo = 200, hi = 800;
+      mode_label = 'Truck LTL';
+      rows = [
+        ['LTL freight class estimate', `$${lo} – $${hi}`],
+        ['Fuel + accessorial surcharges', `$${Math.round(lo*.18)} – $${Math.round(hi*.25)}`],
+        ['TOTAL ESTIMATE', `$${Math.round(lo*1.18)} – $${Math.round(hi*1.25)}`],
+      ];
+      disclaimer = 'LTL rates depend on freight class, distance, and weight breaks. Get quotes from FedEx Freight, Old Dominion, XPO, or a 3PL.';
+    }
+
+    result.style.display = '';
+    result.innerHTML = `
+      <div class="frt-estimate-label">📊 INDICATIVE ESTIMATE — ${escHtml(mode_label)}</div>
+      ${rows.map(([l,v]) => `<div class="frt-estimate-row"><span>${escHtml(l)}</span><span style="font-weight:600">${escHtml(v)}</span></div>`).join('')}
+      <div class="frt-estimate-disclaimer">⚠️ ${escHtml(disclaimer)}</div>`;
+    rfqWrap.style.display = '';
+
+    // Store estimate data for RFQ drafting
+    FreightPage._lastEstimate = { mode, lane, weightKg, cbm, teu, ctype, rows, mode_label };
+  },
+
+  _draftRfq(container) {
+    const e = FreightPage._lastEstimate;
+    if (!e) { toast('Run the estimator first', 'error'); return; }
+    const laneLabels = {'asia-na':'Asia → North America','asia-eu':'Asia → Europe','eu-na':'Europe → North America','me-eu':'Middle East → Europe','domestic':'Domestic','other':'Cross-trade'};
+    const rfqPrompt = `Draft a professional freight RFQ (Request for Quotation) for the following shipment. Format it as a ready-to-send email to a freight forwarder:
+
+Mode: ${e.mode_label}
+Trade Lane: ${laneLabels[e.lane] || e.lane}
+${e.mode !== 'fcl' ? `Gross Weight: ${e.weightKg} kg\nVolume: ${e.cbm} CBM` : `Containers: ${e.teu}× ${e.ctype}`}
+
+Include sections for: cargo description (leave placeholder), HS code (leave placeholder), pickup address / port of loading, port of discharge / delivery address, requested Incoterms, target cargo readiness date, required transit time, special requirements (e.g. hazmat, temp control), and request for all-in rate including surcharges and estimated transit time. End with a professional sign-off requesting the quote within 48 hours.`;
+    const input = document.getElementById('frt-input');
+    if (input) { input.value = rfqPrompt; FreightPage._send(); }
+  },
+
+  _addMsg(role, html, raw = '') {
+    const msgs = document.getElementById('frt-messages');
+    if (!msgs) return;
+    document.querySelector('.frt-welcome')?.remove();
+    document.querySelector('.frt-quick-row')?.remove();
+    const wrap = document.createElement('div');
+    wrap.className = `frt-msg frt-msg--${role}`;
+    if (role === 'user') {
+      wrap.innerHTML = `<div class="frt-bubble frt-bubble--user">${escHtml(raw || html)}</div>`;
+    } else {
+      wrap.innerHTML = `<div class="frt-av">🚢</div><div class="frt-bubble frt-bubble--ai">${html}</div>`;
+    }
+    msgs.appendChild(wrap);
+    msgs.scrollTop = msgs.scrollHeight;
+    return wrap.querySelector('.frt-bubble--ai');
+  },
+
+  async _send() {
+    const input = document.getElementById('frt-input');
+    const text  = (input?.value || '').trim();
+    if (!text) return;
+    if (!Usage.canMessage()) { toast('Daily message limit reached. Upgrade your plan.', 'error'); return; }
+
+    input.value = '';
+    input.style.height = 'auto';
+
+    FreightPage._addMsg('user', text, text);
+    FreightPage._history.push({ role: 'user', content: text });
+    Usage.trackMessage();
+
+    // Typing indicator
+    const msgs = document.getElementById('frt-messages');
+    const typing = document.createElement('div');
+    typing.className = 'frt-msg frt-msg--ai'; typing.id = 'frt-typing';
+    typing.innerHTML = `<div class="frt-av">🚢</div><div class="frt-bubble frt-bubble--ai"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
+
+    const emp = FreightPage._emp;
+    const systemPrompt = emp?.system || 'You are Vasco, a freight and logistics expert.';
+    const compCtx = State.company?.name ? `\n\nCompany context: ${State.company.name}${State.company.industry ? ', '+State.company.industry : ''}.` : '';
+
+    try {
+      const result = await callAI(FreightPage._history, systemPrompt + compCtx, emp);
+      document.getElementById('frt-typing')?.remove();
+      const raw    = result.content?.[0]?.text || '';
+      const html   = (typeof marked !== 'undefined' ? marked.parse(raw) : escHtml(raw));
+      FreightPage._addMsg('ai', html, raw);
+      FreightPage._history.push({ role: 'assistant', content: raw });
+      if (emp) { emp.tasks = (emp.tasks || 0) + 1; save('employees'); }
+    } catch(err) {
+      document.getElementById('frt-typing')?.remove();
+      FreightPage._addMsg('ai', `<span style="color:var(--error)">⚠️ ${escHtml(String(err))}</span>`);
+    }
+  },
+
+  destroy() {
+    FreightPage._emp     = null;
+    FreightPage._history = [];
+    FreightPage._lastEstimate = null;
   },
 };
 
