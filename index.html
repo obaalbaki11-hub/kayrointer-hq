@@ -116,8 +116,9 @@ nav{
 
 /* ── PRICING ── */
 .pricing-wrap{width:100%;max-width:940px;margin:0 auto}
-.pricing-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-@media(max-width:720px){.pricing-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto}}
+.pricing-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:1080px){.pricing-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:540px){.pricing-grid{grid-template-columns:1fr;max-width:380px;margin:0 auto}}
 .p-card{
   background:#0e0e0e;border:1px solid var(--border);
   border-radius:16px;padding:28px;display:flex;flex-direction:column;
@@ -427,7 +428,7 @@ footer{
 <section class="hero" id="hero" style="min-height:100vh;padding-bottom:64px">
   <div class="hero-badge">
     <span class="badge-dot"></span>
-    AI Workforce Platform — 30+ Power Skills
+    AI Workforce Platform — 33 Power Skills
   </div>
 
   <h1 class="hero-h1">
@@ -435,7 +436,7 @@ footer{
     <span class="hero-h1-dim">Actually doing the work.</span>
   </h1>
 
-  <p class="hero-sub">8 specialized AI employees — each with a role, memory, and domain expertise. Not a chatbot. A full workforce that writes emails, builds PRDs, audits sales calls, analyses markets, and ships.</p>
+  <p class="hero-sub">46 specialized AI employees across 12 departments — each with a role, memory, and domain expertise. Not a chatbot. A workforce that writes emails, builds PRDs, audits sales calls, analyses markets, and ships.</p>
 
   <div style="display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-bottom:36px">
     <a href="#showcase" style="display:inline-flex;align-items:center;gap:8px;background:#fff;color:#000;padding:14px 28px;border-radius:10px;font-size:14px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#fff'">See what it does ↓</a>
@@ -445,22 +446,23 @@ footer{
   <!-- Agent avatar strip -->
   <div style="display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:20px">
     <div style="display:flex">
-      <div title="Claude — AI Manager" style="width:40px;height:40px;border-radius:50%;background:#e07540;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:8">C</div>
-      <div title="Omar — Head of Product" style="width:40px;height:40px;border-radius:50%;background:#3b82f6;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:7">O</div>
-      <div title="Sarah — Lead Engineer" style="width:40px;height:40px;border-radius:50%;background:#22c55e;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:6">S</div>
-      <div title="Alex — Marketing" style="width:40px;height:40px;border-radius:50%;background:#a855f7;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:5">A</div>
-      <div title="Zara — Design" style="width:40px;height:40px;border-radius:50%;background:#ec4899;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:4">Z</div>
-      <div title="Chris — Head of Sales" style="width:40px;height:40px;border-radius:50%;background:#ef4444;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:3">C</div>
-      <div title="Mia — Customer Success" style="width:40px;height:40px;border-radius:50%;background:#06b6d4;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:2">M</div>
-      <div title="ARIA — Personal Assistant" style="width:40px;height:40px;border-radius:50%;background:#f0c040;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#000;margin-left:-6px;z-index:1">A</div>
+      <div title="Rex — AI Orchestrator" style="width:40px;height:40px;border-radius:50%;background:#7c3aed;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:9">R</div>
+      <div title="Sarah — Lead Engineer" style="width:40px;height:40px;border-radius:50%;background:#22c55e;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:8">S</div>
+      <div title="Alex — Head of Marketing" style="width:40px;height:40px;border-radius:50%;background:#a855f7;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:7">A</div>
+      <div title="Chris — Head of Sales" style="width:40px;height:40px;border-radius:50%;background:#ef4444;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:6">C</div>
+      <div title="Zara — Lead Designer" style="width:40px;height:40px;border-radius:50%;background:#ec4899;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:5">Z</div>
+      <div title="Linda — Legal Counsel" style="width:40px;height:40px;border-radius:50%;background:#f59e0b;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:4">L</div>
+      <div title="Felix — CFO & Finance" style="width:40px;height:40px;border-radius:50%;background:#06b6d4;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#fff;margin-left:-6px;z-index:3">F</div>
+      <div title="ARIA — Personal Assistant" style="width:40px;height:40px;border-radius:50%;background:#f0c040;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;color:#000;margin-left:-6px;z-index:2">A</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#1a1a1a;border:2px solid #080808;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#555;margin-left:-6px;z-index:1;font-family:var(--mono)">+38</div>
     </div>
-    <span style="font-size:12px;color:#444;margin-left:14px;font-family:var(--mono)">8 agents online</span>
+    <span style="font-size:12px;color:#444;margin-left:14px;font-family:var(--mono)">46 agents online</span>
     <span style="width:6px;height:6px;border-radius:50%;background:#22c55e;margin-left:8px;animation:pulse 2s infinite;display:inline-block"></span>
   </div>
 
   <!-- Stat strip -->
   <div style="display:flex;align-items:center;justify-content:center;gap:24px;flex-wrap:wrap">
-    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">30+</span> power skills</div>
+    <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">33</span> power skills</div>
     <div style="color:#222;font-size:14px">·</div>
     <div style="font-size:11px;color:#333;font-family:var(--mono)"><span style="color:#fff;font-weight:700">Gmail</span> connected</div>
     <div style="color:#222;font-size:14px">·</div>
@@ -483,38 +485,25 @@ footer{
   </div>
 
   <!-- AGENT ROSTER -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;margin-bottom:72px">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:72px">
 
-    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #e07540">
+    <!-- Rex — Orchestrator / Swarm -->
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #7c3aed">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="width:38px;height:38px;border-radius:50%;background:#e0754022;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#e07540;flex-shrink:0">C</div>
-        <div><div style="font-size:13px;font-weight:700;color:#fff">Claude</div><div style="font-size:10px;color:#e07540;font-family:var(--mono);letter-spacing:.5px">AI MANAGER</div></div>
+        <div style="width:38px;height:38px;border-radius:50%;background:#7c3aed22;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#7c3aed;flex-shrink:0">R</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Rex</div><div style="font-size:10px;color:#7c3aed;font-family:var(--mono);letter-spacing:.5px">AI ORCHESTRATOR</div></div>
         <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
       </div>
-      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Your strategic right hand. Manages the team, runs OKRs, builds GTM plans, coordinates cross-functional work, and gives hard honest recommendations.</p>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Coordinates your entire AI team. Launch Swarm Mode to run agents in parallel on the same goal — research, draft, review, and ship simultaneously.</p>
       <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
-        <div style="color:#e07540">Try: </div>
-        <div style="color:#888">/strategy grow from 0 to 100 subscribers</div>
+        <div style="color:#7c3aed">Try: </div>
         <div style="color:#888">/delegate launch Product Hunt by Friday</div>
-        <div style="color:#888">/rfp [paste any tender document]</div>
+        <div style="color:#888">Swarm: research + draft + review in parallel</div>
+        <div style="color:#888">/strategy 0 to 1,000 users</div>
       </div>
     </div>
 
-    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #3b82f6">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
-        <div style="width:38px;height:38px;border-radius:50%;background:#3b82f622;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#3b82f6;flex-shrink:0">O</div>
-        <div><div style="font-size:13px;font-weight:700;color:#fff">Omar</div><div style="font-size:10px;color:#3b82f6;font-family:var(--mono);letter-spacing:.5px">HEAD OF PRODUCT</div></div>
-        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
-      </div>
-      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Writes full PRDs, runs sprint planning, gives blunt product critique, and makes prioritization calls. Thinks like Stripe, Linear, Figma leadership.</p>
-      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
-        <div style="color:#3b82f6">Try: </div>
-        <div style="color:#888">/prd referral program feature</div>
-        <div style="color:#888">/gsd launch the new pricing page</div>
-        <div style="color:#888">/competitive Kayro vs Notion AI</div>
-      </div>
-    </div>
-
+    <!-- Sarah — Engineering -->
     <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #22c55e">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
         <div style="width:38px;height:38px;border-radius:50%;background:#22c55e22;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#22c55e;flex-shrink:0">S</div>
@@ -530,6 +519,7 @@ footer{
       </div>
     </div>
 
+    <!-- Alex — Marketing -->
     <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #a855f7">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
         <div style="width:38px;height:38px;border-radius:50%;background:#a855f722;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#a855f7;flex-shrink:0">A</div>
@@ -540,18 +530,19 @@ footer{
       <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
         <div style="color:#a855f7">Try: </div>
         <div style="color:#888">/campaign Growth plan launch</div>
-        <div style="color:#888">/social announcing Kling video integration</div>
-        <div style="color:#888">/copy hero section for kayrointer.com</div>
+        <div style="color:#888">/social announcing Kling video</div>
+        <div style="color:#888">/copy hero section for landing page</div>
       </div>
     </div>
 
+    <!-- Chris — Sales -->
     <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #ef4444">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
         <div style="width:38px;height:38px;border-radius:50%;background:#ef444422;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#ef4444;flex-shrink:0">C</div>
         <div><div style="font-size:13px;font-weight:700;color:#fff">Chris</div><div style="font-size:10px;color:#ef4444;font-family:var(--mono);letter-spacing:.5px">HEAD OF SALES</div></div>
         <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
       </div>
-      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Closes deals. Writes cold emails that actually get replies, builds outreach sequences, audits sales calls against 6 quality dimensions, and coaches reps.</p>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Closes deals. Writes cold emails that get replies, builds outreach sequences, audits sales calls against 6 quality dimensions, and coaches reps.</p>
       <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
         <div style="color:#ef4444">Try: </div>
         <div style="color:#888">/outreach CTOs at Series A SaaS</div>
@@ -560,6 +551,71 @@ footer{
       </div>
     </div>
 
+    <!-- Zara — Design -->
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #ec4899">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#ec489922;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#ec4899;flex-shrink:0">Z</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Zara</div><div style="font-size:10px;color:#ec4899;font-family:var(--mono);letter-spacing:.5px">LEAD DESIGNER</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Generates complete, working HTML/CSS from a description. Landing pages, dashboards, email templates — live preview in-app, copy code instantly.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#ec4899">Try: </div>
+        <div style="color:#888">Design a SaaS pricing page, dark mode</div>
+        <div style="color:#888">Build a dashboard for weekly metrics</div>
+        <div style="color:#888">Create an email header for our launch</div>
+      </div>
+    </div>
+
+    <!-- Linda — Legal -->
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #f59e0b">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#f59e0b22;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#f59e0b;flex-shrink:0">L</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Linda</div><div style="font-size:10px;color:#f59e0b;font-family:var(--mono);letter-spacing:.5px">LEGAL COUNSEL</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Drafts NDAs, service agreements, and SaaS contracts. Gives plain-English legal analysis on TOS, GDPR compliance, and IP questions.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#f59e0b">Try: </div>
+        <div style="color:#888">/contract NDA with a freelancer</div>
+        <div style="color:#888">/legal is this TOS GDPR compliant?</div>
+        <div style="color:#888">/audit our onboarding flow for risk</div>
+      </div>
+    </div>
+
+    <!-- Felix — Finance -->
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #06b6d4">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#06b6d422;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#06b6d4;flex-shrink:0">F</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Felix</div><div style="font-size:10px;color:#06b6d4;font-family:var(--mono);letter-spacing:.5px">CFO &amp; FINANCE</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Extracts data from invoices, builds expense reports, runs tax planning, and models financial projections in the AI spreadsheet.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#06b6d4">Try: </div>
+        <div style="color:#888">/invoice [attach receipt]</div>
+        <div style="color:#888">/tax what's deductible for SaaS?</div>
+        <div style="color:#888">/expense Q2 report, multi-currency</div>
+      </div>
+    </div>
+
+    <!-- Mia — Customer Support -->
+    <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #3b82f6">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
+        <div style="width:38px;height:38px;border-radius:50%;background:#3b82f622;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#3b82f6;flex-shrink:0">M</div>
+        <div><div style="font-size:13px;font-weight:700;color:#fff">Mia</div><div style="font-size:10px;color:#3b82f6;font-family:var(--mono);letter-spacing:.5px">CUSTOMER SUCCESS</div></div>
+        <div style="margin-left:auto;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:pulse 2s infinite"></div>
+      </div>
+      <p style="font-size:12px;color:#555;line-height:1.65;margin-bottom:14px">Handles support tickets, writes onboarding playbooks, and turns churned customers into case studies. Makes every customer feel like the only customer.</p>
+      <div style="background:#060606;border:1px solid rgba(255,255,255,.05);border-radius:8px;padding:10px 12px;font-family:var(--mono);font-size:11px;line-height:1.7">
+        <div style="color:#3b82f6">Try: </div>
+        <div style="color:#888">/onboard Day 1 playbook for new user</div>
+        <div style="color:#888">Write a reply to this angry customer</div>
+        <div style="color:#888">Turn this churn email into a win-back</div>
+      </div>
+    </div>
+
+    <!-- ARIA — Personal Assistant -->
     <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:16px;padding:22px;border-top:3px solid #f0c040">
       <div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">
         <div style="width:38px;height:38px;border-radius:50%;background:#f0c04022;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#f0c040;flex-shrink:0">A</div>
@@ -573,6 +629,14 @@ footer{
         <div style="color:#888">/morning-note</div>
         <div style="color:#888">/property 123 Main St Austin TX</div>
       </div>
+    </div>
+
+    <!-- +37 more -->
+    <div style="background:#0a0a0a;border:1px dashed rgba(255,255,255,.1);border-radius:16px;padding:22px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px">
+      <div style="font-size:28px;font-weight:800;color:#222;font-family:var(--mono)">+37</div>
+      <div style="font-size:13px;font-weight:700;color:#555">more AI employees</div>
+      <div style="font-size:11px;color:#333;line-height:1.6">Finance, HR, Operations, Travel,<br>Research, Security &amp; more</div>
+      <a href="app.html" style="display:inline-flex;align-items:center;gap:6px;background:#fff;color:#000;padding:9px 18px;border-radius:8px;font-size:12px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:all .2s" onmouseover="this.style.background='#e8e8e8'" onmouseout="this.style.background='#fff'">Meet the full team →</a>
     </div>
 
   </div>
@@ -681,7 +745,7 @@ footer{
       </div>
       <div style="background:#0e0e0e;border:1px solid rgba(255,255,255,.07);border-radius:14px;padding:20px;transition:border-color .18s" onmouseover="this.style.borderColor='rgba(255,255,255,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.07)'">
         <div style="font-size:22px;margin-bottom:10px">⚡</div>
-        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">30+ Skills</div>
+        <div style="font-size:13px;font-weight:700;color:#fff;margin-bottom:5px">33 Power Skills</div>
         <div style="font-size:11.5px;color:#555;line-height:1.6">/meeting /rfp /invoice /tax /sales-audit /property /morning-note /sector and more — full docs every time.</div>
       </div>
     </div>
@@ -750,16 +814,16 @@ footer{
         <div class="p-price p-price-monthly">$29<span class="p-period">/mo</span></div>
         <div class="p-desc">Claude is fully included — we pay the tokens. Zero setup, just launch and go.</div>
         <div class="p-credits" style="border-color:rgba(255,255,255,.15);background:rgba(255,255,255,.05)">
-          <span class="p-credits-label">MESSAGES / DAY</span>
-          <span class="p-credits-val">100</span>
+          <span class="p-credits-label">MESSAGES / MONTH</span>
+          <span class="p-credits-val">~750</span>
         </div>
         <ul class="p-features">
           <li><span class="pf-check">✓</span><strong>Claude AI included — no API key needed</strong></li>
-          <li><span class="pf-check">✓</span><strong>100 messages / day</strong></li>
+          <li><span class="pf-check">✓</span><strong>25 / day · top up anytime</strong></li>
           <li><span class="pf-check">✓</span>Internet search for agents (5/day)</li>
-          <li><span class="pf-check">✓</span>Apollo.io lead search integration</li>
-          <li><span class="pf-check">✓</span>Meta Ads Manager integration</li>
-          <li><span class="pf-check">✓</span>All core features + Power Skills</li>
+          <li><span class="pf-check">✓</span>All 46 agents + all studios</li>
+          <li><span class="pf-check">✓</span>Hunter.io lead finder integration</li>
+          <li><span class="pf-check">✓</span>All core features + 33 Power Skills</li>
           <li><span class="pf-check">✓</span>Email support</li>
         </ul>
         <a class="p-btn primary" href="app.html">Get Growth →</a>
@@ -769,21 +833,41 @@ footer{
       <div class="p-card">
         <div class="p-tier">Scale</div>
         <div class="p-price p-price-monthly">$99<span class="p-period">/mo</span></div>
-        <div class="p-desc">Full power. Bring your own Claude + Kling keys. Built for teams running entire operations on AI.</div>
+        <div class="p-desc">Full power. Kling video generation included. Built for teams running entire operations on AI.</div>
         <div class="p-credits">
-          <span class="p-credits-label">MESSAGES / DAY</span>
-          <span class="p-credits-val">500</span>
+          <span class="p-credits-label">MESSAGES / MONTH</span>
+          <span class="p-credits-val">~2,400</span>
         </div>
         <ul class="p-features">
-          <li><span class="pf-check">✓</span><strong>500 messages / day</strong></li>
+          <li><span class="pf-check">✓</span><strong>80 / day (~2,400/month)</strong></li>
           <li><span class="pf-check">✓</span><strong>Kling AI video generation</strong></li>
           <li><span class="pf-check">✓</span>Internet search (15/day)</li>
-          <li><span class="pf-check">✓</span>5 team seats</li>
+          <li><span class="pf-check">✓</span>Multi-seat · up to 5 users</li>
           <li><span class="pf-check">✓</span>Everything in Growth</li>
           <li><span class="pf-check">✓</span>Bring your own Claude API key</li>
           <li><span class="pf-check">✓</span>Priority support</li>
         </ul>
         <a class="p-btn" href="app.html">Get Scale →</a>
+      </div>
+
+      <!-- Enterprise -->
+      <div class="p-card" style="border-color:rgba(200,160,64,.25)">
+        <div class="p-tier" style="color:#c8a040">Enterprise</div>
+        <div class="p-price" style="font-size:28px;letter-spacing:-1px;padding-top:6px">Let's talk</div>
+        <div class="p-desc">Custom deployment for teams running entire revenue functions on AI.</div>
+        <div class="p-credits" style="border-color:rgba(200,160,64,.2);background:rgba(200,160,64,.04)">
+          <span class="p-credits-label" style="color:#7a6020">MESSAGES</span>
+          <span class="p-credits-val" style="color:#c8a040">Unlimited</span>
+        </div>
+        <ul class="p-features">
+          <li><span class="pf-check" style="color:#c8a040">✓</span>Unlimited messages</li>
+          <li><span class="pf-check" style="color:#c8a040">✓</span>Dedicated infrastructure</li>
+          <li><span class="pf-check" style="color:#c8a040">✓</span>SSO + SAML auth</li>
+          <li><span class="pf-check" style="color:#c8a040">✓</span>Custom AI training on your data</li>
+          <li><span class="pf-check" style="color:#c8a040">✓</span>SOC 2 + data residency</li>
+          <li><span class="pf-check" style="color:#c8a040">✓</span>Dedicated account manager</li>
+        </ul>
+        <a class="p-btn" href="mailto:sales@kayrointer.com?subject=Enterprise Inquiry" style="border-color:rgba(200,160,64,.35);color:#c8a040" onmouseover="this.style.background='rgba(200,160,64,.08)';this.style.color='#c8a040'" onmouseout="this.style.background='none'">Talk to Sales →</a>
       </div>
 
     </div>
@@ -792,7 +876,73 @@ footer{
 
 <!-- FEATURES SECTION -->
 <section class="feat-section" id="features">
-  <p class="feat-section-sub">Eight AI specialists — Product, Engineering, Marketing, Design, Sales, Customer Success, Personal Assistant, and AI Manager — each with their own expertise, memory, and domain knowledge.</p>
+  <p class="feat-section-sub">46 specialized AI employees across 12 departments, plus the tools to run your whole business — all in one command center.</p>
+
+  <!-- HEADLINE FEATURES — 4 major modules -->
+  <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:16px">
+
+    <!-- Ad Studio -->
+    <div class="feat-card" style="border-color:rgba(251,146,60,.2);background:linear-gradient(135deg,#0e0e0e 60%,rgba(251,146,60,.04))">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="feat-icon-wrap" style="background:#2d1800">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#fb923c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+        </div>
+        <div><div class="feat-title" style="margin-bottom:3px">Ad Studio</div><div style="font-size:10px;color:#fb923c;font-family:var(--mono);letter-spacing:1px;font-weight:700">KLING AI VIDEO · IMAGE ADS</div></div>
+      </div>
+      <div class="feat-desc">Describe your ad — a product demo, brand clip, or social spot. Kling AI generates a short video from a text prompt. For image ads, your design agent builds branded HTML/CSS in seconds. Both attach directly to cold email campaigns.</div>
+      <div class="feat-preview">
+        <div><span class="fp-orange">Kling:</span> <span class="fp-white">15s product demo, dark bg, bold CTA</span></div>
+        <div><span class="fp-green">→ Video rendered · attach to email ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Social Studio -->
+    <div class="feat-card" style="border-color:rgba(168,85,247,.2);background:linear-gradient(135deg,#0e0e0e 60%,rgba(168,85,247,.04))">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="feat-icon-wrap" style="background:#1e0a3a">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a855f7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div><div class="feat-title" style="margin-bottom:3px">Social Studio</div><div style="font-size:10px;color:#a855f7;font-family:var(--mono);letter-spacing:1px;font-weight:700">TWITTER · LINKEDIN · INSTAGRAM</div></div>
+      </div>
+      <div class="feat-desc">Generate a full week of social content from a single prompt. Posts for Twitter/X, LinkedIn, and Instagram — each platform-native in tone and format. Includes hashtags, hooks, and a ready-to-paste content calendar.</div>
+      <div class="feat-preview">
+        <div><span style="color:#a855f7">Alex:</span> <span class="fp-white">7-day launch calendar, 3 platforms</span></div>
+        <div><span class="fp-green">→ 21 posts drafted · copy to schedule ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Swarm Mode -->
+    <div class="feat-card" style="border-color:rgba(124,58,237,.2);background:linear-gradient(135deg,#0e0e0e 60%,rgba(124,58,237,.04))">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="feat-icon-wrap" style="background:#1a0a30">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div><div class="feat-title" style="margin-bottom:3px">Swarm Mode</div><div style="font-size:10px;color:#7c3aed;font-family:var(--mono);letter-spacing:1px;font-weight:700">PARALLEL MULTI-AGENT EXECUTION</div></div>
+      </div>
+      <div class="feat-desc">Run your entire AI team on a single goal simultaneously. Broadcast a task and every agent contributes from their own expertise in parallel — Sales angles, Legal risk flags, Engineering edge cases, all at once.</div>
+      <div class="feat-preview">
+        <div><span style="color:#7c3aed">Swarm:</span> <span class="fp-white">Review our new pricing page</span></div>
+        <div><span class="fp-green">→ 8 agents · parallel · 45s ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Remotion Studio -->
+    <div class="feat-card" style="border-color:rgba(239,68,68,.2);background:linear-gradient(135deg,#0e0e0e 60%,rgba(239,68,68,.04))">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px">
+        <div class="feat-icon-wrap" style="background:#2a0a0a">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="2"/><path d="m10 8 6 4-6 4V8z"/></svg>
+        </div>
+        <div><div class="feat-title" style="margin-bottom:3px">Remotion Studio</div><div style="font-size:10px;color:#ef4444;font-family:var(--mono);letter-spacing:1px;font-weight:700">CODE-BASED VIDEO GENERATION</div></div>
+      </div>
+      <div class="feat-desc">Generate animated videos programmatically from React + Remotion. Charts that animate, text that types, product tours that render as MP4 — AI writes the code, you hit render. No video editor required.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">Prompt:</span> <span class="fp-white">Animate our Q2 revenue chart</span></div>
+        <div><span class="fp-green">→ Remotion component ready · render ✓</span></div>
+      </div>
+    </div>
+
+  </div>
+
   <div class="feat-grid">
 
     <!-- Hire & Fire -->
@@ -801,7 +951,7 @@ footer{
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       </div>
       <div class="feat-title">Hire &amp; Fire Employees</div>
-      <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. 8 specialists included — Product, Engineering, Marketing, Design, Sales, CS, Assistant, Manager. Add more any time.</div>
+      <div class="feat-desc">Create AI staff with custom roles, skills, and personalities. 46 specialists included — Product, Engineering, Marketing, Design, Sales, Legal, Finance, Support, and more. Add your own any time.</div>
       <div class="feat-preview">
         <div><span class="fp-green">● ONLINE</span> <span class="fp-white">Sarah — Lead Engineer</span></div>
         <div><span class="fp-dim">→</span> <span class="fp-white">3 tasks in progress</span></div>
@@ -830,7 +980,7 @@ footer{
       <div class="feat-desc">Broadcast one question to your entire AI team simultaneously. Each agent responds from their own expertise — like a real company standup in seconds.</div>
       <div class="feat-preview">
         <div><span class="fp-orange">You:</span> <span class="fp-white">What's the biggest risk this week?</span></div>
-        <div><span class="fp-green">8 agents responding…</span></div>
+        <div><span class="fp-green">46 agents responding…</span></div>
       </div>
     </div>
 
@@ -912,6 +1062,84 @@ footer{
       </div>
     </div>
 
+    <!-- Competitive Intel -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1a1400">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#eab308" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/><path d="M11 8v6M8 11h6"/></svg>
+      </div>
+      <div class="feat-title">Competitive Intel</div>
+      <div class="feat-desc">Monitor competitors in real time. Track pricing changes, feature launches, and positioning shifts. Get a structured teardown with scores across 8 dimensions.</div>
+      <div class="feat-preview">
+        <div><span style="color:#eab308">/competitive</span> <span class="fp-white">Kayro vs Notion AI</span></div>
+        <div><span class="fp-green">→ 8-dimension teardown ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Automations -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#0a1a2a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>
+      </div>
+      <div class="feat-title">Automations</div>
+      <div class="feat-desc">Schedule AI workflows to run on a timer. Morning briefings at 7am, weekly reports every Friday, monthly audits — set it once, agents run it automatically.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">⏰ 07:00 Mon–Fri:</span> <span class="fp-white">/morning-note</span></div>
+        <div><span class="fp-green">→ Delivered automatically ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Security -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#0a1f0a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div class="feat-title">Security Dashboard</div>
+      <div class="feat-desc">Monitor your AI workforce's security posture. Session audits, permission checks, API key exposure scan, and plain-English risk reports — know where you stand.</div>
+      <div class="feat-preview">
+        <div><span class="fp-green">● SECURE</span> <span class="fp-white">API keys: server-side only</span></div>
+        <div><span style="color:#f59e0b">⚠</span> <span class="fp-white">1 item needs review</span></div>
+      </div>
+    </div>
+
+    <!-- Connectors -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1a1a1a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#a1a1aa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="m8.59 13.51 6.83 3.98M15.41 6.51l-6.82 3.98"/></svg>
+      </div>
+      <div class="feat-title">Connectors</div>
+      <div class="feat-desc">Connect external tools — Gmail, Meta Ads, Hunter.io, and more. Agents pull live data and act in your other systems without you switching tabs.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">Gmail</span> <span class="fp-green">✓</span> <span class="fp-blue">Meta Ads</span> <span class="fp-green">✓</span></div>
+        <div><span class="fp-blue">Hunter.io</span> <span class="fp-green">✓</span> <span class="fp-white">+ more</span></div>
+      </div>
+    </div>
+
+    <!-- Travel -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#0a1a2a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19.5 2.5c-1.5-1.5-3.5-1.5-5 0L11 6 2.8 4.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 6.2 7.3c.4.4.9.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/></svg>
+      </div>
+      <div class="feat-title">Travel Concierge</div>
+      <div class="feat-desc">Book flights and hotels without leaving Kayro. Your AI Travel Concierge searches routes, compares hotels, and walks you through booking — all in chat.</div>
+      <div class="feat-preview">
+        <div><span class="fp-blue">✈️ Found 6 flights</span> <span class="fp-white">NYC → LAX</span></div>
+        <div><span class="fp-green">→ Best option selected ✓</span></div>
+      </div>
+    </div>
+
+    <!-- Operations -->
+    <div class="feat-card">
+      <div class="feat-icon-wrap" style="background:#1a0a0a">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#f87171" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="feat-title">Operations</div>
+      <div class="feat-desc">Watch your AI workforce in real time. Live activity feed shows what every agent is doing right now, auto-refreshing. Token Tracker shows usage and cost across all models.</div>
+      <div class="feat-preview">
+        <div><span style="color:#f87171">🔴 LIVE</span> <span class="fp-white">Sarah: reviewing PR #47</span></div>
+        <div><span class="fp-blue">📊 Tokens:</span> <span class="fp-white">12,340 used today</span></div>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -919,12 +1147,12 @@ footer{
 <section class="skills-section" id="skills">
   <div class="skills-section-hdr">
     <div class="skills-eyebrow">// power skills</div>
-    <h2 class="skills-section-h">30+ slash commands.<br>Your team does the work.</h2>
+    <h2 class="skills-section-h">33 slash commands.<br>Your team does the work.</h2>
     <p class="skills-section-sub">Type any <code style="font-family:var(--mono);background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:5px;padding:2px 7px;font-size:13px">/skill</code> in chat and your agent activates a specialized workflow — not a generic reply, a complete professional output.</p>
     <div class="skills-count-row">
-      <div class="skills-count-badge"><span>30+</span> skills</div>
+      <div class="skills-count-badge"><span>33</span> skills</div>
       <div class="skills-count-badge"><span>8</span> categories</div>
-      <div class="skills-count-badge"><span>8</span> AI agents</div>
+      <div class="skills-count-badge"><span>46</span> AI agents</div>
       <div class="skills-count-badge">full docs, not outlines</div>
     </div>
   </div>
