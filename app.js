@@ -14099,37 +14099,52 @@ const TravelPage = {
     const panel = document.getElementById('trv-results-panel');
     if (!panel) return;
 
-    const flightRes = settled.find((_, i) => (searchType === 'flights' || searchType === 'both') && i === 0);
-    const hotelRes  = settled.find((_, i) => searchType === 'both' ? i === 1 : (searchType === 'hotels' && i === 0));
+    let flightRes = null, hotelRes = null;
+    if (searchType === 'flights')      { flightRes = settled[0]; }
+    else if (searchType === 'hotels')  { hotelRes  = settled[0]; }
+    else                               { flightRes = settled[0]; hotelRes = settled[1]; }
+
+    TravelPage._sortFlight  = 'best';
+    TravelPage._sortHotel   = 'price';
 
     let html = '<div class="trv-results-wrap">';
 
-    // ── Flights section ──────────────────────────────────────────
+    // ── Flights ─────────────────────────────────────────────────
     if (searchType === 'flights' || searchType === 'both') {
-      html += `<div class="trv-section-hdr"><span class="trv-section-icon">✈️</span> Flights</div>`;
       if (flightRes?.status === 'rejected') {
-        html += `<div class="trv-error-card">⚠️ Flight search failed: ${escHtml(flightRes.reason?.message || 'Unknown error')}</div>`;
+        html += `<div class="trv-section-meta"><div class="trv-section-hdr"><span class="trv-section-icon">✈️</span> Flights</div><span class="trv-live-badge">Live · Duffel</span></div>`;
+        html += `<div class="trv-error-card">⚠️ ${escHtml(flightRes.reason?.message || 'Flight search failed')}</div>`;
       } else {
         const offers = flightRes?.value?.offers || [];
+        html += `<div class="trv-section-meta"><div class="trv-section-hdr"><span class="trv-section-icon">✈️</span> Flights</div><span class="trv-live-badge">Live · Duffel</span><span class="trv-result-count">${offers.length} result${offers.length!==1?'s':''}</span></div>`;
         if (!offers.length) {
           html += `<div class="trv-no-results">No flights found for those dates. Try adjusting your search.</div>`;
         } else {
-          html += offers.slice(0, 8).map((o, i) => TravelPage._flightCard(o, i)).join('');
+          html += `<div class="trv-sort-bar" id="trv-sort-flight">
+            <button class="trv-sort-btn active" data-sort="best">⭐ Best value</button>
+            <button class="trv-sort-btn" data-sort="cheap">💰 Cheapest</button>
+            <button class="trv-sort-btn" data-sort="fast">⚡ Fastest</button>
+          </div><div id="trv-flight-cards"></div>`;
         }
       }
     }
 
-    // ── Hotels section ───────────────────────────────────────────
+    // ── Hotels ──────────────────────────────────────────────────
     if (searchType === 'hotels' || searchType === 'both') {
-      html += `<div class="trv-section-hdr" style="margin-top:${searchType==='both'?'28px':'0'}"><span class="trv-section-icon">🏨</span> Hotels</div>`;
+      const mt = searchType === 'both' ? 'margin-top:24px' : '';
       if (hotelRes?.status === 'rejected') {
-        html += `<div class="trv-error-card">⚠️ Hotel search failed: ${escHtml(hotelRes.reason?.message || 'Unknown error')}</div>`;
+        html += `<div class="trv-section-meta" style="${mt}"><div class="trv-section-hdr"><span class="trv-section-icon">🏨</span> Hotels</div><span class="trv-live-badge">Live · Amadeus</span></div>`;
+        html += `<div class="trv-error-card">⚠️ ${escHtml(hotelRes.reason?.message || 'Hotel search failed')}</div>`;
       } else {
         const hotels = hotelRes?.value?.hotels || [];
+        html += `<div class="trv-section-meta" style="${mt}"><div class="trv-section-hdr"><span class="trv-section-icon">🏨</span> Hotels</div><span class="trv-live-badge">Live · Amadeus</span><span class="trv-result-count">${hotels.length} result${hotels.length!==1?'s':''}</span></div>`;
         if (!hotels.length) {
-          html += `<div class="trv-no-results">No hotels found. The test sandbox has limited inventory — try a major city code like LON or NYC.</div>`;
+          html += `<div class="trv-no-results">No hotels found. Try a major city code like LON or NYC.</div>`;
         } else {
-          html += hotels.slice(0, 6).map((h, i) => TravelPage._hotelCard(h, i, params)).join('');
+          html += `<div class="trv-sort-bar" id="trv-sort-hotel">
+            <button class="trv-sort-btn active" data-sort="price">💰 Price</button>
+            <button class="trv-sort-btn" data-sort="rating">⭐ Rating</button>
+          </div><div id="trv-hotel-cards"></div>`;
         }
       }
     }
@@ -14137,15 +14152,114 @@ const TravelPage = {
     html += '</div>';
     panel.innerHTML = html;
 
-    // Wire "Select" buttons
-    panel.querySelectorAll('[data-book-flight]').forEach(btn => {
+    // Render initial sorted cards
+    if (document.getElementById('trv-flight-cards')) TravelPage._applyFlightSort(panel, params);
+    if (document.getElementById('trv-hotel-cards'))  TravelPage._applyHotelSort(panel, params);
+
+    // Wire sort tabs
+    panel.querySelector('#trv-sort-flight')?.querySelectorAll('.trv-sort-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const idx = parseInt(btn.dataset.bookFlight);
-        const offer = (TravelPage._flightResults?.offers || [])[idx];
+        panel.querySelectorAll('#trv-sort-flight .trv-sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        TravelPage._sortFlight = btn.dataset.sort;
+        TravelPage._applyFlightSort(panel, params);
+      });
+    });
+    panel.querySelector('#trv-sort-hotel')?.querySelectorAll('.trv-sort-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        panel.querySelectorAll('#trv-sort-hotel .trv-sort-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        TravelPage._sortHotel = btn.dataset.sort;
+        TravelPage._applyHotelSort(panel, params);
+      });
+    });
+
+    // Marco summary
+    const fc = flightRes?.value?.offers?.length || 0;
+    const hc = hotelRes?.value?.hotels?.length  || 0;
+    let summary = '';
+    if (searchType === 'flights')     summary = `Found **${fc}** live flight option${fc!==1?'s':''} from Duffel — sorted by best value. Select any to review before booking.`;
+    else if (searchType === 'hotels') summary = `Found **${hc}** live hotel${hc!==1?'s':''} with availability from Amadeus. Select any to review and confirm.`;
+    else summary = `Found **${fc}** flight${fc!==1?'s':''} and **${hc}** hotel${hc!==1?'s':''} from live feeds. Select options to review — no booking until you confirm.`;
+    TravelPage._addMsg('ai', marked.parse(summary));
+  },
+
+  _flightDurationMinutes(offer) {
+    return (offer.slices || []).reduce((sum, s) => {
+      const h = parseInt(s.duration?.match(/(\d+)H/)?.[1] || 0);
+      const m = parseInt(s.duration?.match(/(\d+)M/)?.[1] || 0);
+      return sum + h * 60 + m;
+    }, 0) || 9999;
+  },
+
+  _sortOffers(offers, sortBy) {
+    if (!offers?.length) return [];
+    const cp = [...offers];
+    if (sortBy === 'cheap') return cp.sort((a,b) => Number(a.totalAmount) - Number(b.totalAmount));
+    if (sortBy === 'fast')  return cp.sort((a,b) => TravelPage._flightDurationMinutes(a) - TravelPage._flightDurationMinutes(b));
+    // best = 60% price + 40% duration
+    const prices = cp.map(o => Number(o.totalAmount));
+    const durs   = cp.map(o => TravelPage._flightDurationMinutes(o));
+    const minP = Math.min(...prices), maxP = Math.max(...prices), pRange = maxP - minP || 1;
+    const minD = Math.min(...durs),   maxD = Math.max(...durs),   dRange = maxD - minD || 1;
+    return cp.sort((a,b) => {
+      const sa = 0.6*((Number(a.totalAmount)-minP)/pRange) + 0.4*((TravelPage._flightDurationMinutes(a)-minD)/dRange);
+      const sb = 0.6*((Number(b.totalAmount)-minP)/pRange) + 0.4*((TravelPage._flightDurationMinutes(b)-minD)/dRange);
+      return sa - sb;
+    });
+  },
+
+  _applyFlightSort(panel, params) {
+    const offers = TravelPage._flightResults?.offers || [];
+    if (!offers.length) return;
+    const container = panel.querySelector('#trv-flight-cards');
+    if (!container) return;
+
+    const bestId    = TravelPage._sortOffers(offers, 'best')[0]?.id;
+    const cheapestId = [...offers].sort((a,b) => Number(a.totalAmount)-Number(b.totalAmount))[0]?.id;
+    const fastestId  = [...offers].sort((a,b) => TravelPage._flightDurationMinutes(a)-TravelPage._flightDurationMinutes(b))[0]?.id;
+    const sorted = TravelPage._sortOffers(offers, TravelPage._sortFlight || 'best');
+
+    container.innerHTML = sorted.slice(0, 8).map(o => {
+      const origIdx = offers.indexOf(o);
+      const badges = [
+        o.id === bestId    && 'best',
+        o.id === cheapestId && 'cheap',
+        o.id === fastestId  && 'fast',
+      ].filter(Boolean);
+      return TravelPage._flightCard(o, origIdx, badges);
+    }).join('');
+
+    container.querySelectorAll('[data-book-flight]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const offer = (TravelPage._flightResults?.offers || [])[parseInt(btn.dataset.bookFlight)];
         if (offer) TravelPage._showBookingModal('flight', offer, params);
       });
     });
-    panel.querySelectorAll('[data-book-hotel]').forEach(btn => {
+  },
+
+  _applyHotelSort(panel, params) {
+    const hotels = TravelPage._hotelResults?.hotels || [];
+    if (!hotels.length) return;
+    const container = panel.querySelector('#trv-hotel-cards');
+    if (!container) return;
+
+    const cheapestId = [...hotels].sort((a,b) => Number(a.offers?.[0]?.price||9999)-Number(b.offers?.[0]?.price||9999))[0]?.hotelId;
+    const topRatedId = [...hotels].sort((a,b) => (Number(b.rating)||0)-(Number(a.rating)||0))[0]?.hotelId;
+    const sorted = TravelPage._sortHotel === 'rating'
+      ? [...hotels].sort((a,b) => (Number(b.rating)||0)-(Number(a.rating)||0))
+      : [...hotels].sort((a,b) => Number(a.offers?.[0]?.price||9999)-Number(b.offers?.[0]?.price||9999));
+
+    container.innerHTML = sorted.slice(0, 6).map(h => {
+      const origIdx = hotels.indexOf(h);
+      const badges = [
+        h.hotelId === cheapestId && 'cheap',
+        h.hotelId === topRatedId && 'rating',
+      ].filter(Boolean);
+      return TravelPage._hotelCard(h, origIdx, params, badges);
+    }).join('');
+
+    container.querySelectorAll('[data-book-hotel]').forEach(btn => {
       btn.addEventListener('click', () => {
         const hIdx = parseInt(btn.dataset.bookHotel);
         const oIdx = parseInt(btn.dataset.offerIdx || '0');
@@ -14154,15 +14268,6 @@ const TravelPage = {
         if (hotel && offer) TravelPage._showBookingModal('hotel', { hotel, offer }, params);
       });
     });
-
-    // Marco summary message
-    const flightCount = flightRes?.value?.offers?.length || 0;
-    const hotelCount  = hotelRes?.value?.hotels?.length  || 0;
-    let summary = '';
-    if (searchType === 'flights') summary = `Found ${flightCount} flight option${flightCount !== 1 ? 's' : ''}. Results sorted by price — select any to review full details before booking.`;
-    else if (searchType === 'hotels') summary = `Found ${hotelCount} hotel${hotelCount !== 1 ? 's' : ''} with availability. Select any to see full details and confirm.`;
-    else summary = `Found ${flightCount} flight${flightCount!==1?'s':''} and ${hotelCount} hotel${hotelCount!==1?'s':''}. Select options below to review — no booking happens until you confirm.`;
-    TravelPage._addMsg('ai', marked.parse(summary));
   },
 
   _fmt(dur) {
@@ -14179,7 +14284,7 @@ const TravelPage = {
     return d.toLocaleString('en-GB', { weekday:'short', month:'short', day:'numeric', hour:'2-digit', minute:'2-digit', hour12:false });
   },
 
-  _flightCard(offer, idx) {
+  _flightCard(offer, idx, badges = []) {
     const slice = offer.slices?.[0] || {};
     const returnSlice = offer.slices?.[1];
     const seg0 = slice.segments?.[0] || {};
@@ -14188,9 +14293,13 @@ const TravelPage = {
     const stopLabel = stops === 0 ? '<span class="trv-nonstop">Non-stop</span>' : `<span class="trv-stops">${stops} stop${stops>1?'s':''}</span>`;
     const price = `${offer.totalCurrency || 'USD'} ${Number(offer.totalAmount).toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 })}`;
     const cabin = seg0.cabinClass ? seg0.cabinClass.replace('_',' ') : (offer.passengers?.[0]?.cabin_class || '');
+    const badgeMap = { best:'⭐ Best value', cheap:'💰 Cheapest', fast:'⚡ Fastest' };
+    const badgeHtml = badges.length ? `<div class="trv-offer-badges">${badges.map(b=>`<span class="trv-badge-${b}">${badgeMap[b]||b}</span>`).join('')}</div>` : '';
+    const highlighted = badges.length ? ' trv-card--highlighted' : '';
 
-    return `<div class="trv-card trv-flight-card">
+    return `<div class="trv-card trv-flight-card${highlighted}">
       <div class="trv-card-main">
+        ${badgeHtml}
         <div class="trv-flight-row">
           <div class="trv-flight-carrier">
             <div class="trv-carrier-av">${(seg0.carrier||'??').slice(0,2)}</div>
@@ -14220,7 +14329,7 @@ const TravelPage = {
     </div>`;
   },
 
-  _hotelCard(hotel, hIdx, params) {
+  _hotelCard(hotel, hIdx, params, badges = []) {
     const bestOffer = hotel.offers?.[0];
     if (!bestOffer) return '';
     const nights = params.checkIn && params.checkOut
@@ -14229,9 +14338,13 @@ const TravelPage = {
     const pricePerNight = Number(bestOffer.price) / nights;
     const stars = hotel.rating ? '★'.repeat(Math.min(parseInt(hotel.rating)||0, 5)) : '';
     const amenities = (hotel.amenities||[]).slice(0,4).map(a => `<span class="trv-amenity">${escHtml(a.replace(/_/g,' ').toLowerCase())}</span>`).join('');
+    const badgeMap = { cheap:'💰 Cheapest', rating:'⭐ Top rated' };
+    const badgeHtml = badges.length ? `<div class="trv-offer-badges">${badges.map(b=>`<span class="trv-badge-${b}">${badgeMap[b]||b}</span>`).join('')}</div>` : '';
+    const highlighted = badges.length ? ' trv-card--highlighted' : '';
 
-    return `<div class="trv-card trv-hotel-card">
+    return `<div class="trv-card trv-hotel-card${highlighted}">
       <div class="trv-card-main">
+        ${badgeHtml}
         <div class="trv-hotel-hdr">
           <div>
             <div class="trv-hotel-name">${escHtml(hotel.name)}</div>

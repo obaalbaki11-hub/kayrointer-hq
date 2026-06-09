@@ -2596,6 +2596,21 @@ input,textarea,select,button{font-family:var(--font)}
 .trv-amenities{display:flex;flex-wrap:wrap;gap:5px}
 .trv-amenity{padding:2px 8px;border-radius:5px;background:var(--surface2);border:1px solid var(--border);font-size:10.5px;color:var(--text3);text-transform:capitalize}
 
+/* Sort bar + badges */
+.trv-section-meta{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.trv-live-badge{padding:2px 8px;border-radius:20px;background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:#16a34a;font-size:10.5px;font-weight:700;letter-spacing:.03em}
+.trv-result-count{font-size:11px;color:var(--text3);margin-left:auto}
+.trv-sort-bar{display:flex;gap:6px;margin-bottom:10px}
+.trv-sort-btn{padding:6px 13px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;font-weight:500;cursor:pointer;transition:all .15s;white-space:nowrap}
+.trv-sort-btn:hover{border-color:#0ea5e9;color:#0ea5e9}
+.trv-sort-btn.active{border-color:#0ea5e9;background:#0ea5e91a;color:#0ea5e9;font-weight:600}
+.trv-offer-badges{display:flex;gap:5px;margin-bottom:8px;flex-wrap:wrap}
+.trv-badge-best{padding:2px 9px;border-radius:20px;background:rgba(16,185,129,.12);border:1px solid rgba(16,185,129,.3);color:#059669;font-size:10.5px;font-weight:700}
+.trv-badge-cheap{padding:2px 9px;border-radius:20px;background:rgba(14,165,233,.12);border:1px solid rgba(14,165,233,.3);color:#0284c7;font-size:10.5px;font-weight:700}
+.trv-badge-fast{padding:2px 9px;border-radius:20px;background:rgba(168,85,247,.12);border:1px solid rgba(168,85,247,.3);color:#9333ea;font-size:10.5px;font-weight:700}
+.trv-badge-rating{padding:2px 9px;border-radius:20px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);color:#d97706;font-size:10.5px;font-weight:700}
+.trv-card--highlighted{border-color:rgba(14,165,233,.3)!important;box-shadow:0 2px 12px rgba(14,165,233,.1)}
+
 /* Booking confirmation modal */
 .trv-modal-wrap{padding:4px 0 8px}
 .trv-modal-warning{padding:12px 14px;border-radius:10px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);color:#92400e;font-size:13px;margin-bottom:18px;line-height:1.5}
