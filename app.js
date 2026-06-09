@@ -717,7 +717,7 @@ WORKFLOW: Analyze → Deconstruct → Dispatch → Review → Synthesize`},
 Your capabilities:
 - Shipment planning: recommend the best mode (ocean/air/truck) based on urgency, weight, volume, and value
 - Container & TEU utilisation: calculate how many TEUs or boxes a shipment needs, optimise load plans
-- Cost estimation: provide indicative ranges (clearly labelled as estimates, not live quotes) for FCL, LCL (W/M), air (chargeable weight), FTL, and LTL
+- Cost estimation: rate ranges grounded in current market benchmarks via web search
 - RFQ drafting: write complete, professional Request for Quotation documents ready to send to forwarders
 - Incoterms 2020: explain EXW, FOB, CIF, DDP, DAP, and others; advise which is appropriate
 - Customs & docs: list required documents (commercial invoice, packing list, B/L, AWB, HS codes, certificates of origin)
@@ -730,13 +730,40 @@ Freight math you know:
 - TEU capacity: 1×20ft = ~33 CBM / 28 t payload; 1×40ft = ~67 CBM / 28 t payload; 1×40HC = ~76 CBM
 - Standard pallet (EUR): 120×80×15 cm; Standard pallet (US): 120×100×15 cm
 
-Important constraints — always be transparent about these:
-- You provide estimates and advisory — you do NOT book shipments. Live booking requires licensing (FMC OTI for ocean, FMCSA for US truck) and API partnerships not yet in place.
-- Always label cost figures as "estimates" and advise users to get live quotes from licensed forwarders.
-- When drafting an RFQ, note it is a draft — users should review and send directly to their chosen forwarder.
-- Never guarantee transit times or prices — freight markets fluctuate.
+═══ RATE RESEARCH PROTOCOL ═══
 
-When asked for a cost estimate, always specify: mode, lane, weight/volume, and the assumptions behind your figure. Format estimates clearly with a low–high range.`},
+When a user asks for a freight cost estimate on any mode or lane, SEARCH FIRST — do not quote figures from training data alone. Freight markets move continuously with fuel prices, port congestion, carrier capacity, and seasonal demand. Training-data rates are often months or years out of date.
+
+Run 1–2 web searches per rate request using targeted queries:
+- Ocean FCL: "Freightos Baltic Index [lane] [month year]" or "container rate [origin]-[destination] per TEU [month year]"
+- Ocean LCL: "LCL ocean freight rate [origin] [destination] per CBM [year]"
+- Air freight: "air freight rate per kg [origin] [destination] [month year]"
+- FTL trucking: "average FTL rate per mile [US/EU] [month year]"
+- LTL trucking: "LTL freight rate benchmark [region] [year]"
+- Surcharges: "fuel surcharge freight [month year]" or "bunker adjustment factor BAF [year]"
+- Market conditions: "ocean freight market outlook [month year]" or "freight rate forecast [year]"
+
+OUTPUT FORMAT FOR RATE RESPONSES — follow this order strictly:
+
+1. **ALWAYS open with the disclaimer, before any numbers:**
+> ⚠️ **Market benchmark estimate — not a live carrier quote.** These figures are based on publicly reported rate indices (Freightos Baltic Index, industry reports). Actual carrier quotes will vary. Get a firm RFQ from a licensed forwarder before committing to any shipment cost.
+
+2. Rate range (low–high) with the index or source cited
+3. What is currently driving rates on this lane (fuel, demand, congestion, season)
+4. Suggested next step (offer to draft an RFQ)
+
+If web search is unavailable or returns no useful rate data, open with:
+> ⚠️ **Market benchmark estimate — not a live carrier quote.** Web search is unavailable; figures below are based on historical benchmarks and may not reflect current market conditions.
+Then give your best estimate.
+
+Never claim to pull a live quote from DHL, Maersk, or any specific carrier. Never attempt to access carrier rate systems directly.
+
+═══ END RATE RESEARCH PROTOCOL ═══
+
+Hard constraints — always be transparent:
+- You provide estimates and advisory — you do NOT book shipments. Live booking requires licensing (FMC OTI for ocean, FMCSA for US truck) and API partnerships not yet in place.
+- When drafting an RFQ, note it is a draft — users should review and send directly to their chosen forwarder.
+- Never guarantee transit times or prices — freight markets fluctuate.`},
 
   {id:'e_travel',name:'Marco',role:'Senior Travel Concierge',model:'claude-sonnet-4-6',color:'#0ea5e9',bodyHex:0x0ea5e9,skinHex:0xf0c89a,pos:[6,-8],status:'online',skills:['Flight Search','Hotel Search','Itinerary Planning','Fare Comparison','Travel Logistics'],hired:Date.now(),tasks:0,
    system:`You are Marco, Senior Travel Concierge at [company]. You specialise in finding flights and hotels that match exactly what the user needs — on budget, at the right times, with no guesswork.
@@ -14561,6 +14588,8 @@ const FreightPage = {
         .frt-scaffold-price{font-size:18px;font-weight:800;color:var(--text);margin-top:8px}
         .frt-scaffold-badge{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;margin-top:6px}
         .frt-book-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#0891b2;color:#fff;font-size:14px;font-weight:700;cursor:not-allowed;margin-top:12px;opacity:.5}
+        .frt-search-pill{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:7px;background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.2);color:#0891b2;font-size:12px;margin-top:6px;flex-shrink:0}
+        .frt-search-spin{width:13px;height:13px;border-radius:50%;border:2px solid rgba(8,145,178,.25);border-top-color:#0891b2;animation:spinLive .8s linear infinite;flex-shrink:0}
       `;
       document.head.appendChild(s);
     }
@@ -14992,28 +15021,60 @@ Include sections for: cargo description (leave placeholder), HS code (leave plac
     FreightPage._history.push({ role: 'user', content: text });
     Usage.trackMessage();
 
-    // Typing indicator
     const msgs = document.getElementById('frt-messages');
-    const typing = document.createElement('div');
-    typing.className = 'frt-msg frt-msg--ai'; typing.id = 'frt-typing';
-    typing.innerHTML = `<div class="frt-av">🚢</div><div class="frt-bubble frt-bubble--ai"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
-    msgs.appendChild(typing); msgs.scrollTop = msgs.scrollHeight;
 
-    const emp = FreightPage._emp;
-    const systemPrompt = emp?.system || 'You are Vasco, a freight and logistics expert.';
-    const compCtx = State.company?.name ? `\n\nCompany context: ${State.company.name}${State.company.industry ? ', '+State.company.industry : ''}.` : '';
+    // Streaming bubble — starts with typing dots, replaced chunk-by-chunk
+    const bubble = document.createElement('div');
+    bubble.className = 'frt-msg frt-msg--ai';
+    bubble.innerHTML = `<div class="frt-av">🚢</div><div class="frt-bubble frt-bubble--ai" id="frt-stream-bubble"><div class="typing"><div class="tdot"></div><div class="tdot"></div><div class="tdot"></div></div></div>`;
+    msgs.appendChild(bubble);
+    msgs.scrollTop = msgs.scrollHeight;
+
+    const streamEl = () => document.getElementById('frt-stream-bubble');
+
+    const emp    = FreightPage._emp;
+    const system = emp?.system || 'You are Vasco, a freight and logistics expert.';
+    const compCtx = State.company?.name ? `\n\nCompany context: ${State.company.name}${State.company.industry ? ', ' + State.company.industry : ''}.` : '';
+
+    let full = '';
+    let searchPill = null;
 
     try {
-      const result = await callAI(FreightPage._history, systemPrompt + compCtx, emp);
-      document.getElementById('frt-typing')?.remove();
-      const raw    = result.content?.[0]?.text || '';
-      const html   = (typeof marked !== 'undefined' ? marked.parse(raw) : escHtml(raw));
-      FreightPage._addMsg('ai', html, raw);
-      FreightPage._history.push({ role: 'assistant', content: raw });
-      if (emp) { emp.tasks = (emp.tasks || 0) + 1; save('employees'); }
+      for await (const chunk of AI.stream(FreightPage._history, system + compCtx, { model: emp?.model, search: true, appTools: false, max_tokens: 2048 })) {
+
+        // Search sentinel → show search pill inside the bubble
+        if (chunk.startsWith('\x00SEARCH:') && chunk.endsWith('\x00')) {
+          const query = chunk.slice(8, -1);
+          searchPill?.remove();
+          searchPill = document.createElement('div');
+          searchPill.className = 'frt-search-pill';
+          searchPill.innerHTML = `<span class="frt-search-spin"></span> Searching: <em>${escHtml(query)}</em>`;
+          streamEl()?.appendChild(searchPill);
+          msgs.scrollTop = msgs.scrollHeight;
+          continue;
+        }
+
+        // Normal text — stream into bubble
+        searchPill?.remove(); searchPill = null;
+        full += chunk;
+        const el = streamEl();
+        if (el) {
+          el.innerHTML = typeof marked !== 'undefined' ? marked.parse(full) : escHtml(full);
+          msgs.scrollTop = msgs.scrollHeight;
+        }
+      }
     } catch(err) {
-      document.getElementById('frt-typing')?.remove();
-      FreightPage._addMsg('ai', `<span style="color:var(--error)">⚠️ ${escHtml(String(err))}</span>`);
+      const el = streamEl();
+      if (el) el.innerHTML = `<span style="color:var(--error)">⚠️ ${escHtml(String(err))}</span>`;
+    }
+
+    searchPill?.remove();
+    bubble.querySelector('#frt-stream-bubble')?.removeAttribute('id');
+
+    if (full) {
+      FreightPage._history.push({ role: 'assistant', content: full });
+      if (emp) { emp.tasks = (emp.tasks || 0) + 1; save('employees'); }
+      Usage.trackUsage(Math.ceil((text.length + full.length) / 4));
     }
   },
 
