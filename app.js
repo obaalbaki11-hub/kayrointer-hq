@@ -14501,15 +14501,12 @@ const FreightPage = {
               </select>
             </div>
             <div>
-              <label class="frt-label">Trade Lane / Route</label>
-              <select class="frt-select" id="frt-lane">
-                <option value="asia-na">Asia → North America</option>
-                <option value="asia-eu">Asia → Europe</option>
-                <option value="eu-na">Europe → North America</option>
-                <option value="me-eu">Middle East → Europe</option>
-                <option value="domestic">Domestic / Short-haul</option>
-                <option value="other">Other / Cross-trade</option>
-              </select>
+              <label class="frt-label">Origin Country</label>
+              <select class="frt-select" id="frt-origin">${FreightPage._countryOptions()}</select>
+            </div>
+            <div>
+              <label class="frt-label">Destination Country</label>
+              <select class="frt-select" id="frt-destination">${FreightPage._countryOptions('US')}</select>
             </div>
             <div id="frt-weight-wrap">
               <label class="frt-label">Gross Weight (kg)</label>
@@ -14664,9 +14661,71 @@ const FreightPage = {
     );
   },
 
+  _countryOptions(selected = 'CN') {
+    const groups = [
+      { label: 'Asia Pacific', countries: [
+        ['CN','China'],['JP','Japan'],['KR','South Korea'],['TW','Taiwan'],['HK','Hong Kong'],
+        ['SG','Singapore'],['VN','Vietnam'],['TH','Thailand'],['MY','Malaysia'],['ID','Indonesia'],
+        ['PH','Philippines'],['IN','India'],['BD','Bangladesh'],['PK','Pakistan'],['LK','Sri Lanka'],
+        ['MM','Myanmar'],['KH','Cambodia'],['AU','Australia'],['NZ','New Zealand'],
+      ]},
+      { label: 'Europe', countries: [
+        ['DE','Germany'],['GB','United Kingdom'],['FR','France'],['NL','Netherlands'],['BE','Belgium'],
+        ['IT','Italy'],['ES','Spain'],['PL','Poland'],['SE','Sweden'],['NO','Norway'],['DK','Denmark'],
+        ['FI','Finland'],['AT','Austria'],['CH','Switzerland'],['PT','Portugal'],['IE','Ireland'],
+        ['GR','Greece'],['CZ','Czech Republic'],['RO','Romania'],['HU','Hungary'],['SK','Slovakia'],
+      ]},
+      { label: 'North America', countries: [
+        ['US','United States'],['CA','Canada'],['MX','Mexico'],
+      ]},
+      { label: 'Middle East', countries: [
+        ['AE','UAE'],['SA','Saudi Arabia'],['QA','Qatar'],['KW','Kuwait'],['BH','Bahrain'],
+        ['OM','Oman'],['JO','Jordan'],['EG','Egypt'],['TR','Turkey'],['IL','Israel'],['LB','Lebanon'],['IQ','Iraq'],
+      ]},
+      { label: 'Africa', countries: [
+        ['ZA','South Africa'],['NG','Nigeria'],['KE','Kenya'],['ET','Ethiopia'],['GH','Ghana'],
+        ['MA','Morocco'],['TZ','Tanzania'],['SN','Senegal'],['CI','Ivory Coast'],['MU','Mauritius'],
+      ]},
+      { label: 'South America', countries: [
+        ['BR','Brazil'],['AR','Argentina'],['CL','Chile'],['CO','Colombia'],['PE','Peru'],
+        ['EC','Ecuador'],['UY','Uruguay'],['PY','Paraguay'],['BO','Bolivia'],['VE','Venezuela'],
+      ]},
+      { label: 'Central America & Caribbean', countries: [
+        ['PA','Panama'],['CR','Costa Rica'],['GT','Guatemala'],['DO','Dominican Republic'],['JM','Jamaica'],
+      ]},
+    ];
+    return groups.map(g =>
+      `<optgroup label="${g.label}">${g.countries.map(([code,name]) =>
+        `<option value="${code}"${code===selected?' selected':''}>${name}</option>`
+      ).join('')}</optgroup>`
+    ).join('');
+  },
+
+  _getLane(orig, dest) {
+    const asia = new Set(['CN','JP','KR','TW','HK','VN','TH','ID','MY','SG','PH','IN','BD','PK','LK','MM','KH','AU','NZ','MM']);
+    const eu   = new Set(['DE','GB','FR','NL','BE','IT','ES','PL','SE','NO','DK','FI','AT','CH','PT','IE','GR','CZ','RO','HU','SK']);
+    const na   = new Set(['US','CA','MX']);
+    const me   = new Set(['AE','SA','QA','KW','BH','OM','JO','EG','TR','IL','LB','IQ']);
+    const reg  = c => asia.has(c)?'asia':eu.has(c)?'eu':na.has(c)?'na':me.has(c)?'me':'other';
+    const ro = reg(orig), rd = reg(dest);
+    if (ro === rd) return 'domestic';
+    if ((ro==='asia'&&rd==='na')||(ro==='na'&&rd==='asia')) return 'asia-na';
+    if ((ro==='asia'&&rd==='eu')||(ro==='eu'&&rd==='asia')) return 'asia-eu';
+    if ((ro==='eu'  &&rd==='na')||(ro==='na'&&rd==='eu'))   return 'eu-na';
+    if ((ro==='me'  &&rd==='eu')||(ro==='eu'&&rd==='me'))   return 'me-eu';
+    if ((ro==='me'  &&rd==='na')||(ro==='na'&&rd==='me'))   return 'me-na';
+    return 'other';
+  },
+
   _calc(container) {
     const mode     = container.querySelector('#frt-mode').value;
-    const lane     = container.querySelector('#frt-lane').value;
+    const origSel  = container.querySelector('#frt-origin');
+    const destSel  = container.querySelector('#frt-destination');
+    const origCode = origSel?.value || 'CN';
+    const destCode = destSel?.value || 'US';
+    const origName = origSel?.options[origSel.selectedIndex]?.text || origCode;
+    const destName = destSel?.options[destSel.selectedIndex]?.text || destCode;
+    const lane     = FreightPage._getLane(origCode, destCode);
     const weightKg = parseFloat(container.querySelector('#frt-weight')?.value) || 0;
     const cbm      = parseFloat(container.querySelector('#frt-cbm')?.value) || 0;
     const teu      = parseInt(container.querySelector('#frt-teu')?.value) || 1;
@@ -14684,14 +14743,15 @@ const FreightPage = {
       'asia-eu': { '20gp':[1400,2800], '40gp':[2200,4000], '40hc':[2500,4400] },
       'eu-na':   { '20gp':[1000,2000], '40gp':[1800,3200], '40hc':[2000,3500] },
       'me-eu':   { '20gp':[800,1800],  '40gp':[1400,2600], '40hc':[1600,2800] },
+      'me-na':   { '20gp':[1200,2400], '40gp':[2000,3800], '40hc':[2200,4200] },
       'domestic':{ '20gp':[600,1200],  '40gp':[1000,1800], '40hc':[1100,2000] },
       'other':   { '20gp':[1200,2500], '40gp':[2000,3600], '40hc':[2200,4000] },
     };
     const lclRatePerWM = { // USD per revenue tonne/CBM
-      'asia-na':55, 'asia-eu':42, 'eu-na':38, 'me-eu':35, 'domestic':20, 'other':45
+      'asia-na':55, 'asia-eu':42, 'eu-na':38, 'me-eu':35, 'me-na':48, 'domestic':20, 'other':45
     };
     const airRatePerKg = {
-      'asia-na':4.5, 'asia-eu':3.8, 'eu-na':3.2, 'me-eu':2.8, 'domestic':1.5, 'other':4.0
+      'asia-na':4.5, 'asia-eu':3.8, 'eu-na':3.2, 'me-eu':2.8, 'me-na':3.5, 'domestic':1.5, 'other':4.0
     };
     const ftlRatePerKm = 1.8; // USD/km rough
     const ltlRateBase  = { 'domestic':250, 'other':400 };
@@ -14766,23 +14826,22 @@ const FreightPage = {
 
     result.style.display = '';
     result.innerHTML = `
-      <div class="frt-estimate-label">📊 INDICATIVE ESTIMATE — ${escHtml(mode_label)}</div>
+      <div class="frt-estimate-label">📊 INDICATIVE ESTIMATE — ${escHtml(mode_label)} · ${escHtml(origName)} → ${escHtml(destName)}</div>
       ${rows.map(([l,v]) => `<div class="frt-estimate-row"><span>${escHtml(l)}</span><span style="font-weight:600">${escHtml(v)}</span></div>`).join('')}
       <div class="frt-estimate-disclaimer">⚠️ ${escHtml(disclaimer)}</div>`;
     rfqWrap.style.display = '';
 
     // Store estimate data for RFQ drafting
-    FreightPage._lastEstimate = { mode, lane, weightKg, cbm, teu, ctype, rows, mode_label };
+    FreightPage._lastEstimate = { mode, lane, origCode, destCode, origName, destName, weightKg, cbm, teu, ctype, rows, mode_label };
   },
 
   _draftRfq(container) {
     const e = FreightPage._lastEstimate;
     if (!e) { toast('Run the estimator first', 'error'); return; }
-    const laneLabels = {'asia-na':'Asia → North America','asia-eu':'Asia → Europe','eu-na':'Europe → North America','me-eu':'Middle East → Europe','domestic':'Domestic','other':'Cross-trade'};
     const rfqPrompt = `Draft a professional freight RFQ (Request for Quotation) for the following shipment. Format it as a ready-to-send email to a freight forwarder:
 
 Mode: ${e.mode_label}
-Trade Lane: ${laneLabels[e.lane] || e.lane}
+Route: ${e.origName} → ${e.destName}
 ${e.mode !== 'fcl' ? `Gross Weight: ${e.weightKg} kg\nVolume: ${e.cbm} CBM` : `Containers: ${e.teu}× ${e.ctype}`}
 
 Include sections for: cargo description (leave placeholder), HS code (leave placeholder), pickup address / port of loading, port of discharge / delivery address, requested Incoterms, target cargo readiness date, required transit time, special requirements (e.g. hazmat, temp control), and request for all-in rate including surcharges and estimated transit time. End with a professional sign-off requesting the quote within 48 hours.`;
