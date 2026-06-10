@@ -3501,8 +3501,13 @@ const RemotionPage = {
         .hs-run-btn:hover{background:#6d28d9}
         .hs-code{flex:1;resize:none;border:none;outline:none;padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.65;background:var(--bg);color:var(--text);tab-size:2;overflow:auto}
         .hs-agent-row{padding:9px 12px;border-top:1px solid var(--border)}
-        .hs-agent-btn{width:100%;padding:7px 12px;border-radius:8px;border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.06);color:#7c3aed;font-size:12px;font-weight:600;cursor:pointer;text-align:left}
-        .hs-agent-btn:hover{background:rgba(124,58,237,.11)}
+        .hs-ai-gen-row{display:flex;gap:8px;align-items:center}
+        .hs-ai-inp{flex:1;padding:7px 11px;border:1px solid rgba(124,58,237,.3);border-radius:8px;background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none}
+        .hs-ai-inp:focus{border-color:#7c3aed}
+        .hs-ai-inp::placeholder{color:var(--text3)}
+        .hs-ai-gen-btn{padding:7px 14px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+        .hs-ai-gen-btn:hover:not(:disabled){background:#6d28d9}
+        .hs-ai-gen-btn:disabled{opacity:.5;cursor:not-allowed}
         .hs-right{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
         .hs-settings-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
         .hs-setting{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
@@ -3555,7 +3560,10 @@ const RemotionPage = {
         </div>
         <textarea class="hs-code" id="hs-code" spellcheck="false"></textarea>
         <div class="hs-agent-row">
-          <button class="hs-agent-btn" id="hs-ask-ai">✨ Ask AI to write an HTML animation — opens chat</button>
+          <div class="hs-ai-gen-row">
+            <input class="hs-ai-inp" id="hs-ai-inp" placeholder="✨ Describe your animation… e.g. 'dark product launch ad for Kayro'" autocomplete="off">
+            <button class="hs-ai-gen-btn" id="hs-ai-gen">Generate</button>
+          </div>
         </div>
       </div>
       <div class="hs-right">
@@ -3588,17 +3596,55 @@ const RemotionPage = {
       })
     );
 
-    // Run
-    document.getElementById('hs-run').addEventListener('click', () => RemotionPage._runPreview());
+    // Run — detect natural language and redirect to generator
+    document.getElementById('hs-run').addEventListener('click', () => {
+      const raw = document.getElementById('hs-code')?.value?.trim() || '';
+      if (raw && !raw.startsWith('<')) {
+        const inp = document.getElementById('hs-ai-inp');
+        if (inp && !inp.value) inp.value = raw;
+        document.getElementById('hs-code').value = '';
+        inp?.focus();
+        toast('Type your description in the Generate bar and hit Generate ✨', 'info');
+        return;
+      }
+      RemotionPage._runPreview();
+    });
     document.getElementById('hs-code').addEventListener('keydown', e => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); RemotionPage._runPreview(); }
     });
 
-    // Ask AI
-    document.getElementById('hs-ask-ai').addEventListener('click', () => {
-      const inp = document.getElementById('chat-input');
-      if (inp) inp.value = 'Write a 1280×720px HTML/CSS animation (10 seconds) for a product launch ad. Use only CSS keyframe animations — no external libraries. Return only the complete standalone HTML file.';
-      Chat.open();
+    // Inline AI generator
+    const hsGenerate = async () => {
+      const prompt = document.getElementById('hs-ai-inp')?.value?.trim();
+      if (!prompt) return;
+      const btn  = document.getElementById('hs-ai-gen');
+      const code = document.getElementById('hs-code');
+      if (!btn || !code) return;
+      btn.disabled = true; btn.textContent = '⏳ Generating…';
+      code.value = '<!-- Generating… please wait -->';
+      const coName = State.settings.companyName || State.company?.name || 'the company';
+      const coDesc = State.company?.description || '';
+      const ctxLine = coDesc ? `Company: ${coName}. About: ${coDesc}` : `Company: ${coName}`;
+      const system = `You are an HTML/CSS/JS motion-graphic generator. ${ctxLine}.\nRules:\n- Return ONLY raw HTML. No markdown, no backticks, no explanation, no code fences.\n- First character must be < from <!DOCTYPE html>\n- All CSS and JS inline. No external CDN except Google Fonts.\n- body fixed 1280px×720px, overflow:hidden.\n- Use professional animations, bold typography, gradients.\n- Must look like a polished ad or social video frame.`;
+      let full = '';
+      try {
+        for await (const chunk of AI.stream([{role:'user',content:prompt}], system, { model:'claude-haiku-4-5-20251001', search:false, appTools:false, max_tokens:4096 })) {
+          full += chunk;
+          code.value = full;
+        }
+        full = full.replace(/^```html\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```\s*$/,'').trim();
+        code.value = full;
+        RemotionPage._runPreview();
+      } catch(err) {
+        code.value = `<!-- Generation failed: ${err.message} -->`;
+        toast('Generation failed — ' + err.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Generate';
+      }
+    };
+    document.getElementById('hs-ai-gen').addEventListener('click', hsGenerate);
+    document.getElementById('hs-ai-inp').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); hsGenerate(); }
     });
 
     // Record
