@@ -3268,14 +3268,36 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
 // ── REMOTION PAGE ─────────────────────────────────────────────
 const RemotionPage = {
   _studioUrl: 'http://localhost:3000',
+  _tab: 'compositions',
+  _lastHtml: null,
+  _recordRunning: false,
+  _onMessage: null,
 
   init(container) {
+    RemotionPage._tab = 'compositions';
+    RemotionPage._recordRunning = false;
     document.getElementById('topbar-right').innerHTML = `
+      <div style="display:flex;gap:3px" id="rmt-tab-bar">
+        <button class="tb-btn rmt-pg-tab active" data-tab="compositions">🎬 Compositions</button>
+        <button class="tb-btn rmt-pg-tab" data-tab="htmlstudio">📝 HTML Studio</button>
+      </div>
       <button class="tb-btn" id="rmt-launch-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed">▶ Start Studio</button>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
     document.getElementById('rmt-launch-btn')?.addEventListener('click', () => RemotionPage._openStudio());
-    RemotionPage._render(container);
+    document.getElementById('rmt-tab-bar')?.querySelectorAll('.rmt-pg-tab').forEach(btn =>
+      btn.addEventListener('click', () => RemotionPage._showTab(container, btn.dataset.tab))
+    );
+    RemotionPage._showTab(container, 'compositions');
+  },
+
+  _showTab(container, tab) {
+    RemotionPage._tab = tab;
+    document.querySelectorAll('#rmt-tab-bar .rmt-pg-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.tab === tab)
+    );
+    if (tab === 'compositions') RemotionPage._render(container);
+    else RemotionPage._renderHTMLStudio(container);
   },
 
   _render(container) {
@@ -3462,7 +3484,230 @@ const RemotionPage = {
     toast('Opening Remotion Studio in new tab — make sure it\'s running: cd kayro-hq/remotion && npx remotion studio', 'info');
   },
 
-  destroy() {},
+  // ── HTML STUDIO ────────────────────────────────────────────────
+
+  _renderHTMLStudio(container) {
+    if (!document.getElementById('hs-styles')) {
+      const s = document.createElement('style'); s.id = 'hs-styles';
+      s.textContent = `
+        .hs-root{display:grid;grid-template-columns:1fr 1fr;height:calc(100vh - 56px);overflow:hidden}
+        @media(max-width:900px){.hs-root{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+        .hs-left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface)}
+        .hs-left-hdr{display:flex;align-items:center;gap:6px;padding:10px 12px;border-bottom:1px solid var(--border);flex-wrap:wrap;background:var(--surface)}
+        .hs-left-title{font-size:12px;font-weight:700;color:var(--text);margin-right:4px}
+        .hs-tpl-btn{padding:3px 9px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;font-family:inherit;white-space:nowrap}
+        .hs-tpl-btn:hover{border-color:#7c3aed;color:#7c3aed;background:rgba(124,58,237,.06)}
+        .hs-run-btn{margin-left:auto;padding:5px 14px;border-radius:7px;border:none;background:#7c3aed;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap}
+        .hs-run-btn:hover{background:#6d28d9}
+        .hs-code{flex:1;resize:none;border:none;outline:none;padding:14px 16px;font-family:var(--mono);font-size:12px;line-height:1.65;background:var(--bg);color:var(--text);tab-size:2;overflow:auto}
+        .hs-agent-row{padding:9px 12px;border-top:1px solid var(--border)}
+        .hs-agent-btn{width:100%;padding:7px 12px;border-radius:8px;border:1px solid rgba(124,58,237,.3);background:rgba(124,58,237,.06);color:#7c3aed;font-size:12px;font-weight:600;cursor:pointer;text-align:left}
+        .hs-agent-btn:hover{background:rgba(124,58,237,.11)}
+        .hs-right{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+        .hs-settings-row{display:flex;align-items:center;gap:10px;padding:8px 12px;border-bottom:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
+        .hs-setting{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+        .hs-inp{width:54px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;outline:none}
+        .hs-inp:focus{border-color:#7c3aed}
+        .hs-preview-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111;position:relative}
+        .hs-frame{border:none;display:block;background:#fff}
+        .hs-record-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
+        .hs-rec-btn{padding:7px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
+        .hs-rec-btn:hover:not(:disabled){background:#dc2626}
+        .hs-rec-btn.hs-recording{background:#6b7280}
+        .hs-rec-prog{flex:1;height:4px;border-radius:2px;background:var(--border);overflow:hidden;min-width:60px}
+        .hs-rec-prog-bar{height:100%;background:#ef4444;width:0%;transition:width .4s linear}
+        .hs-timer{font-size:11px;font-family:var(--mono);color:var(--text2);white-space:nowrap}
+        .hs-note{font-size:10.5px;color:var(--text3);margin-left:auto;text-align:right;line-height:1.5}
+        .rmt-pg-tab.active{background:var(--surface2)!important;color:var(--text)!important}
+      `;
+      document.head.appendChild(s);
+    }
+
+    const TEMPLATES = {
+      'Brand Ad': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:1280px;height:720px;overflow:hidden;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.wrap{text-align:center;color:#fff}.eyebrow{font-size:14px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);opacity:0;animation:up .6s .2s ease forwards}.headline{font-size:80px;font-weight:900;line-height:1;margin:16px 0 20px;background:linear-gradient(90deg,#fff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;animation:up .7s .4s ease forwards}.sub{font-size:22px;color:rgba(255,255,255,.65);opacity:0;animation:up .6s .65s ease forwards}.cta{display:inline-block;margin-top:36px;padding:16px 44px;border-radius:50px;background:#7c3aed;color:#fff;font-size:18px;font-weight:700;opacity:0;animation:up .6s .9s ease forwards}@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}</style></head><body><div class="wrap"><div class="eyebrow">Introducing</div><div class="headline">Your Brand Here</div><div class="sub">The one-line pitch that makes people stop scrolling.</div><div class="cta">Get Started →</div></div></body></html>`,
+
+      'Text Reveal': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.words{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 28px;max-width:940px}.w{font-size:72px;font-weight:900;color:#fff;opacity:0;transform:scale(.75);animation:pop .45s ease forwards}.w:nth-child(1){animation-delay:.1s}.w:nth-child(2){animation-delay:.35s}.w:nth-child(3){animation-delay:.6s}.w:nth-child(4){animation-delay:.85s}.w:nth-child(5){animation-delay:1.1s}.w:nth-child(6){animation-delay:1.35s}.w.hi{color:#a78bfa}@keyframes pop{to{opacity:1;transform:scale(1)}}</style></head><body><div class="words"><span class="w">Build</span><span class="w">smarter.</span><span class="w">Ship</span><span class="w hi">faster.</span><span class="w">Grow</span><span class="w hi">together.</span></div></body></html>`,
+
+      'Countdown': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif;gap:12px}#num{font-size:300px;font-weight:900;color:#fff;line-height:1;transition:transform .12s,color .3s}#lbl{font-size:22px;color:rgba(255,255,255,.35);letter-spacing:.22em;text-transform:uppercase}</style><script>var s=['3','2','1','GO!'],c=['#fff','#fff','#fff','#7c3aed'],i=0;function t(){var el=document.getElementById('num');el.style.transform='scale(.8)';el.style.color=c[i];setTimeout(function(){el.style.transform='scale(1)';el.textContent=s[i++];if(i<s.length)setTimeout(t,1000);},120);}document.addEventListener('DOMContentLoaded',function(){setTimeout(t,400);});<\/script></head><body><div id="num">–</div><div id="lbl">launching in</div></body></html>`,
+    };
+
+    const savedHtml = RemotionPage._lastHtml || TEMPLATES['Brand Ad'];
+
+    container.innerHTML = `<div class="hs-root">
+      <div class="hs-left">
+        <div class="hs-left-hdr">
+          <span class="hs-left-title">HTML/CSS/JS</span>
+          ${Object.keys(TEMPLATES).map(t => `<button class="hs-tpl-btn" data-tpl="${escHtml(t)}">${escHtml(t)}</button>`).join('')}
+          <button class="hs-run-btn" id="hs-run">▶ Run</button>
+        </div>
+        <textarea class="hs-code" id="hs-code" spellcheck="false"></textarea>
+        <div class="hs-agent-row">
+          <button class="hs-agent-btn" id="hs-ask-ai">✨ Ask AI to write an HTML animation — opens chat</button>
+        </div>
+      </div>
+      <div class="hs-right">
+        <div class="hs-settings-row">
+          <span class="hs-setting">W <input class="hs-inp" id="hs-w" type="number" value="1280"></span>
+          <span class="hs-setting">H <input class="hs-inp" id="hs-h" type="number" value="720"></span>
+          <span class="hs-setting">FPS <input class="hs-inp" id="hs-fps" type="number" value="15" style="width:42px"></span>
+          <span class="hs-setting">Duration <input class="hs-inp" id="hs-dur" type="number" value="10" style="width:44px"> s</span>
+        </div>
+        <div class="hs-preview-area" id="hs-preview-area">
+          <iframe class="hs-frame" id="hs-frame" sandbox="allow-scripts allow-same-origin" srcdoc=""></iframe>
+        </div>
+        <div class="hs-record-row">
+          <button class="hs-rec-btn" id="hs-rec">⏺ Record WebM</button>
+          <div class="hs-rec-prog" id="hs-rec-prog" style="display:none"><div class="hs-rec-prog-bar" id="hs-rec-bar"></div></div>
+          <span class="hs-timer" id="hs-timer"></span>
+          <div class="hs-note">Downloads as .webm (Chrome/Edge/Firefox)<br>Convert: <code>ffmpeg -i out.webm out.mp4</code></div>
+        </div>
+      </div>
+    </div>`;
+
+    // Set textarea value directly (avoids escaping issues)
+    document.getElementById('hs-code').value = savedHtml;
+
+    // Templates
+    container.querySelectorAll('.hs-tpl-btn').forEach(btn =>
+      btn.addEventListener('click', () => {
+        const code = document.getElementById('hs-code');
+        if (code) { code.value = TEMPLATES[btn.dataset.tpl] || ''; RemotionPage._runPreview(); }
+      })
+    );
+
+    // Run
+    document.getElementById('hs-run').addEventListener('click', () => RemotionPage._runPreview());
+    document.getElementById('hs-code').addEventListener('keydown', e => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') { e.preventDefault(); RemotionPage._runPreview(); }
+    });
+
+    // Ask AI
+    document.getElementById('hs-ask-ai').addEventListener('click', () => {
+      const inp = document.getElementById('chat-input');
+      if (inp) inp.value = 'Write a 1280×720px HTML/CSS animation (10 seconds) for a product launch ad. Use only CSS keyframe animations — no external libraries. Return only the complete standalone HTML file.';
+      Chat.open();
+    });
+
+    // Record
+    document.getElementById('hs-rec').addEventListener('click', () => {
+      if (RemotionPage._recordRunning) RemotionPage._stopRecord();
+      else RemotionPage._startRecord();
+    });
+
+    // Dimension changes re-scale
+    ['hs-w','hs-h'].forEach(id =>
+      document.getElementById(id)?.addEventListener('change', () => RemotionPage._runPreview())
+    );
+
+    window.addEventListener('resize', RemotionPage._scalePreview);
+    RemotionPage._runPreview();
+  },
+
+  _runPreview() {
+    const code  = document.getElementById('hs-code')?.value || '';
+    const frame = document.getElementById('hs-frame');
+    const W = parseInt(document.getElementById('hs-w')?.value) || 1280;
+    const H = parseInt(document.getElementById('hs-h')?.value) || 720;
+    if (!frame) return;
+    RemotionPage._lastHtml = code;
+    frame.style.width  = W + 'px';
+    frame.style.height = H + 'px';
+    frame.srcdoc = code;
+    setTimeout(() => RemotionPage._scalePreview(), 50);
+  },
+
+  _scalePreview() {
+    const area  = document.getElementById('hs-preview-area');
+    const frame = document.getElementById('hs-frame');
+    if (!area || !frame) return;
+    const W = parseInt(document.getElementById('hs-w')?.value) || 1280;
+    const H = parseInt(document.getElementById('hs-h')?.value) || 720;
+    const scale = Math.min((area.clientWidth - 24) / W, (area.clientHeight - 24) / H, 1);
+    frame.style.transform = `scale(${scale})`;
+    frame.style.transformOrigin = 'center center';
+  },
+
+  _startRecord() {
+    const code = document.getElementById('hs-code')?.value || '';
+    const W    = parseInt(document.getElementById('hs-w')?.value)   || 1280;
+    const H    = parseInt(document.getElementById('hs-h')?.value)   || 720;
+    const fps  = parseInt(document.getElementById('hs-fps')?.value) || 15;
+    const dur  = parseInt(document.getElementById('hs-dur')?.value) || 10;
+
+    // Inject html2canvas + recorder script into the user's HTML
+    const recScript = `<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"><\/script><script>(function(){window.addEventListener('message',function(e){if(!e.data||e.data.type!=='hs-start')return;var fps=e.data.fps||15,dur=e.data.dur||10,W=e.data.W||1280,H=e.data.H||720,cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;var stream=cvs.captureStream(fps),mt=['video/webm;codecs=vp9','video/webm'].find(function(t){return MediaRecorder.isTypeSupported(t)})||'',rec=new MediaRecorder(stream,mt?{mimeType:mt}:{}),chunks=[];rec.ondataavailable=function(ev){if(ev.data.size>0)chunks.push(ev.data);};rec.onstop=function(){var blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob);parent.postMessage({type:'hs-done',url:url},'*');};rec.start(Math.round(1000/fps));var elapsed=0,iv=Math.round(1000/fps);function loop(){html2canvas(document.documentElement,{canvas:cvs,width:W,height:H,useCORS:true,allowTaint:true,logging:false}).then(function(){elapsed+=iv;parent.postMessage({type:'hs-progress',pct:Math.min(elapsed/(dur*1000),1)},'*');if(elapsed<dur*1000)setTimeout(loop,iv);else rec.stop();}).catch(function(){elapsed+=iv;if(elapsed<dur*1000)setTimeout(loop,iv);else rec.stop();});}setTimeout(loop,400);});})();<\/script>`;
+
+    let html = code;
+    html = html.includes('</body>') ? html.replace('</body>', recScript + '</body>') : html + recScript;
+
+    RemotionPage._recordRunning = true;
+    const btn = document.getElementById('hs-rec');
+    if (btn) { btn.textContent = '⏹ Stop'; btn.classList.add('hs-recording'); }
+    const prog = document.getElementById('hs-rec-prog');
+    if (prog) prog.style.display = '';
+    const timer = document.getElementById('hs-timer');
+    if (timer) timer.textContent = 'Loading recorder…';
+
+    // Listen for iframe messages
+    if (RemotionPage._onMessage) window.removeEventListener('message', RemotionPage._onMessage);
+    RemotionPage._onMessage = (e) => {
+      if (e.data?.type === 'hs-progress') {
+        const pct = e.data.pct || 0;
+        const bar = document.getElementById('hs-rec-bar');
+        if (bar) bar.style.width = (pct * 100) + '%';
+        const t = document.getElementById('hs-timer');
+        if (t) t.textContent = (pct * dur).toFixed(1) + 's / ' + dur + 's';
+      } else if (e.data?.type === 'hs-done') {
+        window.removeEventListener('message', RemotionPage._onMessage);
+        RemotionPage._recordRunning = false;
+        const a = document.createElement('a');
+        a.href = e.data.url; a.download = 'kayro-animation.webm'; a.click();
+        setTimeout(() => URL.revokeObjectURL(e.data.url), 15000);
+        const b = document.getElementById('hs-rec');
+        if (b) { b.textContent = '⏺ Record WebM'; b.classList.remove('hs-recording'); }
+        const p = document.getElementById('hs-rec-prog');
+        if (p) { p.style.display = 'none'; const bar = document.getElementById('hs-rec-bar'); if (bar) bar.style.width = '0%'; }
+        const t = document.getElementById('hs-timer');
+        if (t) { t.textContent = '✓ Saved!'; setTimeout(() => { if (t) t.textContent = ''; }, 3000); }
+        toast('Video saved — kayro-animation.webm ✓', 'success');
+        RemotionPage._runPreview(); // restore clean preview
+      }
+    };
+    window.addEventListener('message', RemotionPage._onMessage);
+
+    // Load iframe with injected recorder
+    const frame = document.getElementById('hs-frame');
+    if (!frame) return;
+    frame.srcdoc = html;
+    frame.onload = () => {
+      setTimeout(() => {
+        try { frame.contentWindow?.postMessage({ type: 'hs-start', fps, dur, W, H }, '*'); }
+        catch(_) { toast('Recorder failed to start — check console', 'error'); RemotionPage._stopRecord(); }
+        const t = document.getElementById('hs-timer');
+        if (t) t.textContent = '0.0s / ' + dur + 's';
+      }, 600);
+    };
+  },
+
+  _stopRecord() {
+    if (RemotionPage._onMessage) window.removeEventListener('message', RemotionPage._onMessage);
+    RemotionPage._recordRunning = false;
+    const btn = document.getElementById('hs-rec');
+    if (btn) { btn.textContent = '⏺ Record WebM'; btn.classList.remove('hs-recording'); }
+    const prog = document.getElementById('hs-rec-prog');
+    if (prog) prog.style.display = 'none';
+    const bar = document.getElementById('hs-rec-bar');
+    if (bar) bar.style.width = '0%';
+    const t = document.getElementById('hs-timer');
+    if (t) t.textContent = '';
+    RemotionPage._runPreview();
+  },
+
+  destroy() {
+    if (RemotionPage._onMessage) window.removeEventListener('message', RemotionPage._onMessage);
+    window.removeEventListener('resize', RemotionPage._scalePreview);
+    RemotionPage._recordRunning = false;
+  },
 };
 
 // ── COMPANY PROFILE PAGE ─────────────────────────────────────
