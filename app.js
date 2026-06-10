@@ -3508,8 +3508,8 @@ const RemotionPage = {
         .hs-setting{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--text2);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
         .hs-inp{width:54px;padding:4px 7px;border:1px solid var(--border);border-radius:6px;background:var(--surface2);color:var(--text);font-size:12px;font-family:inherit;outline:none}
         .hs-inp:focus{border-color:#7c3aed}
-        .hs-preview-area{flex:1;display:flex;align-items:center;justify-content:center;overflow:hidden;background:#111;position:relative}
-        .hs-frame{border:none;display:block;background:#fff}
+        .hs-preview-area{flex:1;overflow:hidden;background:#111;position:relative}
+        .hs-frame{border:none;display:block;background:#fff;position:absolute;top:0;left:0}
         .hs-record-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
         .hs-rec-btn{padding:7px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s}
         .hs-rec-btn:hover:not(:disabled){background:#dc2626}
@@ -3523,12 +3523,25 @@ const RemotionPage = {
       document.head.appendChild(s);
     }
 
+    const cName  = State.settings.companyName || State.company?.name || 'Your Brand';
+    const cDesc  = State.company?.description || '';
+    const cIcp   = State.company?.icp || '';
+    const cIndustry = State.company?.industry || '';
+    const pitch  = (cIcp || cDesc || 'The one-line pitch that makes people stop scrolling.').replace(/"/g, '&quot;');
+    const shortPitch = pitch.length > 90 ? pitch.slice(0, 87) + '…' : pitch;
+    const safeName = cName.replace(/"/g, '&quot;');
+    // Words for text reveal: split company name or use industry keywords
+    const revWords = cName.split(/\s+/).filter(Boolean);
+    while (revWords.length < 4) revWords.push(['Smarter.','Faster.','Better.','Now.'][revWords.length % 4]);
+    const revHtml = revWords.slice(0,6).map((w,i) => `<span class="w${i===revWords.length-1?' hi':''}" style="animation-delay:${(.1+i*.25).toFixed(2)}s">${w.replace(/</g,'&lt;')}</span>`).join('');
+    const launchLbl = cName.length < 20 ? `${safeName} launches in` : 'launching in';
+
     const TEMPLATES = {
-      'Brand Ad': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:1280px;height:720px;overflow:hidden;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.wrap{text-align:center;color:#fff}.eyebrow{font-size:14px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);opacity:0;animation:up .6s .2s ease forwards}.headline{font-size:80px;font-weight:900;line-height:1;margin:16px 0 20px;background:linear-gradient(90deg,#fff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;animation:up .7s .4s ease forwards}.sub{font-size:22px;color:rgba(255,255,255,.65);opacity:0;animation:up .6s .65s ease forwards}.cta{display:inline-block;margin-top:36px;padding:16px 44px;border-radius:50px;background:#7c3aed;color:#fff;font-size:18px;font-weight:700;opacity:0;animation:up .6s .9s ease forwards}@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}</style></head><body><div class="wrap"><div class="eyebrow">Introducing</div><div class="headline">Your Brand Here</div><div class="sub">The one-line pitch that makes people stop scrolling.</div><div class="cta">Get Started →</div></div></body></html>`,
+      'Brand Ad': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0;box-sizing:border-box}body{width:1280px;height:720px;overflow:hidden;background:linear-gradient(135deg,#0f0c29,#302b63,#24243e);display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.wrap{text-align:center;color:#fff}.eyebrow{font-size:14px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:rgba(255,255,255,.5);opacity:0;animation:up .6s .2s ease forwards}.headline{font-size:80px;font-weight:900;line-height:1;margin:16px 0 20px;background:linear-gradient(90deg,#fff,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:0;animation:up .7s .4s ease forwards}.sub{font-size:22px;color:rgba(255,255,255,.65);opacity:0;animation:up .6s .65s ease forwards}.cta{display:inline-block;margin-top:36px;padding:16px 44px;border-radius:50px;background:#7c3aed;color:#fff;font-size:18px;font-weight:700;opacity:0;animation:up .6s .9s ease forwards}@keyframes up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}</style></head><body><div class="wrap"><div class="eyebrow">${cIndustry || 'Introducing'}</div><div class="headline">${safeName}</div><div class="sub">${shortPitch}</div><div class="cta">Get Started →</div></div></body></html>`,
 
-      'Text Reveal': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.words{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 28px;max-width:940px}.w{font-size:72px;font-weight:900;color:#fff;opacity:0;transform:scale(.75);animation:pop .45s ease forwards}.w:nth-child(1){animation-delay:.1s}.w:nth-child(2){animation-delay:.35s}.w:nth-child(3){animation-delay:.6s}.w:nth-child(4){animation-delay:.85s}.w:nth-child(5){animation-delay:1.1s}.w:nth-child(6){animation-delay:1.35s}.w.hi{color:#a78bfa}@keyframes pop{to{opacity:1;transform:scale(1)}}</style></head><body><div class="words"><span class="w">Build</span><span class="w">smarter.</span><span class="w">Ship</span><span class="w hi">faster.</span><span class="w">Grow</span><span class="w hi">together.</span></div></body></html>`,
+      'Text Reveal': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#000;display:flex;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif}.words{display:flex;flex-wrap:wrap;justify-content:center;gap:16px 28px;max-width:940px}.w{font-size:72px;font-weight:900;color:#fff;opacity:0;transform:scale(.75);animation:pop .45s ease forwards}.w.hi{color:#a78bfa}@keyframes pop{to{opacity:1;transform:scale(1)}}</style></head><body><div class="words">${revHtml}</div></body></html>`,
 
-      'Countdown': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif;gap:12px}#num{font-size:300px;font-weight:900;color:#fff;line-height:1;transition:transform .12s,color .3s}#lbl{font-size:22px;color:rgba(255,255,255,.35);letter-spacing:.22em;text-transform:uppercase}</style><script>var s=['3','2','1','GO!'],c=['#fff','#fff','#fff','#7c3aed'],i=0;function t(){var el=document.getElementById('num');el.style.transform='scale(.8)';el.style.color=c[i];setTimeout(function(){el.style.transform='scale(1)';el.textContent=s[i++];if(i<s.length)setTimeout(t,1000);},120);}document.addEventListener('DOMContentLoaded',function(){setTimeout(t,400);});<\/script></head><body><div id="num">–</div><div id="lbl">launching in</div></body></html>`,
+      'Countdown': `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>*{margin:0;padding:0}body{width:1280px;height:720px;overflow:hidden;background:#0a0a0a;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:'Helvetica Neue',sans-serif;gap:12px}#num{font-size:300px;font-weight:900;color:#fff;line-height:1;transition:transform .12s,color .3s}#lbl{font-size:22px;color:rgba(255,255,255,.35);letter-spacing:.22em;text-transform:uppercase}</style><script>var s=['3','2','1','GO!'],c=['#fff','#fff','#fff','#7c3aed'],i=0;function t(){var el=document.getElementById('num');el.style.transform='scale(.8)';el.style.color=c[i];setTimeout(function(){el.style.transform='scale(1)';el.textContent=s[i++];if(i<s.length)setTimeout(t,1000);},120);}document.addEventListener('DOMContentLoaded',function(){setTimeout(t,400);});<\/script></head><body><div id="num">–</div><div id="lbl">${launchLbl}</div></body></html>`,
     };
 
     const savedHtml = RemotionPage._lastHtml || TEMPLATES['Brand Ad'];
@@ -3623,8 +3636,12 @@ const RemotionPage = {
     const W = parseInt(document.getElementById('hs-w')?.value) || 1280;
     const H = parseInt(document.getElementById('hs-h')?.value) || 720;
     const scale = Math.min((area.clientWidth - 24) / W, (area.clientHeight - 24) / H, 1);
+    const scaledW = W * scale;
+    const scaledH = H * scale;
+    frame.style.transformOrigin = '0 0';
     frame.style.transform = `scale(${scale})`;
-    frame.style.transformOrigin = 'center center';
+    frame.style.left = Math.round((area.clientWidth  - scaledW) / 2) + 'px';
+    frame.style.top  = Math.round((area.clientHeight - scaledH) / 2) + 'px';
   },
 
   _startRecord() {
