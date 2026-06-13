@@ -999,6 +999,12 @@ function save(key) {
 // ── UTILITIES ──────────────────────────────────────────────────
 function uid() { return '_'+(Math.random()*1e9|0).toString(36)+(Date.now()).toString(36); }
 function escHtml(s) { return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function safeMarkdown(text, opts) {
+  try {
+    const html = marked.parse(text, { breaks: true, gfm: true, ...opts });
+    return typeof DOMPurify !== 'undefined' ? DOMPurify.sanitize(html) : html;
+  } catch(_) { return escHtml(text).replace(/\n/g, '<br>'); }
+}
 function getEmp(id) { return State.employees.find(e=>e.id===id)||null; }
 
 // ── TOASTS ────────────────────────────────────────────────────
@@ -2832,14 +2838,14 @@ const AccountingPage = {
       if (emp?.model?.startsWith('agent_')) {
         for await (const chunk of agentSessionStream(emp.model, AccountingPage, content)) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       } else {
         AccountingPage._history.push({ role: 'user', content: text });
         for await (const chunk of AI.stream(AccountingPage._history, emp?.system || '', { model: emp?.model, search: false, appTools: false, max_tokens: 4096 })) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
         AccountingPage._history.push({ role: 'assistant', content: full });
@@ -3011,14 +3017,14 @@ const InvestmentsPage = {
       if (emp?.model?.startsWith('agent_')) {
         for await (const chunk of agentSessionStream(emp.model, InvestmentsPage, content)) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       } else {
         InvestmentsPage._history.push({ role: 'user', content: text });
         for await (const chunk of AI.stream(InvestmentsPage._history, emp?.system || '', { model: emp?.model, search: true, appTools: false, max_tokens: 8192 })) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
         InvestmentsPage._history.push({ role: 'assistant', content: full });
@@ -3291,12 +3297,12 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
         const aiEl = document.getElementById(aiId)?.querySelector('.agent-pg-bubble--ai');
         if (st.emp?.model?.startsWith('agent_')) {
           for await (const chunk of agentSessionStream(st.emp.model, st, content)) {
-            full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+            full+=chunk; if(aiEl) aiEl.innerHTML=safeMarkdown(full); msgs.scrollTop=msgs.scrollHeight;
           }
         } else {
           st.history.push({ role:'user', content });
           for await (const chunk of AI.stream(st.history, st.emp?.system||'', { model:st.emp?.model, search:useSearch, appTools:false, max_tokens:maxTokens })) {
-            full+=chunk; if(aiEl) aiEl.innerHTML=marked.parse(full); msgs.scrollTop=msgs.scrollHeight;
+            full+=chunk; if(aiEl) aiEl.innerHTML=safeMarkdown(full); msgs.scrollTop=msgs.scrollHeight;
           }
           st.history.push({ role:'assistant', content:full });
         }
@@ -4440,7 +4446,7 @@ Be concise. Use headers for each key insight. End with a clear "Next Steps" sect
             <div class="sw-syn-title">🧩 Manager Synthesis</div>
             <button class="tb-btn" id="sw-save-brain">🧠 Save to Brain</button>
           </div>
-          <div class="sw-syn-body markdown-body">${marked.parse(run.synthesis)}</div>
+          <div class="sw-syn-body markdown-body">${safeMarkdown(run.synthesis)}</div>
         </div>
       ` : '<div id="sw-synthesis"></div>'}
     `;
@@ -4500,10 +4506,10 @@ Be concise. Use headers for each key insight. End with a clear "Next Steps" sect
     const syn = right?.querySelector('#sw-synthesis');
     if (!syn) return;
     if (!syn.querySelector('.sw-synthesis')) {
-      syn.innerHTML = `<div class="sw-synthesis"><div class="sw-syn-hdr"><div class="sw-syn-title">🧩 Synthesizing…</div></div><div class="sw-syn-body markdown-body">${marked.parse(text)}</div></div>`;
+      syn.innerHTML = `<div class="sw-synthesis"><div class="sw-syn-hdr"><div class="sw-syn-title">🧩 Synthesizing…</div></div><div class="sw-syn-body markdown-body">${safeMarkdown(text)}</div></div>`;
     } else {
       const body = syn.querySelector('.sw-syn-body');
-      if (body) body.innerHTML = marked.parse(text);
+      if (body) body.innerHTML = safeMarkdown(text);
     }
   },
 
@@ -4842,14 +4848,7 @@ const Chat = {
       save_('chatHistory');
     }
   },
-  _md(text) {
-    try {
-      if (typeof marked !== 'undefined') {
-        return marked.parse(text, { breaks: true, gfm: true });
-      }
-    } catch(_) {}
-    return escHtml(text).replace(/\n/g,'<br>');
-  },
+  _md(text) { return safeMarkdown(text); },
   _appendBubble(container, av, color, name, text, isUser) {
     const div = document.createElement('div');
     div.className = 'msg'+(isUser?' user':'');
@@ -4990,7 +4989,7 @@ parts.forEach(function(part,i){
   var secT=tm?tm[1]:(i===0?'${safeName}':'Section '+(i+1));
   var hdr=multi?'<div class="shdr"><span class="spill">'+(i+1)+' / '+parts.length+'</span><span class="stitle">'+secT+'</span></div>':'';
   var content=multi?part.replace(/^##[^\n]*\n?/,''):part;
-  el.innerHTML=hdr+'<div class="sc">'+marked.parse(content)+'</div>';
+  el.innerHTML=hdr+'<div class="sc">'+safeMarkdown(content)+'</div>';
   host.appendChild(el);slideEls.push(el);
   var dot=document.createElement('button');
   dot.className='ndot'+(i===0?' on':'');
@@ -10149,14 +10148,14 @@ const AdStudio = {
       if (emp?.model?.startsWith('agent_')) {
         for await (const chunk of agentSessionStream(emp.model, AdStudio._videoState, text)) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       } else {
         AdStudio._videoHistory.push({ role:'user', content:text });
         for await (const chunk of AI.stream(AdStudio._videoHistory, emp?.system||'', { model:emp?.model, search:false, appTools:false, max_tokens:8192 })) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
         AdStudio._videoHistory.push({ role:'assistant', content:full });
@@ -11339,13 +11338,13 @@ const BrainPage = {
       if (emp?.model?.startsWith('agent_')) {
         for await (const chunk of agentSessionStream(emp.model, BrainPage._agentState, text)) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       } else {
         for await (const chunk of AI.stream([{role:'user',content:text}], emp?.system || '', { search: false, appTools: false, max_tokens: 4096 })) {
           full += chunk;
-          if (aiEl) aiEl.innerHTML = marked.parse(full);
+          if (aiEl) aiEl.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       }
@@ -14420,7 +14419,7 @@ const TravelPage = {
 
       // Show any prose Marco added before the tag
       const prose = full.replace(/<search>[\s\S]*?<\/search>/, '').trim();
-      if (prose) TravelPage._addMsg('ai', marked.parse(prose));
+      if (prose) TravelPage._addMsg('ai', safeMarkdown(prose));
 
       if (params) {
         TravelPage._fireSearch(params);
@@ -14429,7 +14428,7 @@ const TravelPage = {
       }
     } else {
       // Pure conversational reply
-      TravelPage._addMsg('ai', marked.parse(full));
+      TravelPage._addMsg('ai', safeMarkdown(full));
     }
   },
 
@@ -14577,7 +14576,7 @@ const TravelPage = {
     if (searchType === 'flights')     summary = `Found **${fc}** live flight option${fc!==1?'s':''} from Duffel — sorted by best value. Select any to review before booking.`;
     else if (searchType === 'hotels') summary = `Found **${hc}** live hotel${hc!==1?'s':''} with availability from Amadeus. Select any to review and confirm.`;
     else summary = `Found **${fc}** flight${fc!==1?'s':''} and **${hc}** hotel${hc!==1?'s':''} from live feeds. Select options to review — no booking until you confirm.`;
-    TravelPage._addMsg('ai', marked.parse(summary));
+    TravelPage._addMsg('ai', safeMarkdown(summary));
   },
 
   _flightDurationMinutes(offer) {
@@ -15791,7 +15790,7 @@ Include sections for: cargo description (leave placeholder), HS code (leave plac
         full += chunk;
         const el = streamEl();
         if (el) {
-          el.innerHTML = typeof marked !== 'undefined' ? marked.parse(full) : escHtml(full);
+          el.innerHTML = safeMarkdown(full);
           msgs.scrollTop = msgs.scrollHeight;
         }
       }
