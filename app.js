@@ -82,7 +82,7 @@ const DEFAULT_BRAIN_FACTS = [
     category:'business', source:'Growth Strategy', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
   {id:'dbf_s2', text:'Best cold email angle for Kayro: "What would you do if you had a Head of Marketing, Engineer, and Product Manager on call 24/7 for $29/month?" Lead with the outcome (full team for cost of a Netflix sub), not the technology.',
     category:'market', source:'Sales Messaging', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf_s3', text:'Objection: "ChatGPT is free" → Kayro agents know YOUR company, YOUR tasks, YOUR goals. ChatGPT forgets everything and has no idea who you are. Objection: "Too expensive" → $29 is less than 2 hours of a freelancer. You get 8 specialist agents 24/7.',
+  {id:'dbf_s3', text:'Objection: "ChatGPT is free" → Kayro agents know YOUR company, YOUR tasks, YOUR goals. ChatGPT forgets everything and has no idea who you are. Objection: "Too expensive" → $29 is less than 2 hours of a freelancer. You get 28 specialist agents 24/7.',
     category:'business', source:'Objection Handling', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
 ];
 
@@ -3319,6 +3319,7 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
 // ── REMOTION PAGE ─────────────────────────────────────────────
 const RemotionPage = {
   _studioUrl: 'http://localhost:3000',
+  _studioRunning: false,
   _tab: 'compositions',
   _lastHtml: null,
   _recordRunning: false,
@@ -3477,6 +3478,11 @@ const RemotionPage = {
     // Wire buttons
     container.querySelectorAll('.rmt-open-btn').forEach(btn => {
       btn.addEventListener('click', () => {
+        if (!RemotionPage._studioRunning) {
+          toast('Remotion Studio requires a local server — run the command above, then click "Check if running →"', 'info');
+          document.getElementById('rmt-guide')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          return;
+        }
         const url = `${RemotionPage._studioUrl}?compositionId=${btn.dataset.cid}`;
         window.open(url, '_blank');
         toast('Opening composition in Remotion Studio', 'success');
@@ -3502,6 +3508,7 @@ const RemotionPage = {
       // Try a no-cors HEAD request — if it doesn't throw, port is open
       await fetch(`${RemotionPage._studioUrl}`, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
       // Running
+      RemotionPage._studioRunning = true;
       if (pill) pill.innerHTML = '<span class="rmt-status-dot rmt-status-dot--on"></span> Studio running';
       if (pill) pill.classList.add('rmt-status--on');
       const guide = document.getElementById('rmt-guide');
@@ -3841,7 +3848,7 @@ const CompanyProfilePage = {
       <div class="cp-header">
         <div>
           <div class="cp-title">Company Profile</div>
-          <div class="cp-sub">This profile is injected into every agent's system prompt — keeping all 46 AI employees aligned to your specific business.</div>
+          <div class="cp-sub">This profile is injected into every agent's system prompt — keeping all 28 AI agents aligned to your specific business.</div>
         </div>
         <div class="cp-tenant-badge">Tenant ID: <code>${escHtml(c.tenantId||'—')}</code></div>
       </div>
@@ -15075,7 +15082,7 @@ Keep bullets concise (max 12 words each). Speaker notes: 1–2 sentences of what
         await new Promise((res, rej) => {
           const sc = document.createElement('script');
           sc.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
-          sc.onload = res; sc.onerror = rej;
+          sc.onload = res; sc.onerror = () => rej(new Error('Failed to load slide library — check your internet connection and try again.'));
           document.head.appendChild(sc);
         });
       }

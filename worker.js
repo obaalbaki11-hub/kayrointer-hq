@@ -7,8 +7,6 @@
 const ALLOWED_ORIGINS = [
   'https://kayrointer.com',
   'https://www.kayrointer.com',
-  'http://localhost:3000',
-  'http://127.0.0.1:5500',
 ];
 
 function cors(origin) {
@@ -49,21 +47,27 @@ export default {
       // AI Proxy — Bedrock if AWS creds set, else Anthropic
       // agent_* models (Claude Platform Agents) must always go to Anthropic directly
       if (path === '/api/ai') {
-        // C4/C5: require valid session before proxying to Anthropic (closes open-key abuse)
         const authR = await requireSession(request, env, origin);
         if (!authR.ok) return authR.response;
         const limitMsg = await checkUsageLimits(env, authR.session.uid, authR.session.plan);
         if (limitMsg) return json({ error: limitMsg }, 402, origin);
         await recordUsage(env, authR.session.uid);
 
+        // HIGH-1: enforce model allowlist per plan
+        const cloned = request.clone();
+        let bodyPeeked;
+        try { bodyPeeked = await cloned.json(); } catch (_) {}
+        if (bodyPeeked) {
+          const model = String(bodyPeeked.model || 'claude-sonnet-4-6');
+          const allowed = PLAN_ALLOWED_MODELS[authR.session.plan || 'free'];
+          if (allowed && !model.startsWith('agent_') && !allowed.has(model)) {
+            return json({ error: `Model ${model} is not available on your plan. Upgrade to Scale or Enterprise for Opus access.` }, 403, origin);
+          }
+        }
+
         let useAI = handleAI;
-        if (env.AWS_ACCESS_KEY_ID) {
-          // Peek at model field without consuming the body
-          const cloned = request.clone();
-          try {
-            const b = await cloned.json();
-            if (!String(b.model || '').startsWith('agent_')) useAI = handleAIBedrock;
-          } catch (_) { useAI = handleAIBedrock; }
+        if (env.AWS_ACCESS_KEY_ID && bodyPeeked && !String(bodyPeeked.model || '').startsWith('agent_')) {
+          useAI = handleAIBedrock;
         }
         return useAI(request, env, origin, authR.session.uid);
       }
@@ -81,8 +85,31 @@ export default {
         return handleAgentTurn(request, env, origin);
       }
       if (path === '/api/ping')                return handlePing(request, env, origin);
-      if (path === '/api/send-email')          return handleSendEmail(request, env, origin);
-      if (path.startsWith('/api/hunter'))     return handleHunter(request, env, origin, path);
+
+      // CRITICAL-5: email relay requires auth + rate limit
+      if (path === '/api/send-email') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const rlWait = await rlCheck(env, 'email', ip);
+        if (rlWait !== null) return json({ error: `Too many emails. Try again in ${Math.ceil(rlWait/60)} minute(s).` }, 429, origin);
+        await rlRecord(env, 'email', ip);
+        return handleSendEmail(request, env, origin);
+      }
+
+      // HIGH-3: Hunter proxy requires auth
+      if (path.startsWith('/api/hunter')) {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleHunter(request, env, origin, path);
+      }
+
+      // CRITICAL-6: Tavily proxy — key stays server-side, quota enforced in KV
+      if (path === '/api/search') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleSearch(request, env, origin, authR.session);
+      }
       if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
       if (path === '/api/usage/me')            return handleUsageMe(request, env, origin);
       if (path === '/api/admin/usage')         return handleAdminUsage(request, env, origin);
@@ -127,12 +154,16 @@ export default {
         return handleHotelBook(request, env, origin);
       }
 
-      // Payments (Stripe)
-      if (path === '/api/payments/customer')   return handleStripeCustomer(request, env, origin);
-      if (path === '/api/payments/setup')      return handleSetupIntent(request, env, origin);
-      if (path === '/api/payments/methods')    return handleListCards(request, env, origin);
-      if (path === '/api/payments/remove')     return handleRemoveCard(request, env, origin);
-      if (path === '/api/payments/charge')     return handleCharge(request, env, origin);
+      // Payments (Stripe) — CRITICAL-2: all require auth
+      if (path.startsWith('/api/payments/')) {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        if (path === '/api/payments/customer') return handleStripeCustomer(request, env, origin, authR.session);
+        if (path === '/api/payments/setup')    return handleSetupIntent(request, env, origin, authR.session);
+        if (path === '/api/payments/methods')  return handleListCards(request, env, origin, authR.session);
+        if (path === '/api/payments/remove')   return handleRemoveCard(request, env, origin, authR.session);
+        if (path === '/api/payments/charge')   return handleCharge(request, env, origin, authR.session);
+      }
 
       return err('Not found', 404, origin);
     } catch (e) {
@@ -207,6 +238,14 @@ const MODEL_COSTS = {
   'claude-3-haiku-20240307':    { input:  0.25, output:  1.25 },
 };
 const RESALE_RATE = 18.00; // $/M tokens — what you charge users
+
+// HIGH-1: Per-plan model allowlist. null = all models allowed.
+const PLAN_ALLOWED_MODELS = {
+  free:       new Set(['claude-haiku-4-5-20251001','claude-haiku-4-5','claude-3-haiku-20240307','claude-3-5-haiku-20241022']),
+  growth:     new Set(['claude-haiku-4-5-20251001','claude-haiku-4-5','claude-3-haiku-20240307','claude-3-5-haiku-20241022','claude-sonnet-4-6','claude-sonnet-4-5','claude-3-5-sonnet-20241022']),
+  scale:      null,
+  enterprise: null,
+};
 
 function modelCostUSD(model, inputTokens, outputTokens) {
   const rates = MODEL_COSTS[model] || MODEL_COSTS['claude-sonnet-4-6'];
@@ -717,6 +756,62 @@ async function handleHunter(request, env, origin, path) {
 }
 
 // ══════════════════════════════════════════════════════════════
+// SEARCH — Tavily proxy (CRITICAL-6: key never reaches browser)
+// ══════════════════════════════════════════════════════════════
+const SEARCH_LIMITS = {
+  free:       0,
+  growth:     5,
+  scale:      15,
+  enterprise: 30,
+};
+
+async function handleSearch(request, env, origin, session) {
+  if (!env.TAVILY_KEY) return json({ error: 'Search not configured.' }, 500, origin);
+
+  const { query, max_results = 5 } = await request.json();
+  if (!query || typeof query !== 'string' || query.trim().length === 0) {
+    return err('query required', 400, origin);
+  }
+
+  const plan  = session.plan || 'free';
+  const limit = SEARCH_LIMITS[plan] ?? 0;
+  if (limit === 0) return json({ error: 'Web search not available on your plan.' }, 403, origin);
+
+  const uid    = session.uid;
+  const dayKey = `search:${uid}:${todayKey()}`;
+  const raw    = env.USERS ? await env.USERS.get(dayKey, { type: 'json' }) : null;
+  const used   = (raw || {}).count || 0;
+
+  if (used >= limit) {
+    return json({ error: `Daily search quota reached (${limit}/day on ${plan} plan).`, quota: { used, limit } }, 429, origin);
+  }
+
+  const res = await fetch('https://api.tavily.com/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      api_key: env.TAVILY_KEY,
+      query: query.trim(),
+      max_results: Math.min(Number(max_results) || 5, 10),
+      include_answer: false,
+    }),
+  });
+
+  if (!res.ok) {
+    const txt = await res.text();
+    return json({ error: `Search failed: ${res.status}`, detail: txt }, 502, origin);
+  }
+
+  const data = await res.json();
+
+  if (env.USERS) {
+    await env.USERS.put(dayKey, JSON.stringify({ count: used + 1 }), { expirationTtl: 2 * 24 * 60 * 60 });
+  }
+
+  return json({ results: data.results || [], quota: { used: used + 1, limit } }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
 // AUTH — Email/Password + JWT (backed by Cloudflare KV)
 // Setup: npx wrangler kv:namespace create USERS
 //        npx wrangler secret put JWT_SECRET
@@ -814,9 +909,11 @@ async function hashPassword(password, salt, iterations = 600000) {
 
 // ── RATE LIMITING (KV-backed; degrades gracefully if KV not configured yet) ───
 const RL_CONFIG = {
-  signin: { max: 10, window: 15 * 60 }, // 10 failures per 15 min per IP
-  signup: { max:  5, window: 60 * 60 }, //  5 attempts per hour per IP
-  guest:  { max: 20, window: 60 * 60 }, // 20 guest sessions per hour per IP
+  signin:   { max: 10, window: 15 * 60 }, // 10 failures per 15 min per IP
+  signup:   { max:  5, window: 60 * 60 }, //  5 attempts per hour per IP
+  guest:    { max: 20, window: 60 * 60 }, // 20 guest sessions per hour per IP
+  email:    { max: 10, window: 60 * 60 }, // 10 emails per IP per hour
+  plancode: { max:  5, window: 60 * 60 }, //  5 code attempts per IP per hour
 };
 
 async function rlCheck(env, action, ip) {
@@ -1033,27 +1130,50 @@ async function handleLogout(request, env, origin) {
   });
 }
 
-// ── POST /api/auth/plan — validate plan code, update KV, re-issue cookie ────
+// ── POST /api/auth/plan — CRITICAL-1: exact-match codes, single-use, rate-limited ──
 async function handlePlanActivation(request, env, origin) {
   const authR = await requireSession(request, env, origin);
   if (!authR.ok) return authR.response;
+
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const rlWait = await rlCheck(env, 'plancode', ip);
+  if (rlWait !== null) return json({ error: `Too many attempts. Try again in ${Math.ceil(rlWait / 60)} minute(s).` }, 429, origin);
 
   const secret = env.JWT_SECRET;
   let body = {};
   try { body = JSON.parse(await request.text()); } catch {}
   const { code } = body;
-  if (!code) return json({ error: 'code required' }, 400, origin);
+  if (!code || typeof code !== 'string') return json({ error: 'code required' }, 400, origin);
 
-  const PLAN_CODES = {
-    'KAYRO-GROWTH': 'growth', 'KAYRO-SCALE': 'scale',
-    'KAYRO-ENTERPRISE': 'enterprise', 'KAYRO-FREE': 'free',
-  };
   const upper = code.toUpperCase().trim();
-  const planMatch = Object.entries(PLAN_CODES).find(([prefix]) => upper === prefix || upper.startsWith(prefix + '-'));
-  if (!planMatch) return json({ error: 'Invalid plan code' }, 400, origin);
-  const newPlan = planMatch[1];
+  if (upper.length < 4 || upper.length > 64) { await rlRecord(env, 'plancode', ip); return json({ error: 'Invalid plan code' }, 400, origin); }
 
   const { uid, email, name } = authR.session;
+  let newPlan = null;
+
+  // 1. KV-backed dynamic codes (admin creates via: wrangler kv:key put "plancode:CODE" '{"plan":"growth"}')
+  if (env.USERS) {
+    const codeData = await env.USERS.get(`plancode:${upper}`, { type: 'json' });
+    if (codeData?.plan) {
+      const usedBy = await env.USERS.get(`plancode_used:${upper}`);
+      // Allow the same user to re-apply their own code (idempotent), but block other users
+      if (usedBy && usedBy !== uid) {
+        await rlRecord(env, 'plancode', ip);
+        return json({ error: 'This code has already been used.' }, 400, origin);
+      }
+      newPlan = codeData.plan;
+      await env.USERS.put(`plancode_used:${upper}`, uid, { expirationTtl: 730 * 24 * 60 * 60 });
+    }
+  }
+
+  // Static shared codes removed — all codes must be single-use dynamic codes.
+  // Generate via: wrangler kv:key put "plancode:MYCODE123" '{"plan":"growth"}' --binding USERS
+
+  if (!newPlan) {
+    await rlRecord(env, 'plancode', ip);
+    return json({ error: 'Invalid plan code' }, 400, origin);
+  }
+
   if (env.USERS) await env.USERS.put(`plan:${uid}`, newPlan);
 
   const sessionToken = await jwtSign(
@@ -1162,19 +1282,21 @@ async function handleFlightBook(request, env, origin) {
 
   if (!offerId || !passengers?.length) return err('offerId and passengers required', 400, origin);
 
-  // Charge via Stripe first — never book without payment
-  if (stripePaymentMethodId && stripeCustomerId) {
-    const charged = await stripeRequest(env, 'POST', '/v1/payment_intents', {
-      amount: Math.round(Number(paymentAmount) * 100),
-      currency: (paymentCurrency || 'usd').toLowerCase(),
-      customer: stripeCustomerId,
-      payment_method: stripePaymentMethodId,
-      confirm: 'true',
-      off_session: 'true',
-    });
-    if (charged.error) return json({ error: charged.error.message }, 400, origin);
-    if (charged.status !== 'succeeded') return json({ error: `Payment status: ${charged.status}` }, 400, origin);
+  // CRITICAL-3: payment required — never book without it
+  if (!stripePaymentMethodId || !stripeCustomerId) {
+    return json({ error: 'Payment method required to complete booking.' }, 402, origin);
   }
+
+  const charged = await stripeRequest(env, 'POST', '/v1/payment_intents', {
+    amount: Math.round(Number(paymentAmount) * 100),
+    currency: (paymentCurrency || 'usd').toLowerCase(),
+    customer: stripeCustomerId,
+    payment_method: stripePaymentMethodId,
+    confirm: 'true',
+    off_session: 'true',
+  });
+  if (charged.error) return json({ error: charged.error.message }, 400, origin);
+  if (charged.status !== 'succeeded') return json({ error: `Payment status: ${charged.status}` }, 400, origin);
 
   const api = duffel(env);
   const result = await api.post('/air/orders', {
@@ -1326,21 +1448,29 @@ async function handleHotelBook(request, env, origin) {
 
   if (!offerId || !guests?.length) return err('offerId and guests required', 400, origin);
 
-  // Charge first
-  if (stripePaymentMethodId && stripeCustomerId) {
-    const charged = await stripeRequest(env, 'POST', '/v1/payment_intents', {
-      amount: Math.round(Number(paymentAmount) * 100),
-      currency: (paymentCurrency || 'usd').toLowerCase(),
-      customer: stripeCustomerId,
-      payment_method: stripePaymentMethodId,
-      confirm: 'true',
-      off_session: 'true',
-    });
-    if (charged.error || charged.status !== 'succeeded') {
-      return json({ error: charged.error?.message || `Payment ${charged.status}` }, 400, origin);
-    }
+  // MEDIUM-2: Hotel booking requires a real Stripe card flow — test card removed.
+  // This endpoint is disabled until Stripe payment collection is fully wired in the UI.
+  return json({ error: 'Hotel booking is not yet available. Check back soon.' }, 503, origin);
+
+  /* eslint-disable no-unreachable */
+  // CRITICAL-3: payment required
+  if (!stripePaymentMethodId || !stripeCustomerId) {
+    return json({ error: 'Payment method required to complete booking.' }, 402, origin);
   }
 
+  const charged = await stripeRequest(env, 'POST', '/v1/payment_intents', {
+    amount: Math.round(Number(paymentAmount) * 100),
+    currency: (paymentCurrency || 'usd').toLowerCase(),
+    customer: stripeCustomerId,
+    payment_method: stripePaymentMethodId,
+    confirm: 'true',
+    off_session: 'true',
+  });
+  if (charged.error || charged.status !== 'succeeded') {
+    return json({ error: charged.error?.message || `Payment ${charged.status}` }, 400, origin);
+  }
+
+  // TODO: replace cardNumber below with real tokenized payment data from Stripe before re-enabling
   const data = await amadeusPost(env, '/v2/booking/hotel-orders', {
     data: {
       offerId,
@@ -1357,14 +1487,15 @@ async function handleHotelBook(request, env, origin) {
         paymentCard: {
           paymentCardInfo: {
             vendorCode: 'VI',
-            cardNumber: '4111111111111111',
-            expiryDate: '2026-01',
+            cardNumber: 'REPLACE_WITH_REAL_CARD_DATA',
+            expiryDate: '2099-01',
             holderName: `${guests[0].firstName} ${guests[0].lastName}`,
           },
         },
       }],
     },
   });
+  /* eslint-enable no-unreachable */
 
   if (data.errors?.length) return json({ error: data.errors[0]?.detail }, 400, origin);
 
@@ -1411,91 +1542,110 @@ function flattenStripeParams(obj, prefix = '') {
   return out;
 }
 
-// Create or retrieve Stripe customer for a Kayro user
-async function handleStripeCustomer(request, env, origin) {
-  const { email, name, kayroUserId } = await request.json();
-  if (!email) return err('email required', 400, origin);
+// Helper — verify a customerId belongs to the authenticated user (KV-backed)
+async function verifyStripeOwner(env, origin, uid, customerId) {
+  if (!env.USERS || !customerId) return null;
+  const owned = await env.USERS.get(`stripe_cust:${uid}`);
+  if (owned && owned !== customerId) return err('Payment account not associated with your account.', 403, origin);
+  return null;
+}
 
-  // Search for existing customer by email
-  const existing = await stripeRequest(env, 'GET', '/v1/customers', { email, limit: '1' });
-  if (existing.data?.length) {
-    return json({ customerId: existing.data[0].id }, 200, origin);
+// Create or retrieve Stripe customer for a Kayro user — CRITICAL-2: auth required
+async function handleStripeCustomer(request, env, origin, session) {
+  const { uid, email: sessionEmail } = session;
+  const body = await request.json();
+  const email = (body.email || '').toLowerCase().trim();
+  const name  = body.name;
+  if (!email) return err('email required', 400, origin);
+  if (email !== (sessionEmail || '').toLowerCase()) return err('email must match authenticated account', 403, origin);
+
+  // Return cached customerId if we already linked one
+  if (env.USERS) {
+    const cached = await env.USERS.get(`stripe_cust:${uid}`);
+    if (cached) return json({ customerId: cached }, 200, origin);
   }
 
-  // Create new customer
-  const customer = await stripeRequest(env, 'POST', '/v1/customers', {
-    email,
-    name: name || email,
-    metadata: { kayroUserId: kayroUserId || '' },
-  });
+  const existing = await stripeRequest(env, 'GET', '/v1/customers', { email, limit: '1' });
+  if (existing.data?.length) {
+    const customerId = existing.data[0].id;
+    if (env.USERS) await env.USERS.put(`stripe_cust:${uid}`, customerId, { expirationTtl: 730 * 24 * 60 * 60 });
+    return json({ customerId }, 200, origin);
+  }
 
+  const customer = await stripeRequest(env, 'POST', '/v1/customers', { email, name: name || email, metadata: { kayroUserId: uid } });
   if (customer.error) return json({ error: customer.error.message }, 400, origin);
+  if (env.USERS) await env.USERS.put(`stripe_cust:${uid}`, customer.id, { expirationTtl: 730 * 24 * 60 * 60 });
   return json({ customerId: customer.id }, 200, origin);
 }
 
-// Create a SetupIntent so the frontend (Stripe.js) can securely collect card details
-async function handleSetupIntent(request, env, origin) {
+// Create SetupIntent — CRITICAL-2: auth + ownership
+async function handleSetupIntent(request, env, origin, session) {
   const { customerId } = await request.json();
   if (!customerId) return err('customerId required', 400, origin);
+  const ownerErr = await verifyStripeOwner(env, origin, session.uid, customerId);
+  if (ownerErr) return ownerErr;
 
   const intent = await stripeRequest(env, 'POST', '/v1/setup_intents', {
-    customer: customerId,
-    payment_method_types: 'card',
-    usage: 'off_session',
+    customer: customerId, payment_method_types: 'card', usage: 'off_session',
   });
-
   if (intent.error) return json({ error: intent.error.message }, 400, origin);
-  return json({
-    clientSecret: intent.client_secret,
-    setupIntentId: intent.id,
-  }, 200, origin);
+  return json({ clientSecret: intent.client_secret, setupIntentId: intent.id }, 200, origin);
 }
 
-// List saved cards for a customer
-async function handleListCards(request, env, origin) {
+// List saved cards — CRITICAL-2: auth + ownership
+async function handleListCards(request, env, origin, session) {
   const url = new URL(request.url);
   const customerId = url.searchParams.get('customerId');
   if (!customerId) return err('customerId required', 400, origin);
+  const ownerErr = await verifyStripeOwner(env, origin, session.uid, customerId);
+  if (ownerErr) return ownerErr;
 
-  const methods = await stripeRequest(env, 'GET', '/v1/payment_methods', {
-    customer: customerId,
-    type: 'card',
-  });
-
+  const methods = await stripeRequest(env, 'GET', '/v1/payment_methods', { customer: customerId, type: 'card' });
   if (methods.error) return json({ error: methods.error.message }, 400, origin);
 
   const cards = (methods.data || []).map(pm => ({
-    id: pm.id,
-    brand: pm.card.brand,
-    last4: pm.card.last4,
-    expMonth: pm.card.exp_month,
-    expYear: pm.card.exp_year,
-    isDefault: false,
+    id: pm.id, brand: pm.card.brand, last4: pm.card.last4,
+    expMonth: pm.card.exp_month, expYear: pm.card.exp_year, isDefault: false,
   }));
-
   return json({ cards }, 200, origin);
 }
 
-// Remove a saved card
-async function handleRemoveCard(request, env, origin) {
+// Remove a saved card — CRITICAL-2: auth + ownership via Stripe lookup
+async function handleRemoveCard(request, env, origin, session) {
   const { paymentMethodId } = await request.json();
   if (!paymentMethodId) return err('paymentMethodId required', 400, origin);
+
+  // Verify this payment method belongs to the session user's customer
+  if (env.USERS) {
+    const ownedCustId = await env.USERS.get(`stripe_cust:${session.uid}`);
+    if (ownedCustId) {
+      const pm = await stripeRequest(env, 'GET', `/v1/payment_methods/${paymentMethodId}`, {});
+      if (pm.customer && pm.customer !== ownedCustId) return err('Payment method not associated with your account.', 403, origin);
+    }
+  }
 
   const result = await stripeRequest(env, 'POST', `/v1/payment_methods/${paymentMethodId}/detach`, {});
   if (result.error) return json({ error: result.error.message }, 400, origin);
   return json({ removed: true }, 200, origin);
 }
 
-// Charge a saved card
-async function handleCharge(request, env, origin) {
+// Charge a saved card — CRITICAL-2: auth + ownership + amount validation
+async function handleCharge(request, env, origin, session) {
   const { customerId, paymentMethodId, amount, currency = 'usd', description = 'Kayro booking' } = await request.json();
 
   if (!customerId || !paymentMethodId || !amount) {
     return err('customerId, paymentMethodId, amount required', 400, origin);
   }
+  const amountNum = Number(amount);
+  if (!isFinite(amountNum) || amountNum <= 0 || amountNum > 100000) {
+    return err('Invalid amount', 400, origin);
+  }
+
+  const ownerErr = await verifyStripeOwner(env, origin, session.uid, customerId);
+  if (ownerErr) return ownerErr;
 
   const intent = await stripeRequest(env, 'POST', '/v1/payment_intents', {
-    amount: String(Math.round(Number(amount) * 100)),
+    amount: String(Math.round(amountNum * 100)),
     currency: currency.toLowerCase(),
     customer: customerId,
     payment_method: paymentMethodId,
