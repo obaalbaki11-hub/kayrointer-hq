@@ -15796,7 +15796,7 @@ Include sections for: cargo description (leave placeholder), HS code (leave plac
       }
     } catch(err) {
       const el = streamEl();
-      if (el) el.innerHTML = `<span style="color:var(--error)">⚠️ ${escHtml(String(err))}</span>`;
+      if (el) el.innerHTML = `<span style="color:var(--danger)">⚠️ ${escHtml(String(err))}</span>`;
     }
 
     searchPill?.remove();
