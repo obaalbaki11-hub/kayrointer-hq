@@ -94,14 +94,14 @@ export default {
         const rlWait = await rlCheck(env, 'email', ip);
         if (rlWait !== null) return json({ error: `Too many emails. Try again in ${Math.ceil(rlWait/60)} minute(s).` }, 429, origin);
         await rlRecord(env, 'email', ip);
-        return handleSendEmail(request, env, origin);
+        return handleSendEmail(request, env, origin, authR.session);
       }
 
-      // HIGH-3: Hunter proxy requires auth
+      // HIGH-3: Hunter proxy requires auth + per-user daily quota
       if (path.startsWith('/api/hunter')) {
         const authR = await requireSession(request, env, origin);
         if (!authR.ok) return authR.response;
-        return handleHunter(request, env, origin, path);
+        return handleHunter(request, env, origin, path, authR.session);
       }
 
       // CRITICAL-6: Tavily proxy — key stays server-side, quota enforced in KV
@@ -113,7 +113,13 @@ export default {
       if (path.startsWith('/api/auth'))       return handleAuth(request, env, origin, path);
       if (path === '/api/usage/me')            return handleUsageMe(request, env, origin);
       if (path === '/api/admin/usage')         return handleAdminUsage(request, env, origin);
-      if (path === '/api/enterprise-lead')     return handleEnterpriseLead(request, env, origin);
+      if (path === '/api/enterprise-lead') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        const rlWait = await rlCheck(env, 'lead', ip);
+        if (rlWait !== null) return json({ error: `Too many requests. Try again in ${Math.ceil(rlWait/60)} minute(s).` }, 429, origin);
+        await rlRecord(env, 'lead', ip);
+        return handleEnterpriseLead(request, env, origin);
+      }
 
       // Flights (Duffel) — all endpoints require a valid session
       if (path === '/api/flights/search') {
@@ -442,6 +448,7 @@ async function handleAI(request, env, origin, uid = null) {
       'anthropic-version': '2023-06-01',
     },
     body: JSON.stringify(bodyObj),
+    signal: AbortSignal.timeout(120000),
   });
 
   if (!res.ok) {
@@ -501,6 +508,7 @@ async function handleAgentSession(request, env, origin) {
       agent: { type: 'agent', id: agent_id },
       environment_id: AGENT_ENV_ID,
     }),
+    signal: AbortSignal.timeout(15000),
   });
 
   if (!res.ok) {
@@ -540,6 +548,7 @@ async function handleAgentTurn(request, env, origin, uid) {
   const streamRes = await fetch(`https://api.anthropic.com/v1/sessions/${session_id}/events/stream?beta=true`, {
     method: 'GET',
     headers: { ...agentHeaders, 'Accept': 'text/event-stream' },
+    signal: AbortSignal.timeout(120000),
   });
 
   if (!streamRes.ok) {
@@ -552,6 +561,7 @@ async function handleAgentTurn(request, env, origin, uid) {
     method: 'POST',
     headers: agentHeaders,
     body: JSON.stringify({ events }),
+    signal: AbortSignal.timeout(30000),
   });
 
   if (!sendRes.ok) {
@@ -688,6 +698,7 @@ async function handlePing(request, env, origin) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01', 'User-Agent': 'kayro-worker/1.0' },
     body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 5, messages: [{ role: 'user', content: 'hi' }] }),
+    signal: AbortSignal.timeout(15000),
   });
   const body = await res.json();
   if (res.ok) return json({ ok: true, status: res.status }, 200, origin);
@@ -721,6 +732,7 @@ async function handleEnterpriseLead(request, env, origin) {
       method: 'POST',
       headers: { Authorization: `Bearer ${env.RESEND_KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ from: fromAddr, to: ['obaalbaki11@gmail.com'], subject: `🏢 Enterprise Lead: ${company} — ${name}`, text }),
+      signal: AbortSignal.timeout(15000),
     }).catch(() => {});
   }
 
@@ -730,11 +742,23 @@ async function handleEnterpriseLead(request, env, origin) {
 // ══════════════════════════════════════════════════════════════
 // SEND EMAIL — RESEND
 // ══════════════════════════════════════════════════════════════
-async function handleSendEmail(request, env, origin) {
+const EMAIL_USER_DAILY = 20;
+
+async function handleSendEmail(request, env, origin, session = null) {
   const key = env.RESEND_KEY;
   if (!key) {
     return json({ error: 'Email sending not configured. Run: npx wrangler secret put RESEND_KEY — get your free key at resend.com' }, 500, origin);
   }
+
+  // Per-user daily cap (optimistic increment before send — failed sends still count)
+  if (session?.uid && env.USERS) {
+    const dayKey = `email:${session.uid}:${todayKey()}`;
+    const raw  = await env.USERS.get(dayKey, { type: 'json' });
+    const used = (raw || {}).count || 0;
+    if (used >= EMAIL_USER_DAILY) return json({ error: `Daily email limit reached (${EMAIL_USER_DAILY}/day).` }, 429, origin);
+    await env.USERS.put(dayKey, JSON.stringify({ count: used + 1 }), { expirationTtl: 2 * 24 * 60 * 60 });
+  }
+
   let body;
   try { body = JSON.parse(await request.text()); } catch(e) {
     return json({ error: 'Invalid request body' }, 400, origin);
@@ -744,21 +768,17 @@ async function handleSendEmail(request, env, origin) {
     return json({ error: 'Missing required fields: to, subject, body' }, 400, origin);
   }
 
-  // Use verified domain if set, otherwise Resend sandbox address
   const fromDomain = env.EMAIL_FROM_DOMAIN || 'onboarding@resend.dev';
   const fromAddress = fromDomain.includes('@') ? fromDomain : `${from_name} <noreply@${fromDomain}>`;
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: { 'Authorization': `Bearer ${key}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      from: fromAddress,
-      to: [to],
-      subject,
-      text: emailBody,
-    }),
+    body: JSON.stringify({ from: fromAddress, to: [to], subject, text: emailBody }),
+    signal: AbortSignal.timeout(15000),
   });
-  const data = await res.json();
+  let data;
+  try { data = await res.json(); } catch { data = {}; }
   if (!res.ok) return json({ error: data.message || data.name || 'Send failed' }, res.status, origin);
   return json({ ok: true, id: data.id }, 200, origin);
 }
@@ -766,25 +786,36 @@ async function handleSendEmail(request, env, origin) {
 // ══════════════════════════════════════════════════════════════
 // HUNTER.IO — EMAIL FINDER (server-side key, never exposed to browser)
 // ══════════════════════════════════════════════════════════════
-async function handleHunter(request, env, origin, path) {
+async function handleHunter(request, env, origin, path, session) {
   const key = env.HUNTER_KEY;
   if (!key) return json({ error: 'Hunter.io key not configured. Run: npx wrangler secret put HUNTER_KEY' }, 500, origin);
 
-  const url = new URL(request.url);
-  // /api/hunter/domain-search → https://api.hunter.io/v2/domain-search
-  const hunterPath = path.replace('/api/hunter', '');
-  const hunterUrl = new URL(`https://api.hunter.io/v2${hunterPath}`);
+  const plan  = session?.plan || 'free';
+  const limit = HUNTER_LIMITS[plan] ?? 0;
+  if (limit === 0) return json({ error: 'Email finder not available on your plan.' }, 403, origin);
 
-  // Forward all query params from the original request, add api_key
+  if (session?.uid && env.USERS) {
+    const dayKey = `hunter:${session.uid}:${todayKey()}`;
+    const raw  = await env.USERS.get(dayKey, { type: 'json' });
+    const used = (raw || {}).count || 0;
+    if (used >= limit) return json({ error: `Daily Hunter quota reached (${limit}/day on ${plan} plan).`, quota: { used, limit } }, 429, origin);
+    await env.USERS.put(dayKey, JSON.stringify({ count: used + 1 }), { expirationTtl: 2 * 24 * 60 * 60 });
+  }
+
+  const url       = new URL(request.url);
+  const hunterPath = path.replace('/api/hunter', '');
+  const hunterUrl  = new URL(`https://api.hunter.io/v2${hunterPath}`);
   url.searchParams.forEach((v, k) => { if (k !== 'api_key') hunterUrl.searchParams.set(k, v); });
   hunterUrl.searchParams.set('api_key', key);
 
-  const res = await fetch(hunterUrl.toString(), { method: 'GET' });
+  let res;
+  try {
+    res = await fetch(hunterUrl.toString(), { method: 'GET', signal: AbortSignal.timeout(15000) });
+  } catch {
+    return json({ error: 'Hunter.io request timed out or failed.' }, 502, origin);
+  }
   const data = await res.text();
-  return new Response(data, {
-    status: res.status,
-    headers: { ...cors(origin), 'Content-Type': 'application/json' },
-  });
+  return new Response(data, { status: res.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -797,10 +828,19 @@ const SEARCH_LIMITS = {
   enterprise: 30,
 };
 
+const HUNTER_LIMITS = {
+  free:       0,
+  growth:     10,
+  scale:      50,
+  enterprise: 200,
+};
+
 async function handleSearch(request, env, origin, session) {
   if (!env.TAVILY_KEY) return json({ error: 'Search not configured.' }, 500, origin);
 
-  const { query, max_results = 5 } = await request.json();
+  let _body;
+  try { _body = await request.json(); } catch { return err('query required', 400, origin); }
+  const { query, max_results = 5 } = _body;
   if (!query || typeof query !== 'string' || query.trim().length === 0) {
     return err('query required', 400, origin);
   }
@@ -821,6 +861,7 @@ async function handleSearch(request, env, origin, session) {
   const res = await fetch('https://api.tavily.com/search', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
+    signal: AbortSignal.timeout(20000),
     body: JSON.stringify({
       api_key: env.TAVILY_KEY,
       query: query.trim(),
@@ -946,6 +987,7 @@ const RL_CONFIG = {
   guest:    { max: 20, window: 60 * 60 }, // 20 guest sessions per hour per IP
   email:    { max: 10, window: 60 * 60 }, // 10 emails per IP per hour
   plancode: { max:  5, window: 60 * 60 }, //  5 code attempts per IP per hour
+  lead:     { max:  3, window: 60 * 60 }, //  3 enterprise leads per IP per hour
 };
 
 async function rlCheck(env, action, ip) {
@@ -1082,7 +1124,7 @@ async function handleFirebaseAuth(request, env, origin) {
   // This is exactly what the Firebase Admin SDK does internally.
   const firebaseRes = await fetch(
     `https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=${FIREBASE_REST_KEY}`,
-    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }) }
+    { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ idToken }), signal: AbortSignal.timeout(10000) }
   );
   if (!firebaseRes.ok) return json({ error: 'Invalid or expired Firebase token' }, 401, origin);
   const fbData = await firebaseRes.json();
@@ -1232,11 +1274,13 @@ function duffel(env) {
 
   return {
     async post(path, data) {
-      const r = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(data) });
+      const r = await fetch(base + path, { method: 'POST', headers, body: JSON.stringify(data), signal: AbortSignal.timeout(30000) });
+      if (!r.ok) { try { return await r.json(); } catch { return { errors: [{ message: `Duffel HTTP ${r.status}` }] }; } }
       return r.json();
     },
     async get(path) {
-      const r = await fetch(base + path, { headers });
+      const r = await fetch(base + path, { headers, signal: AbortSignal.timeout(30000) });
+      if (!r.ok) { try { return await r.json(); } catch { return { errors: [{ message: `Duffel HTTP ${r.status}` }] }; } }
       return r.json();
     },
   };
@@ -1244,7 +1288,9 @@ function duffel(env) {
 
 // Step 1 — Create offer request (search)
 async function handleFlightSearch(request, env, origin) {
-  const { origin: from, destination: to, departureDate, returnDate, passengers = 1, cabinClass = 'economy' } = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { origin: from, destination: to, departureDate, returnDate, passengers = 1, cabinClass = 'economy' } = body;
 
   if (!from || !to || !departureDate) return err('origin, destination, departureDate required', 400, origin);
 
@@ -1310,7 +1356,9 @@ async function handleFlightOffers(request, env, origin) {
 
 // Step 3 — Book (create order)
 async function handleFlightBook(request, env, origin) {
-  const { offerId, passengers, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId } = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { offerId, passengers, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId } = body;
 
   if (!offerId || !passengers?.length) return err('offerId and passengers required', 400, origin);
 
@@ -1376,11 +1424,12 @@ async function handleFlightOrder(request, env, origin, path) {
 // ══════════════════════════════════════════════════════════════
 // HOTELS — AMADEUS
 // ══════════════════════════════════════════════════════════════
-let amadeusToken = null;
-let amadeusTokenExp = 0;
-
 async function getAmadeusToken(env) {
-  if (amadeusToken && Date.now() < amadeusTokenExp) return amadeusToken;
+  // KV cache survives across CF isolate restarts; module-level vars do not
+  if (env.USERS) {
+    const cached = await env.USERS.get('amadeus_token', { type: 'json' });
+    if (cached?.token && cached.exp > Date.now()) return cached.token;
+  }
 
   const base = env.AMADEUS_ENV === 'production'
     ? 'https://api.amadeus.com'
@@ -1390,42 +1439,47 @@ async function getAmadeusToken(env) {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: `grant_type=client_credentials&client_id=${env.AMADEUS_CLIENT_ID}&client_secret=${env.AMADEUS_CLIENT_SECRET}`,
+    signal: AbortSignal.timeout(15000),
   });
-
+  if (!r.ok) throw new Error(`Amadeus auth failed: HTTP ${r.status}`);
   const data = await r.json();
-  amadeusToken = data.access_token;
-  amadeusTokenExp = Date.now() + (data.expires_in - 60) * 1000;
-  return amadeusToken;
+  const token = data.access_token;
+  const ttl   = Math.max(60, (data.expires_in || 1800) - 60);
+
+  if (env.USERS && token) {
+    await env.USERS.put('amadeus_token', JSON.stringify({ token, exp: Date.now() + ttl * 1000 }), { expirationTtl: ttl });
+  }
+  return token;
 }
 
 async function amadeus(env, path) {
   const token = await getAmadeusToken(env);
-  const base = env.AMADEUS_ENV === 'production'
-    ? 'https://api.amadeus.com'
-    : 'https://test.api.amadeus.com';
-
+  const base  = env.AMADEUS_ENV === 'production' ? 'https://api.amadeus.com' : 'https://test.api.amadeus.com';
   const r = await fetch(base + path, {
     headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
+    signal: AbortSignal.timeout(30000),
   });
+  if (!r.ok) { try { return await r.json(); } catch { return { errors: [{ detail: `Amadeus HTTP ${r.status}` }] }; } }
   return r.json();
 }
 
 async function amadeusPost(env, path, body) {
   const token = await getAmadeusToken(env);
-  const base = env.AMADEUS_ENV === 'production'
-    ? 'https://api.amadeus.com'
-    : 'https://test.api.amadeus.com';
-
+  const base  = env.AMADEUS_ENV === 'production' ? 'https://api.amadeus.com' : 'https://test.api.amadeus.com';
   const r = await fetch(base + path, {
     method: 'POST',
     headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
+    signal: AbortSignal.timeout(30000),
   });
+  if (!r.ok) { try { return await r.json(); } catch { return { errors: [{ detail: `Amadeus HTTP ${r.status}` }] }; } }
   return r.json();
 }
 
 async function handleHotelSearch(request, env, origin) {
-  const { cityCode, checkIn, checkOut, adults = 1, rooms = 1, radius = 5 } = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { cityCode, checkIn, checkOut, adults = 1, rooms = 1, radius = 5 } = body;
   if (!cityCode || !checkIn || !checkOut) return err('cityCode, checkIn, checkOut required', 400, origin);
 
   // Step 1: find hotels in city
@@ -1476,7 +1530,9 @@ async function handleHotelOffers(request, env, origin) {
 }
 
 async function handleHotelBook(request, env, origin) {
-  const { offerId, guests, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId } = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { offerId, guests, paymentAmount, paymentCurrency, stripePaymentMethodId, stripeCustomerId } = body;
 
   if (!offerId || !guests?.length) return err('offerId and guests required', 400, origin);
 
@@ -1557,7 +1613,9 @@ async function stripeRequest(env, method, path, params = {}) {
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
+    signal: AbortSignal.timeout(30000),
   });
+  if (!r.ok) { try { return await r.json(); } catch { return { error: { message: `Stripe HTTP ${r.status}` } }; } }
   return r.json();
 }
 
@@ -1585,7 +1643,8 @@ async function verifyStripeOwner(env, origin, uid, customerId) {
 // Create or retrieve Stripe customer for a Kayro user — CRITICAL-2: auth required
 async function handleStripeCustomer(request, env, origin, session) {
   const { uid, email: sessionEmail } = session;
-  const body = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
   const email = (body.email || '').toLowerCase().trim();
   const name  = body.name;
   if (!email) return err('email required', 400, origin);
@@ -1612,7 +1671,9 @@ async function handleStripeCustomer(request, env, origin, session) {
 
 // Create SetupIntent — CRITICAL-2: auth + ownership
 async function handleSetupIntent(request, env, origin, session) {
-  const { customerId } = await request.json();
+  let _body;
+  try { _body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { customerId } = _body;
   if (!customerId) return err('customerId required', 400, origin);
   const ownerErr = await verifyStripeOwner(env, origin, session.uid, customerId);
   if (ownerErr) return ownerErr;
@@ -1644,7 +1705,9 @@ async function handleListCards(request, env, origin, session) {
 
 // Remove a saved card — CRITICAL-2: auth + ownership via Stripe lookup
 async function handleRemoveCard(request, env, origin, session) {
-  const { paymentMethodId } = await request.json();
+  let _body;
+  try { _body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { paymentMethodId } = _body;
   if (!paymentMethodId) return err('paymentMethodId required', 400, origin);
 
   // Verify this payment method belongs to the session user's customer
@@ -1663,7 +1726,9 @@ async function handleRemoveCard(request, env, origin, session) {
 
 // Charge a saved card — CRITICAL-2: auth + ownership + amount validation
 async function handleCharge(request, env, origin, session) {
-  const { customerId, paymentMethodId, amount, currency = 'usd', description = 'Kayro booking' } = await request.json();
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { customerId, paymentMethodId, amount, currency = 'usd', description = 'Kayro booking' } = body;
 
   if (!customerId || !paymentMethodId || !amount) {
     return err('customerId, paymentMethodId, amount required', 400, origin);
