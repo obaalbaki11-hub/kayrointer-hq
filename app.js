@@ -60,9 +60,9 @@ const DEFAULT_BRAIN_FACTS = [
     category:'product', source:'Technical', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
 
   // ── PRICING ────────────────────────────────────────────────────
-  {id:'dbf_pr1', text:'Pricing plans: Free (own API key required, 10 messages/day, core pages only) → Growth $29/mo (Claude key included — Kayro pays tokens, 25 msgs/day, Apollo + Meta integrations, 5 web searches/day) → Scale $99/mo (own Claude + Kling keys, 80 msgs/day, all features, 15 searches/day, 5 seats) → Enterprise (custom pricing, white-label, dedicated support, 30 searches/day, unlimited seats).',
+  {id:'dbf_pr1', text:'Pricing plans: Free ($0, 10 messages/day, core pages only, Claude AI not included) → Growth $29/mo (Claude fully included — Kayro pays tokens, 25 msgs/day, Apollo + Meta integrations, 5 web searches/day) → Scale $99/mo (Claude fully included, 80 msgs/day, all features, 15 searches/day, 5 seats) → Enterprise (custom pricing, white-label, dedicated support, 30 searches/day, unlimited seats).',
     category:'business', source:'Pricing', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
-  {id:'dbf_pr2', text:'Key revenue insight: Growth plan ($29/mo) is the easiest sale — Claude is fully included, user needs zero setup, just pay and go. Scale ($99/mo) is for power users who want full control and bring their own API keys. Enterprise is for agencies and white-label clients.',
+  {id:'dbf_pr2', text:'Key revenue insight: Growth plan ($29/mo) is the easiest sale — Claude is fully included, user needs zero setup, just pay and go. Scale ($99/mo) is for teams that need multiple seats and higher daily limits — Claude is also fully included. Enterprise is for agencies and white-label clients.',
     category:'business', source:'Pricing Strategy', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
   {id:'dbf_pr3', text:'Plan codes to activate: KAYRO-GROWTH (Growth), KAYRO-SCALE (Scale), KAYRO-ENTERPRISE (Enterprise). Users enter these in Settings. Omar can issue codes directly to paying customers until Stripe is integrated.',
     category:'business', source:'Operations', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
@@ -891,7 +891,7 @@ const State = {
 const PLAN_CONFIG = {
   free:       { name:'Free',       price:0,    color:'#888888', icon:'⚪', desc:'Get started',                        seats:1,   msgLimit:10,       searchLimit:0 },
   growth:     { name:'Growth',     price:29,   color:'#4f8cff', icon:'🚀', desc:'Claude included — we pay tokens',   seats:1,   msgLimit:25,       searchLimit:5 },
-  scale:      { name:'Scale',      price:99,   color:'#10d98a', icon:'⚡', desc:'Full power — your own API keys',    seats:5,   msgLimit:80,       searchLimit:15 },
+  scale:      { name:'Scale',      price:99,   color:'#10d98a', icon:'⚡', desc:'Full power — Claude included, built for teams', seats:5,   msgLimit:80,       searchLimit:15 },
   enterprise: { name:'Enterprise', price:null, color:'#a78bfa', icon:'👑', desc:'White-label + dedicated support',  seats:999, msgLimit:Infinity, searchLimit:30 },
 };
 // pages each plan can access
@@ -2636,7 +2636,7 @@ async function* agentSessionStream(agentId, state, content) {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }] }),
+    body: JSON.stringify({ session_id: state._sessionId, messages: [{ role: 'user', content }], model: agentId }),
   });
   if (!res.ok) {
     if (res.status === 404 || res.status === 410) state._sessionId = null;
@@ -11671,7 +11671,7 @@ const PlansPage = {
           { ok:true,  text:'40K tokens/month (~27 Sonnet interactions)' },
           { ok:true,  text:'All core pages — HQ, Tasks, Spreadsheet, Email, Brain, Ops' },
           { ok:true,  text:'10 messages/day · Single user' },
-          { ok:false, text:'Claude AI included — bring your own API key' },
+          { ok:false, text:'Claude AI not included' },
           { ok:false, text:'Opus toggle' },
           { ok:false, text:'Internet search for agents' },
           { ok:false, text:'Apollo.io · Meta Ads · Ad Studio' },
@@ -11707,7 +11707,7 @@ const PlansPage = {
           { ok:true,  text:'5 team seats' },
           { ok:true,  text:'15 web searches/day · Higher Studio limits' },
           { ok:true,  text:'80 messages/day across seats' },
-          { ok:true,  text:'Kling AI video (bring your own key)' },
+          { ok:true,  text:'Kling AI video generation (Kling account required)' },
           { ok:true,  text:'Priority support' },
           { ok:false, text:'SSO · Compliance · SLA' },
         ],
@@ -11868,7 +11868,7 @@ const PlansPage = {
                 ['Web search for agents','✕','5/day','15/day','30/day'],
                 ['Apollo.io lead search','✕','✓','✓','✓'],
                 ['Meta Ads dashboard','✕','✓','✓','✓'],
-                ['Kling AI video (own key)','✕','✕','✓','✓'],
+                ['Kling AI video generation','✕','✕','✓','✓'],
                 ['Team seats','1','1','5','Unlimited'],
                 ['SSO / Compliance','✕','✕','✕','✓'],
                 ['SLA + dedicated support','✕','✕','✕','✓'],

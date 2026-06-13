@@ -82,7 +82,7 @@ export default {
         const limitMsg = await checkUsageLimits(env, authR.session.uid, authR.session.plan);
         if (limitMsg) return json({ error: limitMsg }, 402, origin);
         await recordUsage(env, authR.session.uid);
-        return handleAgentTurn(request, env, origin);
+        return handleAgentTurn(request, env, origin, authR.session.uid);
       }
       if (path === '/api/ping')                return handlePing(request, env, origin);
 
@@ -510,13 +510,16 @@ async function handleAgentSession(request, env, origin) {
   return json(await res.json(), 200, origin);
 }
 
-async function handleAgentTurn(request, env, origin) {
+async function handleAgentTurn(request, env, origin, uid) {
   const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
   if (!key) return json({ error: 'No Anthropic API key configured' }, 500, origin);
   let body = {};
   try { body = JSON.parse(await request.text()); } catch {}
-  const { session_id, messages } = body;
+  const { session_id, messages, model } = body;
   if (!session_id || !messages) return json({ error: 'session_id and messages required' }, 400, origin);
+
+  // Estimate input tokens from the messages payload (chars / 4)
+  const estInputTokens = Math.round(JSON.stringify(messages).length / 4);
 
   const agentHeaders = {
     'Content-Type': 'application/json',
@@ -556,8 +559,37 @@ async function handleAgentTurn(request, env, origin) {
     return new Response(t, { status: sendRes.status, headers: { ...cors(origin), 'Content-Type': 'application/json' } });
   }
 
-  // 3. Pipe the stream body back to the client
-  return new Response(streamRes.body, {
+  // 3. Pipe the stream with a tapper that estimates output tokens from agent.message text content.
+  //    These are labeled (~est) in the dashboard since char/4 is an approximation, not Sessions API usage events.
+  let estOutputChars = 0;
+  const dec = new TextDecoder();
+  const estModelKey = `${model || 'agent_session'} (~est)`;
+  const tapper = new TransformStream({
+    transform(chunk, ctrl) {
+      const text = dec.decode(chunk, { stream: true });
+      // Parse agent.message SSE events to count actual output text characters
+      for (const line of text.split('\n')) {
+        if (!line.startsWith('data: ')) continue;
+        try {
+          const ev = JSON.parse(line.slice(6));
+          if (ev.content) {
+            for (const block of ev.content) {
+              if (block.type === 'text') estOutputChars += (block.text || '').length;
+            }
+          }
+        } catch {}
+      }
+      ctrl.enqueue(chunk);
+    },
+    flush() {
+      if (uid) {
+        const estOutput = Math.max(1, Math.round(estOutputChars / 4));
+        recordTokenUsage(env, uid, estModelKey, estInputTokens, estOutput).catch(() => {});
+      }
+    },
+  });
+
+  return new Response(streamRes.body.pipeThrough(tapper), {
     status: 200,
     headers: { ...cors(origin), 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', 'X-Accel-Buffering': 'no' },
   });
