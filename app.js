@@ -6939,37 +6939,129 @@ Rules: requiresApproval:true if the step sends emails, posts content, or spends 
 
   // ── ASK THE ROOM ─────────────────────────────────────────────
   _askRoom() {
-    const inp=document.getElementById('hq-ask-input');
-    const q=inp?.value.trim();
-    if(!q)return;
-    // AI goes through Kayro backend — no personal key check needed
-    inp.value='';
-    toast(`Asking your team: "${q.slice(0,40)}…"`,'info',3000);
-    Modal.open('Ask the Room',`
+    const inp = document.getElementById('hq-ask-input');
+    const q = inp?.value.trim();
+    if (!q) return;
+
+    // Cost guardrail — needs routing + agents + synthesis
+    Usage._checkReset();
+    const limit = Usage.msgLimit();
+    const used = State.usage.msgsToday || 0;
+    const remaining = limit === Infinity ? 999 : limit - used;
+    if (remaining < 3) {
+      toast(`Ask the Room needs at least 3 messages — you have ${remaining} left today.`, 'error');
+      return;
+    }
+    const MAX_AGENTS = Math.min(6, remaining - 2);
+
+    inp.value = '';
+    Modal.open('Ask the Room', `
       <div style="padding:4px 0">
-        <div style="font-size:13px;color:#888;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:16px;line-height:1.5">"${escHtml(q)}"</div>
-        <div style="display:flex;flex-direction:column;gap:8px">
-          ${State.employees.map(e=>`
-            <div style="display:flex;gap:10px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
-              <div style="width:36px;height:36px;border-radius:10px;background:${e.color}18;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0">${e.name[0]}</div>
-              <div style="flex:1;min-width:0">
-                <div style="font-size:11.5px;font-weight:700;color:${e.color};margin-bottom:5px">${escHtml(e.name)} <span style="color:#555;font-weight:400">· ${escHtml(e.role)}</span></div>
-                <div id="atr-${e.id}" style="font-size:12.5px;color:#888;line-height:1.7;white-space:pre-wrap">thinking…</div>
-              </div>
-            </div>`).join('')}
-        </div>
+        <div style="font-size:13px;color:var(--text2);padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;margin-bottom:14px;line-height:1.5">"${escHtml(q)}"</div>
+        <div id="atr-status" style="font-size:12px;color:var(--text3);padding:6px 0 10px">🧠 Routing to relevant agents…</div>
+        <div id="atr-agents" style="display:flex;flex-direction:column;gap:8px"></div>
+        <div id="atr-synthesis"></div>
       </div>`);
-    State.employees.forEach((e,i)=>{
-      setTimeout(async()=>{
-        const el=document.getElementById(`atr-${e.id}`); if(!el)return;
-        const sys=Chat._buildSystemPrompt(e)+'\n\nIMPORTANT: Answer in 2-4 sentences max. Be direct and specific from your role perspective. No preamble.';
-        let resp='';
-        for await(const chunk of AI.stream([{role:'user',content:q}],sys)){
-          if(!document.getElementById(`atr-${e.id}`))return;
-          resp+=chunk; el.textContent=resp;
+
+    HQ._runAskRoom(q, MAX_AGENTS);
+  },
+
+  async _runAskRoom(q, maxAgents) {
+    const status  = () => document.getElementById('atr-status');
+    const agentsDiv = () => document.getElementById('atr-agents');
+    const synthDiv  = () => document.getElementById('atr-synthesis');
+    const alive   = () => !!document.getElementById('atr-status');
+
+    const roster = State.employees.filter(e => e.id !== 'e_router');
+    const rosterStr = roster.map(e => `${e.id}|${e.name}|${e.role}`).join('\n');
+
+    // Step 1: Haiku routing call — pick relevant agents
+    let pickedIds = [];
+    let routeRaw = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role: 'user', content: `Question: "${q}"\n\nTeam:\n${rosterStr}` }],
+        `Pick the ${maxAgents} most relevant team members for this question. Return ONLY a JSON array of their IDs. No explanation.`,
+        { model: 'claude-haiku-4-5-20251001', search: false, appTools: false, max_tokens: 80, noContext: true }
+      )) { routeRaw += chunk; }
+      const m = routeRaw.match(/\[[\s\S]*?\]/);
+      if (m) pickedIds = JSON.parse(m[0]);
+    } catch (_) {}
+
+    pickedIds = pickedIds.filter(id => roster.some(e => e.id === id)).slice(0, maxAgents);
+    if (pickedIds.length < 2) pickedIds = roster.slice(0, Math.min(4, maxAgents)).map(e => e.id);
+    const agents = pickedIds.map(id => roster.find(e => e.id === id)).filter(Boolean);
+
+    Usage.trackMessage();
+    if (!alive()) return;
+    if (status()) status().textContent = `💬 ${agents.length} agents responding…`;
+
+    if (agentsDiv()) {
+      agentsDiv().innerHTML = agents.map(e => `
+        <div style="display:flex;gap:10px;padding:12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:10px">
+          <div style="width:36px;height:36px;border-radius:10px;background:${e.color}18;color:${e.color};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800;flex-shrink:0">${e.name[0]}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11.5px;font-weight:700;color:${e.color};margin-bottom:4px">${escHtml(e.name)} <span style="color:var(--text3);font-weight:400">· ${escHtml(e.role)}</span></div>
+            <div id="atr-${e.id}" style="font-size:12.5px;color:var(--text2);line-height:1.65">…</div>
+          </div>
+        </div>`).join('');
+    }
+
+    // Step 2: Poll selected agents in parallel on Haiku
+    const results = [];
+    await Promise.all(agents.map(async (e) => {
+      const el = () => document.getElementById(`atr-${e.id}`);
+      const compactSys = `You are ${e.name}, ${e.role}. Your expertise: ${(e.skills || []).slice(0, 4).join(', ')}.
+Answer the question from your specific role perspective in 2–3 tight sentences. Be direct, role-specific, and add genuine value. No preamble, no sign-off.`;
+      let resp = '';
+      try {
+        for await (const chunk of AI.stream(
+          [{ role: 'user', content: q }],
+          compactSys,
+          { model: 'claude-haiku-4-5-20251001', search: false, appTools: false, max_tokens: 150 }
+        )) {
+          resp += chunk;
+          if (el()) el().textContent = resp;
         }
-      },i*950);
-    });
+      } catch (err) {
+        resp = `[${err.message}]`;
+        if (el()) el().textContent = resp;
+      }
+      results.push({ name: e.name, role: e.role, color: e.color, id: e.id, text: resp });
+      Usage.trackMessage();
+    }));
+
+    // Step 3: Synthesis — Sonnet for paid plans, Haiku for free
+    if (!alive()) return;
+    if (status()) status().textContent = '✨ Synthesizing…';
+
+    const synthModel = (State.session?.plan || 'free') === 'free'
+      ? 'claude-haiku-4-5-20251001'
+      : 'claude-sonnet-4-6';
+    const perspStr = results.map(r => `${r.name} (${r.role}): ${r.text}`).join('\n\n');
+    let synthesis = '';
+    try {
+      for await (const chunk of AI.stream(
+        [{ role: 'user', content: `Question: "${q}"\n\nTeam perspectives:\n${perspStr}` }],
+        `Synthesize these team perspectives into a concise, useful answer.
+Format: 1–2 sentence consensus/key takeaway first, then 2–3 standout bullets from specific roles where they add distinct value.
+Keep it tight. No repetition. No generic filler.`,
+        { model: synthModel, search: false, appTools: false, max_tokens: 350, noContext: true }
+      )) { synthesis += chunk; }
+    } catch (_) {
+      synthesis = results.map(r => `• **${r.name}:** ${r.text}`).join('\n');
+    }
+    Usage.trackMessage();
+
+    if (!alive()) return;
+    if (status()) status().style.display = 'none';
+    if (synthDiv()) {
+      synthDiv().innerHTML = `
+        <div style="margin-top:16px;padding:14px 16px;background:rgba(91,46,255,.06);border:1px solid rgba(91,46,255,.18);border-radius:10px">
+          <div style="font-size:10.5px;font-weight:700;color:var(--accent);letter-spacing:.8px;margin-bottom:8px">TEAM CONSENSUS</div>
+          <div style="font-size:13px;color:var(--text);line-height:1.7">${safeMarkdown(synthesis)}</div>
+        </div>`;
+    }
   },
 };
 
