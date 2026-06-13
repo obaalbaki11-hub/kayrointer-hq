@@ -60,7 +60,7 @@ const DEFAULT_BRAIN_FACTS = [
     category:'product', source:'Technical', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
 
   // ── PRICING ────────────────────────────────────────────────────
-  {id:'dbf_pr1', text:'Pricing plans: Free (own API key required, 10 messages/day, core pages only) → Growth $29/mo (Claude key included — Kayro pays tokens, 100 msgs/day, Apollo + Meta integrations, 5 web searches/day) → Scale $99/mo (own Claude + Kling keys, 500 msgs/day, all features, 15 searches/day, 5 seats) → Enterprise (custom pricing, white-label, dedicated support, 30 searches/day, unlimited seats).',
+  {id:'dbf_pr1', text:'Pricing plans: Free (own API key required, 10 messages/day, core pages only) → Growth $29/mo (Claude key included — Kayro pays tokens, 25 msgs/day, Apollo + Meta integrations, 5 web searches/day) → Scale $99/mo (own Claude + Kling keys, 80 msgs/day, all features, 15 searches/day, 5 seats) → Enterprise (custom pricing, white-label, dedicated support, 30 searches/day, unlimited seats).',
     category:'business', source:'Pricing', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
   {id:'dbf_pr2', text:'Key revenue insight: Growth plan ($29/mo) is the easiest sale — Claude is fully included, user needs zero setup, just pay and go. Scale ($99/mo) is for power users who want full control and bring their own API keys. Enterprise is for agencies and white-label clients.',
     category:'business', source:'Pricing Strategy', sourceAgent:'Claude', sourceEmpId:'e_claude', timestamp:Date.now()},
@@ -1057,22 +1057,34 @@ const WebSearch = {
   },
 
   async search(query) {
-    const key = WebSearch._getKey();
-    if (!key) return { error: 'No Tavily API key configured. Add one in Settings.' };
-    // Check daily search limit
+    const platformKey = (State.settings.platformSearchKey||'').trim();
+    const userKey     = (State.settings.tavilyKey||'').trim();
+    if (!platformKey && !userKey) return { error: 'No search key configured. Add one in Settings.' };
     Usage._checkReset();
     const limit = (PLAN_CONFIG[PlanGate.current()] || PLAN_CONFIG.free).searchLimit;
     if (limit !== Infinity && (State.usage.searchesToday || 0) >= limit) {
       return { error: `Daily search limit (${limit}) reached for your plan.` };
     }
-    const proxy = (State.settings.proxyUrl||'').trim();
     try {
-      const body = JSON.stringify({ api_key: key, query, search_depth: 'basic', max_results: 8, include_answer: true, include_raw_content: false });
-      const url = proxy ? `${proxy}?t=tavily` : 'https://api.tavily.com/search';
-      const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body });
+      if (platformKey) {
+        // CRITICAL-6: platform key stays server-side — route through worker proxy
+        const res = await fetch(`${BACKEND_URL}/api/search`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ query, max_results: 8 }),
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+        State.usage.searchesToday = (State.usage.searchesToday || 0) + 1;
+        save('usage');
+        return data;
+      }
+      // Personal key: direct call (user's own key, not a platform secret)
+      const body = JSON.stringify({ api_key: userKey, query, search_depth: 'basic', max_results: 8, include_answer: true, include_raw_content: false });
+      const res = await fetch('https://api.tavily.com/search', { method:'POST', headers:{'Content-Type':'application/json'}, body });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || data.message || `HTTP ${res.status}`);
-      // track usage
       State.usage.searchesToday = (State.usage.searchesToday || 0) + 1;
       save('usage');
       return data;
@@ -11580,7 +11592,7 @@ const PlansPage = {
           { ok:true,  text:'Opus toggle — drains tokens at true rate' },
           { ok:true,  text:'All 28 agents · All Studios · Apollo.io · Meta Ads' },
           { ok:true,  text:'5 web searches/day for agents' },
-          { ok:true,  text:'100 messages/day · Single user' },
+          { ok:true,  text:'25 messages/day · Single user' },
           { ok:true,  text:'Overage: buy top-up tokens anytime' },
           { ok:false, text:'Multi-seat' },
         ],
@@ -11596,7 +11608,7 @@ const PlansPage = {
           { ok:true,  text:'Everything in Growth' },
           { ok:true,  text:'5 team seats' },
           { ok:true,  text:'15 web searches/day · Higher Studio limits' },
-          { ok:true,  text:'500 messages/day across seats' },
+          { ok:true,  text:'80 messages/day across seats' },
           { ok:true,  text:'Kling AI video (bring your own key)' },
           { ok:true,  text:'Priority support' },
           { ok:false, text:'SSO · Compliance · SLA' },
@@ -11690,7 +11702,7 @@ const PlansPage = {
             </tr>`).join('')}
           </tbody>
         </table>
-        <div style="margin-top:8px;color:var(--text3);font-size:11px">Worst-case: Growth user maxing 100 msgs/day × 30 days = 4.5M tokens = $45.90 cost → underwater. Message cap is your primary cost protection. Real usage is typically 15–30% of cap.</div>
+        <div style="margin-top:8px;color:var(--text3);font-size:11px">Worst-case: Growth user maxing 25 msgs/day × 30 days = 1.1M tokens ≈ $11 cost. Scale user maxing 80 msgs/day × 30 days = 3.6M tokens ≈ $36. Message cap is your primary cost protection. Real usage is typically 15–30% of cap.</div>
       </div>` : '';
 
     const plansHTML = `
