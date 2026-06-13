@@ -2394,10 +2394,10 @@ const Auth = {
               if (stored) {
                 try {
                   const parsed = JSON.parse(stored);
-                  if (parsed.isGuest || parsed.token) {
+                  if (parsed.isGuest || parsed.token || parsed.authMethod === 'worker') {
                     Auth.user = parsed; Auth._renderUserArea(); return;
                   }
-                  // Firebase user — server says logged out, honour that
+                  // Firebase user — Firebase says logged out, honour that
                   localStorage.removeItem('kayro_auth_user');
                 } catch(_) {}
               }
@@ -2477,7 +2477,7 @@ const Auth = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: data.token }),
       }).catch(()=>{});
-      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan };
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, authMethod: 'worker' };
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();
@@ -2530,7 +2530,7 @@ const Auth = {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ token: data.token }),
       }).catch(()=>{});
-      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan };
+      Auth.user = { uid: data.uid, name: data.name, email: data.email, photoURL: null, isGuest: false, plan: data.plan, authMethod: 'worker' };
       localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
       Auth._hideOverlay();
       Auth._renderUserArea();

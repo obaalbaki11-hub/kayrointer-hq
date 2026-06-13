@@ -1501,6 +1501,7 @@ footer{
     <div class="auth-logo"><div class="auth-logo-mark">K</div></div>
     <div class="auth-title">Kayro Interactive</div>
     <div class="auth-sub">Your AI workforce, on demand</div>
+    <p id="auth-err" style="font-size:12px;color:#f87171;text-align:center;margin:0 0 8px;min-height:18px"></p>
 
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
@@ -1556,28 +1557,99 @@ footer{
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 const KAYRO_CLIENT_ID = '863845610986-g89ip8k16l4g80d9uah3239b9sfe0717.apps.googleusercontent.com';
+const KAYRO_BACKEND   = 'https://kayro-backend.obaalbaki11.workers.dev';
+const KAYRO_FB_CONFIG = {
+  apiKey: "AIzaSyDbNHzaw0A_itQxpqwOQfsUb3of52RR6pY",
+  authDomain: "kayro-interactive.firebaseapp.com",
+  projectId: "kayro-interactive",
+  storageBucket: "kayro-interactive.firebasestorage.app",
+  messagingSenderId: "303628080555",
+  appId: "1:303628080555:web:2f8f03926a086cd65c6eee",
+};
 
-function signInWithGoogle() {
+// Firebase loaded lazily — only when a sign-in action fires, never on passive page views.
+let _fbReady = false, _fbPromise = null;
+function _loadFirebase() {
+  if (_fbReady) return Promise.resolve();
+  if (_fbPromise) return _fbPromise;
+  _fbPromise = new Promise((resolve, reject) => {
+    const s1 = document.createElement('script');
+    s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
+    s1.onload = () => {
+      const s2 = document.createElement('script');
+      s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
+      s2.onload = () => {
+        try {
+          if (!firebase.apps.length) firebase.initializeApp(KAYRO_FB_CONFIG);
+          firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
+          _fbReady = true;
+          resolve();
+        } catch (e) { reject(e); }
+      };
+      s2.onerror = reject;
+      document.head.appendChild(s2);
+    };
+    s1.onerror = reject;
+    document.head.appendChild(s1);
+  });
+  return _fbPromise;
+}
+
+function _err(msg) {
+  const el = document.getElementById('auth-err');
+  if (el) el.textContent = msg || '';
+}
+
+// After any Firebase sign-in: exchange ID token for httpOnly session cookie, save user, redirect.
+async function _finishAuth(fbUser, company) {
+  const idToken = await fbUser.getIdToken();
+  // Set the same httpOnly session cookie that app.html's worker calls require.
+  await fetch(`${KAYRO_BACKEND}/api/auth/firebase`, {
+    method: 'POST', credentials: 'include',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ idToken }),
+  }).catch(() => {}); // non-fatal — Firebase IndexedDB session still lets app.html through
+  const name = fbUser.displayName || (fbUser.email || '').split('@')[0];
+  localStorage.setItem('kayro_auth_user', JSON.stringify({
+    uid: fbUser.uid, name, email: fbUser.email,
+    photoURL: fbUser.photoURL || null, isGuest: false,
+  }));
+  if (company) {
+    try {
+      const s = JSON.parse(localStorage.getItem('kayro_settings') || '{}');
+      s.companyName = company;
+      localStorage.setItem('kayro_settings', JSON.stringify(s));
+    } catch (_) {}
+  }
+  window.location.href = 'app.html';
+}
+
+async function signInWithGoogle() {
   const btn = document.getElementById('google-auth-btn');
-  btn.textContent = 'Signing in…'; btn.disabled = true;
-  const init = () => {
-    const client = google.accounts.oauth2.initTokenClient({
-      client_id: KAYRO_CLIENT_ID,
-      scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-      callback: async (resp) => {
-        if (resp.error) { btn.innerHTML = 'Continue with Google'; btn.disabled = false; return; }
-        const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-          headers: { Authorization: `Bearer ${resp.access_token}` }
-        }).then(r => r.json());
-        // Save user to localStorage so app.html picks it up
-        const user = { uid:'google_'+info.id, name:info.name||info.email, email:info.email, photoURL:info.picture||null, isGuest:false };
-        localStorage.setItem('kayro_auth_user', JSON.stringify(user));
-        window.location.href = 'app.html';
-      }
+  const origHTML = btn.innerHTML;
+  btn.innerHTML = 'Signing in…'; btn.disabled = true;
+  _err('');
+  try {
+    await _loadFirebase();
+    // Use GIS to get Google access token, then sign into Firebase with it.
+    const accessToken = await new Promise((resolve, reject) => {
+      const run = () => {
+        if (!window.google?.accounts) { setTimeout(run, 200); return; }
+        google.accounts.oauth2.initTokenClient({
+          client_id: KAYRO_CLIENT_ID,
+          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
+          callback: resp => resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token),
+        }).requestAccessToken({ prompt: 'select_account' });
+      };
+      run();
     });
-    client.requestAccessToken({ prompt: 'select_account' });
-  };
-  if (window.google?.accounts) { init(); } else { setTimeout(init, 800); }
+    const credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
+    const result = await firebase.auth().signInWithCredential(credential);
+    await _finishAuth(result.user, '');
+  } catch (err) {
+    btn.innerHTML = origHTML; btn.disabled = false;
+    _err('Google sign-in failed — try email/password below.');
+  }
 }
 
 function openAuth(tab) {
@@ -1586,6 +1658,7 @@ function openAuth(tab) {
 }
 function closeAuth() {
   document.getElementById('auth-overlay').classList.remove('open');
+  _err('');
 }
 function switchTab(tab) {
   const lf = document.getElementById('login-form');
@@ -1599,18 +1672,51 @@ function switchTab(tab) {
     sf.classList.remove('auth-form-hidden'); lf.classList.add('auth-form-hidden');
     ts.classList.add('active'); tl.classList.remove('active');
   }
+  _err('');
 }
-function handleAuth(e) {
+
+async function handleAuth(e) {
   e.preventDefault();
-  const co = document.getElementById('signup-company');
-  if (co && co.value.trim()) {
-    try {
-      const s = JSON.parse(localStorage.getItem('kayro_settings') || '{}');
-      s.companyName = co.value.trim();
-      localStorage.setItem('kayro_settings', JSON.stringify(s));
-    } catch(_) {}
+  _err('');
+  const isSignup = !document.getElementById('signup-form').classList.contains('auth-form-hidden');
+  const form     = document.getElementById(isSignup ? 'signup-form' : 'login-form');
+  const inputs   = form.querySelectorAll('input');
+
+  // Signup fields order: name (text), email, company (text, #signup-company), password
+  // Login fields order:  email, password
+  let email = '', pass = '', name = '', company = '';
+  if (isSignup) {
+    name    = (inputs[0]?.value || '').trim();
+    email   = (inputs[1]?.value || '').trim();
+    company = (inputs[2]?.value || '').trim();
+    pass    = inputs[3]?.value || '';
+  } else {
+    email = (inputs[0]?.value || '').trim();
+    pass  = inputs[1]?.value || '';
   }
-  window.location.href = 'app.html';
+
+  if (!email || !pass) { _err('Enter your email and password.'); return; }
+
+  const btn  = form.querySelector('[type=submit]');
+  const orig = btn?.textContent;
+  if (btn) { btn.disabled = true; btn.textContent = isSignup ? 'Creating account…' : 'Signing in…'; }
+
+  try {
+    await _loadFirebase();
+    let fbUser;
+    if (isSignup) {
+      const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
+      fbUser = cred.user;
+      if (name) await fbUser.updateProfile({ displayName: name }).catch(() => {});
+    } else {
+      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
+      fbUser = cred.user;
+    }
+    await _finishAuth(fbUser, company);
+  } catch (err) {
+    if (btn) { btn.disabled = false; btn.textContent = orig; }
+    _err(err.message || (isSignup ? 'Sign up failed.' : 'Sign in failed.'));
+  }
 }
 </script>
 </body>
