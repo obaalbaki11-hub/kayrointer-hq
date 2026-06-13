@@ -12175,7 +12175,7 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
   async _hunterFetch(hunterPath, params = {}) {
     const qs = new URLSearchParams(params).toString();
     const url = `${BACKEND_URL}/api/hunter${hunterPath}${qs ? '?' + qs : ''}`;
-    const res = await fetch(url);
+    const res = await fetch(url, { credentials: 'include' });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     if (data.errors) throw new Error(data.errors[0]?.details || 'Hunter API error');
@@ -12201,7 +12201,8 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
       status.style.color = 'var(--green)';
       ApolloPage._render();
     } catch(e) {
-      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+      const upgrade = (e.message.includes('quota') || e.message.includes('not available')) ? ' — <a href="javascript:Router.navigate(\'plans\')" style="color:#4f8cff;text-decoration:underline">Upgrade →</a>' : '';
+      status.innerHTML = '❌ ' + escHtml(e.message) + upgrade; status.style.color = 'var(--red,#ef4444)';
     } finally { btn.disabled = false; btn.textContent = '🔍 Find Emails'; }
   },
 
@@ -12222,7 +12223,8 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
       status.style.color = 'var(--green)';
       ApolloPage._render();
     } catch(e) {
-      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+      const upgrade = (e.message.includes('quota') || e.message.includes('not available')) ? ' — <a href="javascript:Router.navigate(\'plans\')" style="color:#4f8cff;text-decoration:underline">Upgrade →</a>' : '';
+      status.innerHTML = '❌ ' + escHtml(e.message) + upgrade; status.style.color = 'var(--red,#ef4444)';
     } finally { btn.disabled = false; btn.textContent = '🔍 Find Email'; }
   },
 
@@ -12241,7 +12243,8 @@ const ApolloPage = {  // keeps router key 'apollo', renamed to Hunter in UI
       ApolloPage._results = d.status !== 'invalid' ? [{ email, first_name:'', last_name:'', title:'', company:'', confidence: d.score }] : [];
       ApolloPage._render();
     } catch(e) {
-      status.textContent = '❌ ' + e.message; status.style.color = 'var(--red,#ef4444)';
+      const upgrade = (e.message.includes('quota') || e.message.includes('not available')) ? ' — <a href="javascript:Router.navigate(\'plans\')" style="color:#4f8cff;text-decoration:underline">Upgrade →</a>' : '';
+      status.innerHTML = '❌ ' + escHtml(e.message) + upgrade; status.style.color = 'var(--red,#ef4444)';
     } finally { btn.disabled = false; btn.textContent = '✅ Verify Email'; }
   },
 
