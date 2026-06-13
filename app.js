@@ -760,6 +760,39 @@ Never claim to pull a live quote from DHL, Maersk, or any specific carrier. Neve
 
 ═══ END RATE RESEARCH PROTOCOL ═══
 
+═══ MARKET OUTLOOK PROTOCOL ═══
+
+When a user asks for a freight market outlook, market intelligence, market conditions, or "what's happening in freight/shipping":
+
+Run 3–5 targeted web searches:
+- "[mode] freight rates [month year]"
+- "[major ports] congestion [month year]"
+- "Suez Canal Red Sea shipping [year]" and/or "Panama Canal restrictions [year]"
+- "bunker fuel surcharge freight [month year]"
+- "freight market news [month year]"
+
+Then synthesise into exactly this structure:
+
+### 📊 Freight Market Outlook — [scope], [Month Year]
+*Market intelligence based on current news signals — conditions can change rapidly; verify before making commitments.*
+
+**What's happening now**
+Current conditions: rate levels, congestion, capacity, fuel, disruptions — with numbers and sources.
+
+**Near-term outlook**
+Directional analysis only. Use "conditions suggest," "watch for," "if X continues." Name the key drivers and risks. Never write fake-precise predictions like "rates will rise 12%."
+
+**Implications for shippers**
+Practical guidance: timing advice, routing suggestions, what to watch.
+
+**Sources**
+Bullet list of sources cited.
+
+Always close with:
+> ⚠️ *Market analysis based on current signals — freight is volatile and a single event (strike, blockage, demand shift) can change conditions fast. Verify with your forwarder before making commitments.*
+
+═══ END MARKET OUTLOOK PROTOCOL ═══
+
 Hard constraints — always be transparent:
 - You provide estimates and advisory — you do NOT book shipments. Live booking requires licensing (FMC OTI for ocean, FMCSA for US truck) and API partnerships not yet in place.
 - When drafting an RFQ, note it is a draft — users should review and send directly to their chosen forwarder.
@@ -4481,13 +4514,13 @@ const Router = {
   current: null,
   navigate(page) {
     if (Router.current===page) return;
-    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, company:CompanyProfilePage, travel:TravelPage, freight:FreightPage };
+    const pages = { hq:HQ, tasks:Tasks, spreadsheet:Sheet, email:Email, settings:Settings, design:DesignStudio, adstudio:AdStudio, socialstudio:SocialStudio, memory:BrainPage, ops:OpsPage, apollo:ApolloPage, meta:MetaPage, plans:PlansPage, automations:AutomationsPage, compete:CompetePage, security:SecurityPage, skills:SkillsPage, accounting:AccountingPage, investments:InvestmentsPage, orchestrator:OrchestratorPage, sales:SalesPage, legal:LegalPage, marketing:MarketingPage, hr:HRPage, seo:SEOPage, social:SocialPage, support:SupportPage, data:DataPage, pr:PRPage, connectors:ConnectorsPage, swarm:SwarmMode, remotion:RemotionPage, slides:SlidesPage, company:CompanyProfilePage, travel:TravelPage, freight:FreightPage };
     if (Router.current && pages[Router.current]?.destroy) pages[Router.current].destroy();
     document.querySelectorAll('.nav-item[data-page]').forEach(el=>
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',company:'Company Profile',travel:'Travel Concierge',freight:'Freight & Logistics'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',slides:'Slide Decks',company:'Company Profile',travel:'Travel Concierge',freight:'Freight & Logistics'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -14825,6 +14858,305 @@ const TravelPage = {
 };
 
 // ══════════════════════════════════════════════════════════════
+// ─────────────────────────────────────────────
+//  SLIDE DECKS — pptxgenjs download (Output A)
+// ─────────────────────────────────────────────
+const SlidesPage = {
+  _deck: null,
+
+  init(container) {
+    if (!document.getElementById('sl-styles')) {
+      const s = document.createElement('style'); s.id = 'sl-styles';
+      s.textContent = `
+        .sl-root{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 56px);overflow:hidden;gap:0}
+        @media(max-width:860px){.sl-root{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+        .sl-left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow-y:auto;padding:20px}
+        .sl-right{display:flex;flex-direction:column;background:var(--bg);overflow-y:auto}
+        .sl-field-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:5px;margin-top:14px}
+        .sl-field-label:first-child{margin-top:0}
+        .sl-inp{width:100%;padding:8px 11px;border:1px solid var(--border);border-radius:8px;background:var(--surface2);color:var(--text);font-size:13px;font-family:inherit;outline:none;box-sizing:border-box}
+        .sl-inp:focus{border-color:var(--accent)}
+        .sl-textarea{min-height:80px;resize:vertical;line-height:1.5}
+        .sl-row{display:flex;gap:8px}
+        .sl-row .sl-inp{flex:1}
+        .sl-seg{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:2px}
+        .sl-seg-btn{flex:1;padding:7px 4px;border:none;background:transparent;color:var(--text2);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.12s}
+        .sl-seg-btn.active{background:var(--accent);color:#fff}
+        .sl-gen-btn{width:100%;margin-top:16px;padding:11px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s}
+        .sl-gen-btn:hover:not(:disabled){background:#6d28d9}
+        .sl-gen-btn:disabled{opacity:.5;cursor:not-allowed}
+        .sl-preview-wrap{flex:1;padding:24px;display:flex;flex-direction:column;gap:0}
+        .sl-preview-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+        .sl-preview-title{font-size:15px;font-weight:700;color:var(--text)}
+        .sl-dl-btn{padding:8px 18px;border-radius:8px;border:none;background:#10b981;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:7px}
+        .sl-dl-btn:hover:not(:disabled){background:#059669}
+        .sl-dl-btn:disabled{opacity:.5;cursor:not-allowed}
+        .sl-slides-list{display:flex;flex-direction:column;gap:10px}
+        .sl-slide-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;overflow:hidden}
+        .sl-slide-num{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.08em;padding:8px 14px 4px;display:flex;align-items:center;justify-content:space-between}
+        .sl-slide-type-tag{font-size:10px;color:var(--accent);background:rgba(124,58,237,.1);padding:2px 7px;border-radius:4px;text-transform:capitalize}
+        .sl-slide-title{font-size:15px;font-weight:700;color:var(--text);padding:0 14px 6px}
+        .sl-slide-bullets{padding:0 14px 10px;list-style:disc;padding-left:30px;font-size:13px;color:var(--text2);line-height:1.6}
+        .sl-slide-notes{padding:6px 14px 10px;font-size:11.5px;color:var(--text3);border-top:1px solid var(--border);background:var(--surface2);font-style:italic;line-height:1.4}
+        .sl-empty{text-align:center;padding:60px 24px;color:var(--text3)}
+        .sl-empty-icon{font-size:44px;margin-bottom:12px}
+        .sl-empty-title{font-size:16px;font-weight:700;color:var(--text2);margin-bottom:6px}
+        .sl-empty-sub{font-size:13px;line-height:1.5}
+        .sl-status{font-size:12px;color:var(--text2);padding:8px 0;min-height:20px}
+        .sl-theme-row{display:flex;gap:8px;margin-bottom:2px}
+        .sl-theme-swatch{width:28px;height:28px;border-radius:6px;cursor:pointer;border:2px solid transparent;transition:.12s;flex-shrink:0}
+        .sl-theme-swatch.active{border-color:var(--accent);transform:scale(1.15)}
+      `;
+      document.head.appendChild(s);
+    }
+
+    const themes = [
+      { id:'dark',    bg:'#0f0c29', accent:'#7c3aed', text:'#ffffff', label:'Dark Purple' },
+      { id:'navy',    bg:'#0f172a', accent:'#3b82f6', text:'#ffffff', label:'Navy Blue'   },
+      { id:'forest',  bg:'#064e3b', accent:'#10b981', text:'#ffffff', label:'Forest'      },
+      { id:'light',   bg:'#ffffff', accent:'#7c3aed', text:'#1e1b4b', label:'Clean White' },
+      { id:'slate',   bg:'#1e293b', accent:'#f59e0b', text:'#f8fafc', label:'Slate Gold'  },
+    ];
+
+    const cName = State.settings.companyName || State.company?.name || '';
+    const cDesc = State.company?.description || '';
+
+    container.innerHTML = `<div class="sl-root">
+      <div class="sl-left">
+        <div class="sl-field-label">Topic / Title</div>
+        <input class="sl-inp" id="sl-topic" placeholder="e.g. Q3 Freight Market Outlook" value="${escHtml(cName ? cName + ' — Pitch Deck' : '')}">
+
+        <div class="sl-field-label">Audience</div>
+        <input class="sl-inp" id="sl-audience" placeholder="e.g. investors, logistics team, board">
+
+        <div class="sl-field-label">Context (optional)</div>
+        <textarea class="sl-inp sl-textarea" id="sl-context" placeholder="Key points, data, or agenda items to include…">${escHtml(cDesc)}</textarea>
+
+        <div class="sl-field-label">Slides</div>
+        <div class="sl-row">
+          <input class="sl-inp" id="sl-count" type="number" min="3" max="20" value="8" style="width:80px;flex:none">
+          <span style="align-self:center;font-size:12px;color:var(--text2)">slides (3–20)</span>
+        </div>
+
+        <div class="sl-field-label">Tone</div>
+        <div class="sl-seg" id="sl-tone-seg">
+          <button class="sl-seg-btn active" data-tone="professional">Professional</button>
+          <button class="sl-seg-btn" data-tone="bold">Bold</button>
+          <button class="sl-seg-btn" data-tone="minimal">Minimal</button>
+        </div>
+
+        <div class="sl-field-label">Theme</div>
+        <div class="sl-theme-row" id="sl-theme-row">
+          ${themes.map((t,i) => `<div class="sl-theme-swatch${i===0?' active':''}" data-theme="${t.id}" title="${t.label}" style="background:${t.bg};box-shadow:inset 0 0 0 3px ${t.accent}44"></div>`).join('')}
+        </div>
+
+        <button class="sl-gen-btn" id="sl-gen">✨ Generate Deck</button>
+        <div class="sl-status" id="sl-status"></div>
+      </div>
+
+      <div class="sl-right">
+        <div class="sl-preview-wrap">
+          <div id="sl-preview-content">
+            <div class="sl-empty">
+              <div class="sl-empty-icon">📽️</div>
+              <div class="sl-empty-title">No deck yet</div>
+              <div class="sl-empty-sub">Fill in the details on the left and hit Generate Deck — you'll see a preview here, then download a polished .pptx.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+    let _tone = 'professional';
+    let _theme = themes[0];
+
+    container.querySelectorAll('.sl-seg-btn').forEach(b =>
+      b.addEventListener('click', () => {
+        container.querySelectorAll('.sl-seg-btn').forEach(x => x.classList.remove('active'));
+        b.classList.add('active'); _tone = b.dataset.tone;
+      })
+    );
+    container.querySelectorAll('.sl-theme-swatch').forEach(b =>
+      b.addEventListener('click', () => {
+        container.querySelectorAll('.sl-theme-swatch').forEach(x => x.classList.remove('active'));
+        b.classList.add('active'); _theme = themes.find(t => t.id === b.dataset.theme) || themes[0];
+      })
+    );
+
+    document.getElementById('sl-gen').addEventListener('click', async () => {
+      const topic   = document.getElementById('sl-topic')?.value.trim();
+      const audience= document.getElementById('sl-audience')?.value.trim();
+      const context = document.getElementById('sl-context')?.value.trim();
+      const count   = Math.max(3, Math.min(20, parseInt(document.getElementById('sl-count')?.value) || 8));
+      if (!topic) { toast('Add a topic first', 'error'); return; }
+
+      const btn    = document.getElementById('sl-gen');
+      const status = document.getElementById('sl-status');
+      btn.disabled = true; btn.textContent = '⏳ Generating…';
+      if (status) status.textContent = 'Asking Claude to structure the deck…';
+
+      const compCtx = State.settings.companyName ? `Company: ${State.settings.companyName}. ` : '';
+      const system = `You are a professional presentation designer. Generate a structured slide deck as a JSON object. Return ONLY valid JSON — no markdown, no backticks, no commentary. The JSON must match this exact schema:
+{
+  "title": "deck title",
+  "subtitle": "one-line subtitle",
+  "slides": [
+    { "type": "title|section|content|quote|two-col|closing", "title": "...", "bullets": ["..."], "notes": "speaker notes", "visual": "visual suggestion" }
+  ]
+}
+Slide type rules:
+- type "title": first slide only, has title + subtitle field instead of bullets
+- type "section": divider slide with just a title (no bullets)
+- type "content": title + 3–5 bullet points
+- type "quote": a single impactful quote or stat (put in title field, attribution in notes)
+- type "two-col": title + bullets array where even-indexed = left column, odd-indexed = right column
+- type "closing": last slide, title + 1–2 bullets (CTA, contact, next steps)
+Keep bullets concise (max 12 words each). Speaker notes: 1–2 sentences of what to say.`;
+
+      const userMsg = `${compCtx}Create a ${count}-slide deck on: "${topic}"${audience ? ` for ${audience}` : ''}. Tone: ${_tone}.${context ? ' Context: ' + context : ''} Include a title slide, logical flow, and a closing slide.`;
+
+      let raw = '';
+      try {
+        for await (const chunk of AI.stream([{role:'user',content:userMsg}], system, { model:'claude-sonnet-4-6', search:false, appTools:false, max_tokens:4096 })) {
+          raw += chunk;
+        }
+        raw = raw.replace(/^```json\s*/i,'').replace(/^```\s*/i,'').replace(/\s*```\s*$/,'').trim();
+        const deck = JSON.parse(raw);
+        SlidesPage._deck = { ...deck, _theme: _theme, _tone: _tone };
+        SlidesPage._renderPreview(container, deck, _theme);
+        if (status) status.textContent = `✓ ${deck.slides.length} slides generated — ready to download.`;
+      } catch(err) {
+        if (status) status.textContent = '⚠️ Generation failed — ' + err.message;
+        toast('Deck generation failed', 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = '✨ Generate Deck';
+      }
+    });
+  },
+
+  _renderPreview(container, deck, theme) {
+    const wrap = document.getElementById('sl-preview-content');
+    if (!wrap) return;
+    wrap.innerHTML = `
+      <div class="sl-preview-hdr">
+        <div class="sl-preview-title">${escHtml(deck.title)} <span style="font-weight:400;color:var(--text2);font-size:12px">${deck.slides.length} slides</span></div>
+        <button class="sl-dl-btn" id="sl-dl-btn">⬇ Download .pptx</button>
+      </div>
+      <div class="sl-slides-list">
+        ${deck.slides.map((s, i) => `
+          <div class="sl-slide-card">
+            <div class="sl-slide-num">Slide ${i+1} <span class="sl-slide-type-tag">${escHtml(s.type||'content')}</span></div>
+            <div class="sl-slide-title">${escHtml(s.title||'')}</div>
+            ${(s.bullets?.length) ? `<ul class="sl-slide-bullets">${s.bullets.map(b=>`<li>${escHtml(b)}</li>`).join('')}</ul>` : ''}
+            ${s.notes ? `<div class="sl-slide-notes">🎙 ${escHtml(s.notes)}</div>` : ''}
+          </div>`).join('')}
+      </div>`;
+
+    document.getElementById('sl-dl-btn')?.addEventListener('click', () => SlidesPage._download(deck, theme));
+  },
+
+  async _download(deck, theme) {
+    const btn = document.getElementById('sl-dl-btn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Building .pptx…'; }
+
+    try {
+      if (typeof PptxGenJS === 'undefined') {
+        await new Promise((res, rej) => {
+          const sc = document.createElement('script');
+          sc.src = 'https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+          sc.onload = res; sc.onerror = rej;
+          document.head.appendChild(sc);
+        });
+      }
+
+      const pptx = new PptxGenJS();
+      pptx.layout = 'LAYOUT_16x9';
+      pptx.title  = deck.title;
+
+      const T = theme || { bg:'#0f0c29', accent:'#7c3aed', text:'#ffffff' };
+      const isDark = SlidesPage._isDark(T.bg);
+      const subtleText = isDark ? 'ababc8' : '64748b';
+      const borderColor = isDark ? '2d2b55' : 'e2e8f0';
+
+      pptx.defineSlideMaster({
+        title: 'MASTER',
+        background: { color: T.bg.replace('#','') },
+        objects: [
+          { rect: { x:0, y:6.8, w:10, h:0.04, fill: { color: T.accent.replace('#','') } } },
+          { text: { text: deck.title, options: { x:0.35, y:6.88, w:6, h:0.25, fontSize:8, color: subtleText, fontFace:'Calibri' } } },
+        ],
+      });
+
+      deck.slides.forEach((sl, idx) => {
+        const slide = pptx.addSlide({ masterName: 'MASTER' });
+
+        if (sl.type === 'title' || idx === 0) {
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:10, h:7.5, fill:{ color: T.bg.replace('#','') } });
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:3.0, w:0.12, h:1.8, fill:{ color: T.accent.replace('#','') } });
+          slide.addText(sl.title || deck.title, { x:0.35, y:2.7, w:9.3, h:1.2, fontSize:40, bold:true, color: T.text.replace('#',''), fontFace:'Calibri Light', align:'left' });
+          const sub = sl.subtitle || sl.notes || deck.subtitle || '';
+          if (sub) slide.addText(sub, { x:0.35, y:3.85, w:8, h:0.7, fontSize:18, color: subtleText, fontFace:'Calibri', align:'left' });
+          slide.addText(`${new Date().getFullYear()}`, { x:8.5, y:6.9, w:1.3, h:0.25, fontSize:8, color: subtleText, fontFace:'Calibri', align:'right' });
+
+        } else if (sl.type === 'section') {
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:10, h:7.5, fill:{ color: T.accent.replace('#','') } });
+          slide.addText(sl.title || '', { x:0.6, y:2.8, w:8.8, h:1.6, fontSize:36, bold:true, color:'ffffff', fontFace:'Calibri Light', align:'left', valign:'middle' });
+
+        } else if (sl.type === 'quote') {
+          slide.addText('“', { x:0.3, y:0.8, w:1.5, h:2, fontSize:80, color: T.accent.replace('#',''), fontFace:'Georgia', bold:true });
+          slide.addText(sl.title || '', { x:0.9, y:1.5, w:8.2, h:3, fontSize:24, color: T.text.replace('#',''), fontFace:'Calibri Light', italic:true, align:'left', valign:'middle' });
+          if (sl.notes) slide.addText(`— ${sl.notes}`, { x:0.9, y:5.2, w:8.2, h:0.5, fontSize:13, color: subtleText, fontFace:'Calibri', align:'left' });
+
+        } else if (sl.type === 'closing') {
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:10, h:7.5, fill:{ color: T.bg.replace('#','') } });
+          slide.addShape(pptx.ShapeType.rect, { x:3.5, y:3.3, w:3, h:0.06, fill:{ color: T.accent.replace('#','') } });
+          slide.addText(sl.title || 'Thank You', { x:0.5, y:2.2, w:9, h:1.1, fontSize:36, bold:true, color: T.text.replace('#',''), fontFace:'Calibri Light', align:'center' });
+          if (sl.bullets?.length) slide.addText(sl.bullets.join('  ·  '), { x:0.5, y:4.1, w:9, h:0.6, fontSize:14, color: subtleText, fontFace:'Calibri', align:'center' });
+          const cname = State.settings.companyName || '';
+          if (cname) slide.addText(cname, { x:0.5, y:5.1, w:9, h:0.4, fontSize:12, color: subtleText, fontFace:'Calibri', align:'center' });
+
+        } else {
+          // content / two-col (default)
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:0, w:10, h:1.15, fill:{ color: T.bg.replace('#','') } });
+          slide.addShape(pptx.ShapeType.rect, { x:0, y:1.15, w:10, h:0.04, fill:{ color: T.accent.replace('#','') } });
+          slide.addText(sl.title || '', { x:0.35, y:0.18, w:9.3, h:0.88, fontSize:26, bold:true, color: T.text.replace('#',''), fontFace:'Calibri', align:'left', valign:'middle' });
+          slide.addText(String(idx+1), { x:9.3, y:0.22, w:0.5, h:0.5, fontSize:10, color: subtleText, fontFace:'Calibri', align:'right' });
+
+          const bullets = sl.bullets || [];
+          if (sl.type === 'two-col' && bullets.length >= 2) {
+            const left  = bullets.filter((_,i) => i%2===0);
+            const right = bullets.filter((_,i) => i%2===1);
+            [[left, 0.2], [right, 5.2]].forEach(([items, xOff]) => {
+              const rows = items.map(b => ({ text: b, options: { bullet:{type:'bullet'}, fontSize:14, color: T.text.replace('#',''), fontFace:'Calibri', paraSpaceAfter:6 } }));
+              slide.addText(rows, { x:xOff+0.2, y:1.4, w:4.6, h:5.5, valign:'top' });
+            });
+          } else {
+            const rows = bullets.map(b => ({ text: b, options: { bullet:{type:'bullet'}, fontSize:15, color: T.text.replace('#',''), fontFace:'Calibri', paraSpaceAfter:8 } }));
+            if (rows.length) slide.addText(rows, { x:0.35, y:1.38, w:9.3, h:5.4, valign:'top' });
+          }
+          if (sl.notes) slide.addNotesSlide(sl.notes);
+        }
+      });
+
+      const slug = (deck.title||'deck').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
+      await pptx.writeFile({ fileName: `${slug}.pptx` });
+      toast('Deck downloaded — open in PowerPoint, Keynote, or Google Slides ✓', 'success');
+    } catch(err) {
+      toast('Download failed: ' + err.message, 'error');
+    } finally {
+      if (btn) { btn.disabled = false; btn.textContent = '⬇ Download .pptx'; }
+    }
+  },
+
+  _isDark(hex) {
+    const c = parseInt((hex||'#000').replace('#',''), 16);
+    const r=(c>>16)&255, g=(c>>8)&255, b=c&255;
+    return (r*299+g*587+b*114)/1000 < 128;
+  },
+
+  destroy() { SlidesPage._deck = null; },
+};
+
 //  FREIGHT & LOGISTICS — Vasco
 // ══════════════════════════════════════════════════════════════
 const FreightPage = {
@@ -14914,6 +15246,14 @@ const FreightPage = {
         .frt-book-btn{width:100%;padding:11px;border-radius:8px;border:none;background:#0891b2;color:#fff;font-size:14px;font-weight:700;cursor:not-allowed;margin-top:12px;opacity:.5}
         .frt-search-pill{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:7px;background:rgba(8,145,178,.08);border:1px solid rgba(8,145,178,.2);color:#0891b2;font-size:12px;margin-top:6px;flex-shrink:0}
         .frt-search-spin{width:13px;height:13px;border-radius:50%;border:2px solid rgba(8,145,178,.25);border-top-color:#0891b2;animation:spinLive .8s linear infinite;flex-shrink:0}
+        .frt-outlook-sub{font-size:12px;color:var(--text2);margin-bottom:10px;line-height:1.45}
+        .frt-outlook-btns{display:flex;flex-wrap:wrap;gap:6px}
+        .frt-outlook-btn{padding:5px 12px;border-radius:7px;border:1px solid rgba(8,145,178,.3);background:rgba(8,145,178,.06);color:#0891b2;font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;transition:.15s;white-space:nowrap}
+        .frt-outlook-btn:hover{background:rgba(8,145,178,.14);border-color:#0891b2}
+        .frt-quota-warn{margin-top:10px;padding:7px 10px;border-radius:7px;font-size:11.5px;line-height:1.4}
+        .frt-quota-warn--error{background:rgba(239,68,68,.07);border:1px solid rgba(239,68,68,.2);color:#dc2626}
+        .frt-quota-warn--warning{background:rgba(234,179,8,.07);border:1px solid rgba(234,179,8,.25);color:#b45309}
+        .frt-quota-warn--info{background:rgba(8,145,178,.07);border:1px solid rgba(8,145,178,.2);color:#0891b2}
       `;
       document.head.appendChild(s);
     }
@@ -14951,6 +15291,20 @@ const FreightPage = {
 
       <!-- RIGHT: Tools -->
       <div class="frt-right">
+
+        <!-- Market Intelligence -->
+        <div class="frt-section">
+          <div class="frt-section-title"><span>📊</span> Market Intelligence</div>
+          <div class="frt-outlook-sub">Ask Vasco for a live outlook grounded in current news. Uses 3–5 web searches from your daily quota.</div>
+          <div class="frt-outlook-btns">
+            <button class="frt-outlook-btn" data-scope="global">🌐 Global</button>
+            <button class="frt-outlook-btn" data-scope="ocean">🚢 Ocean</button>
+            <button class="frt-outlook-btn" data-scope="air">✈️ Air Freight</button>
+            <button class="frt-outlook-btn" data-scope="trucking">🚛 Trucking</button>
+            <button class="frt-outlook-btn" data-scope="disruptions">⚠️ Disruptions</button>
+          </div>
+          <div class="frt-quota-warn" id="frt-quota-warn" style="display:none"></div>
+        </div>
 
         <!-- Cost Estimator -->
         <div class="frt-section">
@@ -15124,6 +15478,9 @@ const FreightPage = {
     });
     container.querySelectorAll('.frt-quick').forEach(btn =>
       btn.addEventListener('click', () => { input.value = btn.dataset.q; FreightPage._send(); })
+    );
+    container.querySelectorAll('.frt-outlook-btn').forEach(btn =>
+      btn.addEventListener('click', () => FreightPage._fireOutlook(btn.dataset.scope))
     );
   },
 
@@ -15313,6 +15670,45 @@ ${e.mode !== 'fcl' ? `Gross Weight: ${e.weightKg} kg\nVolume: ${e.cbm} CBM` : `C
 Include sections for: cargo description (leave placeholder), HS code (leave placeholder), pickup address / port of loading, port of discharge / delivery address, requested Incoterms, target cargo readiness date, required transit time, special requirements (e.g. hazmat, temp control), and request for all-in rate including surcharges and estimated transit time. End with a professional sign-off requesting the quote within 48 hours.`;
     const input = document.getElementById('frt-input');
     if (input) { input.value = rfqPrompt; FreightPage._send(); }
+  },
+
+  _fireOutlook(scope) {
+    const planCfg = PLAN_CONFIG[PlanGate.current()] || PLAN_CONFIG.free;
+    const limit = planCfg.searchLimit;
+    const used = State.usage.searchesToday || 0;
+    const remaining = limit === Infinity ? 999 : (limit - used);
+    const warn = document.getElementById('frt-quota-warn');
+
+    if (!WebSearch.canSearch()) {
+      if (warn) { warn.className = 'frt-quota-warn frt-quota-warn--info'; warn.style.display = ''; warn.textContent = '⚪ Web search isn\'t active — add a Platform Search Key in Settings to enable market intelligence.'; }
+      return;
+    }
+    if (remaining <= 0) {
+      if (warn) { warn.className = 'frt-quota-warn frt-quota-warn--error'; warn.style.display = ''; warn.textContent = `⛔ You've used all ${limit} web searches for today. Resets at midnight.`; }
+      return;
+    }
+    if (remaining <= 2) {
+      if (warn) { warn.className = 'frt-quota-warn frt-quota-warn--warning'; warn.style.display = ''; warn.innerHTML = `⚠️ Only <strong>${remaining}</strong> search${remaining === 1 ? '' : 'es'} left today — this outlook uses 3–5. Results may be partial.`; }
+    } else {
+      if (warn) warn.style.display = 'none';
+    }
+
+    const now = new Date();
+    const monthYear = now.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+
+    const scopes = {
+      global:      { label: 'Global Freight',      q: 'ocean freight rates, major port congestion, air cargo conditions, bunker fuel surcharges, Suez and Panama canal status' },
+      ocean:       { label: 'Ocean Freight',        q: 'transpacific container rates, Asia-Europe ocean freight rates, blank sailings carrier capacity, port congestion Los Angeles Rotterdam Shanghai, container equipment availability' },
+      air:         { label: 'Air Freight',          q: 'air cargo rates and demand trends, belly capacity vs freighter capacity, e-commerce air freight impact, air freight market outlook' },
+      trucking:    { label: 'Trucking (US/EU)',     q: 'US trucking spot rates, truckload capacity market conditions, LTL rate benchmarks, EU trucking rates, carrier capacity outlook' },
+      disruptions: { label: 'Disruptions & Risks', q: 'Red Sea Suez Canal shipping situation, Panama Canal water level restrictions, port strikes labor actions, geopolitical freight impacts' },
+    };
+
+    const s = scopes[scope] || scopes.global;
+    const prompt = `Give me a freight market outlook for ${s.label} — ${monthYear}. Search for current data on: ${s.q}. Structure your response as a market intelligence report: What's Happening Now → Near-Term Outlook → Implications for Shippers → Sources. Use directional, caveated language — this is market analysis, not a guaranteed forecast.`;
+
+    const input = document.getElementById('frt-input');
+    if (input) { input.value = prompt; FreightPage._send(); }
   },
 
   _addMsg(role, html, raw = '') {
