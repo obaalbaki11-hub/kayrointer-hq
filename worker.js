@@ -641,8 +641,10 @@ async function handleUsageMe(request, env, origin) {
 
   const plan  = authR.session.plan || 'free';
   const limit = (PLAN_LIMITS[plan] || PLAN_LIMITS.free).messages;
-  const t = tokenData || { calls: 0, inputTokens: 0, outputTokens: 0, costUSD: 0, revenueUSD: 0, models: {} };
-  const marginUSD = parseFloat(((t.revenueUSD || 0) - (t.costUSD || 0)).toFixed(8));
+  const t = tokenData || { calls: 0, inputTokens: 0, outputTokens: 0, models: {} };
+  const safeModels = Object.fromEntries(
+    Object.entries(t.models || {}).map(([m, v]) => [m, { inputTokens: v.inputTokens || 0, outputTokens: v.outputTokens || 0 }])
+  );
 
   return json({
     date, uid, plan, dailyMsgLimit: limit,
@@ -651,11 +653,7 @@ async function handleUsageMe(request, env, origin) {
     inputTokens: t.inputTokens,
     outputTokens: t.outputTokens,
     totalTokens: t.inputTokens + t.outputTokens,
-    costUSD:     t.costUSD,
-    revenueUSD:  t.revenueUSD,
-    marginUSD,
-    marginPct:   t.costUSD > 0 ? parseFloat(((marginUSD / t.revenueUSD) * 100).toFixed(1)) : null,
-    models:      t.models,
+    models:      safeModels,
   }, 200, origin);
 }
 
