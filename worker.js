@@ -62,9 +62,20 @@ export default {
           const effectivePlan = authR.session.email === ADMIN_EMAIL ? 'enterprise' : (authR.session.plan || 'free');
           const allowed = PLAN_ALLOWED_MODELS[effectivePlan];
           if (allowed && !model.startsWith('agent_') && !allowed.has(model)) {
-            const isOpus = model.includes('opus');
-            const hint = isOpus ? 'Scale or Enterprise' : 'Growth or higher';
-            return json({ error: `PLAN_GATE:${effectivePlan}:${model}:Upgrade to ${hint} to use this model.` }, 403, origin);
+            if (!model.includes('opus') && effectivePlan === 'free') {
+              // Free plan: silently fall back to Haiku so the user gets a real response.
+              // Opus is still hard-blocked (cost too high to absorb).
+              bodyPeeked.model = 'claude-haiku-4-5-20251001';
+              request = new Request(request.url, {
+                method: request.method,
+                headers: request.headers,
+                body: JSON.stringify(bodyPeeked),
+              });
+            } else {
+              const isOpus = model.includes('opus');
+              const hint = isOpus ? 'Scale or Enterprise' : 'Growth or higher';
+              return json({ error: `PLAN_GATE:${effectivePlan}:${model}:Upgrade to ${hint} to use this model.` }, 403, origin);
+            }
           }
         }
 
