@@ -1970,10 +1970,11 @@ const AI = {
           yield `⏸️ **You've used all ${capLimit} daily messages on the ${planName} plan.**\n\nYou can:\n- **[Buy a message top-up →](javascript:Router.navigate('plans'))** — add extra messages without waiting\n- Resume tomorrow when your daily limit resets at midnight UTC\n- Upgrade to a higher plan for a larger daily allowance\n\nTop-ups are available on the Plans & Tokens page.`;
           return;
         }
-        const msg = body?.error?.message || `HTTP ${res.status}`;
+        const errFlat = typeof body?.error === 'string' ? body.error : null;
+        const msg = body?.error?.message || errFlat || `HTTP ${res.status}`;
         const hint = res.status===401 ? '\n\n→ Anthropic credits exhausted. Go to console.anthropic.com → Billing → add credits to restore AI.'
                    : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
-                   : res.status===403 ? '\n\n→ No access to this model — try again in a moment' : '';
+                   : res.status===403 ? '\n\n→ Check your plan or API key permissions — this is a permanent block, not a transient error' : '';
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 

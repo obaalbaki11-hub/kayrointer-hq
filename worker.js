@@ -59,7 +59,8 @@ export default {
         try { bodyPeeked = await cloned.json(); } catch (_) {}
         if (bodyPeeked) {
           const model = String(bodyPeeked.model || 'claude-sonnet-4-6');
-          const allowed = PLAN_ALLOWED_MODELS[authR.session.plan || 'free'];
+          const effectivePlan = authR.session.email === ADMIN_EMAIL ? 'enterprise' : (authR.session.plan || 'free');
+          const allowed = PLAN_ALLOWED_MODELS[effectivePlan];
           if (allowed && !model.startsWith('agent_') && !allowed.has(model)) {
             return json({ error: `Model ${model} is not available on your plan. Upgrade to Scale or Enterprise for Opus access.` }, 403, origin);
           }
@@ -244,6 +245,7 @@ const MODEL_COSTS = {
   'claude-3-haiku-20240307':    { input:  0.25, output:  1.25 },
 };
 const RESALE_RATE = 18.00; // $/M tokens — what you charge users
+const ADMIN_EMAIL  = 'obaalbaki11@gmail.com'; // owner always gets enterprise access
 
 // HIGH-1: Per-plan model allowlist. null = all models allowed.
 const PLAN_ALLOWED_MODELS = {
@@ -650,7 +652,6 @@ async function handleUsageMe(request, env, origin) {
 async function handleAdminUsage(request, env, origin) {
   const authR = await requireSession(request, env, origin);
   if (!authR.ok) return authR.response;
-  const ADMIN_EMAIL = 'obaalbaki11@gmail.com';
   if (authR.session.email !== ADMIN_EMAIL) return json({ error: 'Forbidden' }, 403, origin);
   if (!env.USERS) return json({ error: 'KV not configured' }, 503, origin);
 
@@ -1134,7 +1135,10 @@ async function handleFirebaseAuth(request, env, origin) {
   const name = displayName || email.split('@')[0] || 'User';
 
   // Server-side plan lookup — localStorage value is never trusted
-  const plan = (env.USERS ? await env.USERS.get(`plan:${uid}`) : null) || 'free';
+  const kvPlan = env.USERS ? await env.USERS.get(`plan:${uid}`) : null;
+  const plan = kvPlan || (email === ADMIN_EMAIL ? 'enterprise' : 'free');
+  // Persist the elevated plan so KV is authoritative for future lookups
+  if (!kvPlan && plan !== 'free' && env.USERS) await env.USERS.put(`plan:${uid}`, plan);
 
   const sessionToken = await jwtSign(
     { uid, email, name, plan, isGuest: false, exp: Math.floor(Date.now()/1000) + AUTH_SESSION_TTL },
