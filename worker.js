@@ -62,7 +62,9 @@ export default {
           const effectivePlan = authR.session.email === ADMIN_EMAIL ? 'enterprise' : (authR.session.plan || 'free');
           const allowed = PLAN_ALLOWED_MODELS[effectivePlan];
           if (allowed && !model.startsWith('agent_') && !allowed.has(model)) {
-            return json({ error: `Model ${model} is not available on your plan. Upgrade to Scale or Enterprise for Opus access.` }, 403, origin);
+            const isOpus = model.includes('opus');
+            const hint = isOpus ? 'Scale or Enterprise' : 'Growth or higher';
+            return json({ error: `PLAN_GATE:${effectivePlan}:${model}:Upgrade to ${hint} to use this model.` }, 403, origin);
           }
         }
 

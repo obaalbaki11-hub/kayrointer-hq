@@ -1971,10 +1971,17 @@ const AI = {
           return;
         }
         const errFlat = typeof body?.error === 'string' ? body.error : null;
+        // Plan gate errors come as PLAN_GATE:<plan>:<model>:<hint>
+        if (res.status === 403 && errFlat?.startsWith('PLAN_GATE:')) {
+          const [,curPlan,,hint] = errFlat.split(':');
+          const planLabel = curPlan === 'free' ? 'Free' : curPlan === 'growth' ? 'Growth' : 'your';
+          yield `🔒 **This agent requires a plan upgrade.**\n\nYou're on the **${planLabel} plan** — ${hint}\n\n**[View Plans & Upgrade →](javascript:Router.navigate('plans'))**`;
+          return;
+        }
         const msg = body?.error?.message || errFlat || `HTTP ${res.status}`;
         const hint = res.status===401 ? '\n\n→ Anthropic credits exhausted. Go to console.anthropic.com → Billing → add credits to restore AI.'
                    : res.status===429 ? '\n\n→ Rate limit hit — wait a moment and retry'
-                   : res.status===403 ? '\n\n→ Check your plan or API key permissions — this is a permanent block, not a transient error' : '';
+                   : res.status===403 ? '\n\n→ Check your plan or API key permissions' : '';
         yield `⚠️ API error (${res.status}): ${msg}${hint}`; return;
       }
 
@@ -14085,16 +14092,20 @@ const Onboarding = {
   },
 
   _next() {
-    Onboarding._collect();
-    if (Onboarding._step === 1 && !Onboarding._data.company) {
-      const inp = document.getElementById('ob-company');
-      inp.style.borderColor = 'var(--red)';
-      inp.focus();
-      toast('Enter your company name to continue', 'error');
-      return;
+    try {
+      Onboarding._collect();
+      if (Onboarding._step === 1 && !Onboarding._data.company) {
+        const inp = document.getElementById('ob-company');
+        if (inp) { inp.style.borderColor = 'var(--red,#ef4444)'; inp.focus(); }
+        toast('Enter your company name to continue', 'error');
+        return;
+      }
+      if (Onboarding._step < 6) { Onboarding._step++; Onboarding._render(); }
+      else Onboarding._finish(false);
+    } catch(e) {
+      console.error('Onboarding._next error:', e);
+      toast('Something went wrong — please try again or skip setup', 'error');
     }
-    if (Onboarding._step < 6) { Onboarding._step++; Onboarding._render(); }
-    else Onboarding._finish(false);
   },
 
   _finish(skipped) {
