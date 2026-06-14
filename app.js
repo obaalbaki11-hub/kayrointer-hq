@@ -11682,7 +11682,7 @@ const PlansPage = {
         ],
         cta: current==='growth' ? 'Current Plan' : 'Upgrade to Growth',
         ctaStyle: current==='growth' ? 'secondary' : 'primary',
-        payLink: 'https://buy.stripe.com/kayro-growth',
+        payLink: null, // STRIPE_PENDING — uncomment when Stripe bank account verified: 'https://buy.stripe.com/kayro-growth'
       },
       {
         id: 'scale', icon: '⚡', name: 'Scale', price: '$99', period: '/month',
@@ -11699,7 +11699,7 @@ const PlansPage = {
         ],
         cta: current==='scale' ? 'Current Plan' : 'Upgrade to Scale',
         ctaStyle: current==='scale' ? 'secondary' : 'primary',
-        payLink: 'https://buy.stripe.com/kayro-scale',
+        payLink: null, // STRIPE_PENDING — uncomment when Stripe bank account verified: 'https://buy.stripe.com/kayro-scale'
       },
       {
         id: 'enterprise', icon: '🏢', name: 'Enterprise', price: null, period: '',
@@ -11879,7 +11879,11 @@ const PlansPage = {
           toast('Redirecting to checkout…', 'info', 3000);
           setTimeout(() => window.open(link, '_blank'), 600);
         } else {
-          toast('Enter a plan code below to activate, or contact sales@kayrointer.com', 'info', 5000);
+          const planName = planId === 'growth' ? 'Growth ($29/mo)' : planId === 'scale' ? 'Scale ($99/mo)' : planId;
+          const subject = encodeURIComponent(`Kayro ${planName} — Upgrade Request`);
+          const body = encodeURIComponent(`Hi,\n\nI'd like to upgrade to the ${planName} plan.\n\nPlease send me an activation code.\n\nThanks`);
+          window.open(`mailto:sales@kayrointer.com?subject=${subject}&body=${body}`, '_blank');
+          toast('Opening your email client — we\'ll send you an activation code within 24h', 'success', 6000);
         }
       });
     });
