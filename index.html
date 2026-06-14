@@ -343,64 +343,7 @@ footer{
 .foot-link{font-size:12px;color:#444;text-decoration:none;transition:color .15s}
 .foot-link:hover{color:var(--text2)}
 
-/* ── AUTH MODAL ── */
-.auth-overlay{
-  position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;
-  display:flex;align-items:center;justify-content:center;
-  backdrop-filter:blur(8px);opacity:0;pointer-events:none;transition:opacity .2s;
-}
-.auth-overlay.open{opacity:1;pointer-events:all}
-.auth-box{
-  background:#111;border:1px solid rgba(255,255,255,.12);border-radius:16px;
-  padding:36px;width:400px;max-width:94vw;
-  transform:scale(.97) translateY(8px);transition:transform .2s;
-}
-.auth-overlay.open .auth-box{transform:scale(1) translateY(0)}
-.auth-logo{display:flex;justify-content:center;margin-bottom:24px}
-.auth-logo-mark{
-  width:48px;height:48px;border-radius:50%;background:#fff;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:22px;color:#000;
-}
-.auth-title{font-size:20px;font-weight:800;color:#fff;text-align:center;margin-bottom:5px;letter-spacing:-.5px}
-.auth-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px}
-.auth-tabs{
-  display:flex;background:rgba(255,255,255,.04);border-radius:9px;
-  padding:3px;margin-bottom:24px;border:1px solid var(--border);
-}
-.auth-tab{
-  flex:1;padding:8px;border-radius:7px;font-size:13px;font-weight:600;
-  border:none;cursor:pointer;font-family:var(--sans);
-  color:var(--text2);background:none;transition:all .15s;
-}
-.auth-tab.active{background:rgba(255,255,255,.1);color:#fff}
-.auth-form{display:flex;flex-direction:column;gap:14px}
-.auth-form-hidden{display:none}
-.form-grp{display:flex;flex-direction:column;gap:5px}
-.form-lbl{font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.3px;font-family:var(--mono)}
-.form-inp{
-  background:rgba(255,255,255,.05);border:1px solid var(--border);
-  border-radius:8px;padding:10px 13px;color:#fff;
-  font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s;
-}
-.form-inp:focus{border-color:rgba(255,255,255,.3)}
-.form-inp::placeholder{color:#333}
-.auth-submit{
-  background:#fff;color:#000;padding:12px;
-  border-radius:9px;font-size:14px;font-weight:700;
-  border:none;cursor:pointer;font-family:var(--sans);
-  transition:all .2s;margin-top:6px;
-}
-.auth-submit:hover{background:#e8e8e8;transform:translateY(-1px)}
-.auth-hint{font-size:11.5px;color:#444;text-align:center;margin-top:4px}
-.auth-hint a{color:var(--text2);text-decoration:none;font-weight:600}
-.auth-hint a:hover{color:#fff}
-.auth-close{
-  position:absolute;top:16px;right:20px;background:none;border:none;
-  color:#444;font-size:20px;cursor:pointer;line-height:1;
-  transition:color .15s;
-}
-.auth-close:hover{color:#fff}
+
 </style>
 </head>
 <body>
@@ -419,7 +362,7 @@ footer{
     <a class="nav-link" href="#how">How it works</a>
     <a class="nav-link" href="#enterprise" style="color:#c8a040">Enterprise</a>
     <div class="nav-sep"></div>
-    <a class="nav-getstarted" href="#" onclick="openAuth('login');return false">Sign in / Get started</a>
+    <a class="nav-getstarted" href="app.html">Sign in / Get started</a>
   </div>
 </nav>
 
@@ -1394,7 +1337,7 @@ footer{
   <h2 class="office-strip-h">Run your business from one screen</h2>
   <p class="office-strip-sub">Your AI team's live activity, tasks, chat, and power skills — all in one command center. Ask the room, run a sprint, ship a design. Right now.</p>
   <a class="office-btn" href="app.html">Launch HQ →</a>
-  <a class="office-btn ghost" href="#" onclick="openAuth('signup');return false">Start free</a>
+  <a class="office-btn ghost" href="app.html">Start free</a>
 </div>
 
 <!-- HOW TO GET STARTED -->
@@ -1493,220 +1436,6 @@ footer{
   </div>
 </footer>
 
-<!-- AUTH MODAL -->
-<div class="auth-overlay" id="auth-overlay" onclick="if(event.target===this)closeAuth()">
-  <div class="auth-box" style="position:relative">
-    <button class="auth-close" onclick="closeAuth()">✕</button>
-    <div class="auth-logo"><div class="auth-logo-mark">K</div></div>
-    <div class="auth-title">Kayro Interactive</div>
-    <div class="auth-sub">Your AI workforce, on demand</div>
-    <p id="auth-err" style="font-size:12px;color:#f87171;text-align:center;margin:0 0 8px;min-height:18px"></p>
 
-    <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchTab('signup')">Sign Up</button>
-    </div>
-
-    <button id="github-auth-btn" onclick="signInWithGitHub()" style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:12px 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;font-family:var(--sans);margin-bottom:16px;transition:all .18s">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/></svg>
-      Continue with GitHub
-    </button>
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
-      <span style="font-size:11px;color:#333">or</span>
-      <div style="flex:1;height:1px;background:rgba(255,255,255,.08)"></div>
-    </div>
-
-    <form class="auth-form" id="login-form" onsubmit="handleAuth(event)">
-      <div class="form-grp">
-        <label class="form-lbl">EMAIL</label>
-        <input class="form-inp" type="email" placeholder="you@company.com" required>
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">PASSWORD</label>
-        <input class="form-inp" type="password" placeholder="••••••••" required>
-      </div>
-      <button class="auth-submit" type="submit">Sign In → Launch HQ</button>
-      <div class="auth-hint">No account? <a href="#" onclick="switchTab('signup');return false">Sign up free</a></div>
-    </form>
-
-    <form class="auth-form auth-form-hidden" id="signup-form" onsubmit="handleAuth(event)">
-      <div class="form-grp">
-        <label class="form-lbl">FULL NAME</label>
-        <input class="form-inp" type="text" placeholder="Your name" required>
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">EMAIL</label>
-        <input class="form-inp" type="email" placeholder="you@company.com" required>
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">COMPANY NAME</label>
-        <input class="form-inp" type="text" id="signup-company" placeholder="Acme Corp">
-      </div>
-      <div class="form-grp">
-        <label class="form-lbl">PASSWORD</label>
-        <input class="form-inp" type="password" placeholder="Choose a password" required>
-      </div>
-      <button class="auth-submit" type="submit">Create HQ →</button>
-      <div class="auth-hint">Have an account? <a href="#" onclick="switchTab('login');return false">Sign in</a></div>
-    </form>
-  </div>
-</div>
-
-<script>
-const KAYRO_BACKEND = 'https://kayro-backend.obaalbaki11.workers.dev';
-const KAYRO_FB_CONFIG = {
-  apiKey: "AIzaSyDbNHzaw0A_itQxpqwOQfsUb3of52RR6pY",
-  authDomain: "kayro-interactive.firebaseapp.com",
-  projectId: "kayro-interactive",
-  storageBucket: "kayro-interactive.firebasestorage.app",
-  messagingSenderId: "303628080555",
-  appId: "1:303628080555:web:2f8f03926a086cd65c6eee",
-};
-
-// Firebase loaded lazily — only when a sign-in action fires, never on passive page views.
-let _fbReady = false, _fbPromise = null;
-function _loadFirebase() {
-  if (_fbReady) return Promise.resolve();
-  if (_fbPromise) return _fbPromise;
-  _fbPromise = new Promise((resolve, reject) => {
-    const s1 = document.createElement('script');
-    s1.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js';
-    s1.onload = () => {
-      const s2 = document.createElement('script');
-      s2.src = 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js';
-      s2.onload = () => {
-        try {
-          if (!firebase.apps.length) firebase.initializeApp(KAYRO_FB_CONFIG);
-          firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(() => {});
-          _fbReady = true;
-          resolve();
-        } catch (e) { reject(e); }
-      };
-      s2.onerror = reject;
-      document.head.appendChild(s2);
-    };
-    s1.onerror = reject;
-    document.head.appendChild(s1);
-  });
-  return _fbPromise;
-}
-
-function _err(msg) {
-  const el = document.getElementById('auth-err');
-  if (el) el.textContent = msg || '';
-}
-
-// After any Firebase sign-in: exchange ID token for httpOnly session cookie, save user, redirect.
-async function _finishAuth(fbUser, company) {
-  const idToken = await fbUser.getIdToken();
-  // Set the same httpOnly session cookie that app.html's worker calls require.
-  await fetch(`${KAYRO_BACKEND}/api/auth/firebase`, {
-    method: 'POST', credentials: 'include',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ idToken }),
-  }).catch(() => {}); // non-fatal — Firebase IndexedDB session still lets app.html through
-  const name = fbUser.displayName || (fbUser.email || '').split('@')[0];
-  localStorage.setItem('kayro_auth_user', JSON.stringify({
-    uid: fbUser.uid, name, email: fbUser.email,
-    photoURL: fbUser.photoURL || null, isGuest: false,
-  }));
-  if (company) {
-    try {
-      const s = JSON.parse(localStorage.getItem('kayro_settings') || '{}');
-      s.companyName = company;
-      localStorage.setItem('kayro_settings', JSON.stringify(s));
-    } catch (_) {}
-  }
-  window.location.href = 'app.html';
-}
-
-async function signInWithGitHub() {
-  const btn = document.getElementById('github-auth-btn');
-  const origHTML = btn.innerHTML;
-  btn.textContent = 'Opening GitHub…'; btn.disabled = true;
-  _err('');
-  try {
-    await _loadFirebase();
-    const provider = new firebase.auth.GithubAuthProvider();
-    const result   = await firebase.auth().signInWithPopup(provider);
-    await _finishAuth(result.user, '');
-    // _finishAuth redirects to app.html on success — code below only runs on error
-  } catch (e) {
-    btn.innerHTML = origHTML; btn.disabled = false;
-    if (e.code === 'auth/popup-closed-by-user') return;
-    _err(e.code === 'auth/account-exists-with-different-credential'
-      ? 'An account with this email already exists — try email/password instead.'
-      : 'GitHub sign-in failed — try email/password below.');
-  }
-}
-
-function openAuth(tab) {
-  document.getElementById('auth-overlay').classList.add('open');
-  switchTab(tab || 'login');
-}
-function closeAuth() {
-  document.getElementById('auth-overlay').classList.remove('open');
-  _err('');
-}
-function switchTab(tab) {
-  const lf = document.getElementById('login-form');
-  const sf = document.getElementById('signup-form');
-  const tl = document.getElementById('tab-login');
-  const ts = document.getElementById('tab-signup');
-  if (tab === 'login') {
-    lf.classList.remove('auth-form-hidden'); sf.classList.add('auth-form-hidden');
-    tl.classList.add('active'); ts.classList.remove('active');
-  } else {
-    sf.classList.remove('auth-form-hidden'); lf.classList.add('auth-form-hidden');
-    ts.classList.add('active'); tl.classList.remove('active');
-  }
-  _err('');
-}
-
-async function handleAuth(e) {
-  e.preventDefault();
-  _err('');
-  const isSignup = !document.getElementById('signup-form').classList.contains('auth-form-hidden');
-  const form     = document.getElementById(isSignup ? 'signup-form' : 'login-form');
-  const inputs   = form.querySelectorAll('input');
-
-  // Signup fields order: name (text), email, company (text, #signup-company), password
-  // Login fields order:  email, password
-  let email = '', pass = '', name = '', company = '';
-  if (isSignup) {
-    name    = (inputs[0]?.value || '').trim();
-    email   = (inputs[1]?.value || '').trim();
-    company = (inputs[2]?.value || '').trim();
-    pass    = inputs[3]?.value || '';
-  } else {
-    email = (inputs[0]?.value || '').trim();
-    pass  = inputs[1]?.value || '';
-  }
-
-  if (!email || !pass) { _err('Enter your email and password.'); return; }
-
-  const btn  = form.querySelector('[type=submit]');
-  const orig = btn?.textContent;
-  if (btn) { btn.disabled = true; btn.textContent = isSignup ? 'Creating account…' : 'Signing in…'; }
-
-  try {
-    await _loadFirebase();
-    let fbUser;
-    if (isSignup) {
-      const cred = await firebase.auth().createUserWithEmailAndPassword(email, pass);
-      fbUser = cred.user;
-      if (name) await fbUser.updateProfile({ displayName: name }).catch(() => {});
-    } else {
-      const cred = await firebase.auth().signInWithEmailAndPassword(email, pass);
-      fbUser = cred.user;
-    }
-    await _finishAuth(fbUser, company);
-  } catch (err) {
-    if (btn) { btn.disabled = false; btn.textContent = orig; }
-    _err(err.message || (isSignup ? 'Sign up failed.' : 'Sign in failed.'));
-  }
-}
-</script>
 </body>
 </html>
