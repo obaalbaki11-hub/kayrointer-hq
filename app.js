@@ -2438,10 +2438,11 @@ const Auth = {
       await firebase.auth().signInWithPopup(provider);
       // onAuthStateChanged fires → sets Auth.user → exchanges ID token for session cookie → hides overlay
     } catch(e) {
+      console.error('[Auth] GitHub sign-in error:', e.code, e.message);
       if (e.code !== 'auth/popup-closed-by-user') {
         Auth._showError(e.code === 'auth/account-exists-with-different-credential'
           ? 'An account with this email exists — use email/password sign-in instead.'
-          : 'GitHub sign-in failed — try email/password below.');
+          : `GitHub sign-in failed (${e.code || e.message}) — check console for details.`);
       }
     } finally {
       if (btn) { btn.disabled = false; if (origHTML) btn.innerHTML = origHTML; }
@@ -9390,20 +9391,17 @@ const OpsPage = {
       const res = await fetch(`${BACKEND_URL}/api/usage/me`, { credentials: 'include' });
       if (!res.ok) { box.innerHTML = '<div style="color:var(--text3)">Server stats unavailable</div>'; return; }
       const d = await res.json();
-      const fmtCost = v => '$' + (v||0).toFixed(4);
-      const margin = ((d.marginUSD||0) >= 0) ? `<span style="color:var(--green)">+${fmtCost(d.marginUSD)}</span>` : `<span style="color:var(--danger)">${fmtCost(d.marginUSD)}</span>`;
       const isAdmin = Auth.user?.email === 'obaalbaki11@gmail.com';
       box.innerHTML = `
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
           <span style="font-weight:600;color:var(--text)">📡 Server-Verified Usage (${d.date})</span>
           ${isAdmin ? '<button id="srv-admin-btn" style="font-size:11px;padding:3px 8px;border-radius:6px;border:1px solid var(--border);background:var(--surface3);color:var(--text2);cursor:pointer">Admin View →</button>' : ''}
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:8px">
           <div><div style="color:var(--text3)">Messages</div><div style="font-weight:600;color:var(--text)">${d.messages||0} / ${d.dailyMsgLimit===null?'∞':d.dailyMsgLimit}</div></div>
           <div><div style="color:var(--text3)">Tokens (real)</div><div style="font-weight:600;color:var(--text)">${Usage._fmtK(d.totalTokens||0)}</div></div>
-          <div><div style="color:var(--text3)">My cost</div><div style="font-weight:600;color:var(--danger)">${fmtCost(d.costUSD)}</div></div>
         </div>
-        ${Object.keys(d.models||{}).length ? `<div style="margin-top:8px;color:var(--text3)">${Object.entries(d.models).map(([m,v])=>`${m.replace('claude-','').replace('-20251001','')}: ${Usage._fmtK(v.inputTokens+v.outputTokens)} tok, ${fmtCost(v.costUSD)}`).join(' · ')}</div>` : ''}`;
+        ${Object.keys(d.models||{}).length ? `<div style="margin-top:8px;color:var(--text3)">${Object.entries(d.models).map(([m,v])=>`${m.replace('claude-','').replace('-20251001','')}: ${Usage._fmtK((v.inputTokens||0)+(v.outputTokens||0))} tok`).join(' · ')}</div>` : ''}`;
       document.getElementById('srv-admin-btn')?.addEventListener('click', () => OpsPage._loadAdminUsage());
     } catch { box.innerHTML = '<div style="color:var(--text3)">Server stats unavailable</div>'; }
   },
@@ -11651,14 +11649,6 @@ const PlansPage = {
     const current = PlanGate.current();
     const cfg = PlanGate.cfg();
 
-    // ── Profitability math (Sonnet 4.6 blended ~$10.20/M, 40% input / 60% output)
-    const PLAN_ECON = {
-      free:       { tokens:'40K',  allotRaw:40000,   costPerMo:0.41,  revenue:0,  margin:null,  interactions:'~27' },
-      growth:     { tokens:'1M',   allotRaw:1000000, costPerMo:10.20, revenue:29, margin:64.8,  interactions:'~667' },
-      scale:      { tokens:'4M',   allotRaw:4000000, costPerMo:40.80, revenue:99, margin:58.8,  interactions:'~2,667' },
-      enterprise: { tokens:'Custom', allotRaw:0,     costPerMo:null,  revenue:null, margin:null, interactions:'Custom' },
-    };
-
     const plans = [
       {
         id: 'free', icon: '⚪', name: 'Free', price: '$0', period: '/month',
@@ -11731,10 +11721,10 @@ const PlansPage = {
     ];
 
     const tokPacks = [
-      { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',   per:'$18 / MTok', color:'#94a3b8', g1:'#1e293b', g2:'#0f172a', glow:'rgba(148,163,184,.25)', best:false, label:'Try it out',   emoji:'🌱' },
-      { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36',  per:'$18 / MTok', color:'#4f8cff', g1:'#1a2744', g2:'#0d1733', glow:'rgba(79,140,255,.4)',   best:false, label:'Best value',   emoji:'🚀' },
-      { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$108', per:'$18 / MTok', color:'#10d98a', g1:'#0d2b20', g2:'#061812', glow:'rgba(16,217,138,.45)',  best:true,  label:'Most popular', emoji:'⚡' },
-      { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$270', per:'$18 / MTok', color:'#a78bfa', g1:'#1e1040', g2:'#110a2a', glow:'rgba(167,139,250,.45)', best:false, label:'Power user',   emoji:'👑' },
+      { id:'starter', name:'Starter',  tokens:'500K',  raw:500000,   price:'$9',   color:'#94a3b8', g1:'#1e293b', g2:'#0f172a', glow:'rgba(148,163,184,.25)', best:false, label:'Try it out',   emoji:'🌱' },
+      { id:'growth',  name:'Growth',   tokens:'2M',    raw:2000000,  price:'$36',  color:'#4f8cff', g1:'#1a2744', g2:'#0d1733', glow:'rgba(79,140,255,.4)',   best:false, label:'Best value',   emoji:'🚀' },
+      { id:'pro',     name:'Pro',      tokens:'6M',    raw:6000000,  price:'$108', color:'#10d98a', g1:'#0d2b20', g2:'#061812', glow:'rgba(16,217,138,.45)',  best:true,  label:'Most popular', emoji:'⚡' },
+      { id:'scale',   name:'Scale',    tokens:'15M',   raw:15000000, price:'$270', color:'#a78bfa', g1:'#1e1040', g2:'#110a2a', glow:'rgba(167,139,250,.45)', best:false, label:'Power user',   emoji:'👑' },
     ];
     const bank = State.usage?.tokenBank || 0;
 
@@ -11754,7 +11744,6 @@ const PlansPage = {
             <div class="tok-v2-unit">TOKENS</div>
             <div class="tok-v2-divider" style="background:${t.color}20"></div>
             <div class="tok-v2-price">${t.price}</div>
-            <div class="tok-v2-per">${t.per}</div>
             <button class="tok-v2-btn" style="background:${t.color};box-shadow:0 4px 24px ${t.glow}" data-id="${t.id}" data-tokens="${t.raw}" data-price="${t.price}">
               Buy ${t.tokens} Tokens →
             </button>
@@ -11776,29 +11765,6 @@ const PlansPage = {
         </div>
       </div>`;
 
-    const isAdmin = Auth.user?.email === 'obaalbaki11@gmail.com';
-
-    const adminProfitTable = isAdmin ? `
-      <div style="margin-bottom:28px;padding:16px 20px;background:rgba(99,102,241,.07);border:1px solid rgba(99,102,241,.2);border-radius:12px;font-size:12px">
-        <div style="font-weight:700;color:var(--accent);margin-bottom:10px">📊 Admin: Profitability at Sonnet rates ($10.20/M blended)</div>
-        <table style="width:100%;border-collapse:collapse">
-          <thead><tr style="color:var(--text3);text-align:left">
-            <th style="padding:4px 8px">Plan</th><th style="padding:4px 8px">Tokens/mo</th><th style="padding:4px 8px">Interactions</th><th style="padding:4px 8px">My cost</th><th style="padding:4px 8px">Revenue</th><th style="padding:4px 8px">Margin</th>
-          </tr></thead>
-          <tbody>
-            ${Object.entries(PLAN_ECON).map(([id, e]) => `<tr style="border-top:1px solid var(--border)">
-              <td style="padding:5px 8px;font-weight:600;color:${PLAN_CONFIG[id]?.color||'var(--text)'}">${PLAN_CONFIG[id]?.name||id}</td>
-              <td style="padding:5px 8px">${e.tokens}</td>
-              <td style="padding:5px 8px;color:var(--text2)">${e.interactions}/mo</td>
-              <td style="padding:5px 8px;color:var(--danger)">${e.costPerMo!=null?'$'+e.costPerMo.toFixed(2)+'/mo':'negotiated'}</td>
-              <td style="padding:5px 8px;color:var(--green)">${e.revenue!=null?'$'+e.revenue+'/mo':e.revenue===0?'$0':'custom'}</td>
-              <td style="padding:5px 8px;font-weight:700;color:${e.margin&&e.margin>50?'var(--green)':e.margin?'var(--yellow)':'var(--text3)'}">${e.margin!=null?e.margin+'%':'—'}</td>
-            </tr>`).join('')}
-          </tbody>
-        </table>
-        <div style="margin-top:8px;color:var(--text3);font-size:11px">Worst-case: Growth user maxing 25 msgs/day × 30 days = 1.1M tokens ≈ $11 cost. Scale user maxing 80 msgs/day × 30 days = 3.6M tokens ≈ $36. Message cap is your primary cost protection. Real usage is typically 15–30% of cap.</div>
-      </div>` : '';
-
     const plansHTML = `
       <div class="plans-header">
         <div class="plans-current-badge" style="background:${cfg.color}18;border-color:${cfg.color}30;color:${cfg.color}">
@@ -11807,7 +11773,6 @@ const PlansPage = {
         <div class="plans-title">Simple, Transparent Pricing</div>
         <div class="plans-subtitle">Plans differ by capability — not just token quantity. Each tier unlocks new tools and access.</div>
       </div>
-      ${adminProfitTable}
       <div class="plans-grid">
         ${plans.map(p => {
           const planCfg = PLAN_CONFIG[p.id] || {};
