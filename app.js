@@ -2307,7 +2307,7 @@ const Auth = {
     const cfg = State.settings.firebaseConfig?.apiKey ? State.settings.firebaseConfig : FIREBASE_CONFIG;
     Auth._initFirebase(cfg);
 
-    document.getElementById('auth-google-btn').addEventListener('click', Auth.signInGoogle);
+    document.getElementById('auth-github-btn').addEventListener('click', Auth.signInGitHub);
     document.getElementById('auth-signin-btn').addEventListener('click', Auth.signInEmail);
     document.getElementById('auth-signup-btn').addEventListener('click', Auth.signUpEmail);
     document.getElementById('auth-guest-btn').addEventListener('click', Auth.continueAsGuest);
@@ -2411,44 +2411,32 @@ const Auth = {
     document.head.appendChild(script1);
   },
 
-  async signInGoogle() {
-    const btn = document.getElementById('auth-google-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Signing in…'; }
+  async signInGitHub() {
+    const btn = document.getElementById('auth-github-btn');
+    const origHTML = btn?.innerHTML;
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening GitHub…'; }
     try {
-      // Use GIS (our own OAuth client) to get access token — avoids Firebase's
-      // org-restricted popup which blocks non-kayrointer.com accounts
-      await GmailAPI._loadGIS();
-      const accessToken = await new Promise((resolve, reject) => {
-        const client = google.accounts.oauth2.initTokenClient({
-          client_id: GOOGLE_CLIENT_ID,
-          scope: 'https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile',
-          callback: (resp) => resp.error ? reject(new Error(resp.error)) : resolve(resp.access_token),
+      // Firebase loads asynchronously at init — poll until ready (usually <500ms)
+      if (typeof firebase === 'undefined' || !firebase.apps?.length) {
+        await new Promise((res, rej) => {
+          let tries = 0;
+          const poll = setInterval(() => {
+            if (typeof firebase !== 'undefined' && firebase.apps?.length) { clearInterval(poll); res(); }
+            else if (++tries > 30) { clearInterval(poll); rej(new Error('Firebase load timeout')); }
+          }, 100);
         });
-        client.requestAccessToken({ prompt: 'select_account' });
-      });
-
-      // Fetch Google profile
-      const info = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      }).then(r => r.json());
-
-      // Sign into Firebase using the access token as a Google credential
-      if (typeof firebase !== 'undefined') {
-        const credential = firebase.auth.GoogleAuthProvider.credential(null, accessToken);
-        await firebase.auth().signInWithCredential(credential);
-        // Firebase onAuthStateChanged will handle the rest
-      } else {
-        // Fallback: store profile locally
-        Auth.user = { uid: 'google_' + info.id, name: info.name || info.email, email: info.email, photoURL: info.picture || null, isGuest: false };
-        localStorage.setItem('kayro_auth_user', JSON.stringify(Auth.user));
-        Auth._hideOverlay();
-        Auth._renderUserArea();
-        toast(`Welcome, ${info.name || info.email}!`, 'success');
       }
+      const provider = new firebase.auth.GithubAuthProvider();
+      await firebase.auth().signInWithPopup(provider);
+      // onAuthStateChanged fires → sets Auth.user → exchanges ID token for session cookie → hides overlay
     } catch(e) {
-      Auth._showError('Google sign-in failed. Try email/password or continue as guest.');
+      if (e.code !== 'auth/popup-closed-by-user') {
+        Auth._showError(e.code === 'auth/account-exists-with-different-credential'
+          ? 'An account with this email exists — use email/password sign-in instead.'
+          : 'GitHub sign-in failed — try email/password below.');
+      }
     } finally {
-      if (btn) { btn.disabled = false; btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg> Continue with Google'; }
+      if (btn) { btn.disabled = false; if (origHTML) btn.innerHTML = origHTML; }
     }
   },
 
