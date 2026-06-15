@@ -3315,25 +3315,26 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
 
 // ── REMOTION PAGE ─────────────────────────────────────────────
 const RemotionPage = {
-  _studioUrl: 'http://localhost:3000',
-  _studioRunning: false,
   _tab: 'compositions',
   _lastHtml: null,
   _recordRunning: false,
   _onMessage: null,
+  _renderState: null,
+  _pollId: null,
 
   init(container) {
     RemotionPage._tab = 'compositions';
     RemotionPage._recordRunning = false;
+    if (!RemotionPage._renderState) {
+      try { RemotionPage._renderState = JSON.parse(localStorage.getItem('kayro_render_state') || 'null'); } catch {}
+    }
     document.getElementById('topbar-right').innerHTML = `
       <div style="display:flex;gap:3px" id="rmt-tab-bar">
         <button class="tb-btn rmt-pg-tab active" data-tab="compositions">🎬 Compositions</button>
         <button class="tb-btn rmt-pg-tab" data-tab="htmlstudio">📝 HTML Studio</button>
       </div>
-      <button class="tb-btn" id="rmt-launch-btn" style="background:#7c3aed;color:#fff;border-color:#7c3aed">▶ Start Studio</button>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
-    document.getElementById('rmt-launch-btn')?.addEventListener('click', () => RemotionPage._openStudio());
     document.getElementById('rmt-tab-bar')?.querySelectorAll('.rmt-pg-tab').forEach(btn =>
       btn.addEventListener('click', () => RemotionPage._showTab(container, btn.dataset.tab))
     );
@@ -3350,8 +3351,9 @@ const RemotionPage = {
   },
 
   _render(container) {
-    const company = State.settings.companyName || 'Kayro Interactive';
-    const accent  = State.settings.accentColor  || '#0071e3';
+    const company  = State.settings.companyName || 'Kayro Interactive';
+    const accent   = State.settings.accentColor  || '#5b2eff';
+    const industry = State.settings.industry     || '';
 
     const comps = [
       {
@@ -3360,10 +3362,9 @@ const RemotionPage = {
         name: 'Carousel',
         dims: '1080 × 1080',
         fps: 30,
-        dur: '18.5 s',
+        dur: '18.5s',
         use: 'Instagram · LinkedIn · Twitter',
-        desc: 'Apple-style 6-slide carousel. Each slide has a headline, body, and optional CTA. Auto-paced with progress dots.',
-        from: 'Social Studio',
+        desc: '6-slide carousel with headlines, body, and CTA. Auto-paced with progress dots.',
       },
       {
         id: 'KayroReel',
@@ -3371,10 +3372,9 @@ const RemotionPage = {
         name: 'Reel / Short',
         dims: '1080 × 1920',
         fps: 30,
-        dur: '30 s',
-        use: 'Instagram Reels · TikTok · Shorts',
-        desc: 'Dark cinematic 6-scene vertical reel. Each scene has on-screen text, a voiceover subtitle, and ambient glow.',
-        from: 'Social Studio',
+        dur: '30s',
+        use: 'Reels · TikTok · Shorts',
+        desc: 'Dark cinematic 6-scene vertical reel with on-screen text and ambient glow.',
       },
       {
         id: 'KayroBrandSpot',
@@ -3382,51 +3382,28 @@ const RemotionPage = {
         name: 'Brand Spot',
         dims: '1920 × 1080',
         fps: 30,
-        dur: '33 s',
+        dur: '33s',
         use: 'YouTube · LinkedIn · Presentations',
-        desc: 'Full 33-second brand film: hero opener → stats showcase → 3 feature scenes → CTA with animated ring.',
-        from: 'Ad Studio',
+        desc: '33-second brand film: hero opener → stats → features → CTA with animated ring.',
       },
     ];
 
     container.innerHTML = `<div class="rmt-root page-scroll">
 
-      <!-- HEADER -->
       <div class="rmt-header">
         <div class="rmt-header-left">
           <div class="rmt-logo">🎬</div>
           <div>
-            <div class="rmt-title">Remotion Studio</div>
-            <div class="rmt-sub">Render production-quality videos from your AI-generated content</div>
+            <div class="rmt-title">Kayro Studio</div>
+            <div class="rmt-sub">Pick a composition, preview it live, then export to MP4</div>
           </div>
         </div>
-        <div class="rmt-status-pill" id="rmt-status">
-          <span class="rmt-status-dot"></span> Studio offline
-        </div>
       </div>
 
-      <!-- START GUIDE -->
-      <div class="rmt-guide-card" id="rmt-guide">
-        <div class="rmt-guide-title">Start Remotion Studio</div>
-        <div class="rmt-guide-sub">Remotion renders at your comp's native resolution (no browser scaling). Run one terminal command:</div>
-        <div class="rmt-code-block">
-          <code id="rmt-cmd">cd kayro-hq/remotion &amp;&amp; npx remotion studio</code>
-          <button class="rmt-copy-btn" id="rmt-copy" title="Copy command">⎘</button>
-        </div>
-        <div class="rmt-guide-steps">
-          <div class="rmt-step"><span class="rmt-step-n">1</span>Open a terminal in the <code>kayro-hq</code> folder</div>
-          <div class="rmt-step"><span class="rmt-step-n">2</span>Run the command above — studio opens at <code>localhost:3000</code></div>
-          <div class="rmt-step"><span class="rmt-step-n">3</span>Click any composition card below to open it in the studio</div>
-          <div class="rmt-step"><span class="rmt-step-n">4</span>Render to MP4 with the blue Render button inside the studio</div>
-        </div>
-        <button class="rmt-check-btn" id="rmt-check">Check if running →</button>
-      </div>
-
-      <!-- COMPOSITION CARDS -->
       <div class="rmt-section-label">Compositions</div>
       <div class="rmt-comps-grid">
         ${comps.map(c => `
-          <div class="rmt-comp-card">
+          <div class="rmt-comp-card" id="rmt-card-${c.id}">
             <div class="rmt-comp-top">
               <div class="rmt-comp-icon">${c.icon}</div>
               <div class="rmt-comp-meta">
@@ -3436,107 +3413,198 @@ const RemotionPage = {
             </div>
             <div class="rmt-comp-desc">${escHtml(c.desc)}</div>
             <div class="rmt-comp-use">📺 ${escHtml(c.use)}</div>
-            <div class="rmt-comp-footer">
-              <span class="rmt-comp-source">Generated by: <b>${c.from}</b></span>
-              <button class="rmt-open-btn" data-cid="${c.id}">Open in Studio →</button>
+            <div class="rmt-comp-footer" style="display:flex;gap:8px">
+              <button class="rmt-preview-btn tb-btn" data-cid="${c.id}">▶ Preview</button>
+              <button class="rmt-export-btn" data-cid="${c.id}" style="flex:1;padding:7px 14px;border-radius:8px;border:none;background:#5b2eff;color:#fff;font-size:13px;font-weight:600;cursor:pointer">⬇ Export MP4</button>
             </div>
           </div>
         `).join('')}
       </div>
 
-      <!-- WORKFLOW SECTION -->
-      <div class="rmt-section-label" style="margin-top:28px">How it works</div>
-      <div class="rmt-workflow-row">
-        ${[
-          ['✨','Generate','Use Social Studio or Ad Studio to generate your script and content.'],
-          ['🎬','Preview','Click "Remotion Preview" in the output or open a comp card above.'],
-          ['✏️','Edit Props','Edit the defaultProps in <code>remotion/src/Root.tsx</code> or pass props via URL.'],
-          ['🎞','Render','Hit the blue Render button in Remotion Studio — exports MP4 at full resolution.'],
-        ].map(([icon,label,desc]) => `
-          <div class="rmt-wf-step">
-            <div class="rmt-wf-icon">${icon}</div>
-            <div class="rmt-wf-label">${label}</div>
-            <div class="rmt-wf-desc">${desc}</div>
-          </div>
-        `).join('')}
+      <div class="rmt-section-label" style="margin-top:28px">Live Preview</div>
+      <div id="rmt-preview-wrap" style="min-height:120px;background:var(--surface2,#f5f5f7);border-radius:12px;border:1px solid var(--border,rgba(0,0,0,0.08));overflow:hidden;display:flex;align-items:center;justify-content:center">
+        <div id="rmt-preview-ph" style="color:var(--text3,#999);font-size:14px;padding:48px 24px;text-align:center">Click "▶ Preview" on any composition to see an animated preview</div>
+        <iframe id="rmt-player-frame" style="display:none;width:100%;border:none" allowfullscreen></iframe>
       </div>
 
-      <!-- EMBEDDED PREVIEW -->
-      <div class="rmt-section-label" style="margin-top:28px">Live Preview</div>
-      <div class="rmt-iframe-wrap" id="rmt-iframe-wrap">
-        <div class="rmt-iframe-placeholder" id="rmt-iframe-ph">
-          <div>Studio is not running</div>
-          <div style="font-size:12px;opacity:.6;margin-top:6px">Start it with the command above, then click "Check if running"</div>
-        </div>
-      </div>
+      <div id="rmt-render-panel" style="margin-top:20px"></div>
 
     </div>`;
 
-    // Wire buttons
-    container.querySelectorAll('.rmt-open-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        if (!RemotionPage._studioRunning) {
-          toast('Remotion Studio requires a local server — run the command above, then click "Check if running →"', 'info');
-          document.getElementById('rmt-guide')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-          return;
-        }
-        const url = `${RemotionPage._studioUrl}?compositionId=${btn.dataset.cid}`;
-        window.open(url, '_blank');
-        toast('Opening composition in Remotion Studio', 'success');
-      });
+    container.querySelectorAll('.rmt-preview-btn').forEach(btn => {
+      btn.addEventListener('click', () => RemotionPage._preview(btn.dataset.cid, company, accent, industry));
     });
 
-    document.getElementById('rmt-copy')?.addEventListener('click', () => {
-      navigator.clipboard.writeText('cd kayro-hq/remotion && npx remotion studio');
-      const btn = document.getElementById('rmt-copy');
-      if (btn) { btn.textContent = '✓'; setTimeout(() => { btn.textContent = '⎘'; }, 2000); }
+    container.querySelectorAll('.rmt-export-btn').forEach(btn => {
+      btn.addEventListener('click', () => RemotionPage._startExport(btn.dataset.cid, company, accent, industry));
     });
 
-    document.getElementById('rmt-check')?.addEventListener('click', () => RemotionPage._checkStudio(container));
+    const saved = RemotionPage._renderState;
+    if (saved && saved.state && saved.state !== 'idle') RemotionPage._renderPanel(saved);
   },
 
-  async _checkStudio(container) {
-    const pill = document.getElementById('rmt-status');
-    const btn  = document.getElementById('rmt-check');
-    if (btn)  btn.textContent = 'Checking…';
-    if (pill) pill.innerHTML  = '<span class="rmt-status-dot rmt-status-dot--checking"></span> Checking…';
+  _preview(compId, company, accent, industry) {
+    const frame = document.getElementById('rmt-player-frame');
+    const ph    = document.getElementById('rmt-preview-ph');
+    if (!frame || !ph) return;
+
+    const co = encodeURIComponent(company  || State.settings.companyName || 'Kayro Interactive');
+    const ac = encodeURIComponent(accent   || State.settings.accentColor  || '#5b2eff');
+    const to = encodeURIComponent(industry || State.settings.industry     || '');
+
+    const heights = { KayroCarousel: '560px', KayroReel: '640px', KayroBrandSpot: '480px' };
+    frame.style.height = heights[compId] || '520px';
+    frame.src = `player.html?comp=${compId}&company=${co}&accent=${ac}&topic=${to}`;
+    frame.style.display = 'block';
+    ph.style.display = 'none';
+
+    document.querySelectorAll('.rmt-comp-card').forEach(c => { c.style.outline = ''; });
+    const card = document.getElementById(`rmt-card-${compId}`);
+    if (card) card.style.outline = '2px solid var(--accent,#5b2eff)';
+
+    document.getElementById('rmt-preview-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  },
+
+  async _startExport(compId, company, accent, industry) {
+    const existing = RemotionPage._renderState;
+    if (existing && (existing.state === 'submitting' || existing.state === 'rendering')) {
+      toast('A render is already in progress', 'info');
+      document.getElementById('rmt-render-panel')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      return;
+    }
+
+    const state = { state: 'submitting', comp: compId, progress: 0, downloadUrl: null, renderId: null, bucketName: null, error: null };
+    RemotionPage._saveRenderState(state);
+    RemotionPage._renderPanel(state);
 
     try {
-      // Try a no-cors HEAD request — if it doesn't throw, port is open
-      await fetch(`${RemotionPage._studioUrl}`, { mode: 'no-cors', signal: AbortSignal.timeout(3000) });
-      // Running
-      RemotionPage._studioRunning = true;
-      if (pill) pill.innerHTML = '<span class="rmt-status-dot rmt-status-dot--on"></span> Studio running';
-      if (pill) pill.classList.add('rmt-status--on');
-      const guide = document.getElementById('rmt-guide');
-      if (guide) guide.style.display = 'none';
-      RemotionPage._embedStudio(container);
-      toast('Remotion Studio is running ✓', 'success');
-    } catch(_) {
-      if (pill) pill.innerHTML = '<span class="rmt-status-dot"></span> Studio offline';
-      if (pill) pill.classList.remove('rmt-status--on');
-      toast('Remotion Studio not detected — run the command and try again', 'error');
+      const res = await fetch(`${BACKEND_URL}/api/render`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          composition: compId,
+          inputProps: {
+            company:  company  || State.settings.companyName || '',
+            accent:   accent   || State.settings.accentColor  || '',
+            industry: industry || State.settings.industry     || '',
+          },
+          codec: 'h264',
+        }),
+      });
+      const r = await res.json();
+
+      if (r.error) {
+        const s = { ...state, state: 'error', error: r.message || r.error };
+        RemotionPage._saveRenderState(s);
+        RemotionPage._renderPanel(s);
+        return;
+      }
+
+      const s = { ...state, state: 'rendering', renderId: r.renderId, bucketName: r.bucketName, progress: 0 };
+      RemotionPage._saveRenderState(s);
+      RemotionPage._renderPanel(s);
+      RemotionPage._pollRender(s);
+    } catch (e) {
+      const s = { ...state, state: 'error', error: e.message || 'Request failed' };
+      RemotionPage._saveRenderState(s);
+      RemotionPage._renderPanel(s);
     }
-    if (btn) btn.textContent = 'Check if running →';
   },
 
-  _embedStudio(container) {
-    const wrap = document.getElementById('rmt-iframe-wrap');
-    if (!wrap) return;
-    const ph = document.getElementById('rmt-iframe-ph');
-    if (ph) ph.style.display = 'none';
-    if (!wrap.querySelector('iframe')) {
-      const frame = document.createElement('iframe');
-      frame.src = RemotionPage._studioUrl;
-      frame.className = 'rmt-iframe';
-      frame.allow = 'autoplay';
-      wrap.appendChild(frame);
-    }
+  _pollRender(state) {
+    if (!state.renderId) return;
+    if (RemotionPage._pollId) clearInterval(RemotionPage._pollId);
+    RemotionPage._pollId = setInterval(async () => {
+      try {
+        const r = await fetch(
+          `${BACKEND_URL}/api/render/progress?renderId=${encodeURIComponent(state.renderId)}&bucketName=${encodeURIComponent(state.bucketName)}`,
+          { credentials: 'include' }
+        ).then(res => res.json());
+
+        if (r.error) {
+          clearInterval(RemotionPage._pollId);
+          const s = { ...state, state: 'error', error: r.message || r.error };
+          RemotionPage._saveRenderState(s);
+          RemotionPage._renderPanel(s);
+          return;
+        }
+        if (r.done) {
+          clearInterval(RemotionPage._pollId);
+          const s = { ...state, state: 'done', downloadUrl: r.url, progress: 1 };
+          RemotionPage._saveRenderState(s);
+          RemotionPage._renderPanel(s);
+          toast('Your video is ready — click Download MP4!', 'success', 6000);
+          return;
+        }
+        const s = { ...state, progress: r.overallProgress || 0 };
+        RemotionPage._saveRenderState(s);
+        RemotionPage._renderPanel(s);
+      } catch (_) {}
+    }, 3000);
   },
 
-  _openStudio() {
-    window.open(RemotionPage._studioUrl, '_blank');
-    toast('Opening Remotion Studio in new tab — make sure it\'s running: cd kayro-hq/remotion && npx remotion studio', 'info');
+  _saveRenderState(state) {
+    RemotionPage._renderState = state;
+    try { localStorage.setItem('kayro_render_state', JSON.stringify(state)); } catch {}
+  },
+
+  _renderPanel(state) {
+    const panel = document.getElementById('rmt-render-panel');
+    if (!panel) return;
+    if (!state || state.state === 'idle') { panel.innerHTML = ''; return; }
+
+    const compLabel = { KayroCarousel: 'Carousel', KayroReel: 'Reel / Short', KayroBrandSpot: 'Brand Spot' }[state.comp] || state.comp || '';
+    const pct = Math.round((state.progress || 0) * 100);
+    const base = 'padding:20px 24px;border-radius:12px;border:1px solid;margin-top:8px';
+
+    if (state.state === 'submitting') {
+      panel.innerHTML = `<div style="${base};border-color:rgba(91,46,255,.2);background:rgba(91,46,255,.04)">
+        <div style="display:flex;align-items:center;gap:12px;color:var(--text)">
+          <div style="width:18px;height:18px;border:2px solid #5b2eff;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0"></div>
+          <span>Submitting render — <b>${escHtml(compLabel)}</b>…</span>
+        </div>
+      </div>`;
+    } else if (state.state === 'rendering') {
+      panel.innerHTML = `<div style="${base};border-color:rgba(91,46,255,.2);background:rgba(91,46,255,.04)">
+        <div style="margin-bottom:10px;font-size:14px;color:var(--text)">Rendering <b>${escHtml(compLabel)}</b> — ${pct}%</div>
+        <div style="height:6px;background:var(--border,rgba(0,0,0,.08));border-radius:3px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:#5b2eff;border-radius:3px;transition:width .4s ease"></div>
+        </div>
+      </div>`;
+    } else if (state.state === 'done') {
+      panel.innerHTML = `<div style="${base};border-color:rgba(34,197,94,.3);background:rgba(34,197,94,.05)">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px">✓ Render complete — <b>${escHtml(compLabel)}</b></div>
+        <div style="display:flex;gap:8px">
+          <a href="${escHtml(state.downloadUrl || '')}" download="kayro-${escHtml(state.comp || 'video')}.mp4" style="padding:8px 18px;border-radius:8px;background:#22c55e;color:#fff;font-size:13px;font-weight:600;text-decoration:none">⬇ Download MP4</a>
+          <button id="rmt-render-clear" style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer">Clear</button>
+        </div>
+      </div>`;
+      document.getElementById('rmt-render-clear')?.addEventListener('click', () => {
+        RemotionPage._saveRenderState({ state: 'idle' });
+        panel.innerHTML = '';
+      });
+    } else if (state.state === 'error') {
+      panel.innerHTML = `<div style="${base};border-color:rgba(239,68,68,.25);background:rgba(239,68,68,.04)">
+        <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:6px">Export unavailable</div>
+        <div style="font-size:13px;color:var(--text2);margin-bottom:12px">${escHtml(state.error || 'Unknown error')}</div>
+        <div style="display:flex;gap:8px">
+          <button id="rmt-render-retry" data-cid="${escHtml(state.comp || '')}" style="padding:7px 14px;border-radius:8px;border:none;background:#5b2eff;color:#fff;font-size:13px;font-weight:600;cursor:pointer">Retry</button>
+          <button id="rmt-render-clear" style="padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:13px;cursor:pointer">Dismiss</button>
+        </div>
+      </div>`;
+      document.getElementById('rmt-render-retry')?.addEventListener('click', (e) => {
+        const cid = e.currentTarget.dataset.cid;
+        RemotionPage._saveRenderState({ state: 'idle' });
+        RemotionPage._startExport(cid);
+      });
+      document.getElementById('rmt-render-clear')?.addEventListener('click', () => {
+        RemotionPage._saveRenderState({ state: 'idle' });
+        panel.innerHTML = '';
+      });
+    }
+
+    panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   // ── HTML STUDIO ────────────────────────────────────────────────
@@ -3825,6 +3893,7 @@ const RemotionPage = {
     if (RemotionPage._onMessage) window.removeEventListener('message', RemotionPage._onMessage);
     window.removeEventListener('resize', RemotionPage._scalePreview);
     RemotionPage._recordRunning = false;
+    if (RemotionPage._pollId) { clearInterval(RemotionPage._pollId); RemotionPage._pollId = null; }
   },
 };
 
@@ -4542,7 +4611,7 @@ const Router = {
       el.classList.toggle('active', el.dataset.page===page));
     const container = document.getElementById('page-container');
     container.innerHTML = '';
-    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Remotion Studio',slides:'Slide Decks',company:'Company Profile',travel:'Travel Concierge',freight:'Freight & Logistics'};
+    const titles = {hq:'Headquarters',tasks:'Tasks',spreadsheet:'Spreadsheet',email:'Cold Email',settings:'Settings',design:'Design Studio',adstudio:'Ad Studio',socialstudio:'Social Studio',memory:'Brain',ops:'Operations',apollo:'Apollo.io — Lead Intelligence',meta:'Meta Ads Manager',plans:'Plans & Pricing',compete:'Competitive Intelligence',security:'Security Dashboard',skills:'Skills & Tutorials',automations:'Automations',accounting:'Accounting',investments:'Investments',orchestrator:'AI Orchestrator',sales:'Inside Sales',legal:'Legal Advisor',marketing:'Marketing Strategist',hr:'HR Manager',seo:'SEO Specialist',social:'Social Media',support:'Customer Support',data:'Data Analyst',pr:'PR & Comms',connectors:'Connectors',swarm:'Swarm Mode',remotion:'Kayro Studio',slides:'Slide Decks',company:'Company Profile',travel:'Travel Concierge',freight:'Freight & Logistics'};
     document.getElementById('topbar-title').textContent = titles[page]||page;
     document.getElementById('topbar-right').innerHTML = '<button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>';
     document.getElementById('chat-toggle-btn').addEventListener('click',()=>Chat.toggle());
@@ -10270,11 +10339,10 @@ const AdStudio = {
             const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'cleo-video-script.md'; a.click(); URL.revokeObjectURL(a.href);
           });
           bar.querySelector('.video-remotion-btn').addEventListener('click', () => {
-            const company = State.settings?.companyName || 'Kayro Interactive';
-            const accent = State.settings?.accentColor || '#0071e3';
-            const url = `http://localhost:3000?compositionId=KayroBrandSpot`;
-            window.open(url, '_blank');
-            toast('Opening Brand Spot in Remotion — run: cd kayro-hq/remotion && npx remotion studio', 'info');
+            const co = encodeURIComponent(State.settings?.companyName || 'Kayro Interactive');
+            const ac = encodeURIComponent(State.settings?.accentColor || '#5b2eff');
+            window.open(`player.html?comp=KayroBrandSpot&company=${co}&accent=${ac}`, '_blank');
+            toast('Opening Brand Spot preview ✓', 'success');
           });
           bubbleEl.appendChild(bar);
           msgs.scrollTop = msgs.scrollHeight;
@@ -11085,14 +11153,11 @@ CRITICAL: Output ONLY valid JSON. No markdown fences. No text before or after. S
 
     document.getElementById('soc-remotion-btn')?.addEventListener('click', () => {
       const compId = fmt === 'reel' ? 'KayroReel' : 'KayroCarousel';
-      const company = State.settings?.companyName || 'Kayro Interactive';
-      const accent = State.settings?.accentColor || '#0071e3';
-      const props = fmt === 'reel'
-        ? { topic: data.topic||'', scenes: data.scenes||[], accentColor: accent, company }
-        : { topic: data.topic||'', slides: data.slides||[], accentColor: accent, company };
-      const url = `http://localhost:3000?compositionId=${compId}&inputProps=${encodeURIComponent(JSON.stringify(props))}`;
-      window.open(url, '_blank');
-      toast('Opening Remotion Studio — make sure it\'s running: cd remotion && npx remotion studio', 'info');
+      const co = encodeURIComponent(State.settings?.companyName || 'Kayro Interactive');
+      const ac = encodeURIComponent(State.settings?.accentColor || '#5b2eff');
+      const to = encodeURIComponent(data.topic || '');
+      window.open(`player.html?comp=${compId}&company=${co}&accent=${ac}&topic=${to}`, '_blank');
+      toast('Opening composition preview ✓', 'success');
     });
 
     right.querySelectorAll('.soc-copy-slide').forEach(btn => {

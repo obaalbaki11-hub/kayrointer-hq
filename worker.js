@@ -185,6 +185,18 @@ export default {
         if (path === '/api/payments/charge')   return handleCharge(request, env, origin, authR.session);
       }
 
+      // Render (Remotion Lambda) — requires auth
+      if (path === '/api/render') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleRenderStart(request, env, origin);
+      }
+      if (path === '/api/render/progress') {
+        const authR = await requireSession(request, env, origin);
+        if (!authR.ok) return authR.response;
+        return handleRenderProgress(request, env, origin);
+      }
+
       return err('Not found', 404, origin);
     } catch (e) {
       console.error(e);
@@ -1774,4 +1786,39 @@ async function handleCharge(request, env, origin, session) {
     amount: intent.amount / 100,
     currency: intent.currency,
   }, 200, origin);
+}
+
+// ── RENDER (Remotion Lambda) ──────────────────────────────────────────────────
+
+const RENDER_COMP_ALLOWLIST = new Set(['KayroCarousel', 'KayroReel', 'KayroBrandSpot']);
+
+async function handleRenderStart(request, env, origin) {
+  if (request.method !== 'POST') return err('Method not allowed', 405, origin);
+  let body;
+  try { body = await request.json(); } catch { return err('Invalid request body', 400, origin); }
+  const { composition, inputProps = {}, codec = 'h264' } = body;
+  if (!composition || !RENDER_COMP_ALLOWLIST.has(composition)) {
+    return err(`Invalid composition. Must be one of: ${[...RENDER_COMP_ALLOWLIST].join(', ')}`, 400, origin);
+  }
+  if (!env.REMOTION_FUNCTION_NAME || !env.REMOTION_SERVE_URL) {
+    return json({
+      error: 'RENDER_NOT_CONFIGURED',
+      message: 'Cloud rendering is not yet enabled. Contact support@kayrointer.com to activate video exports.',
+    }, 503, origin);
+  }
+  // TODO: invoke Remotion Lambda via AWS SigV4 once REMOTION_FUNCTION_NAME, REMOTION_SERVE_URL,
+  // REMOTION_AWS_ACCESS_KEY_ID, REMOTION_AWS_SECRET_ACCESS_KEY, REMOTION_AWS_REGION are set in wrangler.toml
+  return json({ error: 'RENDER_NOT_CONFIGURED', message: 'Lambda invocation not yet wired. Contact support.' }, 503, origin);
+}
+
+async function handleRenderProgress(request, env, origin) {
+  const url = new URL(request.url);
+  const renderId = url.searchParams.get('renderId');
+  const bucketName = url.searchParams.get('bucketName');
+  if (!renderId || !bucketName) return err('renderId and bucketName required', 400, origin);
+  if (!env.REMOTION_FUNCTION_NAME) {
+    return json({ error: 'RENDER_NOT_CONFIGURED' }, 503, origin);
+  }
+  // TODO: poll Remotion Lambda progress once credentials are configured
+  return json({ error: 'RENDER_NOT_CONFIGURED' }, 503, origin);
 }

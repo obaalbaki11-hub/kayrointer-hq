@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kayro Studio — Preview</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,'Helvetica Neue',sans-serif;-webkit-font-smoothing:antialiased}
+
+/* ── SHARED PREVIEW SHELL ── */
+.preview-root{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:#111;position:relative}
+.comp-frame{position:relative;overflow:hidden;border-radius:4px;box-shadow:0 0 0 1px rgba(255,255,255,.08)}
+
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.35);font-size:13px;letter-spacing:.05em}
+
+/* ── CAROUSEL (1080×1080 square) ── */
+.carousel-preview{width:100%;height:100%;position:relative;background:#f5f5f7}
+.carousel-slide{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10%;opacity:0;transition:opacity .5s ease}
+.carousel-slide.active{opacity:1}
+.carousel-slide.light{background:#fff}
+.carousel-slide.accent{background:var(--accent)}
+.c-badge{font-size:1.1vw;font-weight:700;letter-spacing:.15em;text-transform:uppercase;color:var(--accent);font-family:monospace;margin-bottom:4%}
+.carousel-slide.accent .c-badge{color:rgba(255,255,255,.7)}
+.c-headline{font-size:4.8vw;font-weight:900;letter-spacing:-.05em;line-height:1.05;color:#1d1d1f;text-align:center;margin-bottom:3%}
+.carousel-slide.accent .c-headline{color:#fff;font-size:3.8vw}
+.c-body{font-size:2vw;font-weight:400;line-height:1.6;color:#6e6e73;text-align:center;max-width:76%}
+.carousel-slide.accent .c-body{color:rgba(255,255,255,.8)}
+.c-cta{margin-top:8%;background:#fff;color:var(--accent);padding:2% 6%;border-radius:999px;font-size:1.8vw;font-weight:700;box-shadow:0 8px 32px rgba(0,0,0,.15)}
+.c-dots{position:absolute;bottom:5%;right:6%;display:flex;gap:1.2%}
+.c-dot{height:.6vw;border-radius:.3vw;background:var(--accent);opacity:.3;transition:all .3s}
+.c-dot.active{width:2.2vw;opacity:1}
+.c-dot:not(.active){width:.6vw}
+.carousel-slide.accent .c-dot{background:#fff}
+.c-company{position:absolute;bottom:5%;left:6%;font-size:1.1vw;color:#aeaeb2;font-weight:500;letter-spacing:.02em}
+.carousel-slide.accent .c-company{color:rgba(255,255,255,.5)}
+
+/* ── REEL (1080×1920 vertical) ── */
+.reel-preview{width:100%;height:100%;position:relative;overflow:hidden}
+.reel-scene{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:12% 8%;opacity:0;transition:opacity .6s ease}
+.reel-scene.active{opacity:1}
+.reel-glow{position:absolute;top:-10%;right:-15%;width:70%;height:70%;border-radius:50%;background:var(--accent);opacity:.06;filter:blur(80px);pointer-events:none}
+.r-bar{width:6vw;height:.5vw;border-radius:.25vw;background:var(--accent);margin-bottom:5%;transform-origin:left;animation:stripeIn .4s ease forwards;opacity:0}
+.reel-scene.active .r-bar{animation:stripeIn .35s .1s ease forwards}
+@keyframes stripeIn{from{opacity:0;transform:scaleX(0)}to{opacity:1;transform:scaleX(1)}}
+.r-counter{font-size:1.8vw;font-weight:600;letter-spacing:.3em;text-transform:uppercase;color:var(--accent);margin-bottom:5%;opacity:0}
+.reel-scene.active .r-counter{animation:fadeUp .4s .2s ease forwards}
+.r-headline{font-size:7.5vw;font-weight:900;letter-spacing:-.04em;line-height:1.05;color:#fff;text-align:center;margin-bottom:4%;opacity:0}
+.reel-scene.active .r-headline{animation:fadeUp .45s .3s ease forwards}
+.r-body{font-size:2.5vw;font-weight:400;line-height:1.6;color:rgba(255,255,255,.65);text-align:center;max-width:84%;opacity:0}
+.reel-scene.active .r-body{animation:fadeUp .4s .45s ease forwards}
+.r-cta{margin-top:10%;background:var(--accent);color:#fff;padding:3% 10%;border-radius:999px;font-size:3vw;font-weight:800;box-shadow:0 16px 48px rgba(0,0,0,.4);opacity:0}
+.reel-scene.active .r-cta{animation:fadeUp .45s .6s ease forwards}
+.r-top{position:absolute;top:5%;left:6%;right:6%;display:flex;justify-content:space-between;align-items:center}
+.r-scene-num{font-size:1.8vw;font-weight:600;letter-spacing:.3em;color:rgba(255,255,255,.35)}
+.r-company{font-size:1.8vw;font-weight:700;color:var(--accent);letter-spacing:.04em}
+.r-progress{position:absolute;bottom:0;left:0;right:0;height:.5vw;background:rgba(255,255,255,.08)}
+.r-progress-fill{height:100%;background:var(--accent);border-radius:0 .25vw .25vw 0;transition:width .1s linear}
+@keyframes fadeUp{from{opacity:0;transform:translateY(3vw)}to{opacity:1;transform:translateY(0)}}
+
+/* ── BRAND SPOT (1920×1080 widescreen) ── */
+.brand-preview{width:100%;height:100%;position:relative;overflow:hidden}
+.brand-scene{position:absolute;inset:0;opacity:0;transition:opacity .7s ease}
+.brand-scene.active{opacity:1}
+
+/* Hero scene */
+.bs-hero{display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#0a0a0f,#12121f);padding:6%}
+.bs-glow{position:absolute;top:5%;left:50%;transform:translateX(-50%);width:40%;height:60%;border-radius:50%;background:var(--accent);opacity:.06;filter:blur(100px)}
+.bs-logo{width:8%;aspect-ratio:1;border-radius:22%;background:var(--accent);display:flex;align-items:center;justify-content:center;font-size:4vw;font-weight:900;color:#fff;margin-bottom:4%;box-shadow:0 2vw 5vw rgba(0,0,0,.3);opacity:0}
+.brand-scene.active .bs-logo{animation:popIn .4s .15s ease forwards}
+@keyframes popIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+.bs-company{font-size:8vw;font-weight:900;letter-spacing:-.06em;color:#fff;text-align:center;line-height:1;margin-bottom:3%;opacity:0}
+.brand-scene.active .bs-company{animation:fadeUp2 .5s .3s ease forwards}
+.bs-tagline{font-size:2vw;font-weight:400;color:rgba(255,255,255,.5);text-align:center;max-width:60%;line-height:1.5;opacity:0}
+.brand-scene.active .bs-tagline{animation:fadeUp2 .5s .5s ease forwards}
+@keyframes fadeUp2{from{opacity:0;transform:translateY(2vw)}to{opacity:1;transform:translateY(0)}}
+
+/* Stats scene */
+.bs-stats{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;padding:6%}
+.bs-stats-lbl{font-size:1vw;font-weight:700;letter-spacing:.35em;text-transform:uppercase;color:var(--accent);margin-bottom:2%}
+.bs-stats-headline{font-size:4vw;font-weight:800;letter-spacing:-.04em;color:#1d1d1f;margin-bottom:6%;text-align:center}
+.bs-stats-row{display:flex;gap:8%;justify-content:center}
+.bs-stat{text-align:center;opacity:0}
+.brand-scene.active .bs-stat:nth-child(1){animation:fadeUp2 .45s .15s ease forwards}
+.brand-scene.active .bs-stat:nth-child(2){animation:fadeUp2 .45s .3s ease forwards}
+.brand-scene.active .bs-stat:nth-child(3){animation:fadeUp2 .45s .45s ease forwards}
+.bs-stat-num{font-size:7vw;font-weight:900;letter-spacing:-.05em;color:var(--accent);line-height:1}
+.bs-stat-lbl{font-size:1.4vw;font-weight:500;color:#6e6e73;margin-top:.5%}
+
+/* CTA scene */
+.bs-cta-scene{display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--accent);padding:6%;overflow:hidden}
+.bs-ring{position:absolute;width:50%;aspect-ratio:1;border-radius:50%;border:2px solid rgba(255,255,255,.25);animation:ringPulse 2s ease-in-out infinite}
+@keyframes ringPulse{0%,100%{transform:scale(.9);opacity:.3}50%{transform:scale(1.1);opacity:.1}}
+.bs-cta-eyebrow{font-size:1.1vw;font-weight:700;letter-spacing:.4em;text-transform:uppercase;color:rgba(255,255,255,.6);margin-bottom:2%;opacity:0}
+.brand-scene.active .bs-cta-eyebrow{animation:fadeUp2 .4s .1s ease forwards}
+.bs-cta-headline{font-size:5.5vw;font-weight:900;letter-spacing:-.05em;color:#fff;text-align:center;line-height:1.08;margin-bottom:5%;opacity:0}
+.brand-scene.active .bs-cta-headline{animation:fadeUp2 .5s .25s ease forwards}
+.bs-cta-pill{background:#fff;color:var(--accent);padding:2% 6%;border-radius:999px;font-size:2.2vw;font-weight:800;letter-spacing:-.02em;box-shadow:0 2vw 5vw rgba(0,0,0,.2);opacity:0}
+.brand-scene.active .bs-cta-pill{animation:fadeUp2 .45s .4s ease forwards}
+
+/* ── CONTROLS BAR ── */
+.player-bar{position:absolute;bottom:0;left:0;right:0;height:40px;background:rgba(0,0,0,.7);backdrop-filter:blur(12px);display:flex;align-items:center;gap:10px;padding:0 12px;z-index:10;border-top:1px solid rgba(255,255,255,.08)}
+.pb-play{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);border:none;cursor:pointer;color:#fff;font-size:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background .15s}
+.pb-play:hover{background:rgba(255,255,255,.25)}
+.pb-track{flex:1;height:3px;background:rgba(255,255,255,.12);border-radius:2px;position:relative;cursor:pointer}
+.pb-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .1s linear;pointer-events:none}
+.pb-time{font-size:10px;color:rgba(255,255,255,.45);font-family:monospace;flex-shrink:0;min-width:36px;text-align:right}
+.pb-label{font-size:10px;color:rgba(255,255,255,.3);letter-spacing:.04em;flex-shrink:0}
+</style>
+</head>
+<body>
+<div class="preview-root" id="root">
+  <div class="loading" id="loading">Loading preview…</div>
+</div>
+<script>
+(function() {
+  const params = new URLSearchParams(location.search);
+  const comp    = params.get('comp')    || 'KayroReel';
+  const company = params.get('company') || 'Kayro Interactive';
+  const accent  = params.get('accent')  || '#0071e3';
+  const topic   = params.get('topic')   || '';
+
+  document.documentElement.style.setProperty('--accent', accent);
+
+  const root = document.getElementById('root');
+  document.getElementById('loading').remove();
+
+  /* ─────────────────── CAROUSEL ─────────────────── */
+  if (comp === 'KayroCarousel') {
+    const slides = [
+      { badge:'01 / hook', headline:'AI is eating business.', body:'Every industry. Every function. Every team.', cls:'accent' },
+      { badge:'02 / content', headline:'Your competitors are already using it.', body:"While you're reading this, they're automating what took days into minutes.", cls:'light' },
+      { badge:'03 / content', headline:'The cost of inaction?', body:'Market share, team bandwidth, and the speed to ship what matters.', cls:'light' },
+      { badge:'04 / content', headline:'The tools exist. Right now.', body:'AI employees for sales, marketing, ops — 24/7.', cls:'light' },
+      { badge:'05 / content', headline:'What changes when you deploy?', body:'Your team focuses on strategy. AI handles execution.', cls:'light' },
+      { badge:'06 / cta', headline:'Ready to build your AI workforce?', body:'', cta:'Get Started Free →', cls:'accent' },
+    ];
+
+    const N = slides.length;
+    let current = 0;
+    let playing = true;
+    let interval = null;
+    let elapsed = 0; // tenths of a second
+    const slideMs = 3000; // 3s per slide
+    const totalMs = slideMs * N;
+
+    root.innerHTML = `
+      <div class="comp-frame" style="width:min(100vw,100vh);height:min(100vw,100vh);position:relative">
+        <div class="carousel-preview" id="cp">
+          ${slides.map((s, i) => `
+            <div class="carousel-slide ${s.cls}${i===0?' active':''}">
+              <div class="c-badge">${s.badge}</div>
+              <div class="c-headline">${s.headline}</div>
+              ${s.body ? `<div class="c-body">${s.body}</div>` : ''}
+              ${s.cta  ? `<div class="c-cta">${s.cta}</div>` : ''}
+              <div class="c-company">${company}</div>
+              <div class="c-dots">
+                ${Array.from({length:N}).map((_,j)=>`<div class="c-dot${j===i?' active':''}"></div>`).join('')}
+              </div>
+            </div>`).join('')}
+        </div>
+        <div class="player-bar">
+          <button class="pb-play" id="pb-play">⏸</button>
+          <div class="pb-track" id="pb-track"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+          <div class="pb-time" id="pb-time">0:00</div>
+          <div class="pb-label">CAROUSEL</div>
+        </div>
+      </div>`;
+
+    const slides_els = root.querySelectorAll('.carousel-slide');
+    const dots_all   = root.querySelectorAll('.c-dot');
+
+    function goTo(i) {
+      slides_els.forEach(e => e.classList.remove('active'));
+      slides_els[i].classList.add('active');
+      dots_all.forEach((d, j) => d.classList.toggle('active', j === i));
+      // Sync dots within each slide
+      root.querySelectorAll(`.carousel-slide:nth-child(${i+1}) .c-dot`).forEach((d,j)=>d.classList.toggle('active',j===i));
+    }
+
+    function tick() {
+      elapsed += 100;
+      const pct = (elapsed % totalMs) / totalMs * 100;
+      document.getElementById('pb-fill').style.width = pct + '%';
+      const s = Math.floor(elapsed / 1000) % (totalMs / 1000);
+      const mm = Math.floor(s/60), ss = s%60;
+      document.getElementById('pb-time').textContent = mm+':'+(ss<10?'0':'')+ss;
+      const slide = Math.floor((elapsed % totalMs) / slideMs);
+      if (slide !== current) { current = slide; goTo(current); }
+    }
+
+    function startPlay() { interval = setInterval(tick, 100); }
+    function pause() { clearInterval(interval); interval = null; }
+
+    startPlay();
+
+    document.getElementById('pb-play').addEventListener('click', () => {
+      playing = !playing;
+      document.getElementById('pb-play').textContent = playing ? '⏸' : '▶';
+      playing ? startPlay() : pause();
+    });
+
+    document.getElementById('pb-track').addEventListener('click', e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      const pct = (e.clientX - rect.left) / rect.width;
+      elapsed = Math.floor(pct * totalMs / 100) * 100;
+    });
+  }
+
+  /* ─────────────────── REEL ─────────────────── */
+  else if (comp === 'KayroReel') {
+    const scenes = [
+      { n:'01', headline:'What if your team never slept?', body:'Imagine a workforce that works 24/7, without burnout.' },
+      { n:'02', headline:'AI Employees. Real Results.', body:'Sales outreach, content, support — all at once.' },
+      { n:'03', headline:'10x your output.', body:'Teams using Kayro ship 10x more in the same hours.' },
+      { n:'04', headline:'Set it. Run it. Scale it.', body:'Deploy AI agents in minutes. Focus on strategy.' },
+      { n:'05', headline:'Every role. Covered.', body:'28 specialists across every business function.' },
+      { n:'06', headline:'Start today.', body:'', cta:'Get Started →' },
+    ];
+
+    const N = scenes.length;
+    let current = 0;
+    let elapsed = 0;
+    let playing = true;
+    let interval = null;
+    const sceneSecs = 5;
+    const totalMs = sceneSecs * N * 1000;
+
+    const bgs = [
+      'linear-gradient(160deg,#0a0a0a,#1a1a2e)',
+      'linear-gradient(160deg,#0f0f1a,#1e1e3f)',
+      'linear-gradient(160deg,#0a1628,#0d2137)',
+      'linear-gradient(160deg,#0a0a0a,#2a1a0e)',
+      'linear-gradient(160deg,#0d1a0d,#1a2e1a)',
+      accent, // last scene uses accent bg
+    ];
+
+    root.innerHTML = `
+      <div class="comp-frame" style="width:min(56.25vh,100vw);height:min(177.78vw,100vh);position:relative">
+        <div class="reel-preview" id="rp">
+          ${scenes.map((s, i) => `
+            <div class="reel-scene${i===0?' active':''}" style="background:${bgs[i]}">
+              <div class="reel-glow"></div>
+              <div class="r-top">
+                <div class="r-scene-num">${s.n} / ${String(N).padStart(2,'0')}</div>
+                <div class="r-company">${company}</div>
+              </div>
+              <div class="r-bar"></div>
+              <div class="r-counter">${s.n}</div>
+              <div class="r-headline">${s.headline}</div>
+              <div class="r-body">${s.body}</div>
+              ${s.cta ? `<div class="r-cta">${s.cta}</div>` : ''}
+              <div class="r-progress"><div class="r-progress-fill" style="width:0%"></div></div>
+            </div>`).join('')}
+        </div>
+        <div class="player-bar">
+          <button class="pb-play" id="pb-play">⏸</button>
+          <div class="pb-track" id="pb-track"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+          <div class="pb-time" id="pb-time">0:00</div>
+          <div class="pb-label">REEL · 9:16</div>
+        </div>
+      </div>`;
+
+    const scene_els = root.querySelectorAll('.reel-scene');
+    function goTo(i) {
+      scene_els.forEach(e => e.classList.remove('active'));
+      scene_els[i].classList.add('active');
+    }
+
+    function tick() {
+      elapsed += 100;
+      const totalSec = sceneSecs * N;
+      const pct = (elapsed % totalMs) / totalMs * 100;
+      document.getElementById('pb-fill').style.width = pct + '%';
+      const s = Math.floor(elapsed / 1000) % totalSec;
+      const mm = Math.floor(s/60), ss = s%60;
+      document.getElementById('pb-time').textContent = mm+':'+(ss<10?'0':'')+ss;
+      const sceneIdx = Math.floor((elapsed % totalMs) / (sceneSecs * 1000));
+      if (sceneIdx !== current) { current = sceneIdx; goTo(current); }
+      // Scene progress bar
+      const scenePct = ((elapsed % (sceneSecs * 1000)) / (sceneSecs * 1000)) * 100;
+      scene_els[current]?.querySelector('.r-progress-fill')?.style.setProperty('width', scenePct + '%');
+    }
+
+    function startPlay() { interval = setInterval(tick, 100); }
+    function pause() { clearInterval(interval); interval = null; }
+    startPlay();
+
+    document.getElementById('pb-play').addEventListener('click', () => {
+      playing = !playing;
+      document.getElementById('pb-play').textContent = playing ? '⏸' : '▶';
+      playing ? startPlay() : pause();
+    });
+    document.getElementById('pb-track').addEventListener('click', e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      elapsed = Math.floor((e.clientX - rect.left) / rect.width * totalMs / 100) * 100;
+    });
+  }
+
+  /* ─────────────────── BRAND SPOT ─────────────────── */
+  else {
+    const stats = [
+      { num:'10x', label:'Faster Execution' },
+      { num:'24/7', label:'Always On' },
+      { num:'50+', label:'AI Roles' },
+    ];
+
+    const SCENES = ['hero', 'stats', 'cta'];
+    const N = SCENES.length;
+    let current = 0;
+    let elapsed = 0;
+    let playing = true;
+    let interval = null;
+    const sceneSecs = 6;
+    const totalMs = sceneSecs * N * 1000;
+
+    root.innerHTML = `
+      <div class="comp-frame" style="width:min(100vw,177.78vh);height:min(56.25vw,100vh);position:relative">
+        <div class="brand-preview" id="bsp">
+
+          <div class="brand-scene bs-hero active">
+            <div class="bs-glow"></div>
+            <div class="bs-logo">K</div>
+            <div class="bs-company">${company}</div>
+            <div class="bs-tagline">Your AI Workforce, On Demand.</div>
+          </div>
+
+          <div class="brand-scene bs-stats-scene" style="display:flex;flex-direction:column;align-items:center;justify-content:center;background:#fff;padding:6%">
+            <div class="bs-stats-lbl">By the numbers</div>
+            <div class="bs-stats-headline">Results that speak for themselves</div>
+            <div class="bs-stats-row">
+              ${stats.map(s=>`<div class="bs-stat"><div class="bs-stat-num">${s.num}</div><div class="bs-stat-lbl">${s.label}</div></div>`).join('')}
+            </div>
+          </div>
+
+          <div class="brand-scene bs-cta-scene">
+            <div class="bs-ring"></div>
+            <div class="bs-cta-eyebrow">${company}</div>
+            <div class="bs-cta-headline">The future of work is here.</div>
+            <div class="bs-cta-pill">kayrointer.com</div>
+          </div>
+
+        </div>
+        <div class="player-bar">
+          <button class="pb-play" id="pb-play">⏸</button>
+          <div class="pb-track" id="pb-track"><div class="pb-fill" id="pb-fill" style="width:0%"></div></div>
+          <div class="pb-time" id="pb-time">0:00</div>
+          <div class="pb-label">BRAND SPOT · 16:9</div>
+        </div>
+      </div>`;
+
+    const scene_els = root.querySelectorAll('.brand-scene');
+    function goTo(i) {
+      scene_els.forEach(e => e.classList.remove('active'));
+      scene_els[i].classList.add('active');
+    }
+
+    function tick() {
+      elapsed += 100;
+      const totalSec = sceneSecs * N;
+      const pct = (elapsed % totalMs) / totalMs * 100;
+      document.getElementById('pb-fill').style.width = pct + '%';
+      const s = Math.floor(elapsed / 1000) % totalSec;
+      const mm = Math.floor(s/60), ss = s%60;
+      document.getElementById('pb-time').textContent = mm+':'+(ss<10?'0':'')+ss;
+      const sceneIdx = Math.floor((elapsed % totalMs) / (sceneSecs * 1000));
+      if (sceneIdx !== current) { current = sceneIdx; goTo(current); }
+    }
+
+    function startPlay() { interval = setInterval(tick, 100); }
+    function pause() { clearInterval(interval); interval = null; }
+    startPlay();
+
+    document.getElementById('pb-play').addEventListener('click', () => {
+      playing = !playing;
+      document.getElementById('pb-play').textContent = playing ? '⏸' : '▶';
+      playing ? startPlay() : pause();
+    });
+    document.getElementById('pb-track').addEventListener('click', e => {
+      const rect = e.currentTarget.getBoundingClientRect();
+      elapsed = Math.floor((e.clientX - rect.left) / rect.width * totalMs / 100) * 100;
+    });
+  }
+})();
+</script>
+</body>
+</html>
