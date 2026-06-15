@@ -15216,8 +15216,10 @@ Keep bullets concise (max 12 words each). Speaker notes: 1–2 sentences of what
             const rows = bullets.map(b => ({ text: b, options: { bullet:{type:'bullet'}, fontSize:15, color: T.text.replace('#',''), fontFace:'Calibri', paraSpaceAfter:8 } }));
             if (rows.length) slide.addText(rows, { x:0.35, y:1.38, w:9.3, h:5.4, valign:'top' });
           }
-          if (sl.notes) slide.addNotesSlide(sl.notes);
         }
+
+        // Attach speaker notes to every slide type — never let this crash the export
+        if (sl.notes) { try { slide.addNotes(sl.notes); } catch(_) {} }
       });
 
       const slug = (deck.title||'deck').toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,40);
