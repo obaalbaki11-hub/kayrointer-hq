@@ -114,18 +114,29 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
 </div>
 <script>
 (function() {
-  const params = new URLSearchParams(location.search);
-  const comp    = params.get('comp')    || 'KayroReel';
+  const params  = new URLSearchParams(location.search);
+  const rawComp = params.get('comp') || '';
   const company = params.get('company') || 'Kayro Interactive';
-  const accent  = params.get('accent')  || '#0071e3';
+  const accent  = params.get('accent')  || '#5b2eff';
   const topic   = params.get('topic')   || '';
+
+  // Normalise comp name — accept full IDs or short aliases, case-insensitive
+  const COMP_MAP = {
+    'kayrocarousel': 'KayroCarousel',
+    'carousel':      'KayroCarousel',
+    'kayroreel':     'KayroReel',
+    'reel':          'KayroReel',
+    'kayrobrandspot':'KayroBrandSpot',
+    'brandspot':     'KayroBrandSpot',
+  };
+  const comp = COMP_MAP[rawComp.toLowerCase()] || 'KayroReel';
 
   document.documentElement.style.setProperty('--accent', accent);
 
   const root = document.getElementById('root');
   document.getElementById('loading').remove();
 
-  /* ─────────────────── CAROUSEL ─────────────────── */
+  /* ─────────────────── CAROUSEL (1080×1080 square) ─────────────────── */
   if (comp === 'KayroCarousel') {
     const slides = [
       { badge:'01 / hook', headline:'AI is eating business.', body:'Every industry. Every function. Every team.', cls:'accent' },
@@ -207,7 +218,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
     });
   }
 
-  /* ─────────────────── REEL ─────────────────── */
+  /* ─────────────────── REEL (1080×1920 vertical) ─────────────────── */
   else if (comp === 'KayroReel') {
     const scenes = [
       { n:'01', headline:'What if your team never slept?', body:'Imagine a workforce that works 24/7, without burnout.' },
@@ -297,8 +308,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
     });
   }
 
-  /* ─────────────────── BRAND SPOT ─────────────────── */
-  else {
+  /* ─────────────────── BRAND SPOT (1920×1080 widescreen) ─────────────────── */
+  else if (comp === 'KayroBrandSpot') {
     const stats = [
       { num:'10x', label:'Faster Execution' },
       { num:'24/7', label:'Always On' },
@@ -380,6 +391,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-ap
       const rect = e.currentTarget.getBoundingClientRect();
       elapsed = Math.floor((e.clientX - rect.left) / rect.width * totalMs / 100) * 100;
     });
+  } else {
+    root.innerHTML = `<div class="loading" style="flex-direction:column;gap:8px"><span style="font-size:18px">⚠</span><span>Unknown composition: ${rawComp || '(none)'}</span></div>`;
   }
 })();
 </script>

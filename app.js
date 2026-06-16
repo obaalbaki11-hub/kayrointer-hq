@@ -3444,25 +3444,34 @@ const RemotionPage = {
   },
 
   _preview(compId, company, accent, industry) {
-    const frame = document.getElementById('rmt-player-frame');
-    const ph    = document.getElementById('rmt-preview-ph');
-    if (!frame || !ph) return;
+    const wrap = document.getElementById('rmt-preview-wrap');
+    const ph   = document.getElementById('rmt-preview-ph');
+    if (!wrap) return;
 
     const co = encodeURIComponent(company  || State.settings.companyName || 'Kayro Interactive');
     const ac = encodeURIComponent(accent   || State.settings.accentColor  || '#5b2eff');
     const to = encodeURIComponent(industry || State.settings.industry     || '');
+    const src = `player.html?comp=${compId}&company=${co}&accent=${ac}&topic=${to}`;
 
     const heights = { KayroCarousel: '560px', KayroReel: '640px', KayroBrandSpot: '480px' };
-    frame.style.height = heights[compId] || '520px';
-    frame.src = `player.html?comp=${compId}&company=${co}&accent=${ac}&topic=${to}`;
-    frame.style.display = 'block';
-    ph.style.display = 'none';
+
+    // Remove any existing iframe — guarantees a fresh navigation, not a cached reload
+    const old = document.getElementById('rmt-player-frame');
+    if (old) old.remove();
+    if (ph) ph.style.display = 'none';
+
+    const frame = document.createElement('iframe');
+    frame.id = 'rmt-player-frame';
+    frame.src = src;
+    frame.style.cssText = `display:block;width:100%;border:none;height:${heights[compId] || '520px'}`;
+    frame.setAttribute('allowfullscreen', '');
+    wrap.appendChild(frame);
 
     document.querySelectorAll('.rmt-comp-card').forEach(c => { c.style.outline = ''; });
     const card = document.getElementById(`rmt-card-${compId}`);
     if (card) card.style.outline = '2px solid var(--accent,#5b2eff)';
 
-    document.getElementById('rmt-preview-wrap')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    wrap.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   },
 
   async _startExport(compId, company, accent, industry) {
