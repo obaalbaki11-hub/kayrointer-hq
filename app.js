@@ -3314,6 +3314,133 @@ function _makeAgentChatPage(stateRef, empId, initial, qaActions, welcomeIcon, we
 }
 
 // ── REMOTION PAGE ─────────────────────────────────────────────
+// ── PERSONALIZE TEMPLATE REGISTRY ────────────────────────────────────────────
+const PS_TEMPLATE_REGISTRY = [{
+  id: 'kayro-ad',
+  name: 'Brand Motion Ad',
+  durationSec: 15,
+  formats: ['square','reel','wide'],
+  defaults: {
+    accent:'#5b2eff', logoLetter:'K', brandName:'Kayro Interactive',
+    tagline:'Your AI workforce, on demand.', cta:'kayrointer.com',
+    hookPre:'AI Workforce', hookLine1:'What if your',
+    hookLine2:'team never <em>slept?</em>',
+    coreStat:'28 AI specialists.', coreHeadline:'Every function. Always on.',
+    coreSub:'Replace entire workflows — not just tasks.',
+    tiles:[
+      {emoji:'📧',label:'Cold Email'},{emoji:'📊',label:'Analyst'},
+      {emoji:'🎨',label:'Designer'},{emoji:'⚡',label:'Ops'},
+      {emoji:'🔍',label:'Research'},{emoji:'🤝',label:'Sales'},
+    ],
+  },
+  // No backticks in inner JS — all string concat — so this embeds safely in a template literal
+  html:`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>{{brandName}}</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;background:#07070d;font-family:'Inter',-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+.stage{--accent:{{accent}};--ar:{{accentR}};--ag:{{accentG}};--ab:{{accentB}};position:relative;width:100vw;height:100vh;overflow:hidden;background:#07070d}
+body{display:flex;align-items:center;justify-content:center}
+.glow{position:absolute;pointer-events:none}
+.glow-a{width:80%;height:80%;top:-20%;left:10%;background:radial-gradient(ellipse,rgba(var(--ar),var(--ag),var(--ab),.18) 0%,transparent 70%);filter:blur(40px)}
+.glow-b{width:60%;height:60%;bottom:-10%;right:-5%;background:radial-gradient(ellipse,rgba(var(--ar),var(--ag),var(--ab),.10) 0%,transparent 70%);filter:blur(50px)}
+.layer{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:8%;will-change:opacity,transform}
+.hook-pre{font-size:1.4vmin;font-weight:700;letter-spacing:.4em;text-transform:uppercase;color:var(--accent);margin-bottom:6%}
+.hook-h{font-size:8.5vmin;font-weight:900;letter-spacing:-.055em;line-height:1.04;color:#fff;text-align:center}
+.hook-h em{color:var(--accent);font-style:normal}
+.line-mask{overflow:hidden;display:block}
+.line-inner{display:block;will-change:transform,opacity}
+.core-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5vmin;width:100%;max-width:72vmin;margin-bottom:6%}
+.agent-tile{border-radius:2.2vmin;background:rgba(var(--ar),var(--ag),var(--ab),.10);border:1px solid rgba(var(--ar),var(--ag),var(--ab),.25);padding:4.5% 4%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.4vmin;will-change:transform,opacity;aspect-ratio:1}
+.agent-emoji{font-size:4vmin;line-height:1}
+.agent-lbl{font-size:1.1vmin;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.5);text-align:center}
+.core-h{font-size:4.4vmin;font-weight:800;letter-spacing:-.04em;color:#fff;text-align:center;line-height:1.15;margin-bottom:2.5%}
+.core-h strong{color:var(--accent)}
+.core-bar{height:2px;background:linear-gradient(90deg,var(--accent),rgba(var(--ar),var(--ag),var(--ab),.4));border-radius:1px;margin-bottom:3%}
+.core-sub{font-size:1.9vmin;font-weight:400;color:rgba(255,255,255,.4);text-align:center;letter-spacing:.01em}
+.brand-logo{width:14vmin;height:14vmin;border-radius:28%;background:var(--accent);display:flex;align-items:center;justify-content:center;box-shadow:0 0 8vmin rgba(var(--ar),var(--ag),var(--ab),.45),0 0 2vmin rgba(var(--ar),var(--ag),var(--ab),.6);margin-bottom:5%;will-change:transform,opacity}
+.brand-k{font-size:7vmin;font-weight:900;color:#fff;letter-spacing:-.02em}
+.brand-name{font-size:5.5vmin;font-weight:800;letter-spacing:-.05em;color:#fff;margin-bottom:1.5%}
+.brand-tag{font-size:1.9vmin;font-weight:400;color:rgba(255,255,255,.38);margin-bottom:8%}
+.brand-pill{padding:2.2vmin 6vmin;border-radius:999px;background:var(--accent);color:#fff;font-size:2.1vmin;font-weight:700;letter-spacing:-.01em;box-shadow:0 4px 3vmin rgba(var(--ar),var(--ag),var(--ab),.45)}
+.noise{position:absolute;inset:0;pointer-events:none;opacity:.03;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+</style>
+</head>
+<body>
+<div class="stage" id="S">
+  <div class="glow glow-a" id="glowA"></div>
+  <div class="glow glow-b" id="glowB"></div>
+  <div class="noise"></div>
+  <div class="layer" id="hook">
+    <div class="hook-pre" id="hPre">{{hookPre}}</div>
+    <h1 class="hook-h">
+      <span class="line-mask"><span class="line-inner" id="hL1">{{hookLine1}}</span></span>
+      <span class="line-mask"><span class="line-inner" id="hL2">{{hookLine2}}</span></span>
+    </h1>
+  </div>
+  <div class="layer" id="core">
+    <div class="core-grid">{{tiles}}</div>
+    <div class="core-h" id="cH"><strong>{{coreStat}}</strong><br>{{coreHeadline}}</div>
+    <div class="core-bar" id="cBar" style="width:0"></div>
+    <div class="core-sub" id="cSub">{{coreSub}}</div>
+  </div>
+  <div class="layer" id="brand">
+    <div class="brand-logo" id="bLogo"><span class="brand-k">{{logoLetter}}</span></div>
+    <div class="brand-name" id="bName">{{brandName}}</div>
+    <div class="brand-tag"  id="bTag">{{tagline}}</div>
+    <div class="brand-pill" id="bPill">{{cta}}</div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var eOut=function(t){return 1-Math.pow(1-t,3);};
+var eIn=function(t){return t*t*t;};
+var eInO=function(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2;};
+var eSpr=function(t){if(t<=0)return 0;if(t>=1)return 1;return Math.pow(2,-10*t)*Math.sin((t*10-.75)*(2*Math.PI/2.5))+1;};
+var $=function(id){return document.getElementById(id);};
+var clamp=function(v,lo,hi){return Math.min(hi,Math.max(lo,v));};
+var lerp=function(a,b,t){return a+(b-a)*t;};
+var prog=function(now,s,e){return clamp((now-s)/(e-s),0,1);};
+var set=function(el,k,v){if(el)el.style[k]=v;};
+var DUR=15;
+var T={hPreIn:[.15,.7],hL1In:[.45,1.0],hL2In:[.75,1.35],hookOut:[2.65,3.15],coreIn:[3.0,3.35],tiles:[[3.1,3.6],[3.3,3.8],[3.5,4.0],[3.7,4.2],[3.9,4.4],[4.1,4.6]],cHIn:[4.5,5.2],cBarW:[5.1,5.8],cSubIn:[5.6,6.2],coreOut:[9.85,10.45],brandIn:[10.3,10.65],bLogoIn:[10.5,11.3],bNameIn:[11.0,11.65],bTagIn:[11.4,12.05],bPillIn:[11.85,12.55]};
+var tiles=document.querySelectorAll('.agent-tile');
+var els={hook:$('hook'),hPre:$('hPre'),hL1:$('hL1'),hL2:$('hL2'),core:$('core'),cH:$('cH'),cBar:$('cBar'),cSub:$('cSub'),brand:$('brand'),bLogo:$('bLogo'),bName:$('bName'),bTag:$('bTag'),bPill:$('bPill'),glowA:$('glowA'),glowB:$('glowB')};
+var t0=null;
+function frame(ts){
+  if(!t0)t0=ts;
+  var t=Math.min((ts-t0)/1000,DUR);
+  var gp=eOut(prog(t,0,2));set(els.glowA,'opacity',gp*.9+'');set(els.glowB,'opacity',gp*.6+'');
+  var breath=.5+.5*Math.sin(t*1.1);set(els.glowA,'transform','scale('+lerp(.92,1.08,breath)+')');
+  var hIn=eOut(prog(t,T.hookOut[0],T.hookOut[1])),hVis=clamp(eOut(prog(t,T.hPreIn[0],T.hPreIn[1]))-hIn,0,1);set(els.hook,'opacity',hVis+'');
+  var preP=eOut(prog(t,T.hPreIn[0],T.hPreIn[1]));set(els.hPre,'opacity',preP+'');set(els.hPre,'transform','translateY('+lerp(18,0,preP)+'px)');
+  var l1p=eSpr(prog(t,T.hL1In[0],T.hL1In[1]));set(els.hL1,'opacity',l1p+'');set(els.hL1,'transform','translateY('+lerp(110,0,eOut(prog(t,T.hL1In[0],T.hL1In[1])))+'%)');
+  var l2p=eSpr(prog(t,T.hL2In[0],T.hL2In[1]));set(els.hL2,'opacity',l2p+'');set(els.hL2,'transform','translateY('+lerp(110,0,eOut(prog(t,T.hL2In[0],T.hL2In[1])))+'%)');
+  var cInP=eOut(prog(t,T.coreIn[0],T.coreIn[1])),cOutP=eIn(prog(t,T.coreOut[0],T.coreOut[1]));set(els.core,'opacity',clamp(cInP-cOutP,0,1)+'');
+  for(var i=0;i<tiles.length;i++){var p=eSpr(prog(t,T.tiles[i][0],T.tiles[i][1]));set(tiles[i],'opacity',p+'');set(tiles[i],'transform','translateY('+lerp(36,0,p)+'px) scale('+lerp(.8,1,p)+')');}
+  var chP=eOut(prog(t,T.cHIn[0],T.cHIn[1]));set(els.cH,'opacity',chP+'');set(els.cH,'transform','translateY('+lerp(20,0,chP)+'px)');
+  var barP=eInO(prog(t,T.cBarW[0],T.cBarW[1]));set(els.cBar,'width',lerp(0,62,barP)+'%');
+  var csP=eOut(prog(t,T.cSubIn[0],T.cSubIn[1]));set(els.cSub,'opacity',csP+'');set(els.cSub,'transform','translateY('+lerp(14,0,csP)+'px)');
+  set(els.brand,'opacity',eOut(prog(t,T.brandIn[0],T.brandIn[1]))+'');
+  var lP=eSpr(prog(t,T.bLogoIn[0],T.bLogoIn[1]));set(els.bLogo,'opacity',lP+'');set(els.bLogo,'transform','scale('+lerp(.4,1,lP)+')');
+  var nmP=eOut(prog(t,T.bNameIn[0],T.bNameIn[1]));set(els.bName,'opacity',nmP+'');set(els.bName,'transform','translateY('+lerp(16,0,nmP)+'px)');
+  var tgP=eOut(prog(t,T.bTagIn[0],T.bTagIn[1]));set(els.bTag,'opacity',tgP+'');set(els.bTag,'transform','translateY('+lerp(12,0,tgP)+'px)');
+  var plP=eOut(prog(t,T.bPillIn[0],T.bPillIn[1]));set(els.bPill,'opacity',plP+'');set(els.bPill,'transform','translateY('+lerp(12,0,plP)+'px)');
+  if(t<DUR)requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+<\/script>
+</body>
+</html>`,
+}];
+
 const RemotionPage = {
   _tab: 'compositions',
   _lastHtml: null,
@@ -3321,6 +3448,10 @@ const RemotionPage = {
   _onMessage: null,
   _renderState: null,
   _pollId: null,
+  _personalizeState: null,
+  _personalizeHtml: null,
+  _psRecRunning: false,
+  _psOnMessage: null,
 
   init(container) {
     RemotionPage._tab = 'compositions';
@@ -3332,6 +3463,7 @@ const RemotionPage = {
       <div style="display:flex;gap:3px" id="rmt-tab-bar">
         <button class="tb-btn rmt-pg-tab active" data-tab="compositions">🎬 Compositions</button>
         <button class="tb-btn rmt-pg-tab" data-tab="htmlstudio">📝 HTML Studio</button>
+        <button class="tb-btn rmt-pg-tab" data-tab="personalize">✨ Personalize</button>
       </div>
       <button class="tb-btn" id="chat-toggle-btn">💬 Chat</button>`;
     document.getElementById('chat-toggle-btn')?.addEventListener('click', () => Chat.toggle());
@@ -3347,6 +3479,7 @@ const RemotionPage = {
       t.classList.toggle('active', t.dataset.tab === tab)
     );
     if (tab === 'compositions') RemotionPage._render(container);
+    else if (tab === 'personalize') RemotionPage._renderPersonalize(container);
     else RemotionPage._renderHTMLStudio(container);
   },
 
@@ -3656,6 +3789,36 @@ const RemotionPage = {
         .hs-timer{font-size:11px;font-family:var(--mono);color:var(--text2);white-space:nowrap}
         .hs-note{font-size:10.5px;color:var(--text3);margin-left:auto;text-align:right;line-height:1.5}
         .rmt-pg-tab.active{background:var(--surface2)!important;color:var(--text)!important}
+        .ps-root{display:grid;grid-template-columns:340px 1fr;height:calc(100vh - 56px);overflow:hidden}
+        @media(max-width:900px){.ps-root{grid-template-columns:1fr;grid-template-rows:auto 1fr}}
+        .ps-left{display:flex;flex-direction:column;border-right:1px solid var(--border);background:var(--surface);overflow-y:auto}
+        .ps-left-hdr{padding:12px 14px 8px;border-bottom:1px solid var(--border);background:var(--surface)}
+        .ps-left-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px}
+        .ps-fmt-row{display:flex;gap:5px}
+        .ps-fmt-btn{flex:1;padding:5px 8px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:10.5px;font-weight:600;cursor:pointer;font-family:inherit;text-transform:uppercase;letter-spacing:.04em}
+        .ps-fmt-btn.active{background:rgba(91,46,255,.12);color:var(--accent,#5b2eff);border-color:var(--accent,#5b2eff)}
+        .ps-form{padding:10px 14px 20px;flex:1;overflow-y:auto}
+        .ps-section{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:14px 0 6px}
+        .ps-row{display:flex;flex-direction:column;gap:3px;margin-bottom:8px}
+        .ps-lbl{font-size:10px;font-weight:600;color:var(--text2);letter-spacing:.04em;text-transform:uppercase}
+        .ps-inp{width:100%;padding:6px 9px;border:1px solid var(--border);border-radius:7px;background:var(--bg);color:var(--text);font-size:12px;font-family:inherit;outline:none}
+        .ps-inp:focus{border-color:var(--accent,#5b2eff)}
+        .ps-color-row{display:flex;gap:6px;align-items:center}
+        .ps-color{width:34px;height:34px;border-radius:7px;border:1px solid var(--border);cursor:pointer;padding:2px;background:transparent}
+        .ps-color-hex{flex:1}
+        .ps-tile-row{display:grid;grid-template-columns:58px 1fr;gap:5px;align-items:center;margin-bottom:5px}
+        .ps-update-btn{width:100%;padding:9px;border-radius:8px;border:none;background:var(--accent,#5b2eff);color:#fff;font-size:12px;font-weight:700;cursor:pointer;margin:12px 0 4px;font-family:inherit}
+        .ps-update-btn:hover{opacity:.88}
+        .ps-right{display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+        .ps-preview-area{flex:1;overflow:hidden;background:#111;position:relative}
+        .ps-frame{border:none;display:block;background:#fff;position:absolute;top:0;left:0}
+        .ps-record-row{display:flex;align-items:center;gap:10px;padding:9px 12px;border-top:1px solid var(--border);background:var(--surface);flex-wrap:wrap}
+        .ps-rec-btn{padding:7px 16px;border-radius:8px;border:none;background:#ef4444;color:#fff;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;transition:background .15s;font-family:inherit}
+        .ps-rec-btn:hover:not(:disabled){background:#dc2626}
+        .ps-rec-btn.ps-recording{background:#6b7280}
+        .ps-rec-prog{flex:1;height:4px;border-radius:2px;background:var(--border);overflow:hidden;min-width:60px}
+        .ps-rec-prog-bar{height:100%;background:#ef4444;width:0%;transition:width .4s linear}
+        .ps-timer{font-size:11px;font-family:var(--mono);color:var(--text2);white-space:nowrap}
       `;
       document.head.appendChild(s);
     }
@@ -3898,10 +4061,274 @@ const RemotionPage = {
     RemotionPage._runPreview();
   },
 
+  // ── PERSONALIZE ────────────────────────────────────────────────
+
+  _fillTemplate(tplHtml, brand) {
+    function esc(s) {
+      return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    }
+    function escWithEm(s) {
+      return esc(s).replace(/&lt;em&gt;/g,'<em>').replace(/&lt;\/em&gt;/g,'</em>');
+    }
+    function hexToRgb(hex) {
+      hex = (hex||'').replace('#','');
+      if (hex.length === 3) hex = hex.split('').map(function(c){return c+c;}).join('');
+      var n = parseInt(hex,16)||0;
+      return { r:(n>>16)&255, g:(n>>8)&255, b:n&255 };
+    }
+    var rgb = hexToRgb(brand.accent || '#5b2eff');
+    var tilesHtml = (brand.tiles||[]).map(function(t) {
+      return '<div class="agent-tile"><div class="agent-emoji">' + esc(t.emoji) + '</div><div class="agent-lbl">' + esc(t.label) + '</div></div>';
+    }).join('');
+    return tplHtml
+      .replace(/\{\{accent\}\}/g,        esc(brand.accent || '#5b2eff'))
+      .replace(/\{\{accentR\}\}/g,        String(rgb.r))
+      .replace(/\{\{accentG\}\}/g,        String(rgb.g))
+      .replace(/\{\{accentB\}\}/g,        String(rgb.b))
+      .replace(/\{\{logoLetter\}\}/g,     esc(brand.logoLetter || 'K'))
+      .replace(/\{\{brandName\}\}/g,      esc(brand.brandName || ''))
+      .replace(/\{\{tagline\}\}/g,        esc(brand.tagline || ''))
+      .replace(/\{\{cta\}\}/g,            esc(brand.cta || ''))
+      .replace(/\{\{hookPre\}\}/g,        esc(brand.hookPre || ''))
+      .replace(/\{\{hookLine1\}\}/g,      esc(brand.hookLine1 || ''))
+      .replace(/\{\{hookLine2\}\}/g,      escWithEm(brand.hookLine2 || ''))
+      .replace(/\{\{coreStat\}\}/g,       esc(brand.coreStat || ''))
+      .replace(/\{\{coreHeadline\}\}/g,   esc(brand.coreHeadline || ''))
+      .replace(/\{\{coreSub\}\}/g,        esc(brand.coreSub || ''))
+      .replace(/\{\{tiles\}\}/g,          tilesHtml);
+  },
+
+  _renderPersonalize(container) {
+    // Ensure shared styles exist (may not if user never visited HTML Studio)
+    if (!document.getElementById('hs-styles')) RemotionPage._renderHTMLStudio(document.createElement('div'));
+    const tpl = PS_TEMPLATE_REGISTRY[0];
+    const defs = tpl.defaults;
+    const cName   = State.settings.companyName || State.company?.name || '';
+    const cLetter = cName ? cName.trim()[0].toUpperCase() : defs.logoLetter;
+    const cAccent = State.settings.accentColor || defs.accent;
+
+    if (!RemotionPage._personalizeState) {
+      RemotionPage._personalizeState = {
+        tplId: tpl.id,
+        format: 'wide',
+        brand: Object.assign({}, defs, {
+          brandName:  cName || defs.brandName,
+          logoLetter: cLetter,
+          accent:     cAccent,
+          tiles:      defs.tiles.map(function(t){ return Object.assign({},t); }),
+        }),
+      };
+    }
+
+    const st = RemotionPage._personalizeState;
+    const br = st.brand;
+    const FMT = { square:{W:1080,H:1080}, reel:{W:1080,H:1920}, wide:{W:1920,H:1080} };
+    const fmtDim = FMT[st.format] || FMT.wide;
+
+    container.innerHTML = `<div class="ps-root">
+      <div class="ps-left">
+        <div class="ps-left-hdr">
+          <div class="ps-left-title">Brand Motion Ad</div>
+          <div class="ps-fmt-row">
+            <button class="ps-fmt-btn${st.format==='square'?' active':''}" data-fmt="square">□ Square</button>
+            <button class="ps-fmt-btn${st.format==='reel'?' active':''}" data-fmt="reel">↕ Reel</button>
+            <button class="ps-fmt-btn${st.format==='wide'?' active':''}" data-fmt="wide">▭ Wide</button>
+          </div>
+        </div>
+        <div class="ps-form" id="ps-form">
+          <div class="ps-section">Brand</div>
+          <div class="ps-row"><div class="ps-lbl">Accent Color</div>
+            <div class="ps-color-row">
+              <input type="color" class="ps-color" id="ps-color" value="${escHtml(br.accent)}">
+              <input class="ps-inp ps-color-hex" id="ps-color-hex" value="${escHtml(br.accent)}" maxlength="7" placeholder="#5b2eff">
+            </div>
+          </div>
+          <div class="ps-row"><div class="ps-lbl">Logo Letter</div><input class="ps-inp" id="ps-logo-letter" value="${escHtml(br.logoLetter)}" maxlength="3"></div>
+          <div class="ps-row"><div class="ps-lbl">Brand Name</div><input class="ps-inp" id="ps-brand-name" value="${escHtml(br.brandName)}"></div>
+          <div class="ps-row"><div class="ps-lbl">Tagline</div><input class="ps-inp" id="ps-tagline" value="${escHtml(br.tagline)}"></div>
+          <div class="ps-row"><div class="ps-lbl">CTA / URL</div><input class="ps-inp" id="ps-cta" value="${escHtml(br.cta)}"></div>
+          <div class="ps-section">Hook — Scene 1</div>
+          <div class="ps-row"><div class="ps-lbl">Pre-Label</div><input class="ps-inp" id="ps-hook-pre" value="${escHtml(br.hookPre)}"></div>
+          <div class="ps-row"><div class="ps-lbl">Line 1</div><input class="ps-inp" id="ps-hook-l1" value="${escHtml(br.hookLine1)}"></div>
+          <div class="ps-row"><div class="ps-lbl">Line 2 (use &lt;em&gt;word&lt;/em&gt; for accent color)</div><input class="ps-inp" id="ps-hook-l2" value="${escHtml(br.hookLine2)}"></div>
+          <div class="ps-section">Core — Scene 2</div>
+          <div class="ps-row"><div class="ps-lbl">Stat (shown bold)</div><input class="ps-inp" id="ps-core-stat" value="${escHtml(br.coreStat)}"></div>
+          <div class="ps-row"><div class="ps-lbl">Headline</div><input class="ps-inp" id="ps-core-headline" value="${escHtml(br.coreHeadline)}"></div>
+          <div class="ps-row"><div class="ps-lbl">Subtext</div><input class="ps-inp" id="ps-core-sub" value="${escHtml(br.coreSub)}"></div>
+          <div class="ps-section">Feature Tiles — 6 icons</div>
+          ${br.tiles.map(function(t,i){ return '<div class="ps-tile-row"><input class="ps-inp ps-tile-emoji" id="ps-tile-e-'+i+'" value="'+escHtml(t.emoji)+'" placeholder="emoji"><input class="ps-inp" id="ps-tile-l-'+i+'" value="'+escHtml(t.label)+'" placeholder="Label"></div>'; }).join('')}
+          <button class="ps-update-btn" id="ps-update">▶ Update Preview</button>
+        </div>
+      </div>
+      <div class="ps-right">
+        <div class="ps-preview-area" id="ps-preview-area">
+          <iframe class="ps-frame" id="ps-frame" sandbox="allow-scripts allow-same-origin" srcdoc=""></iframe>
+        </div>
+        <div class="ps-record-row">
+          <button class="ps-rec-btn" id="ps-rec">⏺ Record WebM</button>
+          <div class="ps-rec-prog" id="ps-rec-prog" style="display:none"><div class="ps-rec-prog-bar" id="ps-rec-bar"></div></div>
+          <span class="ps-timer" id="ps-timer"></span>
+          <div class="hs-note">${fmtDim.W}×${fmtDim.H} · ${tpl.durationSec}s · WebM</div>
+        </div>
+      </div>
+    </div>`;
+
+    container.querySelectorAll('.ps-fmt-btn').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        RemotionPage._personalizeState.format = btn.dataset.fmt;
+        RemotionPage._renderPersonalize(container);
+      });
+    });
+
+    const colorPicker = document.getElementById('ps-color');
+    const colorHex    = document.getElementById('ps-color-hex');
+    colorPicker?.addEventListener('input', function() { colorHex.value = colorPicker.value; });
+    colorHex?.addEventListener('input', function() {
+      if (/^#[0-9a-fA-F]{6}$/.test(colorHex.value)) colorPicker.value = colorHex.value;
+    });
+
+    document.getElementById('ps-update')?.addEventListener('click', function() { RemotionPage._updatePersonalizePreview(); });
+
+    document.getElementById('ps-rec')?.addEventListener('click', function() {
+      if (RemotionPage._psRecRunning) { RemotionPage._stopPersonalizeRecord(); return; }
+      const html = RemotionPage._personalizeHtml;
+      if (!html) { toast('Click "Update Preview" first', 'info'); return; }
+      const fmt = RemotionPage._personalizeState?.format || 'wide';
+      const dims = (FMT[fmt] || FMT.wide);
+      RemotionPage._startPersonalizeRecord(html, dims.W, dims.H, 15, tpl.durationSec);
+    });
+
+    window.addEventListener('resize', RemotionPage._scalePersonalizePreview);
+    RemotionPage._updatePersonalizePreview();
+  },
+
+  _updatePersonalizePreview() {
+    const st = RemotionPage._personalizeState;
+    if (!st) return;
+    const tiles = (st.brand.tiles||[]).map(function(tile,i) {
+      return {
+        emoji: document.getElementById('ps-tile-e-'+i)?.value ?? tile.emoji,
+        label: document.getElementById('ps-tile-l-'+i)?.value ?? tile.label,
+      };
+    });
+    const brand = {
+      accent:       (document.getElementById('ps-color-hex')?.value||'').trim() || st.brand.accent,
+      logoLetter:   document.getElementById('ps-logo-letter')?.value   ?? st.brand.logoLetter,
+      brandName:    document.getElementById('ps-brand-name')?.value    ?? st.brand.brandName,
+      tagline:      document.getElementById('ps-tagline')?.value       ?? st.brand.tagline,
+      cta:          document.getElementById('ps-cta')?.value           ?? st.brand.cta,
+      hookPre:      document.getElementById('ps-hook-pre')?.value      ?? st.brand.hookPre,
+      hookLine1:    document.getElementById('ps-hook-l1')?.value       ?? st.brand.hookLine1,
+      hookLine2:    document.getElementById('ps-hook-l2')?.value       ?? st.brand.hookLine2,
+      coreStat:     document.getElementById('ps-core-stat')?.value     ?? st.brand.coreStat,
+      coreHeadline: document.getElementById('ps-core-headline')?.value ?? st.brand.coreHeadline,
+      coreSub:      document.getElementById('ps-core-sub')?.value      ?? st.brand.coreSub,
+      tiles,
+    };
+    Object.assign(st.brand, brand);
+    const tpl = PS_TEMPLATE_REGISTRY.find(function(t){ return t.id === st.tplId; }) || PS_TEMPLATE_REGISTRY[0];
+    const html = RemotionPage._fillTemplate(tpl.html, brand);
+    RemotionPage._personalizeHtml = html;
+    const frame = document.getElementById('ps-frame');
+    const FMT = { square:{W:1080,H:1080}, reel:{W:1080,H:1920}, wide:{W:1920,H:1080} };
+    const dim = FMT[st.format] || FMT.wide;
+    if (frame) {
+      frame.style.width  = dim.W + 'px';
+      frame.style.height = dim.H + 'px';
+      frame.srcdoc = html;
+      setTimeout(function(){ RemotionPage._scalePersonalizePreview(); }, 50);
+    }
+  },
+
+  _scalePersonalizePreview() {
+    const area  = document.getElementById('ps-preview-area');
+    const frame = document.getElementById('ps-frame');
+    if (!area || !frame) return;
+    const W = parseInt(frame.style.width)  || 1920;
+    const H = parseInt(frame.style.height) || 1080;
+    const scale = Math.min((area.clientWidth - 24) / W, (area.clientHeight - 24) / H, 1);
+    frame.style.transformOrigin = '0 0';
+    frame.style.transform = `scale(${scale})`;
+    frame.style.left = Math.round((area.clientWidth  - W * scale) / 2) + 'px';
+    frame.style.top  = Math.round((area.clientHeight - H * scale) / 2) + 'px';
+  },
+
+  _startPersonalizeRecord(html, W, H, fps, dur) {
+    const recScript = `<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"><\/script><script>(function(){window.addEventListener('message',function(e){if(!e.data||e.data.type!=='ps-start')return;var fps=e.data.fps||15,dur=e.data.dur||15,W=e.data.W||1920,H=e.data.H||1080,cvs=document.createElement('canvas');cvs.width=W;cvs.height=H;var stream=cvs.captureStream(fps),mt=['video/webm;codecs=vp9','video/webm'].find(function(t){return MediaRecorder.isTypeSupported(t)})||'',rec=new MediaRecorder(stream,mt?{mimeType:mt}:{}),chunks=[];rec.ondataavailable=function(ev){if(ev.data.size>0)chunks.push(ev.data);};rec.onstop=function(){var blob=new Blob(chunks,{type:'video/webm'}),url=URL.createObjectURL(blob);parent.postMessage({type:'ps-done',url:url},'*');};rec.start(Math.round(1000/fps));var elapsed=0,iv=Math.round(1000/fps);function loop(){html2canvas(document.documentElement,{canvas:cvs,width:W,height:H,useCORS:true,allowTaint:true,logging:false}).then(function(){elapsed+=iv;parent.postMessage({type:'ps-progress',pct:Math.min(elapsed/(dur*1000),1)},'*');if(elapsed<dur*1000)setTimeout(loop,iv);else rec.stop();}).catch(function(){elapsed+=iv;if(elapsed<dur*1000)setTimeout(loop,iv);else rec.stop();});}setTimeout(loop,400);});})();<\/script>`;
+    let injected = html.includes('</body>') ? html.replace('</body>', recScript + '</body>') : html + recScript;
+
+    RemotionPage._psRecRunning = true;
+    const btn = document.getElementById('ps-rec');
+    if (btn) { btn.textContent = '⏹ Stop'; btn.classList.add('ps-recording'); }
+    const prog = document.getElementById('ps-rec-prog');
+    if (prog) prog.style.display = '';
+    const timer = document.getElementById('ps-timer');
+    if (timer) timer.textContent = 'Loading recorder…';
+
+    if (RemotionPage._psOnMessage) window.removeEventListener('message', RemotionPage._psOnMessage);
+    RemotionPage._psOnMessage = function(e) {
+      if (e.data?.type === 'ps-progress') {
+        const pct = e.data.pct || 0;
+        const bar = document.getElementById('ps-rec-bar');
+        if (bar) bar.style.width = (pct * 100) + '%';
+        const t = document.getElementById('ps-timer');
+        if (t) t.textContent = (pct * dur).toFixed(1) + 's / ' + dur + 's';
+      } else if (e.data?.type === 'ps-done') {
+        window.removeEventListener('message', RemotionPage._psOnMessage);
+        RemotionPage._psRecRunning = false;
+        const brandName = RemotionPage._personalizeState?.brand?.brandName || 'brand';
+        const fmt = RemotionPage._personalizeState?.format || 'wide';
+        const a = document.createElement('a');
+        a.href = e.data.url;
+        a.download = (brandName + '-' + fmt + '.webm').replace(/\s+/g,'-').toLowerCase();
+        a.click();
+        setTimeout(function(){ URL.revokeObjectURL(e.data.url); }, 15000);
+        const b = document.getElementById('ps-rec');
+        if (b) { b.textContent = '⏺ Record WebM'; b.classList.remove('ps-recording'); }
+        const p = document.getElementById('ps-rec-prog');
+        if (p) { p.style.display = 'none'; const bar = document.getElementById('ps-rec-bar'); if (bar) bar.style.width = '0%'; }
+        const t = document.getElementById('ps-timer');
+        if (t) { t.textContent = '✓ Saved!'; setTimeout(function(){ if (t) t.textContent = ''; }, 3000); }
+        toast('Video saved ✓', 'success');
+        RemotionPage._updatePersonalizePreview();
+      }
+    };
+    window.addEventListener('message', RemotionPage._psOnMessage);
+
+    const frame = document.getElementById('ps-frame');
+    if (!frame) return;
+    frame.srcdoc = injected;
+    frame.onload = function() {
+      setTimeout(function() {
+        try { frame.contentWindow?.postMessage({ type: 'ps-start', fps, dur, W, H }, '*'); }
+        catch(_) { toast('Recorder failed to start', 'error'); RemotionPage._stopPersonalizeRecord(); }
+        const t = document.getElementById('ps-timer');
+        if (t) t.textContent = '0.0s / ' + dur + 's';
+      }, 600);
+    };
+  },
+
+  _stopPersonalizeRecord() {
+    if (RemotionPage._psOnMessage) window.removeEventListener('message', RemotionPage._psOnMessage);
+    RemotionPage._psRecRunning = false;
+    const btn = document.getElementById('ps-rec');
+    if (btn) { btn.textContent = '⏺ Record WebM'; btn.classList.remove('ps-recording'); }
+    const prog = document.getElementById('ps-rec-prog');
+    if (prog) prog.style.display = 'none';
+    const bar = document.getElementById('ps-rec-bar');
+    if (bar) bar.style.width = '0%';
+    const t = document.getElementById('ps-timer');
+    if (t) t.textContent = '';
+    RemotionPage._updatePersonalizePreview();
+  },
+
   destroy() {
     if (RemotionPage._onMessage) window.removeEventListener('message', RemotionPage._onMessage);
+    if (RemotionPage._psOnMessage) window.removeEventListener('message', RemotionPage._psOnMessage);
     window.removeEventListener('resize', RemotionPage._scalePreview);
+    window.removeEventListener('resize', RemotionPage._scalePersonalizePreview);
     RemotionPage._recordRunning = false;
+    RemotionPage._psRecRunning = false;
     if (RemotionPage._pollId) { clearInterval(RemotionPage._pollId); RemotionPage._pollId = null; }
   },
 };
