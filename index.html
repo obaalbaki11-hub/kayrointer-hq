@@ -417,6 +417,39 @@ footer{
   .hero-agents [style*="width:40px"]{width:32px !important;height:32px !important;font-size:12px !important}
 }
 
+/* ── LIVE AI DEMO ── */
+.demo-live{max-width:760px;margin:0 auto 64px;background:linear-gradient(180deg,#0d0d0d,#0a0a0a);border:1px solid rgba(34,197,94,.25);border-radius:16px;padding:24px 22px 18px;box-shadow:0 0 0 1px rgba(34,197,94,.04),0 20px 60px rgba(0,0,0,.4)}
+.demo-live-head{text-align:center;margin-bottom:16px}
+.demo-live-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:1.5px;color:var(--green);border:1px solid rgba(34,197,94,.3);border-radius:20px;padding:4px 12px;margin-bottom:12px}
+.demo-live-title{display:block;font-size:clamp(19px,2.6vw,26px);font-weight:800;letter-spacing:-.6px;color:#fff;margin-bottom:6px}
+.demo-live-sub{display:block;font-size:13px;color:var(--text2);line-height:1.6;max-width:460px;margin:0 auto}
+.demo-live-io{display:flex;gap:10px;align-items:stretch}
+.demo-input{flex:1;min-width:0;background:#060606;border:1px solid var(--border2);border-radius:10px;color:#fff;font-family:var(--sans);font-size:15px;line-height:1.5;padding:12px 14px;resize:none;outline:none}
+.demo-input:focus{border-color:rgba(34,197,94,.5)}
+.demo-input::placeholder{color:#555}
+.demo-run{flex-shrink:0;background:var(--green);color:#001a0a;border:none;border-radius:10px;font-family:var(--sans);font-weight:700;font-size:14px;padding:0 24px;cursor:pointer;transition:opacity .15s}
+.demo-run:hover{opacity:.9}
+.demo-run:disabled{opacity:.45;cursor:not-allowed}
+.demo-hint{font-family:var(--mono);font-size:10px;color:#444;text-align:center;margin-top:10px;letter-spacing:.2px}
+.demo-output{margin-top:16px;background:#060606;border:1px solid var(--border);border-left:2px solid var(--green);border-radius:10px;padding:16px 18px;font-size:14.5px;line-height:1.7;color:#e8e8e8;white-space:pre-wrap;word-break:break-word;min-height:22px}
+.demo-cursor{display:inline-block;width:7px;height:15px;background:var(--green);margin-left:1px;vertical-align:text-bottom;animation:demoBlink 1s steps(2) infinite}
+@keyframes demoBlink{0%,49%{opacity:1}50%,100%{opacity:0}}
+.demo-thinking{color:var(--text2);font-family:var(--mono);font-size:12.5px;letter-spacing:.3px}
+.demo-gate{margin-top:16px;border-top:1px solid var(--border);padding-top:18px;text-align:center;animation:fadeUp .3s ease-out}
+.demo-gate-title{font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;letter-spacing:-.3px}
+.demo-gate-sub{font-size:13px;color:var(--text2);line-height:1.6;max-width:450px;margin:0 auto 16px}
+.demo-gate-btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.demo-gate-btn{display:inline-flex;align-items:center;gap:7px;padding:12px 22px;border-radius:9px;font-size:13px;font-weight:700;text-decoration:none;font-family:var(--sans);transition:opacity .15s,border-color .15s}
+.demo-gate-btn.wa{background:#25d366;color:#001a0a}
+.demo-gate-btn.wa:hover{opacity:.9}
+.demo-gate-btn.email{background:none;color:#fff;border:1px solid var(--border2)}
+.demo-gate-btn.email:hover{border-color:var(--border2)}
+@media(max-width:600px){
+  .demo-live-io{flex-direction:column}
+  .demo-run{padding:13px}
+  .demo-input{font-size:16px}
+}
+
 </style>
 </head>
 <body>
@@ -519,6 +552,29 @@ footer{
 
 <!-- SHOWCASE SECTION -->
 <section id="showcase" style="max-width:1140px;margin:0 auto;padding:0 28px 96px">
+
+  <!-- LIVE AI DEMO -->
+  <div class="demo-live" id="demo-live">
+    <div class="demo-live-head">
+      <span class="demo-live-badge"><span class="badge-dot"></span> LIVE · REAL AI</span>
+      <span class="demo-live-title">Try it. Type a prompt, get a real response.</span>
+      <span class="demo-live-sub">One free response, generated live by the framework I build. Then let's talk about building yours.</span>
+    </div>
+    <div class="demo-live-io" id="demo-io">
+      <textarea id="demo-input" class="demo-input" maxlength="500" rows="2" placeholder="e.g. Draft a cold email to a logistics firm pitching AI ops automation — 3 sentences, sharp"></textarea>
+      <button id="demo-run" class="demo-run">Run &#9655;</button>
+    </div>
+    <div class="demo-hint" id="demo-hint">Runs on a server-side agent · your prompt never touches an API key · ⌘/Ctrl + Enter to send</div>
+    <div class="demo-output" id="demo-output" style="display:none"></div>
+    <div class="demo-gate" id="demo-gate" style="display:none">
+      <div class="demo-gate-title">Want to keep going?</div>
+      <div class="demo-gate-sub">That's one live response. For the real thing — a system built around your business — message me and let's talk.</div>
+      <div class="demo-gate-btns">
+        <a class="demo-gate-btn wa" href="https://wa.me/971555627973" target="_blank" rel="noopener">WhatsApp · 055 562 7973</a>
+        <a class="demo-gate-btn email" href="mailto:omarbaalbaki@kayrointer.com?subject=Let's%20build%20an%20AI%20system">Email me</a>
+      </div>
+    </div>
+  </div>
 
   <!-- Section header -->
   <div style="text-align:center;margin-bottom:64px">
@@ -1413,6 +1469,71 @@ footer{
   </div>
 </footer>
 
+<!-- LIVE AI DEMO — calls the server-side Worker; no API key in this page -->
+<script>
+(function(){
+  var API = 'https://kayro-backend.obaalbaki11.workers.dev/api/demo';
+  var input = document.getElementById('demo-input');
+  var run   = document.getElementById('demo-run');
+  var io    = document.getElementById('demo-io');
+  var hint  = document.getElementById('demo-hint');
+  var out   = document.getElementById('demo-output');
+  var gate  = document.getElementById('demo-gate');
+  if (!run || !input) return;
+
+  var used = false;
+  try { used = localStorage.getItem('kayro_demo_used') === '1'; } catch(e){}
+  if (used) lockToGate();
+
+  function lockToGate(){
+    io.style.display = 'none';
+    if (hint) hint.style.display = 'none';
+    gate.style.display = 'block';
+  }
+  function showThinking(){
+    out.style.display = 'block';
+    out.innerHTML = '<span class="demo-thinking">generating<span class="demo-cursor"></span></span>';
+  }
+  function typewrite(text){
+    out.textContent = '';
+    var cur = document.createElement('span'); cur.className = 'demo-cursor';
+    out.appendChild(cur);
+    var i = 0;
+    (function step(){
+      if (i < text.length){
+        cur.insertAdjacentText('beforebegin', text.slice(i, i+2)); i += 2;
+        out.scrollTop = out.scrollHeight;
+        setTimeout(step, 12);
+      } else {
+        cur.remove();
+        try { localStorage.setItem('kayro_demo_used','1'); } catch(e){}
+        setTimeout(lockToGate, 700);
+      }
+    })();
+  }
+  function fail(msg){
+    out.style.display = 'block';
+    out.textContent = msg;
+    setTimeout(lockToGate, 1400);
+  }
+  function submit(){
+    var p = (input.value || '').trim();
+    if (!p || used) return;
+    run.disabled = true; input.disabled = true;
+    showThinking();
+    fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p }) })
+      .then(function(r){ return r.json().then(function(d){ return { status:r.status, d:d }; }); })
+      .then(function(o){
+        if (o.status === 200 && o.d && o.d.reply){ used = true; typewrite(o.d.reply); }
+        else if (o.status === 429){ used = true; fail((o.d && o.d.message) || "That's the demo limit — let's talk below."); }
+        else { run.disabled = false; input.disabled = false; fail((o.d && o.d.message) || "Something went wrong — reach out and I'll show you directly."); }
+      })
+      .catch(function(){ run.disabled = false; input.disabled = false; fail("Network hiccup — reach out and I'll show you directly."); });
+  }
+  run.addEventListener('click', submit);
+  input.addEventListener('keydown', function(e){ if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') submit(); });
+})();
+</script>
 
 </body>
 </html>
