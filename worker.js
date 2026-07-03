@@ -135,6 +135,26 @@ export default {
         return handleEnterpriseLead(request, env, origin);
       }
 
+      // PUBLIC AI DEMO — server-side key, per-IP rate limit + global daily kill-switch,
+      // input length cap + hard max_tokens. NEVER exposes ANTHROPIC_KEY to the browser.
+      if (path === '/api/demo') {
+        const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+        let body = {};
+        try { body = await request.json(); } catch {}
+        const prompt = String(body.prompt || '').trim();
+        if (!prompt)                       return json({ error: 'empty',    message: 'Type a prompt to try the demo.' }, 400, origin);
+        if (prompt.length > DEMO_INPUT_MAX) return json({ error: 'too_long', message: `Keep it under ${DEMO_INPUT_MAX} characters for the demo.` }, 400, origin);
+        // 1) per-IP hourly cap
+        const rlWait = await rlCheck(env, 'demo', ip);
+        if (rlWait !== null) return json({ gate: true, error: 'rate_limited', message: "That's the live-demo limit for now — let's keep going over WhatsApp or email." }, 429, origin);
+        // 2) global daily kill-switch (bounds worst-case spend)
+        if (await demoGlobalCapped(env)) return json({ gate: true, error: 'daily_cap', message: "Today's live-demo quota is used up — reach out and I'll show you more." }, 429, origin);
+        // 3) reserve quota BEFORE the paid call so failures can't be used to bypass limits
+        await rlRecord(env, 'demo', ip);
+        await demoGlobalIncr(env);
+        return handleDemo(prompt, env, origin);
+      }
+
       // Flights (Duffel) — all endpoints require a valid session
       if (path === '/api/flights/search') {
         const authR = await requireSession(request, env, origin);
@@ -259,6 +279,7 @@ async function awsSig4(method, urlStr, extraHeaders, body, accessKey, secretKey,
 // MODEL COST RATES — $/M tokens (Anthropic list price, verify at anthropic.com/pricing)
 // ══════════════════════════════════════════════════════════════
 const MODEL_COSTS = {
+  'claude-opus-4-8':            { input:  5.00, output: 25.00 },
   'claude-opus-4-7':            { input: 15.00, output: 75.00 },
   'claude-opus-4-6':            { input: 15.00, output: 75.00 },
   'claude-sonnet-4-6':          { input:  3.00, output: 15.00 },
@@ -1012,7 +1033,60 @@ const RL_CONFIG = {
   email:    { max: 10, window: 60 * 60 }, // 10 emails per IP per hour
   plancode: { max:  5, window: 60 * 60 }, //  5 code attempts per IP per hour
   lead:     { max:  3, window: 60 * 60 }, //  3 enterprise leads per IP per hour
+  demo:     { max:  3, window: 60 * 60 }, //  3 public AI-demo calls per IP per hour
 };
+
+// ── PUBLIC AI DEMO — cost guards (Opus is expensive; this is a public endpoint) ──
+const DEMO_MODEL      = 'claude-opus-4-8';
+const DEMO_MAX_TOKENS = 300;
+const DEMO_DAILY_CAP  = 150;                 // hard global kill-switch: max paid demo calls/day
+const DEMO_INPUT_MAX  = 500;                 // max prompt length (chars)
+const DEMO_SYSTEM = `You are the live demo of Kayro Interactive — the AI-systems studio of Omar Baalbaki, who builds custom AI agents, private intelligence terminals, and business automation.
+A prospective client just typed a prompt on the marketing site. Give ONE sharp, genuinely useful response that demonstrates real capability — concrete, specific, and businesslike, the kind of output a purpose-built agent would produce. Use tight structure (short headers / bullets) when it helps. Be impressive but concise; never pad. Do not discuss pricing. Do not claim to perform actions you cannot (no sending email, no live browsing). This is a one-shot demo — make it land.`;
+
+function _demoDayKey() { return `demo:global:${new Date().toISOString().slice(0, 10)}`; }
+
+// Fail-CLOSED: if KV (the rate-limit backing) is unavailable, treat as capped so no
+// unbounded paid Opus calls can happen without abuse protection in place.
+async function demoGlobalCapped(env) {
+  if (!env.USERS) return true;
+  const n = await env.USERS.get(_demoDayKey());
+  return n !== null && parseInt(n, 10) >= DEMO_DAILY_CAP;
+}
+async function demoGlobalIncr(env) {
+  if (!env.USERS) return;
+  const k = _demoDayKey();
+  const cur = parseInt((await env.USERS.get(k)) || '0', 10) + 1;
+  await env.USERS.put(k, String(cur), { expirationTtl: 2 * 24 * 60 * 60 });
+}
+
+async function handleDemo(prompt, env, origin) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) return json({ error: 'unavailable', message: 'Demo temporarily unavailable.' }, 503, origin);
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
+      body: JSON.stringify({
+        model: DEMO_MODEL,
+        max_tokens: DEMO_MAX_TOKENS,     // hard output cap — bounds per-call cost
+        system: DEMO_SYSTEM,
+        messages: [{ role: 'user', content: prompt }],
+      }),
+      signal: AbortSignal.timeout(60000),
+    });
+  } catch (e) {
+    return json({ error: 'timeout', message: "The demo timed out — reach out and I'll show you directly." }, 504, origin);
+  }
+  if (!res.ok) {
+    return json({ error: 'upstream', message: "Demo hit a snag — reach out and I'll show you directly." }, 502, origin);
+  }
+  const data = await res.json();
+  const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+  if (!reply) return json({ error: 'empty', message: "Reach out and I'll show you what it can do." }, 502, origin);
+  return json({ reply }, 200, origin);
+}
 
 async function rlCheck(env, action, ip) {
   if (!env.USERS) return null;
