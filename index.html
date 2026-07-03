@@ -1494,6 +1494,16 @@ footer{
     out.style.display = 'block';
     out.innerHTML = '<span class="demo-thinking">generating<span class="demo-cursor"></span></span>';
   }
+  function cleanMd(t){
+    return String(t)
+      .replace(/\*\*(.+?)\*\*/g, '$1')          // bold markers
+      .replace(/__(.+?)__/g, '$1')
+      .replace(/`([^`]+)`/g, '$1')              // inline code
+      .replace(/(^|\n)\s*#{1,6}\s+/g, '$1')     // headers
+      .replace(/(^|\n)\s*[-*]\s+/g, '$1• ')     // bullets -> •
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+  }
   function typewrite(text){
     out.textContent = '';
     var cur = document.createElement('span'); cur.className = 'demo-cursor';
@@ -1524,7 +1534,7 @@ footer{
     fetch(API, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ prompt: p }) })
       .then(function(r){ return r.json().then(function(d){ return { status:r.status, d:d }; }); })
       .then(function(o){
-        if (o.status === 200 && o.d && o.d.reply){ used = true; typewrite(o.d.reply); }
+        if (o.status === 200 && o.d && o.d.reply){ used = true; typewrite(cleanMd(o.d.reply)); }
         else if (o.status === 429){ used = true; fail((o.d && o.d.message) || "That's the demo limit — let's talk below."); }
         else { run.disabled = false; input.disabled = false; fail((o.d && o.d.message) || "Something went wrong — reach out and I'll show you directly."); }
       })
