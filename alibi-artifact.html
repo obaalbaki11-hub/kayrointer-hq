@@ -1,0 +1,702 @@
+<title>Alibi</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Newsreader:opsz,wght@6..72,300;6..72,400;6..72,500&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Alibi — committed to one visual world: an interview room under a desk lamp.
+   Single theme on purpose, every colour painted explicitly so the page holds
+   on a light or dark host ground. */
+:root{
+  --ink:#0B0C0E; --slate:#14161A; --haze:#1C1F25; --edge:#282C34; --edge2:#3A404B;
+  --bone:#EDEAE3; --ash:#8A8F99; --dust:#5D636E; --dim:#3E434C;
+  --lamp:#E8B44C; --blood:#C1352F;
+  --display:'Instrument Serif',Georgia,serif;
+  --body:'Newsreader',Georgia,serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{
+  background:var(--ink);color:var(--bone);font-family:var(--body);font-size:16px;line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  background-image:radial-gradient(120% 60% at 50% -10%,rgba(232,180,76,.10),transparent 60%);
+  background-repeat:no-repeat;background-attachment:fixed;
+}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+button:focus-visible,textarea:focus-visible{outline:2px solid var(--lamp);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-inline:16px;padding-block:0 64px}
+.mono{font-family:var(--mono)}
+.kicker{font-family:var(--mono);font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--dust);font-weight:500}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+
+/* header */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:flex;align-items:center;justify-content:space-between;gap:16px;
+  padding:12px 16px;background:rgba(11,12,14,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--edge)}
+.bar-l{display:flex;align-items:baseline;gap:10px;min-width:0}
+.bar-name{font-family:var(--display);font-size:22px;letter-spacing:.01em;line-height:1}
+.bar-r{display:flex;align-items:center;gap:14px;font-family:var(--mono);font-size:11px;color:var(--dust)}
+.tick{color:var(--lamp)}
+
+/* intro */
+.intro{max-width:640px;margin:0 auto;padding-block:8vh 0;text-align:center}
+.intro h1{font-family:var(--display);font-size:clamp(56px,13vw,104px);line-height:.92;letter-spacing:-.01em;text-wrap:balance;margin:14px 0 6px}
+.intro h1 em{font-style:italic;color:var(--lamp)}
+.lede{font-size:18px;color:#C9C6BF;line-height:1.65;max-width:52ch;margin:14px auto 0;text-wrap:balance}
+.fine{font-size:14.5px;color:var(--ash);line-height:1.7;max-width:56ch;margin:14px auto 0}
+.diffs{display:grid;gap:10px;margin:34px 0 22px;text-align:left}
+.diff{display:flex;align-items:flex-start;gap:14px;background:var(--slate);border:1px solid var(--edge);border-radius:4px;padding:16px 18px;transition:border-color .15s,background .15s}
+.diff:hover{border-color:var(--edge2)}
+.diff[aria-pressed="true"]{border-color:var(--lamp);background:var(--haze)}
+.diff-dot{width:7px;height:7px;border-radius:50%;background:var(--dim);margin-top:9px;flex:none}
+.diff[aria-pressed="true"] .diff-dot{background:var(--lamp);box-shadow:0 0 10px rgba(232,180,76,.8)}
+.diff-n{font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:3px}
+.diff-b{font-size:14.5px;color:var(--ash);line-height:1.55}
+.diff-m{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--dim);flex:none;padding-top:4px}
+.go{display:inline-block;background:var(--bone);color:var(--ink);font-family:var(--mono);font-size:13px;font-weight:700;letter-spacing:.08em;
+  text-transform:uppercase;padding:15px 34px;border-radius:3px;transition:transform .12s,background .15s}
+.go:hover{background:#fff;transform:translateY(-1px)}
+.go[disabled]{opacity:.4;cursor:not-allowed;transform:none}
+.ghost{font-family:var(--mono);font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--ash);border:1px solid var(--edge);
+  border-radius:3px;padding:13px 24px}
+.ghost:hover{color:var(--bone);border-color:var(--edge2)}
+
+/* loading */
+.load{max-width:460px;margin:14vh auto 0;text-align:center}
+.load h2{font-family:var(--display);font-size:30px;margin:14px 0 10px}
+.load p{font-size:14.5px;color:var(--ash);line-height:1.7}
+.rule{height:1px;background:var(--edge);margin-top:26px;overflow:hidden;position:relative}
+.rule i{position:absolute;inset:0;width:34%;background:linear-gradient(90deg,transparent,var(--lamp),transparent);animation:sweep 1.6s infinite ease-in-out}
+@keyframes sweep{0%{transform:translateX(-120%)}100%{transform:translateX(420%)}}
+
+/* dossier */
+.dossier{padding-block:30px 20px}
+.dossier h1{font-family:var(--display);font-size:clamp(32px,5.4vw,50px);line-height:1.04;letter-spacing:-.005em;margin:9px 0 12px;text-wrap:balance}
+.crime{font-size:17px;color:#C9C6BF;line-height:1.68;max-width:66ch}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.chip{font-family:var(--mono);font-size:11.5px;line-height:1.5;color:var(--ash);background:var(--slate);border:1px solid var(--edge);border-radius:3px;padding:7px 11px}
+.chip b{color:var(--lamp);font-weight:500}
+
+.grid{display:grid;grid-template-columns:265px minmax(0,1fr) 270px;gap:12px;align-items:start}
+.card{background:var(--slate);border:1px solid var(--edge);border-radius:4px}
+.card-h{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:13px 16px 11px;border-bottom:1px solid var(--edge)}
+.card-h .kicker{white-space:nowrap}
+.card-b{padding:14px 16px}
+
+/* suspect index */
+.file{display:block;width:100%;text-align:left;padding:13px 15px;border-bottom:1px solid var(--edge);transition:background .15s}
+.file:last-child{border-bottom:none}
+.file:hover{background:var(--haze)}
+.file[aria-current="true"]{background:var(--haze);box-shadow:inset 2px 0 0 var(--lamp)}
+.file-n{display:flex;align-items:baseline;gap:7px}
+.file-name{font-size:16px;font-weight:500;letter-spacing:-.01em}
+.file-age{font-family:var(--mono);font-size:10px;color:var(--dim)}
+.file-role{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;color:var(--dust);margin-top:3px;text-transform:uppercase}
+.file-q{font-size:13.5px;color:var(--ash);font-style:italic;line-height:1.5;margin-top:8px;padding-left:9px;border-left:1px solid var(--edge2)}
+.file-m{display:flex;align-items:center;gap:8px;margin-top:9px}
+.tell{display:flex;gap:3px}
+.tell i{width:13px;height:2px;background:var(--dim);border-radius:1px;transition:background .3s}
+.tell i.on{background:var(--blood)}
+.file-c{margin-left:auto;font-family:var(--mono);font-size:10px;color:var(--dim)}
+
+/* evidence */
+.ev{list-style:none;display:grid;gap:10px}
+.ev li{font-size:14px;color:#B4B1AA;line-height:1.6;padding-left:15px;position:relative}
+.ev li::before{content:'';position:absolute;left:0;top:9px;width:4px;height:4px;background:var(--lamp);border-radius:50%}
+
+/* interview */
+.who{display:flex;align-items:baseline;gap:9px;min-width:0}
+.who-n{font-size:17px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.who-r{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;text-transform:uppercase;color:var(--dust);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log{padding:18px;display:flex;flex-direction:column;gap:17px;min-height:320px;max-height:min(56vh,540px);overflow-y:auto}
+.blank{margin:auto;text-align:center;color:var(--dim);font-size:14.5px;line-height:1.75;max-width:32ch;font-style:italic}
+.turn{display:flex;flex-direction:column;gap:5px;max-width:88%}
+.turn.you{align-self:flex-end;align-items:flex-end}
+.turn.sys{align-self:center;max-width:100%}
+.turn-w{font-family:var(--mono);font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.bub{font-size:15.5px;line-height:1.65;padding:11px 15px;border-radius:3px;white-space:pre-wrap;overflow-wrap:anywhere}
+.turn.you .bub{background:var(--bone);color:var(--ink);font-family:var(--mono);font-size:13.5px;line-height:1.6}
+.turn.them .bub{background:var(--haze);border:1px solid var(--edge);color:#DEDBD4}
+.turn.sys .bub{border:1px dashed var(--edge2);color:var(--dust);font-size:13.5px;font-style:italic;background:none}
+.dots{display:flex;gap:5px;padding:15px}
+.dots i{width:4px;height:4px;border-radius:50%;background:var(--dust);animation:bob 1.3s infinite}
+.dots i:nth-child(2){animation-delay:.16s}
+.dots i:nth-child(3){animation-delay:.32s}
+@keyframes bob{0%,62%,100%{opacity:.25;transform:translateY(0)}31%{opacity:1;transform:translateY(-4px)}}
+.ask{border-top:1px solid var(--edge);padding:13px 16px;display:flex;gap:9px;align-items:flex-end}
+.ask textarea{flex:1;background:var(--haze);border:1px solid var(--edge);border-radius:3px;color:var(--bone);font-family:var(--mono);
+  font-size:13.5px;line-height:1.6;padding:11px 13px;resize:none;max-height:120px}
+.ask textarea::placeholder{color:var(--dim)}
+.ask textarea:disabled{opacity:.5}
+.send{background:var(--bone);color:var(--ink);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;padding:12px 17px;border-radius:3px;flex:none}
+.send[disabled]{opacity:.35;cursor:not-allowed}
+.meta{padding:0 16px 13px;display:flex;justify-content:space-between;gap:10px;font-family:var(--mono);font-size:10px;color:var(--dim)}
+
+/* notebook */
+.tabs{display:flex;gap:3px}
+.tab{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;text-transform:uppercase;padding:5px 8px;border-radius:2px;color:var(--dust)}
+.tab[aria-pressed="true"]{background:var(--haze);color:var(--bone)}
+.notes{padding:10px 11px;display:grid;gap:7px;max-height:min(52vh,520px);overflow-y:auto}
+.note{background:var(--haze);border:1px solid var(--edge);border-radius:3px;padding:9px 10px}
+.note-h{display:flex;align-items:center;gap:7px;margin-bottom:4px}
+.note-w{font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--bone)}
+.note-t{font-family:var(--mono);font-size:9.5px;color:var(--lamp);margin-left:auto;flex:none}
+.note-x{font-size:13px;color:#ABA8A1;line-height:1.5}
+.notes-0{padding:24px 12px;text-align:center;font-size:13px;color:var(--dim);line-height:1.7;font-style:italic}
+
+.accuse-wrap{position:sticky;bottom:0;padding-top:20px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));margin-top:12px;
+  background:linear-gradient(transparent,var(--ink) 42%);display:flex;justify-content:center}
+.accuse{background:var(--blood);color:#fff;font-family:var(--mono);font-size:12.5px;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;padding:14px 30px;border-radius:3px}
+.accuse:hover{background:#d13b34}
+
+/* modal */
+.scrim{position:fixed;inset:0;background:rgba(6,7,8,.86);backdrop-filter:blur(5px);display:grid;place-items:center;padding:20px;z-index:60}
+.modal{background:var(--slate);border:1px solid var(--edge2);border-radius:4px;max-width:440px;width:100%;padding:24px}
+.modal h2{font-family:var(--display);font-size:29px;margin:8px 0 7px}
+.modal p{font-size:14.5px;color:var(--ash);line-height:1.65;margin-bottom:17px}
+.pick{display:grid;gap:7px;margin-bottom:17px}
+.pick button{background:var(--haze);border:1px solid var(--edge);border-radius:3px;padding:12px 14px;text-align:left;font-size:15px;transition:border-color .15s}
+.pick button:hover{border-color:var(--blood)}
+.pick button[aria-pressed="true"]{border-color:var(--blood);background:rgba(193,53,47,.12)}
+.pick small{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.05em;text-transform:uppercase;color:var(--dust);margin-top:2px}
+.acts{display:flex;gap:9px;justify-content:flex-end;flex-wrap:wrap}
+
+/* verdict */
+.verdict{max-width:740px;margin:0 auto}
+.stamp-wrap{text-align:center;padding-block:34px 30px;border-bottom:1px solid var(--edge);margin-bottom:28px}
+.stamp{display:inline-block;border:3px solid var(--blood);color:var(--blood);font-family:var(--mono);font-size:15px;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;padding:9px 20px;transform:rotate(-4deg);opacity:.92;animation:thud .45s cubic-bezier(.2,1.5,.4,1) both}
+.stamp.won{border-color:var(--lamp);color:var(--lamp)}
+@keyframes thud{from{transform:rotate(-4deg) scale(2.2);opacity:0}to{transform:rotate(-4deg) scale(1);opacity:.92}}
+@media(prefers-reduced-motion:reduce){.stamp{animation:none}.rule i{animation:none;width:100%;opacity:.4}.dots i{animation:none;opacity:.6}}
+.verdict h1{font-family:var(--display);font-size:clamp(38px,7.5vw,62px);line-height:1;margin:38px 0 14px;text-wrap:balance}
+.verdict .sub{font-size:16.5px;color:#C9C6BF;line-height:1.65;max-width:46ch;margin:0 auto}
+.score{font-family:var(--mono);font-size:46px;font-weight:700;letter-spacing:-.02em;margin-top:24px;font-variant-numeric:tabular-nums}
+.score small{display:block;font-family:var(--mono);font-size:10.5px;font-weight:400;letter-spacing:.1em;text-transform:uppercase;color:var(--dust);margin-top:8px;line-height:1.8}
+.sec{margin-bottom:26px}
+.sec h3{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--dust);
+  display:flex;align-items:center;gap:12px;margin-bottom:13px}
+.sec h3::after{content:'';flex:1;height:1px;background:var(--edge)}
+.tl{list-style:none}
+.tl li{display:flex;gap:15px;padding:9px 0;border-bottom:1px solid var(--edge);font-size:15px;line-height:1.6}
+.tl li:last-child{border-bottom:none}
+.tl time{font-family:var(--mono);font-size:11.5px;color:var(--lamp);flex:none;width:66px;padding-top:3px;font-variant-numeric:tabular-nums}
+.tl span{color:#BEBBB4}
+.rev{border:1px solid var(--edge);border-radius:4px;padding:16px 18px;margin-bottom:9px;background:var(--slate)}
+.rev.g{border-color:rgba(193,53,47,.55);background:rgba(193,53,47,.06)}
+.rev-h{display:flex;align-items:center;gap:9px;margin-bottom:11px;flex-wrap:wrap}
+.rev-n{font-size:17px;font-weight:500}
+.tag{font-family:var(--mono);font-size:8.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;padding:3px 7px;border-radius:2px}
+.tag.g{background:var(--blood);color:#fff}
+.tag.i{border:1px solid var(--edge2);color:var(--ash)}
+.rev-r{font-size:14.5px;line-height:1.65;color:#ABA8A1;margin-bottom:8px}
+.rev-r:last-child{margin-bottom:0}
+.rev-r b{display:block;font-family:var(--mono);font-size:9px;font-weight:500;letter-spacing:.15em;text-transform:uppercase;color:var(--dust);margin-bottom:3px}
+
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(22px + env(safe-area-inset-bottom,0px));background:var(--bone);color:var(--ink);
+  font-family:var(--mono);font-size:12.5px;padding:11px 18px;border-radius:3px;z-index:70;max-width:calc(100vw - 36px);box-shadow:0 12px 40px rgba(0,0,0,.6)}
+.fatal{max-width:460px;margin:16vh auto 0;text-align:center}
+.fatal h2{font-family:var(--display);font-size:30px;margin:12px 0 10px}
+.fatal p{font-size:15px;color:var(--ash);line-height:1.7}
+
+@media(max-width:1040px){.grid{grid-template-columns:1fr}.log{max-height:none}.notes{max-height:330px}}
+@media(max-width:560px){.intro{padding-block:5vh 0}.turn{max-width:96%}}
+</style>
+
+<header class="bar">
+  <div class="bar-l">
+    <span class="bar-name">Alibi</span>
+    <span class="kicker">Interview Room</span>
+  </div>
+  <div class="bar-r"><span id="hud">Ready</span></div>
+</header>
+
+<main class="wrap" id="stage" aria-live="polite"></main>
+
+<script>
+(async () => {
+  const stage = document.getElementById('stage');
+  const hud = document.getElementById('hud');
+
+  const fatal = (title, msg) => {
+    stage.innerHTML = '';
+    const d = document.createElement('div');
+    d.className = 'fatal';
+    const k = document.createElement('div'); k.className = 'kicker'; k.textContent = '// case file';
+    const h = document.createElement('h2'); h.textContent = title;
+    const p = document.createElement('p'); p.textContent = msg;
+    d.append(k, h, p); stage.append(d);
+  };
+
+  // The prompts, schemas and scoring are one shared module — the same file the
+  // server-backed build uses, so the two can't drift on the rules of the game.
+  let P;
+  try {
+    P = await import('./alibi-prompts.js');
+  } catch (e) {
+    fatal('The case engine didn’t load.', 'alibi-prompts.js could not be fetched, so there are no cases to open.');
+    return;
+  }
+
+  const sample = await window.claude?.use?.('sample').catch(() => null) ?? null;
+  if (!sample) {
+    fatal('No line to the interview room.', 'This page asks Claude to play the suspects, so it only works inside a Claude viewer with that access granted.');
+    return;
+  }
+
+  // ── state ───────────────────────────────────────────────────
+  // The solved case lives here, in this closure, and is never written into the
+  // DOM until the accusation. Honest caveat: with no server, a determined player
+  // can still find it in devtools — the server-backed build is the one that
+  // truly hides it.
+  let CASE = null;
+  const S = {
+    difficulty: 'detective', pub: null, active: null,
+    log: {}, notes: [], tell: {}, noteView: 'person',
+    busy: false, asked: 0, brokeCulprit: false, over: false,
+  };
+
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) =>
+    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+  function toast(msg, ms = 4600) {
+    document.querySelectorAll('.toast').forEach((t) => t.remove());
+    const el = document.createElement('div');
+    el.className = 'toast'; el.setAttribute('role', 'status'); el.textContent = msg;
+    document.body.append(el);
+    setTimeout(() => el.remove(), ms);
+  }
+
+  // Branch on the code, never retry from a loop.
+  const PERMANENT = new Set(['not_granted', 'sampling_disabled', 'not_declared', 'capability_disabled', 'capability_removed']);
+  function copyFor(e) {
+    const c = e && e.code;
+    if (PERMANENT.has(c)) return 'Claude access isn’t granted for this page, so the suspects can’t answer.';
+    if (c === 'rate_limited') return 'Too many questions too quickly. Give it a moment, then ask again.';
+    if (c === 'refused') return 'That line of questioning went nowhere. Try a different angle.';
+    if (c === 'invalid_json') return 'That answer came back garbled. Ask again.';
+    if (c === 'empty_completion') return 'They said nothing at all. Try asking it differently.';
+    if (c === 'prompt_too_large') return 'This interview has run too long to send. Try another suspect.';
+    if (c === 'session_expired') return 'Your Claude session expired — sign in again.';
+    return 'Something went wrong reaching the interview room. Try again.';
+  }
+
+  const JSON_RULE = (schema, what) =>
+    `Reply with ONLY a JSON ${what} — no preamble, no commentary, no code fence. It must match this JSON Schema exactly:\n${JSON.stringify(schema)}`;
+
+  const REPLY_RULE = JSON_RULE(P.REPLY_SCHEMA, 'object');
+
+  function minutes(t) {
+    const m = /(\d{1,2})[:.](\d{2})\s*(am|pm)?/i.exec(t || '');
+    if (!m) {
+      const h = /(\d{1,2})\s*(am|pm)/i.exec(t || '');
+      if (!h) return null;
+      return ((parseInt(h[1], 10) % 12) + (/pm/i.test(h[2]) ? 12 : 0)) * 60;
+    }
+    let hh = parseInt(m[1], 10) % 12;
+    if (m[3] && /pm/i.test(m[3])) hh += 12;
+    else if (!m[3] && parseInt(m[1], 10) >= 13) hh = parseInt(m[1], 10);
+    return hh * 60 + parseInt(m[2], 10);
+  }
+  // A case that runs past midnight would sort 12:05am ahead of 9:52pm. Decide the
+  // wrap across the whole set, so a plain morning case is left alone.
+  function orderer(rows) {
+    const ms = rows.map((r) => minutes(r.time)).filter((m) => m !== null);
+    const wraps = ms.some((m) => m >= 1200) && ms.some((m) => m < 240);
+    return (t) => { const m = minutes(t); return m === null ? null : (wraps && m < 240 ? m + 1440 : m); };
+  }
+
+  // ── intro ───────────────────────────────────────────────────
+  function renderIntro() {
+    hud.textContent = 'Ready';
+    stage.innerHTML = `
+      <section class="intro">
+        <div class="kicker">// four suspects · one guilty</div>
+        <h1>Al<em>i</em>bi</h1>
+        <p class="lede">A fresh crime every round. Four people, each with a private history, a secret, and a reason to lie to you.</p>
+        <p class="fine">The innocent ones are hiding something embarrassing that makes them look guilty — so nerves prove nothing, and you have to catch a real contradiction. ${P.QUESTION_BUDGET} questions, then you name someone.</p>
+        <div class="diffs" role="group" aria-label="Difficulty">
+          ${Object.entries(P.DIFFICULTIES).map(([k, d]) => `
+            <button class="diff" data-d="${k}" aria-pressed="${S.difficulty === k}">
+              <span class="diff-dot"></span>
+              <span><span class="diff-n">${esc(d.label)}</span><span class="diff-b">${esc(d.blurb)}</span></span>
+              <span class="diff-m">×${d.multiplier}</span>
+            </button>`).join('')}
+        </div>
+        <button class="go" id="start">Open a case file</button>
+        <p class="fine" style="margin-top:22px;font-size:13px;color:var(--dim)">Claude writes the crime, the timeline and all four lies at runtime. Nothing here is scripted, and questions run on your own Claude usage.</p>
+      </section>`;
+    stage.querySelectorAll('.diff').forEach((b) => b.addEventListener('click', () => {
+      S.difficulty = b.dataset.d;
+      stage.querySelectorAll('.diff').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    }));
+    document.getElementById('start').addEventListener('click', newCase);
+  }
+
+  function renderLoading() {
+    hud.textContent = 'Writing the case…';
+    stage.innerHTML = `
+      <div class="load">
+        <div class="kicker">// case generation</div>
+        <h2>Building the file</h2>
+        <p>Claude is writing the crime, the true timeline, and four people with something to hide. This is a real model call and takes a moment.</p>
+        <div class="rule"><i></i></div>
+      </div>`;
+  }
+
+  function validCase(k) {
+    if (!k || !Array.isArray(k.suspects) || k.suspects.length !== 4) return false;
+    const ids = k.suspects.map((s) => s.id);
+    if (new Set(ids).size !== 4 || !ids.includes(k.culpritId)) return false;
+    if (!Array.isArray(k.evidence) || !k.evidence.length) return false;
+    if (!Array.isArray(k.trueTimeline) || !k.trueTimeline.length) return false;
+    return k.suspects.every((s) => s.name && s.truth && s.secret && s.crackPoint && Array.isArray(s.knows));
+  }
+
+  async function newCase() {
+    renderLoading();
+    const seed = P.makeSeed();
+    const prompt = P.caseGenPrompt(S.difficulty, seed) + '\n\n' + JSON_RULE(P.CASE_SCHEMA, 'object');
+    try {
+      const k = await sample.json(prompt, { modelTier: 'complex', cache: false });
+      if (!validCase(k)) { renderIntro(); toast('That case came out malformed. Open another.'); return; }
+      CASE = k;
+      S.pub = {
+        title: k.title, crime: k.crime, scene: k.scene, victim: k.victim, window: k.window,
+        evidence: k.evidence,
+        suspects: k.suspects.map((s) => ({ id: s.id, name: s.name, age: s.age, role: s.role, publicAlibi: s.publicAlibi })),
+      };
+      S.active = S.pub.suspects[0].id;
+      S.log = {}; S.notes = []; S.tell = {}; S.asked = 0; S.brokeCulprit = false; S.over = false;
+      renderCase();
+    } catch (e) {
+      renderIntro();
+      toast(copyFor(e));
+    }
+  }
+
+  // ── case ────────────────────────────────────────────────────
+  const left = () => P.QUESTION_BUDGET - S.asked;
+
+  function renderCase() {
+    const k = S.pub;
+    hud.innerHTML = `<span class="tick">${left()}</span> of ${P.QUESTION_BUDGET} questions left`;
+    stage.innerHTML = `
+      <section class="dossier">
+        <div class="kicker">// ${esc(P.DIFFICULTIES[S.difficulty].label)} · case open</div>
+        <h1>${esc(k.title)}</h1>
+        <p class="crime">${esc(k.crime)}</p>
+        <div class="chips">
+          <span class="chip"><b>Scene</b> · ${esc(k.scene)}</span>
+          <span class="chip"><b>Harmed</b> · ${esc(k.victim)}</span>
+          <span class="chip"><b>Window</b> · ${esc(k.window)}</span>
+        </div>
+      </section>
+
+      <div class="grid">
+        <div>
+          <div class="card" style="margin-bottom:12px">
+            <div class="card-h"><span class="kicker">// suspects</span></div>
+            <div id="files"></div>
+          </div>
+          <div class="card">
+            <div class="card-h"><span class="kicker">// established facts</span></div>
+            <div class="card-b"><ul class="ev">${k.evidence.map((e) => `<li>${esc(e)}</li>`).join('')}</ul></div>
+          </div>
+        </div>
+
+        <div class="card" id="interview">
+          <div class="card-h"><div class="who" id="who"></div><span class="kicker" id="qleft">${left()} left</span></div>
+          <div class="log" id="log"></div>
+          <div class="ask">
+            <label class="sr" for="q">Your question</label>
+            <textarea id="q" rows="1" maxlength="300" placeholder="Where were you when the lights went out?"></textarea>
+            <button class="send" id="send">Ask</button>
+          </div>
+          <div class="meta"><span>Enter to ask · Shift+Enter for a line break</span><span id="chars">0/300</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-h">
+            <span class="kicker">// notebook</span>
+            <div class="tabs" role="group" aria-label="Notebook order">
+              <button class="tab" data-v="person" aria-pressed="${S.noteView === 'person'}">By person</button>
+              <button class="tab" data-v="time" aria-pressed="${S.noteView === 'time'}">By time</button>
+            </div>
+          </div>
+          <div class="notes" id="notes"></div>
+        </div>
+      </div>
+
+      <div class="accuse-wrap"><button class="accuse" id="acc">Make an accusation</button></div>`;
+
+    renderFiles(); renderWho(); renderLog(); renderNotes();
+
+    const q = document.getElementById('q');
+    const chars = document.getElementById('chars');
+    q.addEventListener('input', () => {
+      q.style.height = 'auto';
+      q.style.height = Math.min(q.scrollHeight, 120) + 'px';
+      chars.textContent = `${q.value.length}/300`;
+    });
+    q.addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ask(); } });
+    document.getElementById('send').addEventListener('click', ask);
+    document.getElementById('acc').addEventListener('click', openAccuse);
+    stage.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => {
+      S.noteView = b.dataset.v;
+      stage.querySelectorAll('.tab').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      renderNotes();
+    }));
+    if (!S.busy) q.focus();
+  }
+
+  const who = () => S.pub.suspects.find((s) => s.id === S.active);
+
+  function renderFiles() {
+    const host = document.getElementById('files');
+    if (!host) return;
+    host.innerHTML = S.pub.suspects.map((s) => {
+      const t = S.tell[s.id] || 0;
+      const n = (S.log[s.id] || []).filter((x) => x.who === 'you').length;
+      return `<button class="file" data-id="${s.id}" aria-current="${S.active === s.id}">
+          <span class="file-n"><span class="file-name">${esc(s.name)}</span><span class="file-age">${esc(s.age)}</span></span>
+          <span class="file-role">${esc(s.role)}</span>
+          <span class="file-q">“${esc(s.publicAlibi)}”</span>
+          <span class="file-m">
+            <span class="tell" aria-label="Rattled ${t} of 3">${[1, 2, 3].map((i) => `<i class="${t >= i ? 'on' : ''}"></i>`).join('')}</span>
+            <span class="file-c">${n ? n + (n === 1 ? ' q' : ' qs') : '—'}</span>
+          </span>
+        </button>`;
+    }).join('');
+    host.querySelectorAll('.file').forEach((b) => b.addEventListener('click', () => {
+      if (S.busy) { toast('Wait for the answer first.'); return; }
+      S.active = b.dataset.id;
+      renderFiles(); renderWho(); renderLog();
+      if (window.matchMedia('(max-width:1040px)').matches) {
+        document.getElementById('interview')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+      document.getElementById('q')?.focus();
+    }));
+  }
+
+  function renderWho() {
+    const s = who(); const el = document.getElementById('who');
+    if (el && s) el.innerHTML = `<span class="who-n">${esc(s.name)}</span><span class="who-r">${esc(s.role)}</span>`;
+  }
+
+  function renderLog() {
+    const host = document.getElementById('log');
+    if (!host) return;
+    const turns = S.log[S.active] || [];
+    const s = who();
+    if (!turns.length) {
+      host.innerHTML = `<p class="blank">${esc(s.name)} is waiting. Ask where they were, who they saw, or put another suspect’s account to them.</p>`;
+      return;
+    }
+    host.innerHTML = turns.map((t) => `
+      <div class="turn ${t.who}">
+        <span class="turn-w">${t.who === 'you' ? 'You' : t.who === 'sys' ? '' : esc(s.name)}</span>
+        <div class="bub">${esc(t.text)}</div>
+      </div>`).join('');
+    host.scrollTop = host.scrollHeight;
+  }
+
+  function push(id, w, text) {
+    (S.log[id] = S.log[id] || []).push({ who: w, text });
+    if (id === S.active) renderLog();
+  }
+
+  function setBusy(v) {
+    S.busy = v;
+    const s = document.getElementById('send'); const q = document.getElementById('q');
+    if (s) { s.disabled = v; s.textContent = v ? '…' : 'Ask'; }
+    if (q) q.disabled = v;
+  }
+
+  function counters() {
+    hud.innerHTML = `<span class="tick">${left()}</span> of ${P.QUESTION_BUDGET} questions left`;
+    const el = document.getElementById('qleft');
+    if (el) el.textContent = `${left()} left`;
+  }
+
+  async function ask() {
+    if (S.busy || S.over) return;
+    const box = document.getElementById('q');
+    const question = box.value.trim();
+    if (!question) return;
+    if (left() <= 0) { toast('Out of questions. Name someone.'); return; }
+
+    const id = S.active;
+    const suspect = CASE.suspects.find((s) => s.id === id);
+    box.value = ''; box.style.height = 'auto';
+    document.getElementById('chars').textContent = '0/300';
+    push(id, 'you', question);
+    setBusy(true);
+
+    const log = document.getElementById('log');
+    const wait = document.createElement('div');
+    wait.className = 'turn them';
+    wait.innerHTML = `<span class="turn-w">${esc(suspect.name)}</span><div class="bub dots"><i></i><i></i><i></i></div>`;
+    log.append(wait); log.scrollTop = log.scrollHeight;
+
+    // There is no system role: the standing instructions are a leading user turn
+    // that is always kept, then this suspect's own interview replays after it.
+    const turns = [{ role: 'user', content: P.suspectSystem(CASE, suspect) + '\n\n' + REPLY_RULE }];
+    for (const t of (S.log[id] || [])) {
+      if (t.who === 'you' && t.text !== question) turns.push({ role: 'user', content: t.text });
+      else if (t.who === 'them') turns.push({ role: 'assistant', content: t.text });
+    }
+    turns.push({ role: 'user', content: question + '\n\n' + REPLY_RULE });
+
+    try {
+      const out = await sample.json(turns, { cache: false });
+      wait.remove();
+      const reply = String(out.reply || '').trim();
+      if (!reply) throw { code: 'empty_completion' };
+      const rattled = Math.max(0, Math.min(3, parseInt(out.rattled, 10) || 0));
+      const claims = Array.isArray(out.claims) ? out.claims.slice(0, 4) : [];
+
+      S.asked += 1;
+      push(id, 'them', reply);
+      S.tell[id] = Math.max(S.tell[id] || 0, rattled);
+      if (rattled >= 3 && id === CASE.culpritId) S.brokeCulprit = true;
+      claims.forEach((c, i) => {
+        if (c && c.text) S.notes.push({ id, name: suspect.name, text: String(c.text), time: c.time ? String(c.time) : '', order: S.notes.length + i });
+      });
+      renderFiles(); renderNotes(); counters();
+      if (left() === 0) { push(id, 'sys', 'That was your last question. Time to name someone.'); toast('Out of questions — make the accusation.'); }
+    } catch (e) {
+      wait.remove();
+      push(id, 'sys', copyFor(e));
+      toast(copyFor(e));
+    } finally {
+      setBusy(false);
+      document.getElementById('q')?.focus();
+    }
+  }
+
+  function renderNotes() {
+    const host = document.getElementById('notes');
+    if (!host) return;
+    if (!S.notes.length) {
+      host.innerHTML = `<p class="notes-0">Every checkable claim gets logged here. Switch to <strong>by time</strong> to line up who claimed to be where.</p>`;
+      return;
+    }
+    const rows = S.notes.slice();
+    if (S.noteView === 'time') {
+      const at = orderer(rows);
+      rows.sort((a, b) => {
+        const ma = at(a.time), mb = at(b.time);
+        if (ma === null && mb === null) return a.order - b.order;
+        if (ma === null) return 1;
+        if (mb === null) return -1;
+        return ma - mb || a.order - b.order;
+      });
+    } else {
+      const idx = {}; S.pub.suspects.forEach((s, i) => { idx[s.id] = i; });
+      rows.sort((a, b) => idx[a.id] - idx[b.id] || a.order - b.order);
+    }
+    host.innerHTML = rows.map((n) => `
+      <div class="note">
+        <div class="note-h"><span class="note-w">${esc(n.name.split(' ')[0])}</span>${n.time ? `<span class="note-t">${esc(n.time)}</span>` : ''}</div>
+        <div class="note-x">${esc(n.text)}</div>
+      </div>`).join('');
+  }
+
+  // ── accuse ──────────────────────────────────────────────────
+  function openAccuse() {
+    if (S.busy) { toast('Wait for the answer first.'); return; }
+    let chosen = null;
+    const scrim = document.createElement('div');
+    scrim.className = 'scrim';
+    scrim.innerHTML = `
+      <div class="modal" role="dialog" aria-modal="true" aria-labelledby="at">
+        <div class="kicker">// charge sheet</div>
+        <h2 id="at">Who did it?</h2>
+        <p>One name. Get it wrong and the case closes unsolved — the real one walks.</p>
+        <div class="pick">
+          ${S.pub.suspects.map((s) => `<button data-id="${s.id}" aria-pressed="false">${esc(s.name)}<small>${esc(s.role)}</small></button>`).join('')}
+        </div>
+        <div class="acts">
+          <button class="ghost" id="cancel">Keep questioning</button>
+          <button class="accuse" id="charge" disabled>Charge them</button>
+        </div>
+      </div>`;
+    document.body.append(scrim);
+    const charge = scrim.querySelector('#charge');
+    scrim.querySelectorAll('.pick button').forEach((b) => b.addEventListener('click', () => {
+      chosen = b.dataset.id;
+      scrim.querySelectorAll('.pick button').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+      charge.disabled = false;
+    }));
+    scrim.querySelector('#cancel').addEventListener('click', () => scrim.remove());
+    scrim.addEventListener('click', (e) => { if (e.target === scrim) scrim.remove(); });
+    charge.addEventListener('click', () => { scrim.remove(); renderVerdict(chosen); });
+    scrim.querySelector('.pick button')?.focus();
+  }
+
+  function renderVerdict(accusedId) {
+    S.over = true;
+    const k = CASE;
+    const accused = k.suspects.find((s) => s.id === accusedId);
+    const culprit = k.suspects.find((s) => s.id === k.culpritId);
+    const correct = accusedId === k.culpritId;
+    const score = P.scoreCase({ correct, questionsUsed: S.asked, difficulty: S.difficulty, brokeCulprit: S.brokeCulprit });
+    hud.textContent = correct ? 'Case closed' : 'Case unsolved';
+    window.scrollTo({ top: 0 });
+
+    stage.innerHTML = `
+      <div class="verdict">
+        <div class="stamp-wrap">
+          <div class="stamp ${correct ? 'won' : ''}">${correct ? 'Case closed' : 'Unsolved'}</div>
+          <h1>${correct ? 'You got them.' : 'Wrong person.'}</h1>
+          <p class="sub">${correct
+            ? `${esc(culprit.name)} did it — and you named ${esc(culprit.name)} in ${S.asked} question${S.asked === 1 ? '' : 's'}.`
+            : `You charged ${esc(accused.name)}. It was <strong>${esc(culprit.name)}</strong>, who is now free to do it again.`}</p>
+          <div class="score">${score.points.toLocaleString()}<small>${esc(score.rank)} · ${esc(score.detail)}</small></div>
+        </div>
+
+        <div class="sec">
+          <h3>What actually happened</h3>
+          <ul class="tl">${k.trueTimeline.map((t) => `<li><time>${esc(t.time)}</time><span>${esc(t.event)}</span></li>`).join('')}</ul>
+        </div>
+
+        <div class="sec">
+          <h3>What each of them was hiding</h3>
+          ${k.suspects.map((s) => `
+            <div class="rev ${s.id === k.culpritId ? 'g' : ''}">
+              <div class="rev-h">
+                <span class="rev-n">${esc(s.name)}</span>
+                <span class="tag ${s.id === k.culpritId ? 'g' : 'i'}">${s.id === k.culpritId ? 'guilty' : 'innocent'}</span>
+                ${s.id === accusedId ? '<span class="tag i">you charged them</span>' : ''}
+              </div>
+              <div class="rev-r"><b>The secret</b>${esc(s.secret)}</div>
+              <div class="rev-r"><b>Where they really were</b>${esc(s.truth)}</div>
+            </div>`).join('')}
+        </div>
+
+        <div style="display:flex;gap:9px;justify-content:center;padding-block:8px 24px;flex-wrap:wrap">
+          <button class="go" id="again">New case</button>
+        </div>
+      </div>`;
+    document.getElementById('again').addEventListener('click', () => { CASE = null; renderIntro(); });
+  }
+
+  // Carry a game in progress across a republish, where the viewer supports it.
+  try {
+    window.claude?.hot?.snapshot?.(() => ({ CASE, S }));
+  } catch (e) { /* not fatal — the game just restarts on republish */ }
+
+  function boot(saved) {
+    try {
+      if (saved && saved.CASE && saved.S && !saved.S.over) {
+        CASE = saved.CASE; Object.assign(S, saved.S);
+        renderCase();
+        return;
+      }
+    } catch (e) { /* fall through to a clean start */ }
+    renderIntro();
+  }
+
+  if (window.claude?.hot?.ready) window.claude.hot.ready(boot);
+  else boot(window.claude?.hot?.data ?? null);
+})();
+</script>
