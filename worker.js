@@ -4,6 +4,11 @@
  * Deploy: wrangler deploy
  */
 
+import {
+  QUESTION_BUDGET, DIFFICULTIES, CASE_SCHEMA, REPLY_SCHEMA,
+  caseGenPrompt, suspectSystem, makeSeed, scoreCase,
+} from './alibi-prompts.js';
+
 const ALLOWED_ORIGINS = [
   'https://kayrointer.com',
   'https://www.kayrointer.com',
@@ -154,6 +159,11 @@ export default {
         await demoGlobalIncr(env);
         return handleDemo(prompt, env, origin);
       }
+
+      // ALIBI — public interrogation game. Same guard model as /api/demo: server-side
+      // key, per-IP + global daily caps, hard token ceilings. The generated case file
+      // (culprit, true timeline, every secret) lives in KV and never reaches the browser.
+      if (path === '/api/alibi') return handleAlibi(request, env, origin);
 
       // Flights (Duffel) — all endpoints require a valid session
       if (path === '/api/flights/search') {
@@ -1034,6 +1044,8 @@ const RL_CONFIG = {
   plancode: { max:  5, window: 60 * 60 }, //  5 code attempts per IP per hour
   lead:     { max:  3, window: 60 * 60 }, //  3 enterprise leads per IP per hour
   demo:     { max:  3, window: 60 * 60 }, //  3 public AI-demo calls per IP per hour
+  alibinew: { max:  4, window: 60 * 60 }, //  4 new Alibi cases per IP per hour
+  alibiask: { max: 70, window: 60 * 60 }, // 70 suspect questions per IP per hour
 };
 
 // ── PUBLIC AI DEMO — cost guards (Opus is expensive; this is a public endpoint) ──
@@ -1086,6 +1098,315 @@ async function handleDemo(prompt, env, origin) {
   const reply = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
   if (!reply) return json({ error: 'empty', message: "Reach out and I'll show you what it can do." }, 502, origin);
   return json({ reply }, 200, origin);
+}
+
+// ══════════════════════════════════════════════════════════════
+// ALIBI — AI interrogation game
+//
+// Three actions on one route:
+//   {action:'new',    difficulty}                 → generates a case, returns the redacted brief
+//   {action:'ask',    caseId, suspect, question}  → one suspect answers, in character
+//   {action:'accuse', caseId, suspect}            → verdict, reveal, score
+//
+// The case file holds the culprit, the true timeline and all four secrets. It is written
+// to KV under a random id and only ever leaves this Worker redacted — so the answer is not
+// sitting in the page source waiting to be read out of devtools. Each suspect call is built
+// from that one suspect's private block only, so no side character can leak the solution.
+// ══════════════════════════════════════════════════════════════
+const ALIBI_MODEL        = 'claude-opus-5';
+const ALIBI_CASE_TOKENS  = 6000;             // a case file runs ~2.5-4k tokens
+const ALIBI_REPLY_TOKENS = 800;
+const ALIBI_DAILY_CALLS  = 400;              // global kill-switch: paid calls/day, all players
+const ALIBI_Q_MAX        = 300;              // chars per question
+const ALIBI_TTL          = 6 * 60 * 60;      // an abandoned case expires from KV in 6h
+
+function _alibiDayKey() { return `alibi:global:${new Date().toISOString().slice(0, 10)}`; }
+
+// Fail-CLOSED, as with the demo: no KV means no abuse protection, so no paid calls.
+async function alibiGlobalCapped(env) {
+  if (!env.USERS) return true;
+  const n = await env.USERS.get(_alibiDayKey());
+  return n !== null && parseInt(n, 10) >= ALIBI_DAILY_CALLS;
+}
+async function alibiGlobalIncr(env) {
+  if (!env.USERS) return;
+  const k = _alibiDayKey();
+  const cur = parseInt((await env.USERS.get(k)) || '0', 10) + 1;
+  await env.USERS.put(k, String(cur), { expirationTtl: 2 * 24 * 60 * 60 });
+}
+
+/**
+ * One structured call to Claude. Returns {data} or {error}.
+ * Opus 5 rejects assistant prefills, so JSON comes back via output_config.format
+ * instead. `fallbacks: 'default'` re-runs a classifier refusal on Anthropic's
+ * recommended substitute server-side rather than handing the player an error.
+ */
+async function alibiCall(env, { system, messages, schema, maxTokens, effort, cacheSystem }) {
+  const key = env.ANTHROPIC_KEY || env.ANTHROPIC_API_KEY;
+  if (!key) return { error: 'unavailable' };
+
+  const body = {
+    model: ALIBI_MODEL,
+    max_tokens: maxTokens,
+    fallbacks: 'default',
+    output_config: { format: { type: 'json_schema', schema } },
+    messages,
+  };
+  if (effort) body.output_config.effort = effort;
+  if (system) {
+    // The suspect's system prompt is identical on every turn of an interview — cache it
+    // so turn 9 isn't paying full price to re-read the same character sheet.
+    body.system = cacheSystem
+      ? [{ type: 'text', text: system, cache_control: { type: 'ephemeral' } }]
+      : system;
+  }
+
+  let res;
+  try {
+    res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': key,
+        'anthropic-version': '2023-06-01',
+        'anthropic-beta': 'server-side-fallback-2026-07-01',
+        'User-Agent': 'kayro-worker/1.0',
+      },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(180000),
+    });
+  } catch (e) {
+    return { error: 'timeout' };
+  }
+  if (!res.ok) {
+    console.error('alibi upstream', res.status, await res.text().catch(() => ''));
+    return { error: 'upstream' };
+  }
+
+  const data = await res.json();
+  // stop_reason must be checked before reading content — on a refusal it is empty or partial.
+  if (data.stop_reason === 'refusal') return { error: 'refusal' };
+  if (data.stop_reason === 'max_tokens') return { error: 'truncated' };
+  const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('').trim();
+  if (!text) return { error: 'empty' };
+  try {
+    return { data: JSON.parse(text) };
+  } catch (e) {
+    return { error: 'parse' };
+  }
+}
+
+async function alibiLoad(env, caseId) {
+  if (!env.USERS || !caseId) return null;
+  return env.USERS.get(`alibi:case:${caseId}`, { type: 'json' });
+}
+async function alibiSave(env, state) {
+  if (!env.USERS) return;
+  await env.USERS.put(`alibi:case:${state.id}`, JSON.stringify(state), { expirationTtl: ALIBI_TTL });
+}
+
+/** Everything the player is allowed to see. Secrets, truths and the culprit stay behind. */
+function alibiPublic(state) {
+  const k = state.case;
+  return {
+    caseId: state.id,
+    difficulty: state.difficulty,
+    title: k.title,
+    crime: k.crime,
+    scene: k.scene,
+    victim: k.victim,
+    window: k.window,
+    evidence: k.evidence,
+    suspects: k.suspects.map((s) => ({
+      id: s.id, name: s.name, age: s.age, role: s.role, publicAlibi: s.publicAlibi,
+    })),
+    budget: QUESTION_BUDGET,
+    questionsLeft: QUESTION_BUDGET - state.asked,
+  };
+}
+
+/** A generated case is only usable if the structure holds up. Cheap sanity gate. */
+function alibiValidCase(k) {
+  if (!k || !Array.isArray(k.suspects) || k.suspects.length !== 4) return false;
+  const ids = k.suspects.map((s) => s.id);
+  if (new Set(ids).size !== 4) return false;
+  if (!ids.includes(k.culpritId)) return false;
+  if (!Array.isArray(k.evidence) || !k.evidence.length) return false;
+  return k.suspects.every((s) => s.name && s.truth && s.secret && s.crackPoint && Array.isArray(s.knows));
+}
+
+async function handleAlibi(request, env, origin) {
+  if (request.method !== 'POST') return err('POST only', 405, origin);
+  let body = {};
+  try { body = await request.json(); } catch {}
+  const action = String(body.action || '');
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+  if (action === 'new')    return alibiNew(body, env, origin, ip);
+  if (action === 'ask')    return alibiAsk(body, env, origin, ip);
+  if (action === 'accuse') return alibiAccuse(body, env, origin);
+  return err('Unknown action', 400, origin);
+}
+
+async function alibiNew(body, env, origin, ip) {
+  const difficulty = DIFFICULTIES[body.difficulty] ? body.difficulty : 'detective';
+
+  const rlWait = await rlCheck(env, 'alibinew', ip);
+  if (rlWait !== null) {
+    return json({ gate: true, error: 'rate_limited', message: `You've opened a few cases this hour. Try again in ${Math.ceil(rlWait / 60)} minute(s).` }, 429, origin);
+  }
+  if (await alibiGlobalCapped(env)) {
+    return json({ gate: true, error: 'daily_cap', message: "Today's Alibi quota is used up — the detectives have been busy. Come back tomorrow." }, 429, origin);
+  }
+  // Reserve before the paid call, so a failed generation can't be used to bypass the cap.
+  await rlRecord(env, 'alibinew', ip);
+  await alibiGlobalIncr(env);
+
+  const seed = makeSeed();
+  const out = await alibiCall(env, {
+    messages: [{ role: 'user', content: caseGenPrompt(difficulty, seed) }],
+    schema: CASE_SCHEMA,
+    maxTokens: ALIBI_CASE_TOKENS,
+    effort: 'medium',
+  });
+  if (out.error) return alibiError(out.error, origin);
+  if (!alibiValidCase(out.data)) {
+    return json({ error: 'generation', message: 'That case came out malformed. Try opening another.' }, 502, origin);
+  }
+
+  const state = {
+    id: crypto.randomUUID(),
+    difficulty,
+    case: out.data,
+    asked: 0,
+    closed: false,
+    brokeCulprit: false,
+    transcript: {},            // suspectId → [{ q, a }]
+    createdAt: Date.now(),
+  };
+  await alibiSave(env, state);
+  return json(alibiPublic(state), 200, origin);
+}
+
+async function alibiAsk(body, env, origin, ip) {
+  const question = String(body.question || '').replace(/[\u0000-\u001f]+/g, ' ').trim();
+  if (!question) return json({ error: 'empty', message: 'Ask them something.' }, 400, origin);
+  if (question.length > ALIBI_Q_MAX) {
+    return json({ error: 'too_long', message: `Keep questions under ${ALIBI_Q_MAX} characters.` }, 400, origin);
+  }
+
+  const state = await alibiLoad(env, String(body.caseId || ''));
+  if (!state) return json({ error: 'no_case', message: 'That case file is gone. Open a new one.' }, 404, origin);
+  if (state.closed) return json({ error: 'closed', message: 'You already made the accusation.' }, 409, origin);
+  if (state.asked >= QUESTION_BUDGET) {
+    return json({ error: 'no_questions', message: 'Out of questions. Name someone.' }, 403, origin);
+  }
+
+  const suspect = state.case.suspects.find((s) => s.id === String(body.suspect || ''));
+  if (!suspect) return json({ error: 'no_suspect', message: 'No such suspect.' }, 400, origin);
+
+  const rlWait = await rlCheck(env, 'alibiask', ip);
+  if (rlWait !== null) {
+    return json({ gate: true, error: 'rate_limited', message: `That's the interrogation limit for this hour. Back in ${Math.ceil(rlWait / 60)} minute(s).` }, 429, origin);
+  }
+  if (await alibiGlobalCapped(env)) {
+    return json({ gate: true, error: 'daily_cap', message: "Today's Alibi quota is used up. Come back tomorrow." }, 429, origin);
+  }
+  await rlRecord(env, 'alibiask', ip);
+  await alibiGlobalIncr(env);
+
+  // Replay this interview only. A suspect never sees another suspect's interview,
+  // which is what makes holding (and breaking) a consistent lie meaningful.
+  const prior = state.transcript[suspect.id] || [];
+  const messages = [];
+  for (const turn of prior) {
+    messages.push({ role: 'user', content: turn.q });
+    messages.push({ role: 'assistant', content: turn.a });
+  }
+  messages.push({ role: 'user', content: question });
+
+  const out = await alibiCall(env, {
+    system: suspectSystem(state.case, suspect),
+    cacheSystem: true,
+    messages,
+    schema: REPLY_SCHEMA,
+    maxTokens: ALIBI_REPLY_TOKENS,
+    effort: 'medium',
+  });
+  if (out.error) return alibiError(out.error, origin);
+
+  const reply   = String(out.data.reply || '').trim();
+  const claims  = Array.isArray(out.data.claims) ? out.data.claims.slice(0, 4) : [];
+  const rattled = Math.max(0, Math.min(3, parseInt(out.data.rattled, 10) || 0));
+  if (!reply) return alibiError('empty', origin);
+
+  // The question is only charged once there is an answer to show for it.
+  state.asked += 1;
+  state.transcript[suspect.id] = prior.concat([{ q: question, a: reply }]);
+  if (rattled >= 3 && suspect.id === state.case.culpritId) state.brokeCulprit = true;
+  await alibiSave(env, state);
+
+  return json({
+    suspect: suspect.id,
+    reply,
+    claims,
+    rattled,
+    questionsLeft: QUESTION_BUDGET - state.asked,
+  }, 200, origin);
+}
+
+async function alibiAccuse(body, env, origin) {
+  const state = await alibiLoad(env, String(body.caseId || ''));
+  if (!state) return json({ error: 'no_case', message: 'That case file is gone. Open a new one.' }, 404, origin);
+
+  const accused = state.case.suspects.find((s) => s.id === String(body.suspect || ''));
+  if (!accused) return json({ error: 'no_suspect', message: 'No such suspect.' }, 400, origin);
+  if (state.closed) return json({ error: 'closed', message: 'You already made the accusation.' }, 409, origin);
+
+  const k = state.case;
+  const correct = accused.id === k.culpritId;
+  const culprit = k.suspects.find((s) => s.id === k.culpritId);
+
+  state.closed = true;
+  await alibiSave(env, state);
+
+  // Case over — now the whole file is fair game.
+  return json({
+    correct,
+    accusedId: accused.id,
+    accusedName: accused.name,
+    culpritId: k.culpritId,
+    culpritName: culprit.name,
+    trueTimeline: k.trueTimeline,
+    reveal: k.suspects.map((s) => ({
+      id: s.id,
+      name: s.name,
+      guilty: s.id === k.culpritId,
+      secret: s.secret,
+      truth: s.truth,
+    })),
+    questionsUsed: state.asked,
+    score: scoreCase({
+      correct,
+      questionsUsed: state.asked,
+      difficulty: state.difficulty,
+      brokeCulprit: state.brokeCulprit,
+    }),
+  }, 200, origin);
+}
+
+function alibiError(code, origin) {
+  const map = {
+    unavailable: [503, 'The interrogation room is offline — no API key configured.'],
+    timeout:     [504, 'They took too long to answer. Ask again.'],
+    upstream:    [502, 'Lost the line to the interview room. Ask again.'],
+    refusal:     [502, 'That line of questioning went nowhere. Try a different angle.'],
+    truncated:   [502, 'They trailed off mid-sentence. Ask again.'],
+    parse:       [502, 'Garbled answer came back. Ask again.'],
+    empty:       [502, 'They said nothing at all. Ask again.'],
+  };
+  const [status, message] = map[code] || [502, 'Something went wrong. Try again.'];
+  return json({ error: code, message }, status, origin);
 }
 
 async function rlCheck(env, action, ip) {

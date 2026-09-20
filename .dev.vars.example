@@ -1,0 +1,9 @@
+# Copy to `.dev.vars` and fill in. That file is gitignored — never commit a real key.
+#   cp .dev.vars.example .dev.vars
+#
+# Used by dev-server.mjs for local runs, and by `npx wrangler dev` if you use that
+# instead. Production secrets live in Cloudflare (`npx wrangler secret put ...`),
+# not here.
+#
+# Get a key: https://console.anthropic.com/settings/api-keys
+ANTHROPIC_KEY=sk-ant-replace-me
