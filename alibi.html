@@ -217,7 +217,12 @@ main{max-width:1240px;margin:0 auto;padding:36px 24px 80px}
 <script type="module">
 import { QUESTION_BUDGET, DIFFICULTIES } from './alibi-prompts.js';
 
-const API = 'https://kayro-backend.obaalbaki11.workers.dev/api/alibi';
+// Served from the live site, the game talks to the deployed Worker. Served from a local
+// dev server (see dev-server.mjs), it talks to that same origin instead, so there is no
+// second host to configure and no CORS hop. ?api=<url> overrides both.
+const LOCAL = ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname);
+const API = new URLSearchParams(location.search).get('api')
+  || (LOCAL ? '/api/alibi' : 'https://kayro-backend.obaalbaki11.workers.dev/api/alibi');
 const stage = document.getElementById('stage');
 const hud = document.getElementById('hud');
 
