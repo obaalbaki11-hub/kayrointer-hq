@@ -2,225 +2,281 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Privacy Policy — Kayro Interactive</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='50' fill='%23ffffff'/><text y='72' font-size='60' font-family='Inter,sans-serif' font-weight='900' fill='%23000000' text-anchor='middle' x='50'>K</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy | Kayro Interactive</title>
+<meta name="description" content="How Kayro Interactive handles personal information on kayrointer.com and when you contact us about a project.">
+<link rel="canonical" href="https://kayrointer.com/privacy.html">
+<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800&display=swap" rel="stylesheet">
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html{scroll-behavior:smooth}
 :root{
-  --bg:#080808;
-  --bg2:#111;
-  --border:rgba(255,255,255,0.08);
-  --text:#ffffff;
-  --text2:#888;
-  --sans:'Inter',-apple-system,sans-serif;
-  --mono:'JetBrains Mono',monospace;
+  --blue:#0E61FF;
+  --cyan:#07D4ED;
+  --navy:#00173A;
+  --ink:#141414;
+  --ink2:#4A4A4A;
+  --ink3:#6B6B6B;
+  --paper:#FFFFFF;
+  --paper2:#F6F6F3;
+  --line:#E4E4DF;
+  --gutter:clamp(16px,4vw,40px);
+  --sans:'Inter Tight',ui-sans-serif,system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
 }
-body{background:var(--bg);color:var(--text);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.7}
-::-webkit-scrollbar{width:4px}
-::-webkit-scrollbar-thumb{background:rgba(255,255,255,.1);border-radius:2px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit}
+:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--ink);color:#fff;padding:10px 16px;z-index:200;text-decoration:none}
+.skip:focus{left:8px}
+.wrap{max-width:1240px;margin:0 auto;padding:0 var(--gutter)}
+.mark rect{shape-rendering:crispEdges}
 
-nav{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  height:60px;display:flex;align-items:center;justify-content:space-between;
-  padding:0 32px;background:rgba(8,8,8,.92);backdrop-filter:blur(20px);
-  border-bottom:1px solid var(--border);
-}
-.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
-.nav-logo-mark{
-  width:32px;height:32px;border-radius:50%;background:#fff;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:900;font-size:15px;color:#000;flex-shrink:0;
-}
-.nav-logo-name{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.2px}
-.nav-back{
-  font-size:13px;font-weight:500;color:var(--text2);text-decoration:none;
-  padding:8px 16px;border:1px solid var(--border);border-radius:8px;transition:all .15s;
-}
-.nav-back:hover{color:#fff;border-color:rgba(255,255,255,.2)}
+/* Nav */
+.nav{position:sticky;top:0;z-index:100;background:rgba(255,255,255,.94);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:72px;gap:16px}
+.logo{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink);font-size:20px;letter-spacing:-.02em;line-height:1}
+.logo b{font-weight:800}
+.back{display:inline-flex;align-items:center;gap:10px;font:600 15px/1 var(--sans);text-decoration:none;padding:12px 16px;border:2px solid var(--ink);color:var(--ink);transition:background .15s,color .15s}
+.back:hover{background:var(--ink);color:#fff}
 
-.page{max-width:720px;margin:0 auto;padding:100px 24px 80px}
+/* Header */
+.head{border-bottom:1px solid var(--line);position:relative;overflow:hidden}
+.head::before{content:"";position:absolute;inset:0;background-image:linear-gradient(var(--line) 1px,transparent 1px),linear-gradient(90deg,var(--line) 1px,transparent 1px);background-size:96px 96px;background-position:-1px -1px;opacity:.55;-webkit-mask-image:linear-gradient(90deg,transparent 0%,#000 60%);mask-image:linear-gradient(90deg,transparent 0%,#000 60%);pointer-events:none}
+.head .wrap{position:relative;padding-top:clamp(56px,8vw,96px);padding-bottom:clamp(48px,7vw,80px)}
+.eyebrow{display:inline-flex;align-items:center;gap:10px;font:500 13px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:24px}
+.eyebrow::before{content:"";width:10px;height:10px;background:var(--blue)}
+h1{font-size:clamp(42px,7vw,88px);font-weight:400;letter-spacing:-.04em;line-height:.98;text-wrap:balance}
+h1 b{font-weight:800}
+.meta{margin-top:24px;font-size:15px;color:var(--ink3)}
 
-.page-label{
-  font-size:11px;font-weight:600;color:var(--text2);letter-spacing:.8px;
-  font-family:var(--mono);text-transform:uppercase;margin-bottom:16px;
-}
-.page-title{
-  font-size:clamp(28px,4vw,44px);font-weight:800;letter-spacing:-1.5px;
-  color:#fff;margin-bottom:12px;line-height:1.1;
-}
-.page-meta{font-size:13px;color:var(--text2);margin-bottom:60px}
+/* Body */
+.doc{display:grid;grid-template-columns:240px minmax(0,1fr);gap:clamp(32px,6vw,96px);padding-top:clamp(48px,7vw,88px);padding-bottom:clamp(72px,10vw,120px)}
+.toc{position:sticky;top:104px;align-self:start}
+.toc p{font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:16px}
+.toc ol{list-style:none;display:flex;flex-direction:column;gap:2px;border-left:1px solid var(--line)}
+.toc a{display:block;padding:6px 0 6px 16px;margin-left:-1px;border-left:2px solid transparent;font-size:14px;color:var(--ink2);text-decoration:none}
+.toc a:hover{color:var(--ink);border-left-color:var(--blue)}
+.content{max-width:680px;min-width:0}
+.summary{display:grid;grid-template-columns:repeat(3,1fr);border-top:1px solid var(--ink);border-left:1px solid var(--line);margin-bottom:64px}
+.summary div{padding:20px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.summary strong{display:block;font-size:16px;font-weight:700;margin-bottom:6px}
+.summary span{display:block;font-size:14px;color:var(--ink2);line-height:1.5}
+section{scroll-margin-top:96px}
+section + section{margin-top:56px}
+h2{display:flex;align-items:baseline;gap:14px;font-size:clamp(24px,2.6vw,30px);font-weight:400;letter-spacing:-.025em;line-height:1.15;padding-bottom:16px;margin-bottom:20px;border-bottom:1px solid var(--line)}
+h2 b{font-weight:800}
+h2 .n{font:700 14px/1 var(--mono);color:var(--blue);flex:none}
+.content p{color:var(--ink2)}
+.content p + p,.content p + ul,.content ul + p{margin-top:14px}
+.content ul{list-style:none;display:flex;flex-direction:column;gap:10px}
+.content li{position:relative;padding-left:22px;color:var(--ink2)}
+.content li::before{content:"";position:absolute;left:0;top:.62em;width:8px;height:8px;background:var(--blue)}
+.content strong{color:var(--ink);font-weight:700}
+.content a{color:var(--blue);text-underline-offset:3px}
+.content a:hover{color:var(--navy)}
+.note{margin-top:20px;padding:20px 22px;background:var(--paper2);border-left:3px solid var(--navy)}
+.note p{color:var(--ink2);font-size:15px}
+.contact-list{display:grid;gap:12px;margin-top:20px}
+.contact-list a{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:18px 20px;border:2px solid var(--ink);text-decoration:none;color:var(--ink);transition:background .15s,color .15s}
+.contact-list a:hover{background:var(--ink);color:#fff}
+.contact-list small{display:block;font:500 12px/1 var(--mono);text-transform:uppercase;letter-spacing:.08em;color:var(--ink3);margin-bottom:8px}
+.contact-list a:hover small{color:#B9B9B9}
+.contact-list strong{font-size:17px;font-weight:600;word-break:break-all}
+.contact-list .sq{flex:none;width:10px;height:10px;background:currentColor}
 
-.section{margin-bottom:48px}
-.section h2{
-  font-size:18px;font-weight:700;color:#fff;margin-bottom:16px;
-  padding-bottom:12px;border-bottom:1px solid var(--border);
-  letter-spacing:-.3px;
-}
-.section p{font-size:15px;color:#bbb;margin-bottom:14px;line-height:1.75}
-.section ul{padding-left:20px;margin-bottom:14px}
-.section ul li{font-size:15px;color:#bbb;margin-bottom:8px;line-height:1.7}
-.section a{color:#fff;text-decoration:underline;text-underline-offset:3px}
-.section a:hover{color:var(--text2)}
+/* Footer */
+footer{border-top:1px solid var(--line);padding:48px 0 40px}
+footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:28px}
+.foot-links{display:flex;flex-wrap:wrap;gap:8px 28px;list-style:none}
+.foot-links a{text-decoration:none;font-size:15px;color:var(--ink2)}
+.foot-links a:hover{color:var(--blue)}
+.foot-links a[aria-current]{color:var(--ink);font-weight:600}
+.foot-copy{width:100%;padding-top:28px;border-top:1px solid var(--line);font-size:14px;color:var(--ink3)}
 
-.highlight-box{
-  background:rgba(255,255,255,.03);border:1px solid var(--border);
-  border-radius:12px;padding:20px 24px;margin-bottom:14px;
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+@media (max-width:900px){
+  .doc{grid-template-columns:1fr}
+  .toc{position:static}
+  .toc ol{display:grid;grid-template-columns:repeat(2,1fr);gap:0 16px;border-left:0}
+  .toc a{padding-left:0;border-left:0;margin-left:0}
 }
-.highlight-box p{margin-bottom:0;font-size:14px}
-
-footer{
-  border-top:1px solid var(--border);padding:32px 24px;text-align:center;
-  font-size:12px;color:var(--text2);
+@media (max-width:640px){
+  body{font-size:16px}
+  .logo{font-size:18px}
+  .back span.long{display:none}
+  .summary{grid-template-columns:1fr}
+  .toc ol{grid-template-columns:1fr}
 }
-footer a{color:var(--text2);text-decoration:none}
-footer a:hover{color:#fff}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Skip to content</a>
 
-<nav>
-  <a class="nav-logo" href="/">
-    <div class="nav-logo-mark">K</div>
-    <span class="nav-logo-name">Kayro Interactive</span>
-  </a>
-  <a class="nav-back" href="/">← Back to home</a>
-</nav>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="kmark" viewBox="0 0 3 3">
+    <rect x="1" y="0" width="2" height="2" fill="#0E61FF"/>
+    <rect x="0" y="1" width="1" height="1" fill="#07D4ED"/>
+    <rect x="1" y="2" width="1" height="1" fill="#07D4ED"/>
+    <rect x="1" y="1" width="1" height="1" fill="#00173A"/>
+  </symbol>
+</svg>
 
-<div class="page">
-
-  <div class="page-label">Legal</div>
-  <h1 class="page-title">Privacy Policy</h1>
-  <p class="page-meta">Last updated: June 14, 2026</p>
-
-  <div class="section">
-    <h2>1. Overview</h2>
-    <p>Kayro Interactive ("Kayro", "we", "us", or "our") operates the AI workforce platform available at kayrointer.com. This Privacy Policy explains what information we collect, how we use it, and the choices you have.</p>
-    <p>By using Kayro, you agree to the collection and use of information described in this policy.</p>
+<header class="nav">
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Kayro Interactive, home">
+      <svg class="mark" width="30" height="30" aria-hidden="true"><use href="#kmark"/></svg>
+      <span><b>Kayro</b> Interactive.</span>
+    </a>
+    <a class="back" href="/"><span aria-hidden="true">←</span><span>Back<span class="long"> to home</span></span></a>
   </div>
+</header>
 
-  <div class="section">
-    <h2>2. Information We Collect</h2>
-    <p><strong style="color:#fff">Account information:</strong> When you sign up, we collect your name, email address, and authentication credentials. If you sign in with GitHub, we receive your GitHub profile name, email, and avatar.</p>
-    <p><strong style="color:#fff">Usage data:</strong> We collect information about how you use the platform — which agents you interact with, commands you run, and approximate token usage — to operate the service and enforce plan limits.</p>
-    <p><strong style="color:#fff">Content you provide:</strong> Messages, documents, and data you submit to AI agents are processed to generate responses. Conversation history is not permanently stored by default. However, information you explicitly save to your <strong style="color:#fff">Brain</strong> (the company knowledge base) is stored in your account until you delete it — this is a core feature of the service.</p>
-    <p><strong style="color:#fff">Technical data:</strong> IP address, browser type, and session identifiers are collected for security and abuse prevention.</p>
-  </div>
-
-  <div class="section">
-    <h2>3. Google API &amp; Gmail Usage</h2>
-    <div class="highlight-box">
-      <p style="color:#fff;font-weight:600;margin-bottom:8px">How we use your Google account</p>
-      <p>When you connect your Google account, Kayro requests permission to send emails on your behalf via the Gmail API (<code style="font-family:var(--mono);font-size:13px;color:#aaa">gmail.send</code> scope). This allows Kayro's AI agents to draft and send outreach emails, follow-ups, and other messages directly from your Gmail address — only when you explicitly instruct them to.</p>
+<main id="main">
+  <div class="head">
+    <div class="wrap">
+      <p class="eyebrow">Legal</p>
+      <h1><b>Privacy</b> policy.</h1>
+      <p class="meta">Last updated: October 7, 2026</p>
     </div>
-    <ul>
-      <li>We only send emails you have explicitly requested through the platform.</li>
-      <li>We do not read, index, or store the contents of your Gmail inbox.</li>
-      <li>We do not use your Gmail data to train AI models.</li>
-      <li>Access tokens are stored securely and used solely for the actions you initiate.</li>
-      <li>You can revoke Gmail access at any time via your <a href="https://myaccount.google.com/permissions" target="_blank">Google Account permissions page</a>.</li>
-    </ul>
-    <p>Our use of Google APIs complies with the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank">Google API Services User Data Policy</a>, including the Limited Use requirements.</p>
   </div>
 
-  <div class="section">
-    <h2>4. How We Use Your Information</h2>
-    <ul>
-      <li>To provide, operate, and improve the Kayro platform</li>
-      <li>To authenticate your identity and maintain your session</li>
-      <li>To enforce plan limits and usage caps</li>
-      <li>To send transactional emails (e.g. password resets, billing notices)</li>
-      <li>To detect and prevent fraud or abuse</li>
-      <li>To respond to your support requests</li>
-    </ul>
-    <p>We do not sell your personal information to third parties.</p>
-  </div>
+  <div class="wrap doc">
+    <nav class="toc" aria-label="On this page">
+      <p>On this page</p>
+      <ol>
+        <li><a href="#who">Who we are</a></li>
+        <li><a href="#scope">What this covers</a></li>
+        <li><a href="#collect">What we collect</a></li>
+        <li><a href="#use">How we use it</a></li>
+        <li><a href="#share">Who we share it with</a></li>
+        <li><a href="#keep">How long we keep it</a></li>
+        <li><a href="#rights">Your rights</a></li>
+        <li><a href="#security">Security</a></li>
+        <li><a href="#changes">Changes</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ol>
+    </nav>
 
-  <div class="section">
-    <h2>5. Third-Party Services</h2>
-    <p>Kayro uses the following third-party services to operate the platform:</p>
-    <ul>
-      <li><strong style="color:#fff">Firebase (Google)</strong> — authentication and user session management</li>
-      <li><strong style="color:#fff">Cloudflare</strong> — hosting, edge computing, and DDoS protection</li>
-      <li><strong style="color:#fff">Anthropic</strong> — AI model inference (Claude). Your messages are processed by Anthropic's API subject to their <a href="https://www.anthropic.com/privacy" target="_blank">privacy policy</a>.</li>
-      <li><strong style="color:#fff">Stripe</strong> — payment processing. Billing and financial data is handled directly by Stripe and subject to their <a href="https://stripe.com/privacy" target="_blank">privacy policy</a>. Kayro does not store full card details.</li>
-      <li><strong style="color:#fff">Hunter.io</strong> — email address discovery (only when you use the Lead Finder feature)</li>
-      <li><strong style="color:#fff">Apollo.io</strong> — prospect data and lead enrichment (only when you use prospecting features)</li>
-      <li><strong style="color:#fff">Meta</strong> — advertising integrations (only when you use the Meta Ads connector)</li>
-      <li><strong style="color:#fff">Resend</strong> — transactional email delivery</li>
-      <li><strong style="color:#fff">Tavily</strong> — web search (only when agents perform internet searches)</li>
-      <li><strong style="color:#fff">Duffel / Amadeus</strong> — flight and travel data (only when you use the Travel Concierge booking feature)</li>
-      <li><strong style="color:#fff">Kling AI</strong> — video generation (only when you use the video ad feature on Scale plan)</li>
-    </ul>
-    <p>Each third party is subject to their own privacy policies and data handling practices.</p>
-    <p><strong style="color:#fff">International transfers:</strong> Kayro is operated from the UAE. We use US-based infrastructure providers (Cloudflare, Firebase, Anthropic, Stripe). By using the platform, you acknowledge that your data may be transferred to and processed in the United States and other countries, which may have different data protection laws than your country of residence.</p>
-  </div>
+    <div class="content">
+      <div class="summary" aria-label="In short">
+        <div><strong>No tracking</strong><span>No cookies, analytics or ad trackers on this website.</span></div>
+        <div><strong>Only what you send</strong><span>We hold personal details only when you contact us.</span></div>
+        <div><strong>Never sold</strong><span>We don't sell your data or use it for advertising.</span></div>
+      </div>
 
-  <div class="section">
-    <h2>6. Data Retention</h2>
-    <p>Account data is retained for as long as your account is active. If you delete your account, we remove your personal data within 30 days, except where we are required to retain it for legal or financial compliance purposes.</p>
-    <p>Usage logs and token records are retained for up to 12 months for billing and abuse prevention.</p>
-  </div>
+      <section id="who" aria-labelledby="who-h">
+        <h2 id="who-h"><span class="n">01</span><span><b>Who</b> we are</span></h2>
+        <p>Kayro Interactive ("Kayro", "we", "us") is an independent studio based in Dubai, United Arab Emirates. We build and run our own products, and we design and build brands, websites, games and software for clients.</p>
+        <p>We are responsible for the personal information described in this policy. You can reach us any time at <a href="mailto:omarbaalbaki@kayrointer.com">omarbaalbaki@kayrointer.com</a>.</p>
+      </section>
 
-  <div class="section">
-    <h2>7. Security</h2>
-    <p>We take security seriously. Authentication uses httpOnly session cookies to prevent client-side token theft. API keys are stored server-side and never exposed to the browser. All data in transit is encrypted via HTTPS/TLS.</p>
-    <p>No system is perfectly secure. If you discover a security issue, please contact us at <a href="mailto:dev@kayrointer.com">dev@kayrointer.com</a>.</p>
-  </div>
+      <section id="scope" aria-labelledby="scope-h">
+        <h2 id="scope-h"><span class="n">02</span><span><b>What</b> this policy covers</span></h2>
+        <p>This policy covers the Kayro Interactive website at kayrointer.com and any conversation you start with us about working together.</p>
+        <p>It does not cover:</p>
+        <ul>
+          <li><strong>The Kayro app</strong> at kayrointer.com/app.html. It has its own <a href="app-privacy.html">Kayro App Privacy Policy</a>.</li>
+          <li><strong>Our ventures</strong>, such as ROTH (rothbureau.com) and bell2bell (bell2bell.app), which run on their own websites.</li>
+          <li><strong>Websites we build for clients.</strong> Each client is responsible for the personal data collected on their own site.</li>
+        </ul>
+      </section>
 
-  <div class="section">
-    <h2>8. Your Rights</h2>
-    <p>Depending on where you live, you may have the right to access, correct, or delete your personal data; to object to or restrict how we process it; and to data portability. To exercise any of these rights, contact us at <a href="mailto:inquire@kayrointer.com">inquire@kayrointer.com</a>.</p>
-  </div>
+      <section id="collect" aria-labelledby="collect-h">
+        <h2 id="collect-h"><span class="n">03</span><span><b>What</b> we collect</span></h2>
+        <p><strong>When you browse this website.</strong> We don't ask you for anything, and the site doesn't set cookies or use analytics, advertising or tracking tools. Like any website, the services that host and deliver it, such as GitHub (which hosts the site) and Google Fonts (which serves our typefaces), receive technical details your browser sends automatically, including your IP address, browser type and the page requested. They handle that information under their own privacy policies.</p>
+        <p><strong>When you contact us.</strong> If you email us or message us on WhatsApp, we receive your name, your contact details and whatever you choose to tell us, such as your company, your project and your budget.</p>
+        <p><strong>When we work together.</strong> For client projects, we keep the business contact details, project materials, agreements and invoices needed to deliver the work and run our business.</p>
+        <p>Please don't send us sensitive personal information (for example health or financial account details) unless a project specifically requires it and we've agreed how it will be handled.</p>
+      </section>
 
-  <div class="section">
-    <h2>9. Children</h2>
-    <p>Kayro is not directed at children. We do not knowingly collect personal information from anyone under 16 (or under 13 in jurisdictions where that is the applicable minimum age). If you believe a minor has provided us with personal data, contact us at <a href="mailto:inquire@kayrointer.com">inquire@kayrointer.com</a> and we will delete it promptly.</p>
-  </div>
+      <section id="use" aria-labelledby="use-h">
+        <h2 id="use-h"><span class="n">04</span><span><b>How</b> we use it</span></h2>
+        <ul>
+          <li>To reply to your message and discuss your project.</li>
+          <li>To prepare proposals, scopes and quotes.</li>
+          <li>To deliver, launch and support work we do for you.</li>
+          <li>To send invoices and keep the business records the law requires.</li>
+          <li>To keep this website secure and working.</li>
+        </ul>
+        <p>We don't sell personal information, and we don't use it for advertising or to build marketing profiles.</p>
+      </section>
 
-  <div class="section">
-    <h2>10. AI-Generated Content Disclaimer</h2>
-    <div class="highlight-box">
-      <p style="color:#fff;font-weight:600;margin-bottom:8px">Important: AI output is not professional advice</p>
-      <p>Kayro's AI agents — including agents that discuss legal matters, financial topics, tax questions, accounting, or investment ideas — generate output using large language models. This output is for informational and productivity purposes only.</p>
+      <section id="share" aria-labelledby="share-h">
+        <h2 id="share-h"><span class="n">05</span><span><b>Who</b> we share it with</span></h2>
+        <p>We only share personal information when we need to:</p>
+        <ul>
+          <li><strong>Service providers</strong> that help us run the studio, such as our email, messaging and hosting providers. Messages you send on WhatsApp are also handled by WhatsApp (Meta) under its own policy.</li>
+          <li><strong>Professional advisers</strong>, such as accountants or lawyers, when they need it to advise us.</li>
+          <li><strong>Authorities</strong>, when the law requires it or to protect our rights.</li>
+        </ul>
+        <p>Some of these providers process data outside the UAE, including in the United States. When that happens, we rely on providers that protect data to recognised standards.</p>
+      </section>
+
+      <section id="keep" aria-labelledby="keep-h">
+        <h2 id="keep-h"><span class="n">06</span><span><b>How long</b> we keep it</span></h2>
+        <p>We keep enquiry messages for as long as we need them to respond and follow up. If we work together, we keep project and billing records for as long as the work continues and for any period the law requires for tax and accounting. After that, we delete the information or keep it in a form that no longer identifies you.</p>
+      </section>
+
+      <section id="rights" aria-labelledby="rights-h">
+        <h2 id="rights-h"><span class="n">07</span><span><b>Your</b> rights</span></h2>
+        <p>Depending on where you live, including under the UAE Personal Data Protection Law and, for people in the EU or UK, the GDPR, you can ask us to:</p>
+        <ul>
+          <li>Tell you what personal information we hold about you and give you a copy.</li>
+          <li>Correct information that's wrong or incomplete.</li>
+          <li>Delete your information, unless we have to keep it by law.</li>
+          <li>Stop or limit how we use it.</li>
+        </ul>
+        <p>Email <a href="mailto:omarbaalbaki@kayrointer.com?subject=Privacy%20request">omarbaalbaki@kayrointer.com</a> with "Privacy request" in the subject line. We may ask you to confirm your identity before we act on a request. You can also complain to your local data protection authority.</p>
+      </section>
+
+      <section id="security" aria-labelledby="security-h">
+        <h2 id="security-h"><span class="n">08</span><span><b>Security</b></span></h2>
+        <p>This website is served over HTTPS, and we limit access to client and enquiry information to the people who need it. No system is completely secure. If you think you've found a security problem, please tell us at <a href="mailto:omarbaalbaki@kayrointer.com?subject=Security%20report">omarbaalbaki@kayrointer.com</a>.</p>
+        <p>This website is not aimed at children, and we don't knowingly collect information from anyone under 16.</p>
+      </section>
+
+      <section id="changes" aria-labelledby="changes-h">
+        <h2 id="changes-h"><span class="n">09</span><span><b>Changes</b> to this policy</span></h2>
+        <p>We'll update this page if the way we handle personal information changes, and change the date at the top. If you're a client and the change affects you, we'll tell you directly.</p>
+      </section>
+
+      <section id="contact" aria-labelledby="contact-h">
+        <h2 id="contact-h"><span class="n">10</span><span><b>Contact</b></span></h2>
+        <p>Questions about this policy or your information? Get in touch.</p>
+        <div class="contact-list">
+          <a href="mailto:omarbaalbaki@kayrointer.com?subject=Privacy%20question">
+            <span><small>Email</small><strong>omarbaalbaki@kayrointer.com</strong></span><span class="sq" aria-hidden="true"></span>
+          </a>
+          <a href="https://wa.me/971555627973" target="_blank" rel="noopener">
+            <span><small>WhatsApp</small><strong>055 562 7973</strong></span><span class="sq" aria-hidden="true"></span>
+          </a>
+        </div>
+        <div class="note"><p>Kayro Interactive · Dubai, United Arab Emirates</p></div>
+      </section>
     </div>
-    <p><strong style="color:#fff">Nothing generated by Kayro constitutes legal, financial, tax, investment, or accounting advice.</strong> AI agents are not licensed attorneys, financial advisors, CPAs, or regulated professionals. Output should not be relied upon as a substitute for qualified professional advice specific to your situation.</p>
-    <p>Kayro accepts no liability for decisions made based on AI-generated content. Always consult a qualified professional before acting on legal, financial, tax, or investment matters.</p>
   </div>
-
-  <div class="section">
-    <h2>11. California Privacy Rights (CCPA)</h2>
-    <p>If you are a California resident, the California Consumer Privacy Act (CCPA) grants you additional rights:</p>
-    <ul>
-      <li><strong style="color:#fff">Right to Know:</strong> You may request disclosure of the categories and specific pieces of personal information we have collected about you.</li>
-      <li><strong style="color:#fff">Right to Delete:</strong> You may request deletion of personal information we have collected, subject to certain exceptions.</li>
-      <li><strong style="color:#fff">Right to Non-Discrimination:</strong> We will not discriminate against you for exercising your privacy rights.</li>
-      <li><strong style="color:#fff">Do Not Sell:</strong> We do not sell your personal information to third parties.</li>
-    </ul>
-    <p>To exercise these rights, contact us at <a href="mailto:inquire@kayrointer.com">inquire@kayrointer.com</a>. We will respond within 45 days.</p>
-  </div>
-
-  <div class="section">
-    <h2>12. Changes to This Policy</h2>
-    <p>We may update this Privacy Policy from time to time. When we do, we will update the "Last updated" date at the top and, for material changes, notify you by email or via a notice in the app.</p>
-  </div>
-
-  <div class="section">
-    <h2>13. Contact</h2>
-    <p>Questions about this policy? Reach us at:</p>
-    <ul>
-      <li>Email: <a href="mailto:inquire@kayrointer.com">inquire@kayrointer.com</a></li>
-      <li>Website: <a href="https://kayrointer.com">kayrointer.com</a></li>
-    </ul>
-  </div>
-
-</div>
+</main>
 
 <footer>
-  <p>© 2026 Kayro Interactive &nbsp;·&nbsp; <a href="/">Home</a> &nbsp;·&nbsp; <a href="mailto:inquire@kayrointer.com">Contact</a></p>
+  <div class="wrap">
+    <a class="logo" href="/" aria-label="Kayro Interactive, home">
+      <svg class="mark" width="26" height="26" aria-hidden="true"><use href="#kmark"/></svg>
+      <span><b>Kayro</b> Interactive.</span>
+    </a>
+    <ul class="foot-links" aria-label="Footer">
+      <li><a href="/#ventures">Ventures</a></li>
+      <li><a href="/#clients">Client work</a></li>
+      <li><a href="/#services">What we do</a></li>
+      <li><a href="/#contact">Contact</a></li>
+      <li><a href="privacy.html" aria-current="page">Privacy</a></li>
+    </ul>
+    <div class="foot-copy">© 2026 Kayro Interactive · Dubai, UAE</div>
+  </div>
 </footer>
-
 </body>
 </html>
