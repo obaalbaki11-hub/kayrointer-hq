@@ -28,7 +28,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;700;800&family=JetBrains+Mono:wght@400;500;700;800&family=Cormorant+Garamond:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"Kayro Interactive","url":"https://kayrointer.com","logo":"https://kayrointer.com/assets/brand/kayro-logo.png","email":"omarbaalbaki@kayrointer.com","address":{"@type":"PostalAddress","addressLocality":"Dubai","addressCountry":"AE"}}
@@ -160,13 +160,13 @@ section{scroll-margin-top:72px}
 .v-roth .venture-link{color:#AC3E1A}
 
 /* bell2bell: dark, premium */
-.v-bell{background:#0B0B0E;color:#F2F0EA}
+.v-bell{background:#0B0B0E;color:#F2F0EA;font-family:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .v-bell::before{content:"";position:absolute;inset:0;z-index:-1;background-image:linear-gradient(rgba(255,255,255,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.05) 1px,transparent 1px);background-size:32px 32px}
-.v-bell .venture-tag{background:#E0A43A;color:#0B0B0E}
-.v-bell h3{font-family:var(--mono);font-weight:700;font-size:clamp(38px,4.4vw,58px);letter-spacing:-.04em}
+.v-bell .venture-tag{background:#E0A43A;color:#0B0B0E;font-family:inherit;font-weight:700}
+.v-bell h3{font-family:inherit;font-weight:800;font-size:clamp(38px,4.4vw,58px);letter-spacing:-.04em}
 .v-bell h3 .cur{display:inline-block;width:.5em;height:.82em;background:#E0A43A;vertical-align:-.06em;margin-left:4px}
-.v-bell p{color:#B9B6AE}
-.v-bell .venture-meta{color:#8F8C85;font-family:var(--mono);font-size:13px}
+.v-bell p{color:#B9B6AE;font-size:15px;line-height:1.7}
+.v-bell .venture-meta{color:#8F8C85;font-size:13px}
 .v-bell .venture-link{color:#E0A43A}
 .v-bell .laptop-screen{box-shadow:0 0 0 1px #2A2A30}
 .v-bell .laptop-base{background:#3A3A3F}
@@ -196,8 +196,6 @@ section{scroll-margin-top:72px}
 .cap .num{position:absolute;top:clamp(22px,2.4vw,32px);right:clamp(22px,2.4vw,32px);font:500 13px/1 var(--mono);color:var(--ink3)}
 .cap h3{font-size:clamp(22px,2vw,27px);margin:24px 0 10px}
 .cap p{font-size:15px;color:var(--ink2);line-height:1.5}
-.cap-ai{background:var(--navy);color:#fff;border-color:var(--navy)}
-.cap-ai p,.cap-ai .num{color:#A9B6CC}
 
 /* ── How we work ── */
 .how{background:var(--paper2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
@@ -440,14 +438,14 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-ite
     </div>
 
     <div class="caps">
-      <article class="cap cap-ai rv">
+      <article class="cap rv">
         <svg class="ico" viewBox="0 0 3 3" aria-hidden="true"><rect x="0" y="0" width="2" height="2" fill="#0E61FF"/><rect x="2" y="2" width="1" height="1" fill="#07D4ED"/></svg>
         <span class="num">01</span>
         <h3><b>Brands</b> &amp; e&#8209;commerce</h3>
         <p>Naming, identity and storefronts that sell. We've built our own and run them.</p>
       </article>
       <article class="cap rv d1">
-        <svg class="ico" viewBox="0 0 3 3" aria-hidden="true"><rect x="0" y="0" width="3" height="1" fill="#0E61FF"/><rect x="0" y="1" width="1" height="2" fill="#00173A"/><rect x="1" y="1" width="2" height="2" fill="#07D4ED" opacity=".55"/></svg>
+        <svg class="ico" viewBox="0 0 3 3" aria-hidden="true"><rect x="0" y="0" width="3" height="1" fill="#0E61FF"/><rect x="0" y="1" width="1" height="2" fill="#0E61FF"/><rect x="1" y="1" width="2" height="2" fill="#07D4ED" opacity=".55"/></svg>
         <span class="num">02</span>
         <h3><b>Websites</b> &amp; web apps</h3>
         <p>Fast marketing sites, storefronts and full platforms with accounts, payments and data.</p>
@@ -458,8 +456,8 @@ footer .wrap{display:flex;flex-wrap:wrap;justify-content:space-between;align-ite
         <h3><b>Games</b> &amp; interactive</h3>
         <p>Browser games and interactive experiences, built to be played, not just looked at.</p>
       </article>
-      <article class="cap cap-ai rv d3">
-        <svg class="ico" viewBox="0 0 3 3" aria-hidden="true"><rect x="1" y="0" width="2" height="2" fill="#0E61FF"/><rect x="0" y="1" width="1" height="1" fill="#07D4ED"/><rect x="1" y="2" width="1" height="1" fill="#07D4ED"/><rect x="1" y="1" width="1" height="1" fill="#fff"/></svg>
+      <article class="cap rv d3">
+        <svg class="ico" viewBox="0 0 3 3" aria-hidden="true"><rect x="1" y="0" width="2" height="2" fill="#0E61FF"/><rect x="0" y="1" width="1" height="1" fill="#07D4ED"/><rect x="1" y="2" width="1" height="1" fill="#07D4ED"/><rect x="1" y="1" width="1" height="1" fill="#07D4ED"/></svg>
         <span class="num">04</span>
         <h3><b>Custom AI</b> systems</h3>
         <p>Private AI tools and intelligence terminals built around how a business runs.</p>
