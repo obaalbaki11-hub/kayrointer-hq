@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="google-site-verification" content="37eac7b9bfa6f9ee">
 <title>Kayro Interactive | Independent studio, Dubai</title>
-<meta name="description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms and AI systems for companies that want the same standard.">
+<meta name="description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms, AI systems and website audits for companies that want the same standard.">
 <link rel="canonical" href="https://kayrointer.com/">
 <meta name="theme-color" content="#0B0B0C">
 
@@ -13,14 +13,14 @@
 <meta property="og:site_name" content="Kayro Interactive">
 <meta property="og:url" content="https://kayrointer.com/">
 <meta property="og:title" content="Kayro Interactive | Independent studio, Dubai">
-<meta property="og:description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms and AI systems for companies that want the same standard.">
+<meta property="og:description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms, AI systems and website audits for companies that want the same standard.">
 <meta property="og:image" content="https://kayrointer.com/assets/brand/og-kayro-os.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="Kayro Interactive. We build it like we have to run it.">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Kayro Interactive | Independent studio, Dubai">
-<meta name="twitter:description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms and AI systems for companies that want the same standard.">
+<meta name="twitter:description" content="Kayro launches and operates its own ventures, then builds brands, games, platforms, AI systems and website audits for companies that want the same standard.">
 <meta name="twitter:image" content="https://kayrointer.com/assets/brand/og-kayro-os.png">
 
 <link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
@@ -30,6 +30,11 @@
 
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"Organization","name":"Kayro Interactive","url":"https://kayrointer.com","logo":"https://kayrointer.com/assets/brand/kayro-logo.png","email":"omarbaalbaki@kayrointer.com","address":{"@type":"PostalAddress","addressLocality":"Dubai","addressCountry":"AE"}}
+</script>
+
+<script>
+/* Security band ticker: one [label, detail] pair per item. Edit here; the band renders from this list. */
+var SECURITY_TICKER=[["https","everywhere"],["payments","PCI-compliant"],["edge","DDoS protected"],["code","hardened"],["data","encrypted at rest"],["access","least privilege"]];
 </script>
 
 <style>
@@ -210,28 +215,57 @@ a.panel:hover .fr{animation-duration:1.2s}
 .flash{animation:flash .9s var(--ease)}
 @keyframes flash{0%{color:var(--acc)}100%{color:var(--fg)}}
 
-/* client visuals */
-.syn{background:#0E0E0F;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:18px;align-content:center}
-.syn .p{aspect-ratio:3/4;border-radius:8px;background:#161618;border:1px solid #26262A;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;gap:4px;transition:transform .6s var(--ease),border-color .3s;animation:hover3 5s ease-in-out infinite;animation-delay:calc(var(--n)*-1.6s)}
-@keyframes hover3{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
-a.panel:hover .syn .p{border-color:#D7262E}
-a.panel:hover .syn .p:nth-child(1){transform:translateY(-10px) rotate(-3deg)}
-a.panel:hover .syn .p:nth-child(3){transform:translateY(-10px) rotate(3deg)}
-.syn .p .can{flex:1;margin:6px 14px 10px;border-radius:6px 6px 4px 4px;background:#1E1E21;border-top:6px solid #D7262E;position:relative;overflow:hidden}
-.syn .p .can::after{content:"";position:absolute;left:0;right:0;bottom:0;height:var(--f,40%);background:rgba(215,38,46,.18);animation:fill 3.6s ease-in-out infinite;animation-delay:calc(var(--n)*.5s)}
-@keyframes fill{0%,100%{height:30%}50%{height:70%}}
-.syn .p b{font-weight:500;font-size:12px;color:#EDEDED;font-family:var(--mono)}
-.syn .p small{font-size:10px;color:#8A8A8A}
-.bas{background:#0D0B0B;display:grid;place-items:center;text-align:center}
-.bas .w{font-size:clamp(26px,4vw,40px);font-weight:500;letter-spacing:-.03em;color:#E5484D;line-height:1;animation:flick 6s steps(1) infinite}
-@keyframes flick{0%,100%{opacity:1}92%{opacity:1}93%{opacity:.35}94%{opacity:1}96%{opacity:.5}97%{opacity:1}}
-.bas .n{display:flex;gap:14px;justify-content:center;margin-top:14px;color:#8A8A8A}
-.bas .n span{animation:navcycle 4.8s steps(1) infinite;animation-delay:calc(var(--n)*1.6s)}
-@keyframes navcycle{0%,33%{color:#EDEDED}34%,100%{color:#8A8A8A}}
-.bas .j{margin-top:16px;display:inline-block;border:1px solid #E5484D;color:#E5484D;border-radius:6px;padding:5px 12px;transition:background .3s,color .3s}
-a.panel:hover .bas .j{background:#E5484D;color:#0D0B0B}
-.bas .ticket{position:absolute;left:16px;bottom:14px;color:#8A8A8A}
-.bas .ticket b{color:#E5484D;font-weight:400}
+/* yours: four level cards, a live mini-UI on top of each */
+#yours .head{margin-bottom:88px}
+.grid4{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:1fr;gap:20px}
+.yc:hover{transform:translateY(-3px);border-color:var(--line2)}
+.mini{height:168px;flex:none;background:var(--s2);border-bottom:1px solid var(--line);position:relative;overflow:hidden;padding:14px 16px;display:flex;flex-direction:column;gap:10px;font-family:var(--mono);font-size:11px;color:var(--mute)}
+.mini .hd{display:flex;justify-content:space-between;align-items:center;height:18px;white-space:nowrap}
+.mini .dot::after{animation-delay:calc(var(--n,0)*-.5s)}
+html.io .mini:not(.live) .dot::after{animation-play-state:paused}
+html.io .yc:not(.seen) .mini .bar i{width:0!important}
+.yb{padding:18px;display:flex;flex-direction:column;gap:8px;flex:1;position:relative;z-index:1}
+.yb .lb,.yb h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.yb h3{font-size:24px;line-height:1.25}
+.yb p{color:var(--mute);font-size:15px;line-height:1.6;height:4.8em;overflow:hidden;margin-bottom:8px}
+.ft{display:flex;justify-content:space-between;align-items:center;gap:12px;white-space:nowrap;margin-top:auto;padding-top:14px;border-top:1px solid var(--line)}
+.ft .chips{flex-wrap:nowrap}
+.priv{display:inline-flex;align-items:center;gap:6px;color:var(--mute);font-size:14px}
+html.io .stg:not(.seen){opacity:0}
+html.io .stg.seen{animation:fadeup .8s var(--ease) backwards;animation-delay:var(--d,0ms)}
+.sy .tabs{display:flex;gap:4px;height:22px}
+.sy .tb{padding:0 8px;line-height:21px;border-bottom:1px solid var(--line2);color:var(--faint-t);transition:color .3s,border-color .3s}
+.sy .tb.on{color:var(--fg);border-color:#D7262E}
+.sy .sn{font-family:var(--sans);font-size:15px;color:var(--fg);height:20px;line-height:20px;transition:opacity .22s}
+.sy .sp{display:grid;grid-template-columns:76px minmax(0,1fr);gap:4px 10px;align-items:center}
+.sy .bar i{background:#D7262E}
+.sy .pdf{margin-top:auto;display:flex;justify-content:space-between;border-top:1px solid var(--line);padding-top:7px}
+.ba .hd b{font-weight:400;color:#E5484D}
+.ba .sw{height:52px;clip-path:inset(0 0 0 0);transition:clip-path 1.6s var(--ease) .2s}
+html.io .yc:not(.seen) .ba .sw{clip-path:inset(0 100% 0 0)}
+.ba .sw svg{width:100%;height:100%;display:block}
+.ba .rw{display:flex;justify-content:space-between;align-items:center;height:22px;border-top:1px solid var(--line)}
+.ba .rw i{width:6px;height:6px;border-radius:50%;background:#E5484D}
+.ba.live .rw i{animation:pulse 1.6s ease-in-out infinite}
+@keyframes pulse{50%{opacity:.3}}
+.ba .toast{position:absolute;left:16px;top:44px;border:1px solid #E5484D;color:#E5484D;background:var(--s1);border-radius:6px;padding:1px 8px;font-size:10.5px}
+html.io .ba .toast{opacity:0}
+.ba .toast.pop{animation:toast 2.6s var(--ease) both}
+@keyframes toast{0%{opacity:0;transform:translateY(6px) scale(.94)}12%,78%{opacity:1;transform:none}100%{opacity:0;transform:translateY(-4px)}}
+.at{gap:4px}
+.at .hd{margin-bottom:2px}
+.at .ag{display:grid;grid-template-columns:7px 92px minmax(0,1fr);gap:10px;align-items:center;height:24px;border-top:1px solid var(--line)}
+.at .ag span:nth-child(2){color:var(--fg)}
+.at .st{text-align:right;color:var(--faint-t);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;transition:opacity .22s,color .3s}
+.at .st.ok{color:var(--acc)}
+.fm .ci{display:inline-flex;align-items:center;gap:8px;color:var(--fg)}
+.fm .wk{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;height:34px}
+.fm .dy{border:1px solid var(--line2);border-radius:5px;display:grid;place-items:center;color:var(--faint-t);position:relative;transition:border-color .3s,color .3s,background .3s}
+.fm .dy.on{border-color:var(--acc);color:var(--acc);background:rgba(200,255,61,.06)}
+.fm .dy.ev::after{content:"";position:absolute;bottom:4px;left:50%;width:3px;height:3px;margin-left:-1.5px;border-radius:50%;background:var(--mute)}
+.fm .gl{display:grid;grid-template-columns:52px minmax(0,1fr) 34px;gap:10px;align-items:center;height:17px}
+.fm .gl b{font-weight:400;color:var(--fg);text-align:right;font-variant-numeric:tabular-nums}
+.fm .bar i{transition-duration:1.4s}
 
 /* systems */
 #systems{background:var(--s1);position:relative;overflow:hidden}
@@ -270,19 +304,56 @@ nav.top .mm{display:block;height:auto} /* the panel also matched "nav.top .wrap"
 @keyframes load{to{transform:translateX(100%)}}
 .note{margin-top:22px;color:var(--faint-t)}
 
-/* capabilities */
-.caps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));border:1px solid var(--line);border-radius:12px;overflow:hidden}
-.cap{padding:26px 22px 30px;display:flex;flex-direction:column;gap:14px;min-width:0;position:relative;overflow:hidden;transition:background .3s}
+/* capabilities: five level cards; the audit card gets a rotating gradient border */
+.caps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
+.cap{padding:24px 20px 28px;display:flex;flex-direction:column;gap:14px;min-width:0;position:relative;overflow:hidden;border:1px solid var(--line);border-radius:12px;background:var(--bg);transition:background .3s}
 .cap::before{content:"";position:absolute;left:0;right:0;bottom:0;height:0;background:var(--acc);transition:height .5s var(--ease);z-index:0}
 .cap>*{position:relative;z-index:1;transition:color .35s}
 .cap:hover::before{height:100%}
 .cap:hover>*{color:var(--on-acc)!important}
-.cap+.cap{border-left:1px solid var(--line)}
-.cap h3{font-size:22px}
+.cap h3{font-size:22px;white-space:nowrap}
 .cap p{color:var(--mute);font-size:15px}
-.cap .ix{display:flex;justify-content:space-between}
+.cap .ix{display:flex;justify-content:space-between;align-items:center;white-space:nowrap}
 .cap .ix b{font-weight:400;transition:transform .4s var(--ease)}
-.cap:hover .ix b{transform:rotate(-45deg)}
+.cap:hover .ix b{transform:translateX(4px)}
+.new{font-style:normal;margin-left:8px;border:1px solid var(--acc);color:var(--acc);border-radius:4px;padding:0 5px;font-size:10px;line-height:15px;display:inline-block;animation:newp 2.4s ease-in-out infinite paused}
+.caps.seen .new{animation-play-state:running}
+@keyframes newp{50%{opacity:.5}}
+.cap:hover .new{color:var(--on-acc);border-color:var(--on-acc)}
+@property --ang{syntax:"<angle>";inherits:false;initial-value:0deg}
+.cap.hot{border-color:transparent;background:linear-gradient(var(--bg),var(--bg)) padding-box,conic-gradient(from var(--ang),var(--line2) 0%,var(--acc) 10%,var(--line2) 24%,var(--line2) 50%,rgba(200,255,61,.45) 62%,var(--line2) 76%) border-box;animation:spinb 6s linear infinite paused}
+.caps.seen .cap.hot{animation-play-state:running}
+@keyframes spinb{to{--ang:360deg}}
+
+/* website audit */
+.audit{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.1fr);gap:56px;align-items:center}
+.audit h2{font-size:clamp(28px,3.8vw,46px);line-height:1.08;margin-top:16px}
+.audit p{color:var(--mute);margin-top:14px;max-width:46ch}
+.aud .term-h{align-items:center;gap:12px}
+.aud .path{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rp{font:inherit;color:var(--mute);background:transparent;border:1px solid var(--line2);border-radius:6px;padding:1px 8px;transition:color .2s,border-color .2s}
+.rp:hover{color:var(--acc);border-color:var(--acc)}
+.aud ol{gap:10px;padding:16px 14px 18px}
+.aud li{grid-template-columns:14px 104px minmax(0,1fr) 64px;align-items:center;height:20px;transition:opacity .35s,color .25s}
+.aud li .bar i{width:100%;transition:width 1.2s var(--ease)}
+.aud li.ok{color:var(--fg)}.aud li.ok b,.aud li.ok .v{color:var(--acc)}
+.aud li.end{grid-template-columns:14px minmax(0,1fr);color:var(--fg)}
+.aud li.end b{color:var(--acc)}
+.aud.armed li:not(.sh){opacity:0}
+.aud.armed li:not(.sh) .bar i{width:0}
+.aud.rst li,.aud.rst li .bar i{transition:none}
+.aud .scan{display:none}.aud.run .scan{display:block}
+
+/* security band */
+.secb{border-top:1px solid var(--line);background:var(--s1);padding-top:56px}
+.secb+section.blk{border-top:0}
+.secb-h{display:flex;align-items:center;justify-content:center;gap:16px}
+.shield{width:44px;height:44px;flex:none;border:1px solid var(--line2);border-radius:10px;display:grid;place-items:center;color:var(--acc)}
+.secb-h p{font-size:clamp(19px,2.2vw,26px);font-weight:500;letter-spacing:-.02em;line-height:1.3;text-wrap:balance}
+.tick{margin-top:48px;border-block:1px solid var(--line);overflow:hidden;height:53px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent);mask-image:linear-gradient(90deg,transparent,#000 12%,#000 88%,transparent)}
+.tick .marq-t{animation-duration:46s;animation-play-state:paused}
+.tick.live .marq-t{animation-play-state:running}
+.tick.live:hover .marq-t{animation-play-state:paused}
 
 /* process */
 .steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px;position:relative;padding-top:2px}
@@ -335,31 +406,38 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   .hero{grid-template-columns:minmax(0,1fr);grid-template-areas:"ttl" "lead" "term";row-gap:32px;padding-block:80px 112px}
   .head{grid-template-columns:minmax(0,1fr);gap:8px}
   .caps{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .cap:nth-child(3){border-left:0}
-  .cap:nth-child(n+3){border-top:1px solid var(--line)}
-  .contact{grid-template-columns:minmax(0,1fr)}
+  .cap:last-child{grid-column:1/-1}
+  .contact,.audit{grid-template-columns:minmax(0,1fr)}
+  .audit{gap:40px}
 }
 @media (max-width:760px){
   .links,.nav-r .pill{display:none}
   .menu-btn{display:inline-flex}
   .vis.wire{aspect-ratio:auto}
-  .grid2,.steps{grid-template-columns:minmax(0,1fr)}
+  .grid2,.grid4,.steps,.panel.ops{grid-template-columns:minmax(0,1fr)}
   .steps::before,.steps::after{display:none}
   .step{border-top:1px solid var(--line2)}
   section.blk{padding-block:104px}
   .head{margin-bottom:48px}
+  #yours .head{margin-bottom:56px}
+  .ops .vis{height:280px;border-right:0;border-bottom:1px solid var(--line)}
+  .ops .pbody{padding:22px 22px 24px}
   .frames{grid-template-columns:repeat(3,auto)}
   .fr:nth-child(n+7){display:none}
   .scroll-hint{display:none}
 }
+@media (max-width:640px){
+  .cap{padding:18px 16px 22px}.cap h3{font-size:19px}
+  .secb-h{justify-content:flex-start}
+  .aud .lights{display:none}
+}
 @media (max-width:480px){
-  .caps{grid-template-columns:minmax(0,1fr)}
-  .cap+.cap{border-left:0;border-top:1px solid var(--line)}
   .nav-r .btn{padding:8px 12px}
   .b2b{grid-template-columns:minmax(0,1fr)}.b2b .c:nth-child(n+3){display:none}
   .vis.b2b{aspect-ratio:auto}
 }
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}html{scroll-behavior:auto}.panel{transform:none!important}}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}html{scroll-behavior:auto}.panel{transform:none!important}
+  .tick{height:auto;-webkit-mask-image:none;mask-image:none}.tick .marq-t{width:auto;flex-wrap:wrap;justify-content:center;padding-block:10px}.tick .marq-t span{padding:6px 14px;gap:14px}}
 </style>
 </head>
 <body>
@@ -482,39 +560,69 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   <div class="wrap">
     <div class="head rv">
       <span class="mono tag"><i>02</i> / Yours</span>
-      <div><h2 class="scr">Built for clients. Held to the same bar.</h2><p>Live sites with real customers and real data, built the way we build our own.</p></div>
+      <div><h2 class="scr">Built for clients. Held to the same bar.</h2><p>Live sites with real customers and real data, and private systems we can't link to.</p></div>
     </div>
-    <div class="grid2">
-      <a class="panel tilt rv" href="https://synuthane.com">
-        <div class="vis syn" aria-label="Synuthane product storefront">
-          <div class="p" style="--n:0"><div class="can" style="--n:0"></div><b>SYNU.ROOF</b><small>Roof systems</small></div>
-          <div class="p" style="--n:1"><div class="can" style="--n:1"></div><b>SYNU.PROOF</b><small>Waterproofing</small></div>
-          <div class="p" style="--n:2"><div class="can" style="--n:2"></div><b>SYNU.COAT</b><small>Coatings</small></div>
+    <div class="grid4">
+      <a class="panel yc rv stg" href="https://synuthane.com">
+        <div class="mini sy" id="sy" aria-hidden="true">
+          <div class="tabs"><span class="tb on">SYNU.ROOF</span><span class="tb">SYNU.PROOF</span><span class="tb">SYNU.COAT</span></div>
+          <div class="sn">Roof systems</div>
+          <div class="sp"><span>tensile</span><span class="bar"><i style="width:72%"></i></span><span>elongation</span><span class="bar"><i style="width:54%"></i></span></div>
+          <div class="pdf"><span>spec sheet · pdf</span><span>↓</span></div>
         </div>
-        <div class="pbody">
-          <span class="mono mute">Storefront · Construction systems</span>
+        <div class="yb">
+          <span class="mono mute lb">Storefront · Construction systems</span>
           <h3>Synuthane</h3>
           <p>An Apple-grade storefront for a Dubai construction-systems supplier. Six product lines with tabbed spec pages.</p>
-          <div class="chips mono"><span class="chip">Next.js</span><span class="chip">Tailwind</span><span class="chip">Cloudflare Workers</span></div>
-          <div class="prow"><span class="mono mute">synuthane.com</span><span class="go">View live <b>↗</b></span></div>
+          <div class="ft"><div class="chips mono"><span class="chip">Next.js</span><span class="chip">Workers</span></div><span class="go">View live <b>↗</b></span></div>
         </div>
       </a>
-      <a class="panel tilt rv" style="--d:120ms" href="https://basocieties.com">
-        <div class="vis bas" aria-label="Boston Arab Society homepage">
-          <div><div class="w">Boston Arab Society</div>
-          <div class="n mono"><span style="--n:0">Events</span><span style="--n:1">Podcast</span><span style="--n:2">Merch</span></div>
-          <span class="j mono">Join now</span></div>
-          <span class="mono ticket">new member <b id="mem">#1</b></span>
+      <a class="panel yc rv stg" style="--d:90ms" href="https://basocieties.com">
+        <div class="mini ba" id="ba" aria-hidden="true">
+          <div class="hd"><span>members</span><b>join now →</b></div>
+          <div class="sw"><svg viewBox="0 0 300 52" preserveAspectRatio="none"><defs><linearGradient id="bag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#E5484D" stop-opacity=".22"/><stop offset="1" stop-color="#E5484D" stop-opacity="0"/></linearGradient></defs><path d="M0,47 L30,45 60,46 90,39 120,41 150,32 180,34 210,23 240,25 270,13 300,6 L300,52 0,52Z" fill="url(#bag)"/><polyline points="0,47 30,45 60,46 90,39 120,41 150,32 180,34 210,23 240,25 270,13 300,6" fill="none" stroke="#E5484D" stroke-width="1.5" vector-effect="non-scaling-stroke"/></svg></div>
+          <div class="rw"><span>events · rsvp</span><span>→</span></div>
+          <div class="rw"><span>podcast · live</span><i></i></div>
+          <span class="toast">+1 new member</span>
         </div>
-        <div class="pbody">
-          <span class="mono mute">Community platform</span>
+        <div class="yb">
+          <span class="mono mute lb">Community platform</span>
           <h3>Boston Arab Society</h3>
           <p>Event registration, a podcast hub, merch drops and member sign-ups, all on a real database.</p>
-          <div class="chips mono"><span class="chip">React</span><span class="chip">Cloudflare Workers</span><span class="chip">D1</span></div>
-          <div class="prow"><span class="mono mute">basocieties.com</span><span class="go">View live <b>↗</b></span></div>
+          <div class="ft"><div class="chips mono"><span class="chip">React</span><span class="chip">D1</span></div><span class="go">View live <b>↗</b></span></div>
         </div>
       </a>
+      <div class="panel yc rv stg" style="--d:180ms">
+        <div class="mini at" id="at" aria-hidden="true">
+          <div class="hd"><span>atlas · 07:00</span><span>4 agents</span></div>
+          <div class="ag"><span class="dot" style="--n:0"></span><span>analyst</span><span class="st ok">report ready</span></div>
+          <div class="ag"><span class="dot" style="--n:1"></span><span>market news</span><span class="st ok">digest sent</span></div>
+          <div class="ag"><span class="dot" style="--n:2"></span><span>comms</span><span class="st ok">queued for review</span></div>
+          <div class="ag"><span class="dot" style="--n:3"></span><span>assistant</span><span class="st ok">on standby</span></div>
+        </div>
+        <div class="yb">
+          <span class="mono mute lb">AI system · Executive</span>
+          <h3>ATLAS</h3>
+          <p>A private intelligence terminal for a group CEO. Four agents, persistent memory and weekly market reports.</p>
+          <div class="ft"><div class="chips mono"><span class="chip">Workers</span><span class="chip">Agents</span></div><span class="priv"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="2" y="5.5" width="8" height="5.5" rx="1"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg> Private</span></div>
+        </div>
+      </div>
+      <div class="panel yc rv stg" style="--d:270ms">
+        <div class="mini fm" id="fm" aria-hidden="true">
+          <div class="hd"><span>this week</span><span class="ci"><span class="dot"></span>checked in</span></div>
+          <div class="wk"><span class="dy">M</span><span class="dy ev">T</span><span class="dy">W</span><span class="dy on ev">T</span><span class="dy">F</span><span class="dy ev">S</span><span class="dy">S</span></div>
+          <div class="gl"><span>goals</span><span class="bar"><i style="width:64%"></i></span><b><span class="count" data-to="64">64</span>%</b></div>
+          <div class="gl"><span>budget</span><span class="bar"><i style="width:78%"></i></span><b><span class="count" data-to="78">78</span>%</b></div>
+        </div>
+        <div class="yb">
+          <span class="mono mute lb">Web app · Family</span>
+          <h3>Family check-in</h3>
+          <p>A private home base for a family. Shared schedule, budget, goals, messages and location check-ins.</p>
+          <div class="ft"><div class="chips mono"><span class="chip">Pages</span><span class="chip">GitHub CI</span></div><span class="priv"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.2" aria-hidden="true"><rect x="2" y="5.5" width="8" height="5.5" rx="1"/><path d="M4 5.5V4a2 2 0 0 1 4 0v1.5"/></svg> Private</span></div>
+        </div>
+      </div>
     </div>
+    <p class="mono note">Private systems stay private. Walkthroughs on request.</p>
   </div>
 </section>
 
@@ -525,39 +633,22 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
       <span class="mono tag"><i>03</i> / Systems</span>
       <div><h2 class="scr">AI that runs the business, not a chatbot on the homepage.</h2><p>We run this studio on an operations system we built ourselves: pipeline, delivery, finance and agents in one place. We build the same kind of thing for clients, privately.</p></div>
     </div>
-    <div class="grid2">
-      <div class="panel tilt rv">
-        <div class="vis wire" aria-hidden="true">
-          <div class="t"><span class="dot"></span>briefing · 07:00<em id="t1">synthesising</em></div>
-          <div class="a" style="grid-column:span 4;grid-row:span 3"><div class="sk"><i style="--n:0"></i><i style="--n:1;width:80%"></i><i style="--n:2;width:92%"></i><i style="--n:3;width:60%"></i><i style="--n:4;width:85%"></i></div></div>
-          <div style="grid-column:span 2;grid-row:span 2"><div class="bars" style="height:100%"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i></div></div>
-          <div style="grid-column:span 2"><div class="line"><i style="--n:0"></i><i style="--n:1"></i></div></div>
-          <div style="grid-column:span 2;grid-row:span 2"><div class="sk"><i style="--n:2"></i><i style="--n:3;width:70%"></i><i style="--n:4;width:50%"></i></div></div>
-          <div style="grid-column:span 2;grid-row:span 2"><div class="bars" style="height:100%"><i style="--n:3"></i><i style="--n:1"></i><i style="--n:5"></i><i style="--n:2"></i></div></div>
-          <div class="a" style="grid-column:span 2;grid-row:span 2"><div class="sk"><i style="--n:1"></i><i style="--n:4;width:75%"></i></div></div>
-        </div>
-        <div class="pbody">
-          <span class="mono mute">Private · Executive</span>
-          <h3>Executive intelligence terminal</h3>
-          <p>A private AI briefing and research desk built for one decision-maker and the way they work.</p>
-        </div>
+    <div class="panel tilt rv ops">
+      <div class="vis wire" aria-hidden="true">
+        <div class="t"><span class="dot"></span>ops<em><span id="ag">4</span> agents running</em></div>
+        <div style="grid-column:span 2;grid-row:span 6"><div class="log"><div>
+          <p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p><p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p><p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p><p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p>
+        </div></div></div>
+        <div class="a" style="grid-column:span 4;grid-row:span 2"><div class="bars" style="height:100%"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i></div></div>
+        <div style="grid-column:span 2;grid-row:span 2"><div class="line" style="top:30%"><i style="--n:0"></i></div><div class="line" style="top:70%"><i style="--n:2"></i></div></div>
+        <div style="grid-column:span 2;grid-row:span 2"><div class="sk"><i style="--n:0"></i><i style="--n:2;width:65%"></i><i style="--n:4;width:88%"></i><i style="--n:1;width:45%"></i></div></div>
+        <div style="grid-column:span 2;grid-row:span 2"><div class="bars" style="height:100%"><i style="--n:3"></i><i style="--n:1"></i><i style="--n:5"></i><i style="--n:2"></i></div></div>
+        <div class="a" style="grid-column:span 2;grid-row:span 2"><div class="sk"><i style="--n:1"></i><i style="--n:4;width:75%"></i></div></div>
       </div>
-      <div class="panel tilt rv" style="--d:120ms">
-        <div class="vis wire" aria-hidden="true">
-          <div class="t"><span class="dot"></span>ops<em><span id="ag">4</span> agents running</em></div>
-          <div style="grid-column:span 2;grid-row:span 5"><div class="log"><div>
-            <p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p>
-            <p><b>›</b> lead scored</p><p><b>›</b> inbox triaged</p><p><b>›</b> invoice sent</p><p><b>›</b> build passed</p><p><b>›</b> brief drafted</p><p><b>›</b> spend checked</p>
-          </div></div></div>
-          <div class="a" style="grid-column:span 4;grid-row:span 2"><div class="bars" style="height:100%"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i><i style="--n:8"></i><i style="--n:9"></i></div></div>
-          <div style="grid-column:span 2;grid-row:span 3"><div class="line" style="top:30%"><i style="--n:0"></i></div><div class="line" style="top:70%"><i style="--n:2"></i></div></div>
-          <div style="grid-column:span 2;grid-row:span 3"><div class="sk"><i style="--n:0"></i><i style="--n:2;width:65%"></i><i style="--n:4;width:88%"></i><i style="--n:1;width:45%"></i></div></div>
-        </div>
-        <div class="pbody">
-          <span class="mono mute">Private · Operations</span>
-          <h3>Operations platform</h3>
-          <p>Leads, inbox, projects, money and supervising agents, connected in one place.</p>
-        </div>
+      <div class="pbody">
+        <span class="mono mute">Private · Operations</span>
+        <h3>Operations platform</h3>
+        <p>Leads, inbox, projects, money and supervising agents, connected in one place.</p>
       </div>
     </div>
     <p class="mono note">Client systems are private. Walkthroughs on request.</p>
@@ -568,15 +659,46 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   <div class="wrap">
     <div class="head rv">
       <span class="mono tag"><i>04</i> / What we do</span>
-      <div><h2 class="scr">Four disciplines, one small team.</h2></div>
+      <div><h2 class="scr">Five disciplines, one small team.</h2></div>
     </div>
-    <div class="caps">
-      <div class="cap"><span class="mono mute ix">Brands and commerce <b>→</b></span><h3>Launch it</h3><p>We launched ROTH and sold out the first batch in a day and a half. Naming, identity, storefront, launch.</p></div>
-      <div class="cap"><span class="mono mute ix">Websites and platforms <b>→</b></span><h3>Ship it</h3><p>Storefronts, community platforms and full apps with accounts, payments and real data.</p></div>
-      <div class="cap"><span class="mono mute ix">Games and interactive <b>→</b></span><h3>Make it stick</h3><p>We built a life sim people actually play. We know how to make people stay.</p></div>
-      <div class="cap"><span class="mono mute ix">AI systems <b>→</b></span><h3>Run it</h3><p>Private tools built around how your business actually runs.</p></div>
+    <div class="caps rv">
+      <div class="cap"><span class="mono mute ix">Brands <b>→</b></span><h3>Launch it</h3><p>Naming, identity, storefront, launch.</p></div>
+      <div class="cap"><span class="mono mute ix">Websites <b>→</b></span><h3>Ship it</h3><p>Storefronts, platforms and full apps.</p></div>
+      <div class="cap"><span class="mono mute ix">Games <b>→</b></span><h3>Make it stick</h3><p>Worlds people actually stay in.</p></div>
+      <div class="cap"><span class="mono mute ix">AI systems <b>→</b></span><h3>Run it</h3><p>Private tools built around you.</p></div>
+      <a class="cap hot" href="#audit"><span class="mono mute ix"><span>Audits<em class="new">NEW</em></span> <b>→</b></span><h3>Fix it</h3><p>We find what's broken. Then we fix it.</p></a>
     </div>
   </div>
+</section>
+
+<section class="blk" id="audit">
+  <div class="wrap audit">
+    <div class="rv">
+      <span class="mono tag">Website audit</span>
+      <h2 class="scr">Every bug. Every slow page. Every weak spot.</h2>
+      <p>We take your site apart and hand you a report ranked by impact, plus a fixed quote to clear it.</p>
+    </div>
+    <div class="term aud" id="aud">
+      <div class="scan"></div>
+      <div class="term-h mono"><span class="lights"><i></i><i></i><i></i></span><span class="path">~/kayro/audit bciholding.com</span><button class="rp mono" type="button">replay</button></div>
+      <ol class="mono">
+        <li class="ok"><b>&gt;</b><span>functionality</span><span class="bar"><i></i></span><span class="v">checked</span></li>
+        <li class="ok"><b>&gt;</b><span>mobile layout</span><span class="bar"><i></i></span><span class="v">checked</span></li>
+        <li class="ok"><b>&gt;</b><span>speed</span><span class="bar"><i></i></span><span class="v">checked</span></li>
+        <li class="ok"><b>&gt;</b><span>seo</span><span class="bar"><i></i></span><span class="v">checked</span></li>
+        <li class="ok"><b>&gt;</b><span>security</span><span class="bar"><i></i></span><span class="v">checked</span></li>
+        <li class="end"><b>&gt;</b><span>report delivered · fixes shipping<span class="caret"></span></span></li>
+      </ol>
+    </div>
+  </div>
+</section>
+
+<section class="secb" id="security" aria-label="Security">
+  <div class="wrap secb-h">
+    <span class="shield" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg></span>
+    <p>Enterprise-grade security on every game and storefront we ship.</p>
+  </div>
+  <div class="tick" id="tick"><div class="marq-t mono" id="tickT"></div></div>
 </section>
 
 <section class="blk" id="process">
@@ -612,6 +734,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
           <label class="opt"><input type="radio" name="type" id="t2r" value="Website"><span>Website</span></label>
           <label class="opt"><input type="radio" name="type" id="t3r" value="Game"><span>Game</span></label>
           <label class="opt"><input type="radio" name="type" id="t4r" value="AI system"><span>AI system</span></label>
+          <label class="opt"><input type="radio" name="type" id="t6r" value="Website audit"><span>Website audit</span></label>
           <label class="opt"><input type="radio" name="type" id="t5r" value="Not sure yet"><span>Not sure</span></label>
         </div>
       </fieldset>
@@ -660,6 +783,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
 (function(){
   var RM=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches;
   var FINE=window.matchMedia&&matchMedia('(pointer: fine)').matches;
+  var IO=!RM&&'IntersectionObserver' in window;if(IO)document.documentElement.classList.add('io');
   var $=function(s,r){return (r||document).querySelector(s)},$$=function(s,r){return [].slice.call((r||document).querySelectorAll(s))};
   var mouse={x:-9999,y:-9999};
 
@@ -736,6 +860,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
       p.addEventListener('mousemove',function(e){var r=p.getBoundingClientRect(),x=(e.clientX-r.left)/r.width,y=(e.clientY-r.top)/r.height;p.style.setProperty('--mx',x*100+'%');p.style.setProperty('--my',y*100+'%');p.style.transform='rotateY('+(x-.5)*7+'deg) rotateX('+(.5-y)*6+'deg) translateZ(0)'});
       p.addEventListener('mouseleave',function(){p.style.transform=''});
     });
+    $$('.yc').forEach(function(p){p.addEventListener('mousemove',function(e){var r=p.getBoundingClientRect();p.style.setProperty('--mx',(e.clientX-r.left)/r.width*100+'%');p.style.setProperty('--my',(e.clientY-r.top)/r.height*100+'%')})});
   }
 
   /* ---------- scroll-linked ---------- */
@@ -791,10 +916,40 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
       $('#pbar').style.width=prog+'%';$('#ptxt').textContent='next promotion '+Math.round(prog)+'%';
     },1300);
     setInterval(function(){var e=$('#ev');e.style.opacity=0;setTimeout(function(){ei=(ei+1)%evs.length;e.textContent=evs[ei];e.style.opacity=1},300)},3200);
-    var mem=1;setInterval(function(){mem+=1+(Math.random()*3|0);$('#mem').textContent='#'+mem},2400);
-    var states=['synthesising','reading 42 sources','drafting brief','ready'],si=0;setInterval(function(){si=(si+1)%states.length;$('#t1').textContent=states[si]},1700);
     setInterval(function(){$('#ag').textContent=3+(Math.random()*3|0)},2600);
   }
+
+  /* ---------- live mini-UIs, audit, ticker: entrances run once, loops tick only while on screen ---------- */
+  function live(el,ms,tick,enter){
+    if(!IO)return;var on=false,first=true;
+    new IntersectionObserver(function(es){on=es[0].isIntersecting;if(on&&first){first=false;el.classList.add('live');if(enter)enter()}},{threshold:.35}).observe(el);
+    if(tick)setInterval(function(){if(on&&!document.hidden)tick()},ms);
+  }
+  function swap(el,txt){el.style.opacity=0;setTimeout(function(){el.textContent=txt;el.style.opacity=1},220)}
+  var sy=$('#sy'),SY=[['Roof systems',72,54],['Waterproofing',58,86],['Coatings',84,40]],syi=0,tbs=$$('.tb',sy),sbs=$$('.bar i',sy);
+  live(sy,2000,function(){syi=(syi+1)%3;tbs.forEach(function(t,k){t.classList.toggle('on',k===syi)});swap($('.sn',sy),SY[syi][0]);sbs[0].style.width=SY[syi][1]+'%';sbs[1].style.width=SY[syi][2]+'%'});
+  var tst=$('#ba .toast');function pop(){tst.classList.remove('pop');void tst.offsetWidth;tst.classList.add('pop')}
+  live($('#ba'),3800,pop,function(){setTimeout(pop,1400)});
+  var AT=[['synthesising','reading filings','report ready'],['scanning wires','ranking stories','digest sent'],['triaging inbox','drafting replies','queued for review'],['checking calendar','booking travel','on standby']],ats=$$('#at .st'),atp=[0,1,0,1],atr=0;
+  if(IO)ats.forEach(function(s,i){s.textContent=AT[i][atp[i]];s.classList.remove('ok')});
+  live($('#at'),1100,function(){var i=atr;atr=(atr+1)%4;atp[i]=(atp[i]+1)%3;swap(ats[i],AT[i][atp[i]]);setTimeout(function(){ats[i].classList.toggle('ok',atp[i]===2)},220)});
+  var dys=$$('#fm .dy'),dyi=3;
+  if(IO)$$('#fm .count').forEach(function(c){c.textContent='0'});
+  live($('#fm'),900,function(){dys[dyi].classList.remove('on');dyi=(dyi+1)%7;dys[dyi].classList.add('on')});
+  var aud=$('#aud'),als=$$('li',aud),tmr=[];
+  function audRun(){
+    tmr.forEach(clearTimeout);tmr=[];
+    aud.classList.add('armed','rst','run');als.forEach(function(l){l.classList.remove('sh','ok');var v=$('.v',l);if(v)v.textContent='scanning'});
+    void aud.offsetWidth;aud.classList.remove('rst');
+    als.forEach(function(l,i){var end=i===als.length-1,t=end?(i-1)*700+1500:i*700;
+      tmr.push(setTimeout(function(){l.classList.add('sh');if(end)aud.classList.remove('run')},t));
+      if(!end)tmr.push(setTimeout(function(){l.classList.add('ok');$('.v',l).textContent='checked'},t+1250));
+    });
+  }
+  if(IO){aud.classList.add('armed');live(aud,0,null,audRun);$('.rp',aud).addEventListener('click',audRun)}else $('.rp',aud).hidden=true;
+  var one=SECURITY_TICKER.map(function(x){return '<span><b>'+x[0]+'</b> · '+x[1]+'</span>'}).join('');
+  $('#tickT').innerHTML=RM?one:one+one+(one+one).replace(/<span>/g,'<span aria-hidden="true">');
+  live($('#tick'));
 
   /* ---------- mobile menu ---------- */
   var mb=$('#mb'),mm=$('#mm');
