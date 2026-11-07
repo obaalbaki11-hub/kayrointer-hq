@@ -34,7 +34,7 @@
 
 <script>
 /* Security band ticker: one [label, detail] pair per item. Edit here; the band renders from this list. */
-var SECURITY_TICKER=[["https","everywhere"],["payments","PCI-compliant"],["edge","DDoS protected"],["code","hardened"],["data","encrypted at rest"],["access","least privilege"]];
+var SECURITY_TICKER=[["edge","DDoS protected"],["payments","PCI-compliant via Stripe"],["tls","on every domain"],["data","encrypted at rest"],["checkout","rate-limited"]];
 </script>
 
 <style>
@@ -696,7 +696,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
 <section class="secb" id="security" aria-label="Security">
   <div class="wrap secb-h">
     <span class="shield" aria-hidden="true"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6z"/><rect x="9" y="11" width="6" height="5" rx="1"/><path d="M10.5 11V9.5a1.5 1.5 0 0 1 3 0V11"/></svg></span>
-    <p>Enterprise-grade security on every game and storefront we ship.</p>
+    <p>Built on Cloudflare's edge. Payments that never touch our servers.</p>
   </div>
   <div class="tick" id="tick"><div class="marq-t mono" id="tickT"></div></div>
 </section>
