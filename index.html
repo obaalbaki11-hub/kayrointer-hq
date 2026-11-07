@@ -303,6 +303,9 @@ nav.top .mm{display:block;height:auto} /* the panel also matched "nav.top .wrap"
 .wire .sk i::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(200,255,61,.5),transparent);transform:translateX(-100%);animation:load 2.2s ease-in-out infinite;animation-delay:calc(var(--n)*.25s)}
 @keyframes load{to{transform:translateX(100%)}}
 .note{margin-top:22px;color:var(--faint-t)}
+.panel.ops{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}
+.ops .vis{aspect-ratio:auto;height:340px;border-bottom:0;border-right:1px solid var(--line);grid-template-rows:26px repeat(6,minmax(0,1fr))}
+.ops .pbody{justify-content:flex-end;padding:32px}
 
 /* capabilities: five level cards; the audit card gets a rotating gradient border */
 .caps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:16px}
