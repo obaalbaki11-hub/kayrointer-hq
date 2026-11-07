@@ -189,7 +189,7 @@ a.panel:hover .chip{border-color:var(--faint);color:var(--fg)}
 .roth{display:grid;place-items:center;background:#131315}
 .roth .ring{position:absolute;width:150%;aspect-ratio:1;border-radius:50%;border:1px dashed #232327;animation:spin 60s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
-.frames{display:grid;grid-template-columns:repeat(5,auto);gap:18px 22px;position:relative}
+.frames{display:grid;grid-template-columns:repeat(3,auto);gap:18px 22px;position:relative}
 .fr{display:flex;align-items:center;animation:bob 3.2s ease-in-out infinite;animation-delay:calc(var(--n)*-0.32s);transition:transform .4s var(--ease)}
 .fr i{width:34px;height:34px;border-radius:50%;border:4px solid var(--c);background:color-mix(in srgb,var(--c) 22%,#0B0B0C);position:relative;overflow:hidden}
 .fr i::after{content:"";position:absolute;inset:-20%;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.35) 50%,transparent 60%);transform:translateX(-120%);animation:sheen 4.5s ease-in-out infinite;animation-delay:calc(var(--n)*.18s)}
@@ -425,8 +425,6 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   #yours .head{margin-bottom:56px}
   .ops .vis{height:280px;border-right:0;border-bottom:1px solid var(--line)}
   .ops .pbody{padding:22px 22px 24px}
-  .frames{grid-template-columns:repeat(3,auto)}
-  .fr:nth-child(n+7){display:none}
   .scroll-hint{display:none}
 }
 @media (max-width:640px){
@@ -451,7 +449,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   <div class="wrap">
     <a class="mark" href="#top">KAYRO<span>/OS</span></a>
     <div class="links">
-      <a href="#ours">Ours</a><a href="#yours">Yours</a><a href="#systems">Systems</a><a href="#contact">Contact</a>
+      <a href="#ours">Ours</a><a href="#yours">Yours</a><a href="#systems">Systems</a><a href="/about">About</a><a href="#contact">Contact</a>
     </div>
     <div class="nav-r">
       <span class="pill mono"><span class="dot"></span>4 systems live</span>
@@ -463,7 +461,8 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
     <a href="#ours" style="--n:0">Ours<span>01</span></a>
     <a href="#yours" style="--n:1">Yours<span>02</span></a>
     <a href="#systems" style="--n:2">Systems<span>03</span></a>
-    <a href="#contact" style="--n:3">Contact<span>06</span></a>
+    <a href="/about" style="--n:3">About<span>→</span></a>
+    <a href="#contact" style="--n:4">Contact<span>06</span></a>
   </div>
 </nav>
 
@@ -515,27 +514,23 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
     </div>
     <div class="grid2">
       <a class="panel tilt rv" href="https://rothbureau.com">
-        <div class="vis roth" aria-label="ROTH Round frames in ten colourways">
+        <div class="vis roth" aria-label="ROTH Round frames in six colourways">
           <div class="ring"></div>
           <span class="mono stamp">SOLD OUT</span>
           <div class="frames">
-            <div class="fr" style="--c:#1A1A1A;--n:0"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#C9A24B;--n:1"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#B5452E;--n:2"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#4D6B4A;--n:3"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#2F4D7A;--n:4"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#E8DCC8;--n:5"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#7A4E8C;--n:6"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#D98AA0;--n:7"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#8C8C8C;--n:8"><i></i><s></s><i></i></div>
-            <div class="fr" style="--c:#6B4A2E;--n:9"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#8A5A2B;--n:0"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#1A1A1A;--n:1"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#B08A5E;--n:2"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#A9C3DD;--n:3"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#6B2230;--n:4"><i></i><s></s><i></i></div>
+            <div class="fr" style="--c:#E6B39A;--n:5"><i></i><s></s><i></i></div>
           </div>
-          <span class="mono mute lbl">THE ROUND</span><span class="mono mute lbl2">10 colourways</span>
+          <span class="mono mute lbl">THE ROUND</span><span class="mono mute lbl2">6 colourways</span>
         </div>
         <div class="pbody">
           <span class="mono mute">Brand · E-commerce</span>
           <h3>ROTH</h3>
-          <p>The Round. Unisex retro frames in ten colourways, delivered across the UAE.</p>
+          <p>The Round. Unisex retro frames in six colourways, delivered across the UAE.</p>
           <div class="stat"><strong class="count" data-to="1.5" data-dec="1">1.5</strong><strong style="font-size:22px;color:var(--fg)">days</strong><span class="mono mute">first batch, sold out</span></div>
           <div class="prow"><span class="mono mute">rothbureau.com</span><span class="go">Visit <b>↗</b></span></div>
         </div>
@@ -776,7 +771,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
   <div class="wrap">
     <div class="row">
       <span class="mono mute">© 2026 Kayro Interactive · Dubai, UAE · ROTH is operated by Kayro Interactive.</span>
-      <div class="fl"><a href="#ours">Ours</a><a href="#yours">Yours</a><a href="#systems">Systems</a><a href="#contact">Contact</a><a href="privacy.html">Privacy</a></div>
+      <div class="fl"><a href="#ours">Ours</a><a href="#yours">Yours</a><a href="#systems">Systems</a><a href="/about">About</a><a href="#contact">Contact</a><a href="privacy.html">Privacy</a></div>
     </div>
     <div class="giant" aria-hidden="true">KAYRO<span></span></div>
   </div>
@@ -961,6 +956,7 @@ footer .fl a{color:var(--mute);font-size:14px;transition:color .2s}footer .fl a:
 
   /* ---------- brief builder ---------- */
   var f=$('#brief'),err=$('#err'),msg=$('#msg'),EM=['omarbaalbaki','kayrointer.com'].join('@');
+  try{var pre=new URLSearchParams(location.search).get('type');if(pre)$$('input[name="type"]',f).forEach(function(r){if(r.value===pre)r.checked=true})}catch(e){}
   msg.addEventListener('input',function(){err.textContent=''});
   f.addEventListener('change',function(){err.textContent=''});
   function bad(m,el){err.textContent=m;f.classList.remove('shake');void f.offsetWidth;f.classList.add('shake');if(el)el.focus()}
