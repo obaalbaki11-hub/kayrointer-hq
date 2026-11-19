@@ -129,6 +129,8 @@ h2{font-weight:600;font-size:clamp(30px,3vw,42px);line-height:1.1;letter-spacing
 .card{border:1px solid var(--line);border-radius:16px;background:#fff;overflow:hidden;display:flex;flex-direction:column}
 .shot{background:var(--soft);border-bottom:1px solid var(--line);padding:20px 20px 0}
 .shot img{width:100%;aspect-ratio:2.2/1;object-fit:cover;object-position:top center;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
+.shot.logo{padding:0;aspect-ratio:2.4/1;display:grid;place-items:center;background:var(--lbg,var(--soft))}
+.shot.logo img{width:var(--lw,46%);height:auto;aspect-ratio:auto;object-fit:contain;border:0;border-radius:0}
 @media (min-width:1100px){
   .card.row{flex-direction:row}
   .card.row .shot{position:relative;flex:0 0 44%;min-height:200px;padding:0;border-bottom:0;border-right:1px solid var(--line)}
@@ -342,7 +344,7 @@ footer .mark{color:#fff}
   </div>
   <div class="cards">
     <article class="card">
-      <div class="shot"><img src="/assets/work/roth-desktop.webp" width="1440" height="900" alt="The ROTH homepage showing The Round sunglasses in the Azure colourway" loading="lazy" decoding="async"></div>
+      <div class="shot logo" style="--lbg:#F3EEE5;--lw:40%"><img src="/assets/brand/roth-wordmark.svg" width="4017" height="666" alt="ROTH" loading="lazy" decoding="async"></div>
       <div class="cb">
         <div class="cb-top"><span>Brand and e-commerce</span><a class="ext" href="https://rothbureau.com">rothbureau.com <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12L12 4M6 4h6v6"/></svg></a></div>
         <h3>ROTH</h3>
@@ -351,7 +353,7 @@ footer .mark{color:#fff}
       </div>
     </article>
     <article class="card">
-      <div class="shot"><img src="/assets/work/bell2bell-desktop.webp" width="1440" height="900" alt="The Bell2Bell title screen over a map of Europe in 1066" loading="lazy" decoding="async"></div>
+      <div class="shot logo" style="--lbg:#231E18;--lw:56%"><img src="/assets/brand/bell2bell-wordmark.svg" width="6414" height="670" alt="Bell2Bell" loading="lazy" decoding="async"></div>
       <div class="cb">
         <div class="cb-top"><span>Browser game</span><a class="ext" href="https://bell2bell.app">bell2bell.app <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12L12 4M6 4h6v6"/></svg></a></div>
         <h3>Bell2Bell</h3>
