@@ -1,0 +1,31 @@
+name               = "kayro-builder"
+main               = "api.js"
+compatibility_date = "2025-09-01"
+workers_dev        = true
+
+# The builder page calls kayrointer.com/api/builder (same origin as the site).
+# The kayrointer.com zone must be in the Cloudflare account you deploy with.
+routes = [
+  { pattern = "kayrointer.com/api/builder*", zone_name = "kayrointer.com" }
+]
+
+[vars]
+MODEL     = "claude-haiku-5-5"   # fast model: the page streams in as it is written
+DAILY_CAP = "300"                # only used when the CAP namespace below is switched on
+
+# Per-visitor limit: 4 designs a minute per IP. Needs wrangler 4.36 or later.
+[[ratelimits]]
+name         = "LIMITER"
+namespace_id = "2001"
+
+  [ratelimits.simple]
+  limit  = 4
+  period = 60
+
+# Optional daily cap across all visitors, to bound the worst-case AI bill.
+#   npx wrangler kv namespace create CAP     -> paste the id below, uncomment, deploy again
+# [[kv_namespaces]]
+# binding = "CAP"
+# id      = "PASTE_ID_HERE"
+
+# Secret (set once):  npx wrangler secret put ANTHROPIC_KEY

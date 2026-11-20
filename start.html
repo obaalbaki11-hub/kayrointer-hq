@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Start a project | Kayro Interactive</title>
+<meta name="description" content="Describe your business and watch Kayro design a first look at your homepage, with a guide price and timeline.">
+<link rel="canonical" href="https://kayrointer.com/start">
+<meta name="theme-color" content="#FFFFFF">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Kayro Interactive">
+<meta property="og:url" content="https://kayrointer.com/start">
+<meta property="og:title" content="Start a project | Kayro Interactive">
+<meta property="og:description" content="Describe your business and watch Kayro design a first look at your homepage, with a guide price and timeline.">
+<meta property="og:image" content="https://kayrointer.com/assets/brand/og-kayro.png">
+<meta name="twitter:card" content="summary_large_image">
+
+<link rel="icon" href="assets/brand/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png">
+<link rel="preload" href="/assets/fonts/inter-latin.woff2" as="font" type="font/woff2" crossorigin>
+
+<style>
+/* Font: Inter (latin, variable weight), hosted here */
+@font-face{font-family:"Inter";font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/fonts/inter-latin.woff2) format("woff2")}
+
+/* kayrointer.com design language: white page, navy ink, the logo's blue as the one accent, Inter.
+   One prompt on the left, the live preview on the right. Everything else stays out of the way. */
+:root{
+  color-scheme:light;
+  --bg:#FFFFFF;--soft:#F6F7F9;
+  --ink:#0B1220;--mute:#445060;
+  --line:#E6E8EC;--line2:#C3C9D2;--field:#8892A0;
+  --acc:#0E61FF;--acc-h:#0A4FD6;--navy:#00173A;
+  --ok:#0B6B3A;--ok-bg:#E3F5EA;--bad:#B42318;
+  --sans:"Inter",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --nav:73px;
+}
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3,p{margin:0}
+a{color:inherit;text-decoration:none}
+button,input,textarea,select{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+
+/* nav */
+.top{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.92);backdrop-filter:saturate(1.4) blur(12px);-webkit-backdrop-filter:saturate(1.4) blur(12px);border-bottom:1px solid var(--line)}
+.top-in{display:flex;align-items:center;justify-content:space-between;gap:24px;min-height:72px;padding:0 clamp(20px,3vw,40px)}
+.mark{display:flex;align-items:center;gap:10px;font-size:17px;font-weight:600;letter-spacing:-.01em;padding:10px 0;white-space:nowrap}
+.mark svg{width:26px;height:26px;flex:none}
+.links{display:flex;align-items:center;gap:34px;font-size:15px;font-weight:500;color:var(--mute)}
+.links a{padding:12px 0}.links a:hover{color:var(--ink)}
+.badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;font-size:13px;font-weight:600;white-space:nowrap}
+.badge.live{background:var(--ok-bg);color:var(--ok)}
+.badge.priv{background:#EEF0F3;color:#2A3442}
+@media (max-width:1000px){.links{display:none}}
+
+.wrap{display:grid;grid-template-columns:minmax(360px,460px) 1fr;min-height:calc(100vh - var(--nav))}
+.controls{padding:clamp(28px,3.4vw,48px) clamp(20px,3vw,40px) 48px;display:flex;flex-direction:column;gap:28px;min-width:0}
+.intro{display:flex;flex-direction:column;align-items:flex-start;gap:14px}
+.eyebrow{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--acc)}
+.intro h1{font-weight:600;font-size:clamp(32px,2.9vw,42px);line-height:1.06;letter-spacing:-.035em;text-wrap:balance}
+.lede{font-size:17px;line-height:1.55;color:var(--mute)}
+
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px;display:flex;flex-direction:column;gap:16px}
+.lab{display:block;font-size:15px;font-weight:600}
+textarea,input[type=text],select{width:100%;min-width:0;padding:12px 14px;border-radius:8px;border:1px solid var(--field);background:#fff;color:var(--ink);font-size:16px;line-height:1.5;transition:border-color .15s}
+input[type=text],select{min-height:48px}
+textarea{resize:vertical;min-height:190px;display:block}
+textarea:hover,input[type=text]:hover,select:hover{border-color:var(--ink)}
+.bad{border-color:var(--bad)!important}
+::placeholder{color:#5F6B7A;opacity:1}
+label.f{display:flex;flex-direction:column;gap:8px;font-size:15px;font-weight:600;min-width:0}
+label.f input,label.f select{font-weight:400}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grp{display:flex;flex-direction:column;gap:10px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:48px;padding:13px 22px;border-radius:8px;border:1px solid transparent;font-size:15px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
+.btn-primary{background:var(--acc);color:#fff}
+.btn-primary:hover{background:var(--acc-h)}
+.btn-primary:disabled{opacity:.6;cursor:progress}
+.btn-ghost{background:#fff;border-color:var(--line2);color:var(--ink)}
+.btn-ghost:hover{background:var(--soft)}
+.btn-block{width:100%}
+.note{font-size:14px;line-height:1.5;color:var(--mute)}
+.err{color:var(--bad);font-size:14px;font-weight:500;display:none}
+.err.on{display:block}
+.link{font-size:14px;font-weight:600;color:var(--ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;background:none;border:0;padding:0}
+.link:hover{color:var(--acc)}
+
+.ask-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.up{position:relative;display:inline-block}
+.up input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+.up:focus-within{outline:2px solid var(--acc);outline-offset:3px;border-radius:4px}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px}
+.thumb{position:relative;width:56px;height:56px;border-radius:8px;border:1px solid var(--line);background:var(--soft) center/cover no-repeat}
+.thumb button{position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:50%;border:1px solid var(--line2);background:#fff;font-size:13px;line-height:1;cursor:pointer;display:grid;place-items:center;padding:0}
+
+/* your project */
+.plan h2{font-size:22px;font-weight:600;letter-spacing:-.02em;line-height:1.2;margin-top:6px}
+.estimate{background:var(--navy);color:#fff;border-radius:12px;padding:18px 20px;display:grid;grid-template-columns:1fr 1fr;gap:2px 16px}
+.estimate .k{font-size:14px;color:#B8C0CC}
+.estimate .v{font-size:24px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.adj summary{font-size:14px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;list-style:none;display:inline-block}
+.adj summary::-webkit-details-marker{display:none}
+.adj summary:hover{color:var(--acc)}
+.adj-in{display:flex;flex-direction:column;gap:18px;padding-top:16px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;min-height:40px;padding:8px 14px;border-radius:8px;border:1px solid var(--field);background:#fff;font-size:14px;font-weight:500;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.chip:hover{border-color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--acc);border-color:var(--acc);color:#fff}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.sw{width:32px;height:32px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px var(--line2);cursor:pointer;padding:0}
+.sw[aria-pressed="true"]{box-shadow:0 0 0 2px var(--acc)}
+.custom{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:500;color:var(--mute)}
+.custom input{width:32px;height:32px;border:none;padding:0;background:none;cursor:pointer}
+.addons{display:flex;flex-direction:column}
+.addon{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 0;border-top:1px solid var(--line);cursor:pointer;font-size:15px}
+.addon:first-child{border-top:0;padding-top:0}
+.addon input{width:18px;height:18px;accent-color:var(--acc);flex:none}
+.addon span{display:flex;align-items:center;gap:10px;font-weight:500}
+.addon em{font-style:normal;font-size:14px;color:var(--mute);font-variant-numeric:tabular-nums;white-space:nowrap}
+.rule{height:1px;background:var(--line);border:0;margin:4px 0}
+
+.sent{display:flex;flex-direction:column;gap:14px;padding-top:4px}
+.sent-h{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:600}
+.sent-h svg{color:var(--acc);flex:none}
+.sent-actions{display:flex;flex-direction:column;gap:10px}
+.brief{padding:16px 18px;border-radius:10px;background:var(--soft);border:1px solid var(--line);font-size:14px;line-height:1.55;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow:auto;margin-top:12px}
+
+/* preview */
+.stage{background:var(--soft);border-left:1px solid var(--line);padding:24px clamp(20px,2.6vw,40px);position:sticky;top:var(--nav);height:calc(100vh - var(--nav));display:flex;flex-direction:column;gap:14px;min-width:0}
+.stage-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.status{display:flex;align-items:center;gap:10px;font-size:14px;font-weight:600}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--field);flex:none}
+.status.ai .dot{background:var(--acc)}
+.status.busy .dot{background:var(--acc);animation:pulse 1s infinite}
+@keyframes pulse{50%{opacity:.3}}
+.seg{display:inline-flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden;background:#fff}
+.seg button{border:none;background:none;min-height:36px;padding:0 14px;font-size:14px;font-weight:500;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--ink);color:#fff}
+
+.browser{flex:1;min-height:0;background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 32px rgba(0,23,58,.07);display:flex;flex-direction:column;overflow:hidden;margin:0 auto;width:100%;transition:max-width .25s}
+.browser.mobile{max-width:400px}
+.bar{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.lights{display:flex;gap:6px}
+.lights i{width:10px;height:10px;border-radius:50%;background:var(--line);display:block}
+.url{flex:1;background:var(--soft);border:1px solid var(--line);border-radius:8px;padding:5px 12px;font-size:13px;color:var(--mute);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.frame-wrap{position:relative;flex:1;min-height:0}
+iframe{border:0;width:100%;height:100%;display:block;background:#fff}
+.overlay{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);background:var(--navy);color:#fff;border-radius:999px;padding:9px 18px;font-size:14px;font-weight:500;display:none;align-items:center;gap:10px;box-shadow:0 8px 24px rgba(0,23,58,.25);white-space:nowrap}
+.overlay.on{display:flex}
+.spin{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:sp .8s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.refine{display:flex;gap:10px}
+.refine input{flex:1}
+
+@media (max-width:900px){
+  .wrap{grid-template-columns:1fr}
+  .stage{position:relative;top:0;height:680px;border-left:0;border-top:1px solid var(--line)}
+}
+@media (max-width:720px){
+  :root{--nav:61px}
+  .top-in{min-height:60px}
+  .intro h1{font-size:clamp(28px,8vw,34px)}
+  .card{padding:20px;border-radius:14px}
+}
+@media (max-width:420px){ .row2{grid-template-columns:1fr} }
+@media (prefers-reduced-motion:reduce){ *{animation:none!important;transition:none!important} }
+</style>
+</head>
+<body>
+<nav class="top" aria-label="Main">
+  <div class="top-in">
+    <a class="mark" href="/" aria-label="Kayro Interactive, home">
+      <svg viewBox="0 0 3 3" shape-rendering="crispEdges" aria-hidden="true"><rect x="1" y="0" width="2" height="2" fill="#0E61FF"/><rect x="0" y="1" width="1" height="1" fill="#07D4ED"/><rect x="1" y="2" width="1" height="1" fill="#07D4ED"/><rect x="1" y="1" width="1" height="1" fill="#00173A"/></svg>
+      <span>Kayro Interactive</span>
+    </a>
+    <div class="links">
+      <a href="/#work">Work</a><a href="/#systems">Systems</a><a href="/#audit">Audits</a><a href="/#process">Process</a><a href="/about">About</a><a href="/#contact">Contact</a>
+    </div>
+    <span class="badge priv" id="fromBadge"></span>
+  </div>
+</nav>
+
+<div class="wrap">
+  <main class="controls">
+    <div class="intro">
+      <span class="eyebrow">Start a project</span>
+      <h1>See your website before we build it.</h1>
+      <p class="lede">Describe your business and what you want. Kayro's AI designs your homepage in front of you.</p>
+    </div>
+
+    <form class="card" id="askForm" novalidate>
+      <label class="lab" for="prompt">What do you want to build?</label>
+      <textarea id="prompt" maxlength="1200" placeholder="Example: A website for Saffron &amp; Co. We make handmade leather bags and wallets in Dubai. I want people to browse the collection, see how the bags are made, and order with delivery across the UAE. Premium but warm, in Arabic and English."></textarea>
+      <p class="err" id="askErr"></p>
+      <button class="btn btn-primary btn-block" id="genBtn" type="submit">Generate my preview</button>
+      <div class="ask-foot">
+        <label class="link up"><input type="file" id="photoIn" accept="image/*" multiple>Add your photos</label>
+        <span class="note" id="askNote">Optional. They stay on your device.</span>
+      </div>
+      <div class="thumbs" id="thumbs" hidden></div>
+    </form>
+
+    <section class="card plan" id="plan" hidden>
+      <div>
+        <span class="eyebrow">Your project</span>
+        <h2 id="planTitle"></h2>
+      </div>
+      <div class="estimate">
+        <div class="k">Starting from</div><div class="k">Timeline</div>
+        <div class="v" id="estPrice"></div><div class="v" id="estTime"></div>
+      </div>
+      <p class="note" id="planIncl"></p>
+      <details class="adj" id="adj">
+        <summary>Change style or features</summary>
+        <div class="adj-in">
+          <label class="f" for="typeSel">Project type <select id="typeSel"></select></label>
+          <div class="grp"><span class="lab">Style</span><div class="chips" id="vibes"></div></div>
+          <div class="grp"><span class="lab">Brand color</span><div class="swatches" id="swatches"><label class="custom" for="customColor"><input type="color" id="customColor" value="#8a5a2b"> Custom</label></div></div>
+          <div class="grp"><span class="lab">Features</span><div class="addons" id="addons"></div></div>
+        </div>
+      </details>
+      <hr class="rule">
+      <div class="row2">
+        <label class="f" for="cName">Your name <input type="text" id="cName" maxlength="40" autocomplete="name"></label>
+        <label class="f" for="cContact">WhatsApp or email <input type="text" id="cContact" maxlength="60"></label>
+      </div>
+      <button class="btn btn-primary btn-block" id="sendBtn" type="button">Send this to Kayro</button>
+      <p class="err" id="sendErr"></p>
+      <p class="note" id="depLine"></p>
+      <div class="sent" id="sent" hidden>
+        <hr class="rule">
+        <div class="sent-h"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 9.5l3.2 3.2L14 6"/></svg><span id="sentTitle">Your brief is ready.</span></div>
+        <div class="sent-actions">
+          <a class="btn btn-primary btn-block" id="waBtn" href="#" target="_blank" rel="noopener">Send it on WhatsApp</a>
+          <a class="btn btn-ghost btn-block" id="payBtn" href="#" target="_blank" rel="noopener" hidden></a>
+        </div>
+        <p class="note" id="sentNote"></p>
+        <details class="adj">
+          <summary>View your brief</summary>
+          <div class="brief" id="briefText"></div>
+          <p class="note" style="margin-top:10px"><button class="link" id="copyBtn" type="button">Copy brief</button> · or paste it in a DM to <a class="link" href="https://ig.me/m/kayro_interactive" target="_blank" rel="noopener">@kayro_interactive</a></p>
+        </details>
+      </div>
+    </section>
+  </main>
+
+  <aside class="stage" id="stage">
+    <div class="stage-top">
+      <div class="status" id="status"><span class="dot"></span><span id="statusText">Example preview</span></div>
+      <div class="seg" role="group" aria-label="Preview size">
+        <button type="button" id="vDesk" aria-pressed="true">Desktop</button>
+        <button type="button" id="vMob" aria-pressed="false">Mobile</button>
+      </div>
+    </div>
+    <div class="browser" id="browser">
+      <div class="bar"><div class="lights"><i></i><i></i><i></i></div><div class="url" id="url">saffronandco.com</div></div>
+      <div class="frame-wrap">
+        <iframe id="frame" title="Homepage preview" sandbox="allow-same-origin"></iframe>
+        <div class="overlay" id="overlay"><span class="spin"></span><span id="overlayText">Designing your homepage…</span></div>
+      </div>
+    </div>
+    <form class="refine" id="refineForm" hidden novalidate>
+      <input type="text" id="refineIn" placeholder="Ask for a change: make it darker, add a menu, more premium…" maxlength="200" aria-label="Ask for a change">
+      <button class="btn btn-ghost" id="refineBtn" type="submit">Update</button>
+    </form>
+  </aside>
+</div>
+
+<script>
+/* ---------- Config: Omar, set your real prices here ---------- */
+const TYPES = [
+  {id:"store",   name:"Online store",     desc:"Sell products online", price:999, weeks:3},
+  {id:"company", name:"Company website",  desc:"Show who you are",     price:999, weeks:2},
+  {id:"booking", name:"Booking site",     desc:"Salons, clinics, cafés", price:999, weeks:3},
+  {id:"brand",   name:"Personal brand",   desc:"Creators & founders",  price:999, weeks:2},
+  {id:"launch",  name:"Launch page",      desc:"One page, one goal",   price:999, weeks:1},
+  {id:"ai",      name:"AI-powered app",   desc:"Tools, agents, portals", price:1999, weeks:5},
+];
+const ADDONS = [
+  {id:"pay",   name:"Online payments",    desc:"Cards, Apple Pay, Tabby",   price:500, weeks:0.5},
+  {id:"book",  name:"Booking & calendar", desc:"Customers book a slot",     price:800, weeks:1},
+  {id:"ar",    name:"Arabic + English",   desc:"Full bilingual site",       price:600, weeks:0.5},
+  {id:"chat",  name:"AI chat assistant",  desc:"Answers customers 24/7",    price:1500, weeks:1},
+  {id:"wa",    name:"WhatsApp orders",    desc:"Orders straight to WhatsApp", price:300, weeks:0.5},
+  {id:"dash",  name:"Admin dashboard",    desc:"Manage orders and content", price:2000, weeks:1},
+];
+/* Deposit. link = your Stripe Payment Link (https://buy.stripe.com/...). While it is empty,
+   the page tells clients Kayro will send the payment link after receiving the brief. */
+const PAY = { amount:500, refundable:true, link:"" };
+/* How much a client must write in the prompt before generating. */
+const MIN_DETAIL = 40;
+
+const COLORS = ["#8a5a2b","#0b1b3f","#2563eb","#0f766e","#be123c","#111111","#7c3aed"];
+const VIBES = [
+  {id:"clean",  name:"Clean",  display:"Inter", body:"Inter"},
+  {id:"bold",   name:"Bold",   display:"Archivo Black", body:"Inter"},
+  {id:"luxury", name:"Luxury", display:"Playfair Display", body:"Inter"},
+  {id:"playful",name:"Playful",display:"Fredoka", body:"Nunito"},
+];
+/* Where briefs are sent: Kayro's WhatsApp, the same number as the audit page on kayrointer.com. */
+const KAYRO_WA = "971555627973";
+
+const state = {
+  type:"store", color:COLORS[0], vibe:"luxury", addons:new Set(["pay","wa"]),
+  biz:{name:"Saffron & Co.", what:"Handmade leather bags and wallets, crafted in Dubai.", city:"Dubai", goal:"Sell online"},
+  prompt:"", photos:[], logo:null,
+  aiBody:null,
+  ref:"KP-" + Math.random().toString(36).slice(2,7).toUpperCase()
+};
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const aed = n => "AED " + n.toLocaleString("en-US");
+function biz(){ return state.biz; }
+function domainFor(name){ return (name.toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"").slice(0,24) || "yourbusiness") + ".com"; }
+
+/* ---------- Color helpers ---------- */
+function hexRgb(hex){ let h=hex.replace("#",""); if(h.length===3) h=h.split("").map(c=>c+c).join(""); const n=parseInt(h,16); return [n>>16,(n>>8)&255,n&255]; }
+function shade(hex, amt){
+  const [r,g,b]=hexRgb(hex);
+  const f=v=>Math.max(0,Math.min(255,Math.round(amt<0? v*(1+amt) : v+(255-v)*amt)));
+  return "#"+[f(r),f(g),f(b)].map(v=>v.toString(16).padStart(2,"0")).join("");
+}
+function lum(hex){ const [r,g,b]=hexRgb(hex).map(v=>{v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4)}); return .2126*r+.7152*g+.0722*b; }
+function onColor(hex){ return lum(hex)>0.45 ? "#111111" : "#ffffff"; }
+
+/* Content library per project type (instant preview) */
+const CONTENT = {
+  store:{
+    bar:"Free delivery across {city} · Easy 14-day returns",
+    nav:["Shop","New in","Collections","Our story"],
+    eyebrow:"New collection",
+    head:["Made in {city}.","Made to last."],
+    cta:"Shop the collection", cta2:"Our story",
+    trust:["Free delivery","Handmade quality","Secure checkout"],
+    strip:["Crafted by hand","Premium materials","Gift wrapping included","Delivered in 24–48h"],
+    gridTitle:"Bestsellers", gridSub:"Our most-loved pieces this season.",
+    items:[["The Signature","AED 690","bag"],["The Everyday","AED 450","box"],["The Mini","AED 320","round"],["Gift Edition","AED 520","bottle"]],
+    storyTitle:"Every piece tells a story", storySteps:[["Designed","Sketched and refined in our {city} studio."],["Handmade","Crafted in small batches by skilled artisans."],["Delivered","Wrapped with care and at your door fast."]],
+    band:"Find the piece that's made for you.", art:"product"
+  },
+  company:{
+    bar:"Now taking new projects for {year}",
+    nav:["Services","Work","About","Insights"],
+    eyebrow:"Trusted partner in {city}",
+    head:["We help businesses","grow with confidence."],
+    cta:"Talk to us", cta2:"See our work",
+    trust:["Expert team","Clear pricing","Fast turnaround"],
+    strip:["Strategy","Operations","Consulting","Delivery","Support"],
+    gridTitle:"What we do", gridSub:"Services built around your goals.",
+    items:[["Strategy","Plan the next step","chart"],["Operations","Run it smoothly","gear"],["Growth","Reach more clients","rocket"],["Support","Always on hand","chat"]],
+    storyTitle:"How we work", storySteps:[["Discover","We learn your business and goals."],["Plan","A clear roadmap, timeline and price."],["Deliver","We execute and report every step."]],
+    band:"Let's build what's next, together.", art:"dashboard"
+  },
+  booking:{
+    bar:"Open 7 days · Book online in 30 seconds",
+    nav:["Services","Prices","Team","Location"],
+    eyebrow:"Now booking in {city}",
+    head:["Your time.","Beautifully booked."],
+    cta:"Book now", cta2:"View prices",
+    trust:["Instant confirmation","Easy rescheduling","Top-rated team"],
+    strip:["Walk-ins welcome","Gift cards available","Private rooms","Parking on site"],
+    gridTitle:"Popular services", gridSub:"Choose a service and pick your time.",
+    items:[["Signature treatment","60 min · AED 350","spa"],["Express session","30 min · AED 180","clock"],["Deluxe package","90 min · AED 520","star"],["Consultation","15 min · Free","chat"]],
+    storyTitle:"Booking made simple", storySteps:[["Choose","Pick a service and your favourite specialist."],["Book","Select a time that suits you, confirmed instantly."],["Relax","Get a reminder and enjoy your visit."]],
+    band:"Ready when you are. Book your visit.", art:"booking"
+  },
+  brand:{
+    bar:"Available for new projects",
+    nav:["About","Work","Speaking","Contact"],
+    eyebrow:"Based in {city}",
+    head:["Ideas that","move people."],
+    cta:"Work with me", cta2:"See projects",
+    trust:["Brand partnerships","Speaking","Consulting"],
+    strip:["Creator","Founder","Speaker","Advisor"],
+    gridTitle:"Selected work", gridSub:"A few projects I'm proud of.",
+    items:[["Brand launch","Campaign · {year}","spark"],["Keynote talk","Event · {year}","mic"],["Collaboration","Partnership","star"],["Masterclass","Course","play"]],
+    storyTitle:"What I do", storySteps:[["Create","Content that builds real audiences."],["Speak","Talks and panels across the region."],["Advise","Helping brands grow online."]],
+    band:"Have a project in mind? Let's talk.", art:"portrait"
+  },
+  launch:{
+    bar:"Launching soon · Join the early list",
+    nav:["Features","How it works","FAQ"],
+    eyebrow:"Coming soon",
+    head:["Something new","is coming."],
+    cta:"Join the waitlist", cta2:"Learn more",
+    trust:["Early access","Launch offer","No spam"],
+    strip:["Early access","Founding member pricing","Built in {city}"],
+    gridTitle:"Why you'll love it", gridSub:"Everything you need, nothing you don't.",
+    items:[["Simple","Set up in minutes","spark"],["Fast","Results from day one","rocket"],["Secure","Your data, protected","shield"],["Local","Made for the UAE","pin"]],
+    storyTitle:"How it works", storySteps:[["Sign up","Join the waitlist with your email."],["Get access","Be first in line on launch day."],["Enjoy","Unlock the founding member offer."]],
+    band:"Be first. Join the waitlist today.", art:"phone"
+  },
+  ai:{
+    bar:"New: AI agents that work 24/7",
+    nav:["Product","Use cases","Pricing","Docs"],
+    eyebrow:"AI built for your business",
+    head:["Work smarter","with AI."],
+    cta:"Try it free", cta2:"Book a demo",
+    trust:["Enterprise security","Arabic & English","Setup in a day"],
+    strip:["Automate","Analyse","Answer","Assist","Report"],
+    gridTitle:"What it does", gridSub:"AI that handles the busywork for you.",
+    items:[["Auto replies","Answer customers instantly","chat"],["Smart reports","Insights every morning","chart"],["Workflows","Connect your tools","gear"],["Secure","Your data stays yours","shield"]],
+    storyTitle:"Up and running fast", storySteps:[["Connect","Link the tools you already use."],["Train","It learns your business and tone."],["Automate","Let it work while you focus."]],
+    band:"See what AI can do for your team.", art:"chat"
+  }
+};
+
+/* Small inline SVG icons */
+const ICON = {
+  chart:'<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>',
+  gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+  rocket:'<path d="M5 15c-1.5 1.3-2 5-2 5s3.7-.5 5-2c.7-.8.7-2.1-.1-2.9a2.2 2.2 0 0 0-2.9-.1zM12 15l-3-3a22 22 0 0 1 2-4A12.9 12.9 0 0 1 22 2c0 2.7-.8 7.5-6 11a22 22 0 0 1-4 2z"/>',
+  chat:'<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  spa:'<path d="M11 20A7 7 0 0 1 4 13c0-5 4-9 16-9 0 12-4 16-9 16z"/><path d="M4 20c4-4 7-7 11-10"/>',
+  clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+  star:'<path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/>',
+  spark:'<path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
+  mic:'<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/>',
+  play:'<circle cx="12" cy="12" r="9"/><path d="m10 8 6 4-6 4z"/>',
+  shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0z"/><circle cx="12" cy="10" r="3"/>',
+  check:'<path d="M20 6 9 17l-5-5"/>',
+  search:'<circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/>',
+  bag:'<path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4zM3 6h18M16 10a4 4 0 0 1-8 0"/>',
+  arrow:'<path d="M5 12h14M13 5l7 7-7 7"/>'
+};
+const icon = (n,s=20) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICON[n]||ICON.spark}</svg>`;
+
+/* Studio scenes: an empty, softly lit set (arch, plinths, a sphere in the brand color).
+   Stands in for photography until the client adds their own photos. */
+function stageSvg(k, c, uid, w=400, h=400){
+  const cx=w/2, fy=Math.round(h*0.70), u="k"+uid;
+  const cyl=(x,yTop,rx,ht)=>{ const ry=rx*0.26;
+    return `<ellipse cx="${x}" cy="${yTop+ht}" rx="${rx}" ry="${ry}" fill="url(#c${u})"/><rect x="${x-rx}" y="${yTop}" width="${rx*2}" height="${ht}" fill="url(#c${u})"/><ellipse cx="${x}" cy="${yTop}" rx="${rx}" ry="${ry}" fill="url(#t${u})"/>`; };
+  const sh=(x,y,rx)=>`<ellipse cx="${x+rx*0.3}" cy="${y}" rx="${rx*1.25}" ry="${rx*0.26}" fill="${shade(c,-0.75)}" opacity=".28" filter="url(#b${u})"/>`;
+  const ball=(x,y,r)=>`<ellipse cx="${x+r*0.25}" cy="${y+r*0.94}" rx="${r*0.95}" ry="${r*0.2}" fill="${shade(c,-0.75)}" opacity=".3" filter="url(#s${u})"/><circle cx="${x}" cy="${y}" r="${r}" fill="url(#g${u})"/>`;
+  const arch=(x,wd,topY)=>`<path d="M${x-wd/2} ${fy}V${topY+wd/2}a${wd/2} ${wd/2} 0 0 1 ${wd} 0V${fy}z" fill="url(#a${u})"/><path d="M${x-wd/2} ${fy}V${topY+wd/2}a${wd/2} ${wd/2} 0 0 1 ${wd} 0V${fy}h-${wd*0.9}V${topY+wd/2}a${wd*0.4} ${wd*0.4} 0 0 0 -${wd*0.1} 0z" fill="${shade(c,-0.3)}" opacity=".0"/>`;
+  let scene="";
+  const v=((k%4)+4)%4;
+  if(v===0){
+    scene = arch(cx,190,fy-250) + sh(cx,fy+44,84) + cyl(cx,fy-14,78,56) + ball(cx,fy-14-40,40);
+  } else if(v===1){
+    scene = `<circle cx="${cx+34}" cy="${fy-112}" r="104" fill="url(#a${u})"/>` + sh(cx-58,fy+18,40) + cyl(cx-58,fy-118,36,134) + sh(cx+38,fy+52,74) + cyl(cx+38,fy+2,70,48) + ball(cx+38,fy+2-30,30);
+  } else if(v===2){
+    scene = arch(cx-46,128,fy-212) + sh(cx+30,fy+50,88) + cyl(cx+30,fy+10,84,38) + cyl(cx+30,fy-30,54,38) + ball(cx-78,fy+26,24);
+  } else {
+    scene = `<path d="M${cx-130} ${fy}a130 130 0 0 1 260 0z" fill="url(#a${u})"/>` + sh(cx-40,fy+46,62) + cyl(cx-40,fy-44,58,88) + ball(cx-40,fy-44-26,26) + sh(cx+72,fy+58,36) + cyl(cx+72,fy+18,34,38);
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs>
+<linearGradient id="w${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c,0.80)}"/><stop offset="1" stop-color="${shade(c,0.70)}"/></linearGradient>
+<linearGradient id="f${u}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(c,0.62)}"/><stop offset="1" stop-color="${shade(c,0.78)}"/></linearGradient>
+<linearGradient id="a${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${shade(c,0.60)}"/><stop offset="1" stop-color="${shade(c,0.72)}"/></linearGradient>
+<linearGradient id="c${u}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="${shade(c,0.93)}"/><stop offset=".5" stop-color="${shade(c,0.82)}"/><stop offset="1" stop-color="${shade(c,0.58)}"/></linearGradient>
+<linearGradient id="t${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="${shade(c,0.88)}"/></linearGradient>
+<radialGradient id="g${u}" cx=".34" cy=".3" r=".8"><stop offset="0" stop-color="${shade(c,0.5)}"/><stop offset=".45" stop-color="${c}"/><stop offset="1" stop-color="${shade(c,-0.55)}"/></radialGradient>
+<linearGradient id="l${u}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".5"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<filter id="b${u}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="9"/></filter>
+<filter id="s${u}" x="-50%" y="-200%" width="200%" height="500%"><feGaussianBlur stdDeviation="4"/></filter>
+<filter id="n${u}"><feTurbulence type="fractalNoise" baseFrequency=".9" numOctaves="2" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 .07 0"/></filter>
+</defs>
+<rect width="${w}" height="${h}" fill="url(#w${u})"/>
+<path d="M0 0H${w*0.62}L${w*0.2} ${fy}H0z" fill="url(#l${u})" opacity=".55"/>
+<rect y="${fy}" width="${w}" height="${h-fy}" fill="url(#f${u})"/>
+${scene}
+<rect width="${w}" height="${h}" filter="url(#n${u})"/>
+</svg>`;
+}
+/* An image slot: the client's own photo when they added one, otherwise a studio scene. */
+function slot(i, c, uid, w=400, h=400){
+  const p=state.photos[i];
+  return p ? `<img src="${p}" alt="">` : stageSvg(i, c, uid, w, h);
+}
+
+/* Hero visuals per type */
+function heroArt(kind, t, b, c){
+  const r=t.radius, on=onColor(c);
+  const card=`background:#fff;color:#111;border-radius:${r.sm};box-shadow:0 20px 50px rgba(0,0,0,.14)`;
+  const photo=state.photos[0];
+  const bg = g => photo ? `background:url('${photo}') center/cover` : `background:${g}`;
+  if(kind==="product"){
+    return `<div class="hero-art">${slot(0,c,"h",400,440)}
+      <div class="float f1"><span class="ic">${icon("check",16)}</span><div><b>Handmade</b><small>in ${esc(b.city)}</small></div></div>
+      ${photo?`<div class="float f2"><b>The Signature</b><small>AED 690</small><span class="add">Add to bag</span></div>`:`<span class="cap">Your photos go here</span>`}</div>`;
+  }
+  if(kind==="booking"){
+    const slots=["10:00","11:30","13:00","15:30","17:00","18:30"];
+    return `<div class="hero-art panel" style="${bg(`linear-gradient(160deg,${shade(c,0.75)},${shade(c,0.45)})`)}">
+      <div class="widget" style="${card}"><div class="w-h"><b>Book your visit</b><small>Signature treatment · 60 min</small></div>
+      <div class="days">${["Mon","Tue","Wed","Thu","Fri"].map((d,i)=>`<span class="${i===2?"on":""}" style="${i===2?`background:${c};color:${on}`:""}">${d}<b>${18+i}</b></span>`).join("")}</div>
+      <div class="slots">${slots.map((s,i)=>`<span style="${i===3?`background:${c};color:${on};border-color:${c}`:""}">${s}</span>`).join("")}</div>
+      <div class="w-btn" style="background:${shade(c,-0.5)};color:#fff">Confirm booking · AED 350</div></div></div>`;
+  }
+  if(kind==="chat"){
+    return `<div class="hero-art panel" style="${bg(`linear-gradient(160deg,${shade(c,-0.55)},${shade(c,-0.2)})`)}">
+      <div class="widget" style="${card}"><div class="w-h row"><span class="ic" style="background:${c};color:${on}">${icon("spark",16)}</span><div><b>${esc(b.name)} AI</b><small>Online · replies instantly</small></div></div>
+      <div class="msg me">Can you summarise today's orders?</div>
+      <div class="msg bot" style="background:${shade(c,0.88)}">Sure. 42 orders today, up from yesterday. 3 need a reply. Want me to draft them?</div>
+      <div class="msg me">Yes, draft the replies.</div>
+      <div class="typing" style="background:${shade(c,0.88)}"><i></i><i></i><i></i></div></div></div>`;
+  }
+  if(kind==="dashboard"){
+    const bars=[40,62,48,75,58,88,70];
+    return `<div class="hero-art panel" style="${bg(`linear-gradient(160deg,${shade(c,0.8)},${shade(c,0.55)})`)}">
+      <div class="widget" style="${card}"><div class="w-h"><b>Project overview</b><small>This quarter</small></div>
+      <div class="bars">${bars.map((h,i)=>`<span style="height:${h}%;background:${i===5?c:shade(c,0.7)}"></span>`).join("")}</div>
+      <div class="kpis"><div><small>On track</small><b>12 projects</b></div><div><small>Delivered</small><b>On time</b></div></div></div></div>`;
+  }
+  if(kind==="phone"){
+    return `<div class="hero-art panel" style="${bg(`radial-gradient(circle at 70% 30%,${shade(c,0.5)},${c} 60%,${shade(c,-0.3)})`)}">
+      <div class="phone"><div class="notch"></div><div class="ph-in" style="background:linear-gradient(180deg,#fff,${shade(c,0.9)})"><b style="color:${shade(c,-0.5)}">${esc(b.name)}</b><small>You're on the list</small><div class="ring" style="border-color:${c}">#128</div><span style="background:${c};color:${on}">Invite friends</span></div></div></div>`;
+  }
+  return `<div class="hero-art">${slot(0,c,"h",400,440)}
+    <div class="float f2"><b>${esc(b.name)}</b><small>${esc(b.city)}</small></div>${photo?"":`<span class="cap">Your photo goes here</span>`}</div>`;
+}
+
+const VIBE_STYLE = {
+  clean:  {radius:{lg:"20px",sm:"14px",btn:"10px"}, case:"none", track:"-.02em", heroLayout:"split", pageBg:"#ffffff", alt:c=>shade(c,0.94)},
+  luxury: {radius:{lg:"0px",sm:"2px",btn:"0px"},   case:"none", track:"-.01em", heroLayout:"split", pageBg:"#f6f2ec", alt:()=>"#efe8de"},
+  bold:   {radius:{lg:"0px",sm:"0px",btn:"0px"},   case:"uppercase", track:"-.01em", heroLayout:"color", pageBg:"#ffffff", alt:c=>shade(c,0.9)},
+  playful:{radius:{lg:"32px",sm:"22px",btn:"99px"},case:"none", track:"0", heroLayout:"split", pageBg:"#ffffff", alt:c=>shade(c,0.9)},
+};
+
+/* ---------- Design kit ----------
+   One stylesheet drives both the instant preview and the AI design. Because the AI only
+   writes the page's markup (not its CSS), the design streams in fast and re-skins instantly
+   when the color or style changes. */
+function ctx(){
+  const b=biz(), v=VIBES.find(x=>x.id===state.vibe), t=VIBE_STYLE[state.vibe], c=state.color, vibe=state.vibe;
+  const lux = vibe==="luxury";
+  const ink = lux ? "#1b1712" : shade(c,-0.78);
+  const on=onColor(c), alt=t.alt(c), r=t.radius;
+  const isColorHero = t.heroLayout==="color";
+  const heroBg = isColorHero ? c : (lux ? t.pageBg : (vibe==="playful" ? shade(c,0.92) : "#ffffff"));
+  const heroInk = isColorHero ? on : ink;
+  const btnBg = isColorHero ? (on==="#ffffff"?"#111111":"#ffffff") : (lux ? ink : c);
+  const btnInk = isColorHero ? (on==="#ffffff"?"#ffffff":"#111111") : (lux ? "#fff" : on);
+  const fam = f => `'${f}', system-ui, sans-serif`;
+  const fonts = [...new Set([v.display,v.body])].map(f=>"family="+f.replace(/ /g,"+")+(f==="Playfair Display"?":ital,wght@0,400;0,600;1,400":":wght@400;500;600;700;800")).join("&");
+  return {b,v,t,c,vibe,lux,ink,on,alt,r,isColorHero,heroBg,heroInk,btnBg,btnInk,fam,fonts};
+}
+function kitCss(x){
+  const {v,t,c,vibe,lux,ink,on,alt,r,isColorHero,heroBg,heroInk,btnBg,btnInk,fam}=x;
+  const bold = vibe==="bold";
+  return `
+:root{--c:${c};--on:${on};--ink:${ink};--alt:${alt};--hi:${shade(c,0.35)};--lo:${shade(c,-0.35)};--deep:${shade(c,-0.6)};--soft:${shade(c,0.85)};--paper:${t.pageBg}}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;font-family:${fam(v.body)};color:${ink};background:${t.pageBg};-webkit-font-smoothing:antialiased}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,.logo{font-family:${fam(v.display)};letter-spacing:${t.track};text-transform:${t.case}}
+.wrap{padding:0 6vw}
+.ann{background:${ink};color:#fff;text-align:center;font-size:12px;padding:8px 6vw;letter-spacing:.02em}
+nav{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:18px 6vw;background:${isColorHero?c:t.pageBg};color:${isColorHero?on:ink};${lux?"border-bottom:1px solid rgba(0,0,0,.08);":""}}
+.logo{font-size:22px;font-weight:${lux?"600":"800"};white-space:nowrap}
+nav ul{display:flex;gap:clamp(14px,2.2vw,28px);list-style:none;margin:0;padding:0;font-size:14px;font-weight:500;${lux?"text-transform:uppercase;letter-spacing:.14em;font-size:11px;":""}}
+.nr{display:flex;align-items:center;gap:14px}
+.nico{position:relative;display:grid;place-items:center}
+.nico i{position:absolute;top:-6px;right:-8px;font-style:normal;font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;display:grid;place-items:center;background:var(--c);color:var(--on)}
+.lang{font-size:12px;font-weight:600;border:1px solid currentColor;border-radius:99px;padding:3px 10px;opacity:.85;white-space:nowrap}
+nav li{white-space:nowrap}
+.nbtn{background:${btnBg};color:${btnInk};padding:10px 18px;border-radius:${r.btn};font-size:13px;font-weight:600;white-space:nowrap}
+.hero{background:${heroBg};color:${heroInk};display:grid;grid-template-columns:1.05fr 1fr;gap:5vw;align-items:center;padding:7vh 6vw 9vh;position:relative;overflow:hidden}
+${vibe==="playful"?`.hero:before{content:"";position:absolute;width:420px;height:420px;border-radius:50%;background:${shade(c,0.7)};left:-120px;bottom:-200px}.hero>*{position:relative}`:""}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;margin-bottom:20px;color:${lux?"#8a7a66":c}}
+.hero .eyebrow{${isColorHero?"color:inherit;":""}}
+.eyebrow:before{content:"";width:22px;height:2px;background:currentColor}
+.hero h1{font-size:clamp(40px,6vw,${isColorHero?"92px":"76px"});line-height:${isColorHero?".95":"1.02"};margin:0 0 22px;font-weight:${lux?"400":"800"}}
+.hero h1 em{font-style:${lux?"italic":"normal"};color:${isColorHero?"inherit":c}}
+.lead{font-size:clamp(16px,1.4vw,19px);line-height:1.6;opacity:.8;max-width:40ch;margin:0 0 30px}
+.ctas{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:34px}
+.b1{background:${btnBg};color:${btnInk};padding:16px 28px;border-radius:${r.btn};font-weight:600;font-size:15px;display:inline-flex;gap:10px;align-items:center;${bold?"box-shadow:5px 5px 0 #111;border:2px solid #111;":""}}
+.b2{padding:16px 24px;border-radius:${r.btn};font-weight:600;font-size:15px;border:1.5px solid currentColor;opacity:.9}
+.trust{display:flex;gap:8px 16px;flex-wrap:wrap;font-size:12.5px;opacity:.85}
+.trust span{display:inline-flex;gap:5px;align-items:center;white-space:nowrap}
+.hero-art{position:relative;aspect-ratio:4/4.4;border-radius:${r.lg};overflow:visible}
+.hero-art>svg,.hero-art>img{width:100%;height:100%;display:block;border-radius:${r.lg};object-fit:cover}
+.cap{position:absolute;left:14px;bottom:14px;background:rgba(255,255,255,.86);color:#111;font-size:11px;font-weight:600;letter-spacing:.02em;padding:6px 11px;border-radius:99px}
+.hero-art.panel{display:grid;place-items:center;padding:8%;background:linear-gradient(160deg,var(--soft),var(--hi))}
+.hero-art.portrait{padding:0;overflow:hidden;place-items:end center}
+.hero-art.portrait svg{width:100%;height:100%;display:block}
+.float{position:absolute;display:flex;gap:10px;align-items:center;padding:12px 14px;font-size:13px;background:#fff;color:#111;border-radius:${r.sm};box-shadow:0 20px 50px rgba(0,0,0,.14)}
+.float b{display:block;font-size:14px}.float small{display:block;opacity:.6;font-size:12px}
+.f1{left:-24px;top:16%}.f2{right:-18px;bottom:12%;flex-direction:column;align-items:flex-start;gap:6px}
+.ic{width:32px;height:32px;border-radius:${r.sm==="0px"?"0":"10px"};display:grid;place-items:center;flex:none;background:var(--soft);color:var(--c)}
+.add{font-size:12px;font-weight:600;padding:7px 12px;border-radius:${r.btn};margin-top:4px;background:var(--c);color:var(--on)}
+.widget{width:100%;max-width:340px;padding:20px;display:flex;flex-direction:column;gap:14px;font-size:13px;background:#fff;color:#111;border-radius:${r.sm};box-shadow:0 20px 50px rgba(0,0,0,.14)}
+.w-h b{display:block;font-size:16px}.w-h small{opacity:.6}.w-h.row{display:flex;gap:10px;align-items:center}
+.days{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.days span{display:flex;flex-direction:column;align-items:center;padding:8px 0;border-radius:${r.sm};background:#f3f4f6;font-size:11px}
+.days b{font-size:15px}
+.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.slots span{border:1px solid #e5e7eb;border-radius:${r.sm==="0px"?"0":"8px"};padding:8px 0;text-align:center;font-weight:500}
+.w-btn{text-align:center;padding:12px;border-radius:${r.btn};font-weight:600}
+.msg{padding:10px 12px;border-radius:14px;max-width:85%;line-height:1.45}
+.msg.me{align-self:flex-end;background:#111;color:#fff;border-bottom-right-radius:4px}
+.msg.bot{border-bottom-left-radius:4px}
+.typing{display:flex;gap:4px;padding:12px;border-radius:14px;width:58px}
+.typing i{width:6px;height:6px;border-radius:50%;background:#999}
+.bars{display:flex;align-items:flex-end;gap:8px;height:140px}
+.bars span{flex:1;border-radius:6px 6px 0 0}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}.kpis div{background:#f5f6f8;border-radius:10px;padding:10px}.kpis small{display:block;opacity:.6}.kpis b{font-size:15px}
+.phone{width:220px;aspect-ratio:9/18;background:#111;border-radius:36px;padding:10px;box-shadow:0 30px 60px rgba(0,0,0,.3);position:relative}
+.notch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:70px;height:18px;background:#111;border-radius:99px;z-index:2}
+.ph-in{height:100%;border-radius:28px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:20px}
+.ph-in b{font-size:20px}.ph-in small{opacity:.6;font-size:12px}
+.ring{width:96px;height:96px;border-radius:50%;border:6px solid;display:grid;place-items:center;font-weight:800;font-size:22px;color:#111;margin:8px 0}
+.ph-in span{padding:9px 16px;border-radius:99px;font-size:12px;font-weight:600}
+.strip{overflow:hidden;white-space:nowrap;padding:18px 0;border-block:1px solid rgba(0,0,0,.08);background:${bold?"#111":t.pageBg};color:${bold?"#fff":ink}}
+.strip div{display:inline-flex;gap:28px;align-items:center;font-size:${bold?"20px":"14px"};font-weight:600;text-transform:${lux?"uppercase":t.case};letter-spacing:${lux?".18em":"0"};padding-left:6vw}
+.strip i{font-style:normal;color:${c}}
+.strip div{animation:mq 40s linear infinite}@keyframes mq{to{transform:translateX(-50%)}}@media(prefers-reduced-motion:reduce){.strip div{animation:none}}
+section.s{padding:90px 6vw}
+.sh{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;margin-bottom:36px;flex-wrap:wrap}
+.sh h2{font-size:clamp(30px,3.6vw,46px);margin:0;font-weight:${lux?"400":"800"};line-height:1.05}
+.sh p{margin:8px 0 0;opacity:.65}
+.sh a{font-weight:600;font-size:14px;color:${lux?ink:c};display:inline-flex;gap:6px;align-items:center;border-bottom:1.5px solid currentColor;padding-bottom:2px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:20px}
+.grid.g3{grid-template-columns:repeat(3,1fr)}
+.card{position:relative;display:flex;flex-direction:column;gap:14px;border-radius:${r.lg};${bold?"border:2px solid #111;":""}}
+.card.svc{background:#fff;padding:26px;border:1px solid rgba(0,0,0,.07);min-height:240px;${bold?"border:2px solid #111;":""}}
+.media{position:relative;aspect-ratio:1;border-radius:${r.lg};overflow:hidden;background:var(--alt)}
+.media svg,.media img{width:100%;height:100%;display:block;object-fit:cover}
+.logo img{height:32px;width:auto;max-width:180px;display:block;object-fit:contain}
+.tag{position:absolute;top:12px;left:12px;font-size:11px;font-weight:600;padding:5px 10px;border-radius:${r.btn};background:var(--ink);color:#fff}
+.cbody h3{margin:0 0 4px;font-size:18px;font-weight:${lux?"400":"700"};text-transform:none}
+.cbody p{margin:0;font-size:14px;opacity:.7;font-variant-numeric:tabular-nums}
+.plus{position:absolute;right:10px;bottom:56px;width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:20px;font-weight:500;box-shadow:0 6px 16px rgba(0,0,0,.18);background:var(--c);color:var(--on)}
+.ibox{width:56px;height:56px;border-radius:${r.sm};display:grid;place-items:center;font-size:26px;background:var(--alt);color:var(--c)}
+.card.svc:first-child .ibox{background:var(--c);color:var(--on)}
+.svc .cbody{margin-top:auto}
+.more{font-size:13px;font-weight:600;display:inline-flex;gap:6px;align-items:center;color:var(--c)}
+.rows{display:flex;flex-direction:column}
+.rowi{display:flex;justify-content:space-between;align-items:baseline;gap:20px;padding:18px 0;border-top:1px solid rgba(0,0,0,.1)}
+.rowi b{display:block;font-size:17px}.rowi span{display:block;opacity:.7;font-size:14px;margin-top:2px}
+.rowi em{font-style:normal;font-weight:700;color:var(--c);white-space:nowrap;font-variant-numeric:tabular-nums}
+.story{display:grid;grid-template-columns:1fr 1fr;gap:6vw;align-items:center;background:${alt}}
+.story .media{aspect-ratio:5/4;background:var(--soft)}
+.steps{display:flex;flex-direction:column;gap:6px;margin-top:28px}
+.step{display:grid;grid-template-columns:52px 1fr;gap:16px;padding:18px 0;border-top:1px solid rgba(0,0,0,.1)}
+.step .n{font-family:${fam(v.display)};font-size:28px;color:${c};font-weight:700;line-height:1}
+.step b{font-size:17px;display:block;margin-bottom:4px}.step span{opacity:.7;font-size:15px;line-height:1.5}
+.band{margin:0 6vw 90px;padding:64px 56px;border-radius:${r.lg};background:${lux?ink:c};color:${lux?"#fff":on};display:flex;justify-content:space-between;align-items:center;gap:30px;flex-wrap:wrap;position:relative;overflow:hidden}
+.band:after{content:"";position:absolute;right:-80px;top:-80px;width:280px;height:280px;border-radius:50%;background:rgba(255,255,255,.1)}
+.band h2{margin:0;font-size:clamp(26px,3vw,40px);max-width:18ch;line-height:1.1;font-weight:${lux?"400":"800"}}
+.band .b1{background:${lux?c:(on==="#ffffff"?"#fff":"#111")};color:${lux?on:(on==="#ffffff"?ink:"#fff")};position:relative;z-index:1}
+footer{background:${ink};color:rgba(255,255,255,.7);padding:60px 6vw 30px;font-size:14px}
+.fgrid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:30px;margin-bottom:40px}
+.fgrid .logo{color:#fff;margin-bottom:10px}
+.fgrid b{color:#fff;display:block;margin-bottom:12px;font-size:13px}
+.fgrid span{display:block;margin-bottom:8px}
+.fbot{border-top:1px solid rgba(255,255,255,.12);padding-top:20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px;font-size:12px}
+.pay{display:flex;gap:6px}.pay span{background:rgba(255,255,255,.12);color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.fab{position:fixed;right:18px;bottom:18px;display:flex;flex-direction:column;gap:10px;align-items:flex-end;z-index:9}
+.fab .bubble{background:#fff;color:#111;padding:12px 14px;border-radius:16px 16px 4px 16px;font-size:13px;box-shadow:0 10px 30px rgba(0,0,0,.18);max-width:220px}
+.fab .round{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;box-shadow:0 10px 24px rgba(0,0,0,.25);font-weight:700;font-size:22px;background:var(--c);color:var(--on)}
+.fab .wa{background:#25d366;color:#fff;padding:12px 16px;border-radius:99px;font-size:13px;font-weight:600;box-shadow:0 10px 24px rgba(0,0,0,.2)}
+@media(max-width:900px){.grid,.grid.g3{grid-template-columns:repeat(2,1fr)}.fgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:640px){
+  nav ul{display:none}.nbtn{display:none}
+  .hero{grid-template-columns:1fr;padding:40px 6vw 60px}.hero-art{max-width:420px;width:100%;margin:0 auto}
+  .f1{left:8px}.f2{right:8px}
+  .story{grid-template-columns:1fr}.band{padding:40px 28px}
+  section.s{padding:60px 6vw}.grid{gap:14px}
+}
+`;
+}
+function docWrap(x, body, tok=1){
+  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?${x.fonts}&display=swap" rel="stylesheet">
+<style>${kitCss(x)}</style></head><body data-kit="${tok}">${body}</body></html>`;
+}
+
+/* ---------- Instant template preview (no AI) ---------- */
+function templateBody(x){
+  const {b,t,c,ink,on,alt,lux}=x, C=CONTENT[state.type];
+  const year=new Date().getFullYear();
+  const fill = s => esc(String(s).replace(/\{city\}/g,b.city).replace(/\{year\}/g,year));
+  const has = id => state.addons.has(id);
+  const primaryCta = has("book") && state.type!=="booking" ? "Book now" : C.cta;
+  const h1 = C.head.map((l,i)=> lux && i===1 ? `<em>${fill(l)}</em>` : fill(l)).join("<br>");
+  const navIcons = state.type==="store" ? `<span class="nico">${icon("search",18)}</span><span class="nico">${icon("bag",18)}<i>2</i></span>` : "";
+  const itemsHtml = C.items.map(([name,meta,kind],i)=>{
+    const isProduct = ["bag","box","round","bottle"].includes(kind);
+    const media = isProduct
+      ? `<div class="media">${slot(i+1,c,"p"+i)}${i===0?`<span class="tag">Bestseller</span>`:""}</div>`
+      : `<div class="ibox">${icon(kind,26)}</div>`;
+    return `<article class="card ${isProduct?"prod":"svc"}">${media}<div class="cbody"><h3>${fill(name)}</h3><p>${fill(meta)}</p></div>${isProduct?`<span class="plus">+</span>`:`<span class="more">Learn more ${icon("arrow",14)}</span>`}</article>`;
+  }).join("");
+  const stripItems = [...C.strip, ...C.strip].map(s=>`<span>${fill(s)}</span><i>✦</i>`).join("");
+
+  return `<div class="ann">${fill(C.bar)}</div>
+<nav><div class="logo">${esc(b.name)}</div><ul>${C.nav.map(n=>`<li>${n}</li>`).join("")}</ul>
+<div class="nr">${has("ar")?`<span class="lang">EN | ع</span>`:""}${navIcons}<span class="nbtn">${primaryCta}</span></div></nav>
+<header class="hero"><div>
+  <div class="eyebrow">${fill(C.eyebrow)}</div>
+  <h1>${h1}</h1>
+  <p class="lead">${esc(b.what)}</p>
+  <div class="ctas"><span class="b1">${primaryCta} ${icon("arrow",16)}</span><span class="b2">${C.cta2}</span></div>
+  <div class="trust">${C.trust.map(s=>`<span>${icon("check",16)} ${s}</span>`).join("")}</div>
+</div>${heroArt(C.art,t,b,c)}</header>
+<div class="strip"><div>${stripItems}</div></div>
+<section class="s"><div class="sh"><div><h2>${C.gridTitle}</h2><p>${fill(C.gridSub)}</p></div><a>View all ${icon("arrow",14)}</a></div><div class="grid">${itemsHtml}</div></section>
+<section class="s story"><div class="media">${slot(5,c,"st",500,400)}</div>
+<div><div class="eyebrow">Why ${esc(b.name)}</div><div class="sh" style="margin:0"><h2>${C.storyTitle}</h2></div>
+<div class="steps">${C.storySteps.map(([h,p],i)=>`<div class="step"><span class="n">0${i+1}</span><div><b>${h}</b><span>${fill(p)}</span></div></div>`).join("")}</div></div></section>
+<div class="band"><h2>${fill(C.band)}</h2><span class="b1">${primaryCta} ${icon("arrow",16)}</span></div>
+<footer><div class="fgrid"><div><div class="logo">${esc(b.name)}</div><span>${esc(b.what)}</span></div>
+<div><b>Explore</b>${C.nav.map(n=>`<span>${n}</span>`).join("")}</div>
+<div><b>Help</b><span>Contact</span><span>FAQ</span>${state.type==="store"?"<span>Shipping</span><span>Returns</span>":"<span>Privacy</span>"}</div>
+<div><b>Visit</b><span>${esc(b.city)}, UAE</span>${has("wa")?"<span>WhatsApp us</span>":"<span>Email us</span>"}</div></div>
+<div class="fbot"><span>© ${year} ${esc(b.name)}. All rights reserved.</span>${has("pay")?`<div class="pay"><span>VISA</span><span>Mastercard</span><span>Apple Pay</span><span>tabby</span></div>`:"<span>Website by Kayro Interactive</span>"}</div></footer>
+${(has("chat")||has("wa"))?`<div class="fab">${has("chat")?`<div class="bubble">Hi! I'm the ${esc(b.name)} assistant. How can I help today?</div>`:""}${has("wa")?`<span class="wa">Order on WhatsApp</span>`:""}${has("chat")?`<span class="round">${icon("chat",22)}</span>`:""}</div>`:""}`;
+}
+function templateHtml(){ const x=ctx(); return docWrap(x, templateBody(x)); }
+
+/* ---------- Preview frame ---------- */
+let frameTok=0, frameSetAt=0;
+function setDoc(x, body){ frameTok++; frameSetAt=Date.now(); $("frame").srcdoc = docWrap(x, body, frameTok); }
+/* Update the preview's body in place (no reload, no flicker).
+   true = patched, null = the frame is still loading, false = the frame can't be reached. */
+function patchFrame(body, follow){
+  try{
+    const d=$("frame").contentDocument;
+    if(d && d.body){
+      if(d.body.getAttribute("data-kit")===String(frameTok)){
+        d.body.innerHTML = body;
+        const w=d.defaultView;
+        if(w) w.scrollTo(0, follow ? d.documentElement.scrollHeight : 0);
+        return true;
+      }
+      return Date.now()-frameSetAt < 1500 ? null : false;
+    }
+  }catch(e){}
+  return false;
+}
+/* Image slots in AI markup: each <svg data-kit="stage"></svg> becomes the client's photo or a studio scene. */
+function decorate(body, x){
+  let i=0;
+  return body.replace(/<svg[^>]*\bdata-kit="[a-z0-9]*"[^>]*>\s*<\/svg>/g, ()=>{ const n=i++; return slot(n, x.c, "a"+n, 400, n===0?440:400); });
+}
+/* Draw whatever we currently have: the AI design if there is one, otherwise the quick template. */
+function showCurrent(){
+  const x=ctx();
+  setDoc(x, state.aiBody ? decorate(state.aiBody, x) : templateBody(x));
+  $("url").textContent = domainFor(state.biz.name);
+}
+function setStatus(mode, text){
+  $("status").className = "status " + mode;
+  $("statusText").textContent = text;
+}
+
+/* ---------- Reading the client's prompt ---------- */
+/* A quick local read of the prompt: used when the AI is unavailable, and as the base the AI's choices sit on. */
+function localGuess(t){
+  const s=" "+t.toLowerCase()+" ", has=(...w)=>w.some(k=>s.includes(k));
+  let type="company";
+  if(has("shop","store","sell","product","e-commerce","ecommerce","order online","delivery","boutique")) type="store";
+  else if(has("book","appointment","salon","clinic","spa","barber","reservation","restaurant","cafe","café","gym","classes","studio")) type="booking";
+  else if(has("portfolio","personal brand","creator","influencer","coach","speaker","my work","freelance")) type="brand";
+  else if(has("landing page","launch","waitlist","coming soon","one page")) type="launch";
+  else if(has(" app","dashboard","platform"," ai ","agent","portal","saas"," tool")) type="ai";
+  let vibe="clean";
+  if(has("luxury","premium","elegant","high-end","high end","boutique","exclusive")) vibe="luxury";
+  else if(has("fun","playful","kids","colorful","colourful","friendly","cute")) vibe="playful";
+  else if(has("bold","strong","sport","street","loud","energy")) vibe="bold";
+  const color={luxury:"#8a5a2b",playful:"#7c3aed",bold:"#be123c",clean:"#2563eb"}[vibe];
+  const addons=[];
+  if(type==="store" || has("pay","checkout")) addons.push("pay");
+  if(type==="booking" || has("booking","appointment","reservation")) addons.push("book");
+  if(has("arabic","bilingual")) addons.push("ar");
+  if(has("chat","assistant")) addons.push("chat");
+  if(has("whatsapp")) addons.push("wa");
+  if(has("dashboard","admin")) addons.push("dash");
+  const m=t.match(/(?:called|named|for)\s+((?:[A-Z][\w'’.-]*)(?:\s+(?:&|and|[A-Z][\w'’.-]*)){0,3})/);
+  const name = m ? m[1].replace(/[.,]+$/,"") : "Your Business";
+  const city = has("abu dhabi")?"Abu Dhabi":has("sharjah")?"Sharjah":has("riyadh")?"Riyadh":has("beirut")?"Beirut":"Dubai";
+  return {name, city, type, vibe, color, addons};
+}
+const GOALS={store:"Sell online",company:"Win more clients",booking:"Get more bookings",brand:"Grow my audience",launch:"Collect sign-ups",ai:"Save time with AI"};
+/* Apply a config (from the AI, or null). fresh = start from a local read of the prompt first. */
+function applyConfig(cfg, fresh){
+  const base = fresh ? localGuess(state.prompt) : null;
+  const c = Object.assign({}, base||{}, cfg && typeof cfg==="object" ? cfg : {});
+  if(TYPES.some(t=>t.id===c.type)) state.type=c.type; else if(base) state.type=base.type;
+  if(VIBES.some(v=>v.id===c.vibe)) state.vibe=c.vibe; else if(base) state.vibe=base.vibe;
+  let col = typeof c.color==="string" && /^#[0-9a-f]{6}$/i.test(c.color.trim()) ? c.color.trim().toLowerCase() : (base ? base.color : null);
+  if(col){ let n=0; while(lum(col)>0.55 && n++<6) col=shade(col,-0.18); state.color=col; }
+  if(Array.isArray(c.addons)) state.addons=new Set(c.addons.filter(id=>ADDONS.some(a=>a.id===id)));
+  else if(base) state.addons=new Set(base.addons);
+  if(typeof c.name==="string" && c.name.trim()) state.biz.name=c.name.trim().slice(0,40);
+  if(typeof c.city==="string" && c.city.trim()) state.biz.city=c.city.trim().slice(0,30);
+  if(fresh){
+    const first=state.prompt.replace(/\s+/g," ").split(/(?<=[.!?])\s/).slice(0,2).join(" ");
+    state.biz.what = first.length>150 ? first.slice(0,147).replace(/\s+\S*$/,"")+"…" : first;
+  }
+  state.biz.goal = GOALS[state.type];
+}
+function currentConfig(){
+  return {name:state.biz.name, city:state.biz.city, type:state.type, vibe:state.vibe, color:state.color, addons:[...state.addons]};
+}
+
+/* ---------- Your project (estimate, style, features) ---------- */
+function total(){
+  const t = TYPES.find(x=>x.id===state.type);
+  let p=t.price, w=t.weeks;
+  state.addons.forEach(id=>{const a=ADDONS.find(x=>x.id===id); p+=a.price; w+=a.weeks;});
+  const lo=Math.max(1,Math.round(w));
+  return {p, weeks:`${lo}–${lo+1} weeks`};
+}
+function renderPlan(){
+  const t=TYPES.find(x=>x.id===state.type), {p,weeks}=total();
+  const adds=ADDONS.filter(a=>state.addons.has(a.id)).map(a=>a.name);
+  $("planTitle").textContent = `${t.name} for ${state.biz.name}`;
+  $("estPrice").textContent = aed(p);
+  $("estTime").textContent = weeks;
+  $("planIncl").textContent = (adds.length ? "Includes: " + adds.join(" · ") + ". " : "") + "A guide price. Kayro confirms a fixed quote after a short call.";
+  $("depLine").textContent = `You start with a ${aed(PAY.amount)} deposit${PAY.refundable?", fully refundable if you don't approve your preview":""}. It comes off your final price.`;
+  $("typeSel").innerHTML = TYPES.map(x=>`<option value="${x.id}" ${x.id===state.type?"selected":""}>${x.name}, from ${aed(x.price)}</option>`).join("");
+  $("vibes").innerHTML = VIBES.map(v=>`<button type="button" class="chip" data-id="${v.id}" aria-pressed="${v.id===state.vibe}">${v.name}</button>`).join("");
+  const custom=$("swatches").querySelector(".custom");
+  $("swatches").querySelectorAll(".sw").forEach(n=>n.remove());
+  [...new Set([state.color, ...COLORS])].slice(0,7).forEach(c=>{
+    const b=document.createElement("button");
+    b.type="button"; b.className="sw"; b.style.background=c; b.dataset.c=c;
+    b.setAttribute("aria-label","Color "+c); b.setAttribute("aria-pressed", String(c===state.color));
+    $("swatches").insertBefore(b, custom);
+  });
+  $("customColor").value = state.color;
+  $("addons").innerHTML = ADDONS.map(a=>`<label class="addon" for="ad-${a.id}"><span><input type="checkbox" id="ad-${a.id}" data-id="${a.id}" ${state.addons.has(a.id)?"checked":""}>${a.name}</span><em>+${aed(a.price)}</em></label>`).join("");
+  $("sent").hidden = true; $("sendBtn").hidden = false; // the brief changes with the plan, so it is made again on send
+}
+function showPlan(){ renderPlan(); $("plan").hidden=false; }
+
+/* ---------- AI ---------- */
+/* AI design runs on Kayro's own API (see /builder-api). If it can't be reached, the page falls back to the quick preview. */
+const AI_ENDPOINT = "/api/builder";
+let aiOn = false, busy = false;
+const aiReady = (async ()=>{
+  try{
+    const ac=new AbortController(), t=setTimeout(()=>ac.abort(), 4000);
+    const r=await fetch(AI_ENDPOINT, {signal:ac.signal, headers:{Accept:"application/json"}});
+    clearTimeout(t);
+    aiOn = r.ok && (await r.json()).ok === true;
+  }catch(e){ aiOn=false; }
+})();
+/* Ask the API for a design. The answer streams in as plain text: a CONFIG line, then the page markup. */
+async function aiCall(payload, onText){
+  const r = await fetch(AI_ENDPOINT, {method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload)});
+  if(!r.ok || !r.body){
+    let j={}; try{ j=await r.json(); }catch(e){}
+    throw {code: r.status===429 ? "rate_limited" : "failed", message: j.message};
+  }
+  const rd=r.body.getReader(), dec=new TextDecoder();
+  let text="";
+  for(;;){
+    const {done, value}=await rd.read();
+    if(done) break;
+    text += dec.decode(value, {stream:true});
+    onText({text});
+  }
+  return {text};
+}
+
+function extractBody(t){
+  let s=String(t||"");
+  const bi=s.search(/<body[^>]*>/i);
+  if(bi>=0) s=s.slice(bi).replace(/^<body[^>]*>/i,"");
+  s=s.replace(/<\/body>[\s\S]*$/i,"").replace(/<!DOCTYPE[^>]*>/ig,"").replace(/<\/?html[^>]*>/ig,"").replace(/<head[\s\S]*?<\/head>/ig,"");
+  const st=s.indexOf("<");
+  if(st<0) return "";
+  return s.slice(st).replace(/<script[\s\S]*?(<\/script>|$)/ig,"").replace(/<style[\s\S]*?(<\/style>|$)/ig,"").replace(/<[^>]*$/,"").trim();
+}
+/* The AI answers with a CONFIG line, then the page markup. Either part may still be arriving. */
+function splitOut(t){
+  const s=String(t||"").replace(/```[a-zA-Z]*[ \t]*\n?/g,"");
+  const i=s.search(/<(div|nav|header|body)\b/i);
+  const head = i<0 ? s : s.slice(0,i);
+  let cfg=null;
+  const m=head.match(/\{[\s\S]*\}/);
+  if(m){ try{ cfg=JSON.parse(m[0]); }catch(e){} }
+  return {cfg, body: i<0 ? "" : extractBody(s.slice(i))};
+}
+const STEPS=["Reading your brief…","Choosing your style…","Writing your copy…","Building your page…","Adding finishing touches…"];
+async function runAI(payload, label, fresh){
+  if(!aiOn || busy) return;
+  busy=true;
+  $("askErr").classList.remove("on");
+  $("genBtn").disabled=true; $("refineBtn").disabled=true;
+  setStatus("busy", label);
+  $("overlay").classList.add("on");
+  let step=0; $("overlayText").textContent=STEPS[0];
+  const stepTimer=setInterval(()=>{step=Math.min(step+1,STEPS.length-1);$("overlayText").textContent=STEPS[step];},3000);
+  const t0=Date.now();
+  let x=null, last=0, lastReload=0, latest="", started=false;
+  try{
+    const res = await aiCall(payload, ({text})=>{
+        latest=text;
+        const o=splitOut(text);
+        if(!o.body) return;
+        const now=Date.now();
+        if(now-last<160) return;
+        last=now;
+        if(!started){
+          started=true; applyConfig(o.cfg, fresh); x=ctx();
+          setDoc(x, decorate(o.body, x)); lastReload=now;
+          $("url").textContent = domainFor(state.biz.name);
+          return;
+        }
+        if(patchFrame(decorate(o.body, x), true)===false && now-lastReload>900){ setDoc(x, decorate(o.body, x)); lastReload=now; }
+    });
+    const o=splitOut(res.text || latest);
+    if(!/<(header|section|nav)\b/i.test(o.body)) throw {message:"The design came back empty. Try again."};
+    applyConfig(o.cfg, fresh && !started);
+    x=ctx();
+    state.aiBody=o.body;
+    showCurrent();
+    const secs=Math.max(1, Math.round((Date.now()-t0)/1000));
+    setStatus("ai", `Designed for ${state.biz.name} · built in ${secs}s`);
+    $("refineForm").hidden=false;
+    showPlan();
+    toPreview();
+  }catch(e){
+    const msg = (e && e.message) || (e && e.code==="rate_limited" ? "Too many designs in a short time. Wait a minute and try again." : "Something went wrong. Try again.");
+    $("askErr").textContent=msg; $("askErr").classList.add("on");
+    if(state.aiBody){ showCurrent(); setStatus("ai", `Designed for ${state.biz.name}`); }
+    else quickPreview();
+  }finally{
+    clearInterval(stepTimer); $("overlay").classList.remove("on");
+    busy=false; $("genBtn").disabled=false; $("refineBtn").disabled=false;
+    if(state.aiBody) $("genBtn").textContent="Generate again";
+  }
+}
+/* No AI available: read the prompt locally and fill Kayro's template with it. */
+function quickPreview(){
+  applyConfig(null, true);
+  state.aiBody=null;
+  showCurrent();
+  setStatus("", `Quick preview for ${state.biz.name}`);
+  $("refineForm").hidden=true;
+  showPlan();
+  toPreview();
+}
+function toPreview(){ if(window.innerWidth<=900){ try{ $("stage").scrollIntoView({behavior:"smooth"}); }catch(e){} } }
+$("askForm").addEventListener("submit", async e=>{
+  e.preventDefault();
+  if(busy) return;
+  const text=$("prompt").value.trim();
+  if(text.length<MIN_DETAIL){
+    $("askErr").textContent="Tell us a bit more: what you sell or do, who it's for, and the feel you want.";
+    $("askErr").classList.add("on"); $("prompt").classList.add("bad"); $("prompt").focus();
+    return;
+  }
+  $("askErr").classList.remove("on"); $("prompt").classList.remove("bad");
+  state.prompt=text;
+  toPreview();
+  $("genBtn").disabled=true; setStatus("busy","Getting ready…");
+  await aiReady;
+  $("genBtn").disabled=false;
+  if(aiOn) runAI({brief:text}, "Kayro AI is designing your homepage…", true);
+  else quickPreview();
+});
+$("prompt").addEventListener("input", ()=>{ if($("prompt").value.trim().length>=MIN_DETAIL){ $("askErr").classList.remove("on"); $("prompt").classList.remove("bad"); } });
+$("refineForm").addEventListener("submit", e=>{
+  e.preventDefault();
+  const ask=$("refineIn").value.trim();
+  if(!ask || !state.aiBody || busy) return;
+  $("refineIn").value="";
+  runAI({brief:state.prompt, change:ask, config:currentConfig(), body:state.aiBody}, "Updating: " + ask.slice(0,40), false);
+});
+
+/* ---------- Send to Kayro ---------- */
+function briefText(name, contact){
+  const t=TYPES.find(x=>x.id===state.type), v=VIBES.find(x=>x.id===state.vibe), {p,weeks}=total();
+  const adds=ADDONS.filter(a=>state.addons.has(a.id)).map(a=>a.name);
+  return `Hi Kayro, I built my project on your site.
+Ref: ${state.ref}
+
+What I want: ${state.prompt}
+
+Project: ${t.name} for ${state.biz.name} (${state.biz.city})
+Style: ${v.name}, brand color ${state.color}
+Features: ${adds.length?adds.join(", "):"none"}
+Guide price: ${aed(p)} · ${weeks}
+Deposit: ${aed(PAY.amount)}${PAY.refundable?" (refundable)":""}
+Preview: ${state.aiBody?"AI design made":"quick preview"}${state.photos.length?`\nMy files: ${state.photos.length} photo(s) to send`:""}
+
+Name: ${name}
+Contact: ${contact}`;
+}
+$("sendBtn").addEventListener("click", async ()=>{
+  const name=$("cName").value.trim(), contact=$("cContact").value.trim();
+  $("sendErr").classList.remove("on");
+  if(!name || contact.length<5){
+    $("sendErr").textContent="Add your name and a WhatsApp number or email so Kayro can reach you.";
+    $("sendErr").classList.add("on");
+    (name ? $("cContact") : $("cName")).focus();
+    return;
+  }
+  const text=briefText(name, contact);
+  $("briefText").textContent=text;
+  $("waBtn").href="https://wa.me/"+KAYRO_WA+"?text="+encodeURIComponent(text);
+  if(PAY.link){
+    let u = PAY.link + (PAY.link.indexOf("?")<0?"?":"&") + "client_reference_id=" + encodeURIComponent(state.ref);
+    if(/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact)) u += "&prefilled_email=" + encodeURIComponent(contact);
+    $("payBtn").href=u; $("payBtn").textContent=`Pay the ${aed(PAY.amount)} deposit`; $("payBtn").hidden=false;
+    $("sentNote").textContent=`Send your brief, then pay the deposit to reserve your project. Secure checkout by Stripe. Your reference is ${state.ref}.`;
+  } else {
+    $("payBtn").hidden=true;
+    $("sentNote").textContent=`Kayro replies with a fixed quote and your secure link for the ${aed(PAY.amount)} deposit. Your reference is ${state.ref}.`;
+  }
+  $("sentTitle").textContent=`Your brief is ready, ${name.split(/\s+/)[0]}.`;
+  $("sent").hidden=false; $("sendBtn").hidden=true;
+  try{ $("sent").scrollIntoView({block:"nearest",behavior:"smooth"}); }catch(e){}
+});
+["cName","cContact"].forEach(id=>$(id).addEventListener("input", ()=>{ $("sent").hidden=true; $("sendBtn").hidden=false; }));
+$("copyBtn").addEventListener("click", async ()=>{
+  try{ await navigator.clipboard.writeText($("briefText").textContent); $("copyBtn").textContent="Copied"; }
+  catch(e){ $("copyBtn").textContent="Select the text and copy it"; }
+  setTimeout(()=>$("copyBtn").textContent="Copy brief",2500);
+});
+
+/* ---------- Style and features (inside "Change style or features") ---------- */
+$("typeSel").addEventListener("change", e=>{ state.type=e.target.value; state.biz.goal=GOALS[state.type]; renderPlan(); if(!state.aiBody) showCurrent(); });
+$("vibes").addEventListener("click", e=>{ const b=e.target.closest(".chip"); if(!b) return; state.vibe=b.dataset.id; renderPlan(); showCurrent(); });
+$("swatches").addEventListener("click", e=>{ const b=e.target.closest(".sw"); if(!b) return; state.color=b.dataset.c; renderPlan(); showCurrent(); });
+$("customColor").addEventListener("input", e=>{ state.color=e.target.value; showCurrent(); });
+$("customColor").addEventListener("change", ()=>renderPlan());
+$("addons").addEventListener("change", e=>{ const id=e.target.dataset.id; if(!id) return; e.target.checked?state.addons.add(id):state.addons.delete(id); renderPlan(); if(!state.aiBody) showCurrent(); });
+
+/* ---------- Photos: resized in the browser and kept on the device, only used for this preview ---------- */
+function readImage(file, max){
+  return new Promise(res=>{
+    if(!file || !/^image\//.test(file.type)) return res(null);
+    const url=URL.createObjectURL(file), im=new Image();
+    im.onload=()=>{
+      try{
+        const k=Math.min(1, max/Math.max(im.naturalWidth||max, im.naturalHeight||max));
+        const cv=document.createElement("canvas");
+        cv.width=Math.max(1,Math.round((im.naturalWidth||max)*k)); cv.height=Math.max(1,Math.round((im.naturalHeight||max)*k));
+        cv.getContext("2d").drawImage(im,0,0,cv.width,cv.height);
+        res(cv.toDataURL("image/jpeg", 0.82));
+      }catch(e){ res(null); }
+      URL.revokeObjectURL(url);
+    };
+    im.onerror=()=>{ URL.revokeObjectURL(url); res(null); };
+    im.src=url;
+  });
+}
+function renderThumbs(){
+  $("thumbs").innerHTML = state.photos.map((p,i)=>`<div class="thumb" style="background-image:url('${p}')"><button type="button" data-rm="${i}" aria-label="Remove photo ${i+1}">×</button></div>`).join("");
+  $("thumbs").hidden = !state.photos.length;
+  $("askNote").textContent = state.photos.length ? `${state.photos.length} of 6 added. The first is your main image.` : "Optional. They stay on your device.";
+}
+$("photoIn").addEventListener("change", async e=>{
+  const files=[...e.target.files].slice(0, 6-state.photos.length); e.target.value="";
+  for(const f of files){ const d=await readImage(f, 1100); if(d) state.photos.push(d); }
+  renderThumbs(); if(!busy) showCurrent();
+});
+$("thumbs").addEventListener("click", e=>{
+  const b=e.target.closest("button[data-rm]"); if(!b) return;
+  state.photos.splice(+b.dataset.rm,1); renderThumbs(); if(!busy) showCurrent();
+});
+
+$("vDesk").addEventListener("click", ()=>{$("browser").classList.remove("mobile");$("vDesk").setAttribute("aria-pressed","true");$("vMob").setAttribute("aria-pressed","false");});
+$("vMob").addEventListener("click", ()=>{$("browser").classList.add("mobile");$("vMob").setAttribute("aria-pressed","true");$("vDesk").setAttribute("aria-pressed","false");});
+
+$("fromBadge").textContent = `Websites from ${aed(Math.min(...TYPES.map(t=>t.price)))}`;
+showCurrent();
+</script>
+</body>
+</html>
