@@ -116,8 +116,14 @@ h2{font-weight:600;font-size:clamp(30px,3vw,42px);line-height:1.1;letter-spacing
 .sel-r b{font-size:16px;font-weight:600}
 .sel-r small{font-size:14px;color:var(--mute)}
 .sel-r em{font-style:normal;font-size:14px;font-weight:500;text-align:right}
-.svc{margin-top:clamp(40px,5vw,64px);padding-top:24px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(auto-fit,minmax(min(190px,100%),1fr));gap:24px 32px}
-.svc div{display:flex;flex-direction:column;gap:4px}
+.svc{margin-top:clamp(40px,5vw,64px);padding-top:24px;border-top:1px solid var(--line);overflow:hidden;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.svc-track{display:flex;width:max-content;animation:svcRun 38s linear infinite}
+.svc:hover .svc-track{animation-play-state:paused}
+.svc-set{display:flex;flex:0 0 auto}
+.svc-set>div{display:flex;flex-direction:column;gap:4px;flex:0 0 auto;width:260px;padding:4px 32px 4px 20px;position:relative}
+.svc-set>div::before{content:"";position:absolute;left:0;top:11px;width:7px;height:7px;border-radius:50%;background:#4F7DF5}
+@keyframes svcRun{to{transform:translateX(-50%)}}
+@media (prefers-reduced-motion:reduce){.svc{-webkit-mask-image:none;mask-image:none}.svc-track{animation:none;width:auto}.svc-set{flex-wrap:wrap;gap:24px 0}.svc-set[aria-hidden]{display:none}}
 .svc b{font-size:16px;font-weight:600}
 .svc span{font-size:14px;color:var(--mute)}
 
@@ -239,8 +245,10 @@ footer .mark{color:#fff}
   .ctas{width:100%}
   .ctas .btn{flex:1 1 auto;white-space:nowrap;padding-left:16px;padding-right:16px}
   .hero .sel-work{display:none}
-  .svc{margin-top:32px;padding-top:20px;display:flex;flex-wrap:wrap;gap:8px}
-  .svc div{flex:0 0 auto;padding:8px 14px;border:1px solid var(--line2);border-radius:999px}
+  .svc{margin-top:32px;padding-top:20px}
+  .svc-track{animation-duration:24s}
+  .svc-set>div{width:auto;margin-right:8px;padding:8px 14px;border:1px solid var(--line2);border-radius:999px}
+  .svc-set>div::before{display:none}
   .svc b{font-size:14px;font-weight:500}
   .svc span{display:none}
   .cards{gap:16px}
@@ -328,13 +336,25 @@ footer .mark{color:#fff}
       <a class="sel-r" href="https://basocieties.com"><div><b>Boston Arab Society</b><small>Community platform with events and members</small></div><em>Live</em></a>
     </div>
   </div>
-  <div class="svc" id="services">
-    <div><b>Brands</b><span>Naming, identity, storefront, launch.</span></div>
-    <div><b>Websites</b><span>Storefronts, platforms, full apps.</span></div>
-    <div><b>Games</b><span>Worlds people stay in.</span></div>
-    <div><b>AI systems</b><span>Private tools built around you.</span></div>
-    <div><b>Audits</b><span>We find what is broken, then fix it.</span></div>
-    <div><b>Clipping</b><span>150+ TikTok and Instagram clips a day.</span></div>
+  <div class="svc" id="services" aria-label="Services">
+    <div class="svc-track">
+    <div class="svc-set">
+      <div><b>Brands</b><span>Naming, identity, storefront, launch.</span></div>
+      <div><b>Websites</b><span>Storefronts, platforms, full apps.</span></div>
+      <div><b>Games</b><span>Worlds people stay in.</span></div>
+      <div><b>AI systems</b><span>Private tools built around you.</span></div>
+      <div><b>Audits</b><span>We find what is broken, then fix it.</span></div>
+      <div><b>Clipping</b><span>150+ TikTok and Instagram clips a day.</span></div>
+    </div>
+    <div class="svc-set" aria-hidden="true">
+      <div><b>Brands</b><span>Naming, identity, storefront, launch.</span></div>
+      <div><b>Websites</b><span>Storefronts, platforms, full apps.</span></div>
+      <div><b>Games</b><span>Worlds people stay in.</span></div>
+      <div><b>AI systems</b><span>Private tools built around you.</span></div>
+      <div><b>Audits</b><span>We find what is broken, then fix it.</span></div>
+      <div><b>Clipping</b><span>150+ TikTok and Instagram clips a day.</span></div>
+    </div>
+    </div>
   </div>
   </div>
 </header>
