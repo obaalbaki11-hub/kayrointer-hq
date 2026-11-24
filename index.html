@@ -131,6 +131,7 @@ h2{font-weight:600;font-size:clamp(30px,3vw,42px);line-height:1.1;letter-spacing
 .shot img{width:100%;aspect-ratio:2.2/1;object-fit:cover;object-position:top center;border:1px solid var(--line);border-bottom:0;border-radius:8px 8px 0 0}
 .shot.logo{padding:0;aspect-ratio:2.4/1;display:grid;place-items:center;background:var(--lbg,var(--soft))}
 .shot.logo img{width:var(--lw,46%);height:auto;aspect-ratio:auto;object-fit:contain;border:0;border-radius:0}
+@media (min-width:1100px){.card.row .shot.logo{aspect-ratio:auto}.card.row .shot.logo img{position:static;inset:auto;width:78%;height:auto;border:0;border-radius:0}}
 @media (min-width:1100px){
   .card.row{flex-direction:row}
   .card.row .shot{position:relative;flex:0 0 44%;min-height:200px;padding:0;border-bottom:0;border-right:1px solid var(--line)}
@@ -375,7 +376,7 @@ footer .mark{color:#fff}
   </div>
   <div class="cards">
     <article class="card row">
-      <div class="shot"><img src="/assets/work/synuthane-desktop.webp" width="1440" height="900" alt="The Synuthane online store" loading="lazy" decoding="async"></div>
+      <div class="shot logo" style="--lbg:#1D1D1F;--lw:62%"><img src="/assets/brand/synuthane-logo.svg" width="9476" height="1143" alt="Synuthane" loading="lazy" decoding="async"></div>
       <div class="cb sm">
         <div class="cb-h"><h3>Synuthane</h3><span class="badge live">Live</span></div>
         <p>Storefront for a Dubai construction-systems supplier. Six product lines, each with its own spec pages.</p>
@@ -383,7 +384,7 @@ footer .mark{color:#fff}
       </div>
     </article>
     <article class="card row">
-      <div class="shot"><img src="/assets/work/basocieties-desktop.webp" width="1440" height="900" alt="The Boston Arab Society website" loading="lazy" decoding="async"></div>
+      <div class="shot logo" style="--lbg:#140B0A;--lw:58%"><img src="/assets/brand/bas-logo.svg" width="2336" height="928" alt="Boston Arab Society" loading="lazy" decoding="async"></div>
       <div class="cb sm">
         <div class="cb-h"><h3>Boston Arab Society</h3><span class="badge live">Live</span></div>
         <p>Community platform with event registration, a podcast hub, merch drops and member sign-ups.</p>
